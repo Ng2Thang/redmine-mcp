@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+source "$(dirname -- "$0")/common.sh"
+python scripts/local_env.py init
+compose exec -T redmine bundle exec rails runner /opt/seed/bootstrap.rb
+assert_environment
+compose --profile tools run --build --rm seed
+python scripts/local_env.py reader
+echo 'Seed ready; read-only API key saved to .env.'
+

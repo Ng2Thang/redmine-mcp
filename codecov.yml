@@ -1,0 +1,8 @@
+# Inactive until automated testing and coverage uploads are explicitly adopted.
+# See docs/testing-roadmap.md. No thresholds or upload credentials are configured.
+coverage:
+  status:
+    project: false
+    patch: false
+    changes: false
+comment: false

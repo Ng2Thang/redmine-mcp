@@ -1,0 +1,26 @@
+# Opt in with: uv run --frozen pre-commit install
+# Use the locked development environment; do not modify source in hooks.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff lint
+        entry: uv run --frozen ruff check .
+        language: system
+        files: '(\.pyi?$|^pyproject\.toml$|^uv\.lock$|^\.pre-commit-config\.yaml$)'
+        pass_filenames: false
+        require_serial: true
+      - id: ruff-format
+        name: Ruff format check
+        entry: uv run --frozen ruff format --check .
+        language: system
+        files: '(\.pyi?$|^pyproject\.toml$|^uv\.lock$|^\.pre-commit-config\.yaml$)'
+        pass_filenames: false
+        require_serial: true
+      - id: mypy
+        name: mypy runtime types
+        entry: uv run --frozen mypy src
+        language: system
+        files: '(\.pyi?$|^pyproject\.toml$|^uv\.lock$|^\.pre-commit-config\.yaml$)'
+        pass_filenames: false
+        require_serial: true

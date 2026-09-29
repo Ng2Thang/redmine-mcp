@@ -1,0 +1,8 @@
+# Optional compatibility checks. Ruff in pyproject.toml is authoritative.
+[flake8]
+max-line-length = 100
+select = E,F
+extend-ignore = E203,E501,E701
+exclude = .git,.venv,.local,.ruff_cache,.mypy_cache,__pycache__,build,dist,*.egg-info
+# Ruff retains the project's line-length checks. The ignores above avoid
+# conflicts with Ruff's formatter; Flake8 is not a required dependency.

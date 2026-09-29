@@ -1,0 +1,5 @@
+FROM postgres:16.8-bookworm
+COPY tools/ops.sh /usr/local/bin/redmine-ops
+RUN chmod +x /usr/local/bin/redmine-ops
+ENTRYPOINT ["/usr/local/bin/redmine-ops"]
+

@@ -41,8 +41,10 @@ changes with `uv.lock`. All Markdown must be English; provide Bash commands only
 
 ## Testing Guidelines
 
-Automated tests, coverage thresholds, and testing CI are deferred. Do not introduce
-them without a scope change. For relevant changes, check service startup and call
+The issue-tool workflow authorizes automated testing as a prerequisite for future
+issue capabilities; its baseline is not implemented yet. Coverage thresholds and
+testing CI remain deferred. Coding-without-tests assignments must hand off testing
+dependencies, fixtures, and execution separately. For relevant changes, check service startup and call
 the affected tools through Inspector. Record verification limitations; follow
 `docs/testing-roadmap.md` when testing work begins.
 
@@ -58,7 +60,9 @@ Update documentation when configuration or public tool contracts change.
 
 ## Security & Configuration
 
-Keep API keys, bearer tokens, and snapshots out of Git and logs. Runtime remains
-read-only; administrative seeding stays separate. Bind published ports to localhost;
+Keep API keys, bearer tokens, and snapshots out of Git and logs. Current tools remain
+read-only. Future issue writes are authorized only through an explicitly enabled
+separate writer deployment with its own restricted key/token and required workflow
+prerequisites; administrative seeding stays separate. Bind published ports to localhost;
 PostgreSQL uses host port 5433. Reset/restore helpers must validate the synthetic
 environment marker before replacing data.

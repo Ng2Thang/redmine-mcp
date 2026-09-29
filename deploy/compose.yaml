@@ -8,10 +8,11 @@ services:
       REDMINE_URL: ${REDMINE_URL:?Set REDMINE_URL}
       REDMINE_API_KEY: ${REDMINE_API_KEY:?Set REDMINE_API_KEY}
       MCP_API_TOKEN: ${MCP_API_TOKEN:?Set MCP_API_TOKEN}
+      REDMINE_WRITE_ENABLED: ${REDMINE_WRITE_ENABLED:-false}
       REDMINE_TIMEOUT_SECONDS: ${REDMINE_TIMEOUT_SECONDS:-20}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${MCP_HOST_PORT:-8000}:8000"
     healthcheck:
       test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
       interval: 10s

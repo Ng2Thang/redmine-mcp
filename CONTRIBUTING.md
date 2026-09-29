@@ -11,7 +11,8 @@ to the [security policy](SECURITY.md).
 - Use explicit type hints, four-space Python indentation, and a 100-character line limit.
   Keep Ruff and strict mypy configuration centralized in `pyproject.toml`.
 - Use async, lifespan-managed HTTP clients. Keep credentials and network access out of imports.
-- Keep runtime tools read-only and administration separate. Preserve stable tool operation IDs
+- Current tools are read-only; future issue writes require the workflow prerequisites and a
+  separate opt-in restricted writer deployment. Keep administration separate. Preserve tool IDs
   and explicitly register new tools in the MCP allowlist.
 - Submit dependency metadata and `uv.lock` together. Avoid unrelated upgrades and source rewrites.
 - Never commit credentials, dumps, snapshots, generated state, or real Redmine data.
@@ -29,8 +30,9 @@ bash scripts/check.sh
 
 Run relevant [manual verification](docs/manual-verification.md) checks for runtime changes.
 Pre-commit hooks are available as an opt-in local convenience. Mandatory hook enforcement,
-automated tests, coverage thresholds, and testing CI remain deferred; follow the
-[testing roadmap](docs/testing-roadmap.md) when that scope is adopted.
+coverage thresholds and testing CI remain deferred. The issue workflow authorizes a required
+automated baseline, still pending a separate testing assignment. Coding-only work excludes
+test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md).
 
 Use concise imperative commit subjects, such as `Add issue status filtering`. Review descriptions
 should explain the behavior change, reference applicable issues, list checks actually performed,

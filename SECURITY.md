@@ -19,7 +19,10 @@ will assess the report and coordinate remediation and disclosure through the pri
 
 ## Configuration and data handling
 
-- Use a dedicated Redmine account with only the read permissions the deployment needs.
+- Default deployments use a dedicated account with only the needed read permissions. Future
+  authorized issue writes require a separate opt-in deployment with its own restricted writer
+  account and bearer token, after the workflow prerequisites. Never use an administrator key
+  or replace the synthetic reader credential to enable writes.
 - All MCP users share that account's visibility. The MCP bearer token does not provide individual
   Redmine identities or per-user authorization.
 - Keep `.env`, `.local/`, API keys, bearer tokens, and database/attachment snapshots out of Git,

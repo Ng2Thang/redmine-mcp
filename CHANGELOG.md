@@ -7,6 +7,10 @@ that a release has been published.
 
 ### Added
 
+- Issue requirement analysis, reviewed task backlog, and explicit testing/contract blockers.
+- Disabled-by-default write authorization prerequisite and separate writer deployment settings;
+  current tools remain read-only. Compose supports a configurable localhost MCP host port.
+
 - Read-only project listing, issue listing, and issue detail tools through REST and MCP.
 - Shared-account Redmine access with MCP bearer authentication and paginated results.
 - Synthetic Redmine/PostgreSQL development environment and separate data-operation helpers.

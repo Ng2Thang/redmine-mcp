@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     redmine_url: HttpUrl
     redmine_api_key: SecretStr
     mcp_api_token: SecretStr
+    redmine_write_enabled: bool = False
     redmine_timeout_seconds: float = 20
     log_level: str = "INFO"
 

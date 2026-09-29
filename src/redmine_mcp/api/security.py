@@ -20,3 +20,12 @@ def require_token(
         raise HTTPException(
             401, "Missing or invalid MCP token", headers={"WWW-Authenticate": "Bearer"}
         )
+
+
+def require_write_access(
+    request: Request,
+    authenticated: Annotated[None, Depends(require_token)],
+) -> None:
+    settings = cast(Settings, request.app.state.settings)
+    if not settings.redmine_write_enabled:
+        raise HTTPException(403, "Write access is disabled")

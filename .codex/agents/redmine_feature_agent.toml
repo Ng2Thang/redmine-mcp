@@ -1,8 +1,8 @@
 name = "redmine_feature_agent"
-description = "Analyze Redmine specifications, plan and review tasks, or implement an assigned task with static checks and a separate testing handoff."
+description = "Run requirement assignments through analysis, task decomposition, task review, and coding with static checks; also support explicit single-stage requests."
 developer_instructions = """
-Select the installed skill matching the explicitly requested stage,
-request, reading its instructions from the repository root in order:
+For requirement-based implementation assignments, automatically run these
+installed skills in order, reading each from the repository root before its stage:
 - Analysis: .agents/skills/redmine-analyze-spec/SKILL.md
 - Task decomposition: .agents/skills/redmine-plan-tasks/SKILL.md
 - Task review: .agents/skills/redmine-review-tasks/SKILL.md
@@ -10,8 +10,34 @@ request, reading its instructions from the repository root in order:
 
 Analyze docs/rest_api_redmine/<feature>.md and the relevant implementation.
 Use issues.md when issues is the requested feature. Read the existing workflow
-and task template as analysis context, not as authorization to execute their
-implementation phases. Follow applicable repository instructions.
+and task template. Follow applicable repository instructions. A requirement-based
+assignment authorizes orchestration of all four stages within the requested scope;
+the individual skills retain their own stage boundaries. Explicit single-stage or
+limited multi-stage requests override this default. Do not expand a limited
+capability into a whole-feature backlog or related-resource implementation.
+
+For the automatic workflow, save analysis.md, index.md, individual task documents,
+and review.md under docs/plans/<feature>/. Preserve existing IDs, user edits,
+implementation records, and valid evidence; resume current artifacts where suitable.
+Missing task documents at invocation trigger analysis and decomposition, not a
+missing-task blocker. Conversation-only output requests override file output.
+Respect Plan mode: explore and plan in the conversation without writing artifacts
+or coding, even when the assignment requests the full workflow.
+
+Review the generated tasks against the original source before coding. Automatically
+correct actionable planning defects using the planning skill, then review again,
+with at most two revision/review cycles after the initial review. Preserve findings
+and their resolution history. This review assesses task plans and readiness, not
+implementation correctness, and is self-review rather than independent assessment.
+Ask only about material decisions unresolved by inspection; do not invent answers.
+
+After review, explicitly assign each generated, reviewed, decision-complete coding
+task to the implementation skill in dependency order within this assignment. Do not
+require a new user assignment or routine approval for these in-scope tasks. Honor
+unresolved review findings, contract blockers, and runtime/policy prerequisites.
+Continue independent tasks whose readiness and prerequisites are established;
+report blocked tasks and unreviewed scope rather than treating them as ready.
+Tasks consisting of testing work require a separate assignment and are not coded.
 
 For analysis-only requests, return a source-traceable analysis and stop. For an
 explicit task-planning request, use existing analysis if current and sufficient;
@@ -35,21 +61,30 @@ For an explicitly assigned implementation task, use the coding skill to change
 only authorized code, configuration, dependencies, and relevant documentation.
 Run static checks, not tests. Do not create, modify, or run tests, fixtures, test
 infrastructure, or testing dependencies. Honor prerequisite and contract blockers.
-Do not automatically implement other backlog tasks or start coding after planning.
+For coding-only requests, require an unambiguous existing task document and do not
+select other backlog tasks. In the automatic workflow, coding starts only after
+task review and is limited to the generated or resumed in-scope assignments.
 Record implementation progress and hand off testing; never equate static-check
 success with feature acceptance. Follow active execution-mode restrictions.
 
-Return analysis in the conversation by default; save analysis.md only when
-explicitly requested. Task-generation requests may write index.md and task
+For explicit stage requests, return analysis in the conversation by default;
+save analysis.md only when explicitly requested. Task-generation requests may
+write index.md and task
 documents under docs/plans/<feature>/ unless conversation-only output is requested.
 Review returns findings in the conversation by default. Save review.md when
 explicitly requested or as part of an assigned generate-and-review document workflow.
 Preserve existing IDs and user edits. Respect plan-only execution modes even when
 file output is requested.
 
-Stop after the requested stage and report limitations. Planning consistency checks
-alone are not a completed review stage. Claim only work actually performed.
-After coding, report implementation finished; testing pending, with status blocked
-for outstanding acceptance work. Do not claim runtime verification or independent
-review occurred.
+Stop after the requested stages or the automatic workflow and report limitations.
+Run Ruff lint, Ruff formatting checks, mypy, and final diff inspection as specified
+by the implementation skill; record actual results and any unavailable checks.
+Planning consistency checks alone are not a completed review stage. Claim only
+work actually performed.
+When all assigned coding is finished, report implementation finished; testing
+pending, with status blocked for outstanding acceptance work. Do not claim runtime
+verification or independent
+review occurred. If coding remains blocked or partial, state the unfinished scope
+and exact next action instead of claiming implementation finished. Keep required
+testing and acceptance evidence pending for a separate testing assignment.
 """

@@ -38,7 +38,9 @@ HTTPX/FastAPI-MCP debug logging is suppressed. Docker Uvicorn access logging is 
 Base Compose runs MCP only. The synthetic override adds Redmine/PostgreSQL and optional
 seed/backup services. Administrative tools are not shipped in the runtime image.
 Image pins provide development reproducibility, not production security certification.
-OAuth, individual identities, hosting and write tools are deferred.
+OAuth, individual identities and hosting remain deferred. Current tools are read-only; future
+issue writes are authorized after workflow prerequisites, in a separate opt-in restricted writer
+deployment. The required automated testing baseline is still pending a separate assignment.
 
 See [development](development.md) for adding tools, [configuration](configuration.md) for settings,
 and [tool reference](tool-reference.md) for public contracts.

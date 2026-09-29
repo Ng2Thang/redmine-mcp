@@ -8,6 +8,45 @@ the repository root. Keep completed task documents as implementation and verific
 
 ## Invocation
 
+Requirement-based implementation assignments to `redmine_feature_agent` automatically run
+these stages in order within the same sub-agent:
+
+1. Analysis with `$redmine-analyze-spec`.
+2. Task decomposition with `$redmine-plan-tasks`.
+3. Task-plan review with `$redmine-review-tasks`.
+4. Coding without tests with `$redmine-implement-task`.
+
+For example:
+
+> Spawn a sub-agent of type redmine_feature_agent to implement the requirements in
+> docs/rest_api_redmine/issues.md. Wait for completion and report changes and static checks.
+
+This assignment authorizes all four stages within the requested requirement scope. Save
+`analysis.md`, `index.md`, individual task documents, and `review.md` under
+`docs/plans/<feature>/`, preserving existing IDs, user edits, and execution evidence. If task
+documents are missing, analyze and decompose the requirement first. Conversation-only output
+requests override file output. In Plan mode, explore and plan in the conversation without
+writing artifacts or implementing code.
+
+Review the task plans before coding. Automatically correct actionable planning defects and
+review again, with at most two correction/review cycles after the initial review. Record
+unresolved findings and material decisions; do not treat blocked or unreviewed tasks as ready.
+Review assesses planning readiness, not code correctness or runtime behavior.
+
+After review, explicitly assign the generated or resumed in-scope coding tasks to the coding
+skill in dependency order without requiring another routine approval. Honor unresolved review
+findings, contract blockers, and runtime/policy prerequisites. Continue independent tasks whose
+contracts and prerequisites are resolved. Testing-only tasks and testing prerequisites excluded
+by the coding skill remain a separate assignment; do not bypass dependent implementation blockers.
+Run Ruff lint, Ruff formatting checks, mypy, and final diff inspection, recording actual results.
+Report **implementation finished; testing pending** only when all assigned coding is finished;
+otherwise identify unfinished scope and exact next actions. Required acceptance remains blocked
+until verification, and static-check success does not establish acceptance.
+
+Explicit single-stage and limited multi-stage requests override the automatic workflow. The
+individual skills retain their stage boundaries; the agent orchestrates transitions only for
+the stages authorized by the assignment. No further subagents are spawned.
+
 For analysis-only requests, use `$redmine-analyze-spec`. For task-generation requests, use
 `$redmine-plan-tasks`; it stops after preparing the backlog and task documents. These skills run
 in the same `redmine_feature_agent` without subagents. Use `$redmine-review-tasks` for source-based

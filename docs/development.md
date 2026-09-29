@@ -84,7 +84,9 @@ uv run --frozen pre-commit uninstall
    Record deferred checks and any limitations instead of claiming unperformed verification.
 
 Services should remain small and feature-focused. Avoid introducing a generic CRUD or connector
-framework. Administrative seed/restore functionality stays separate from runtime read-only tools.
+framework. Administrative seed/restore functionality stays separate from runtime tools. Future
+issue writes require the [issue workflow](workflows/redmine-tools.md) prerequisites and a separate
+opt-in writer deployment; current tools remain read-only.
 
 ## Dependencies and packaging
 
@@ -100,5 +102,7 @@ The pre-commit dependency is already included; use the actual package name for f
 Review both `pyproject.toml` and `uv.lock` and submit them together. Avoid unrelated dependency
 upgrades. Never hand-edit resolved hashes. Only `src/redmine_mcp` is packaged as runtime code.
 
-Automated tests, coverage thresholds, and testing CI remain deferred. Follow the
-[testing roadmap](testing-roadmap.md) when that scope is explicitly adopted.
+Automated testing is authorized and required as a shared prerequisite for future issue tools,
+but its baseline is not yet implemented. A coding-without-tests assignment cannot install test
+dependencies or create/run fixtures and tests; assign that baseline separately. Coverage
+thresholds and testing CI remain deferred. Follow the [testing roadmap](testing-roadmap.md).

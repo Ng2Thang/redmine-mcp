@@ -6,6 +6,7 @@ from redmine_mcp.bootstrap import Container
 from redmine_mcp.features.issues.service import IssueService
 from redmine_mcp.features.projects.service import ProjectService
 from redmine_mcp.features.reference_data.service import ReferenceService
+from redmine_mcp.features.time_entries.service import TimeEntryService
 
 
 def get_projects(request: Request) -> ProjectService:
@@ -18,3 +19,7 @@ def get_issues(request: Request) -> IssueService:
 
 def get_reference_data(request: Request) -> ReferenceService:
     return cast(Container, request.app.state.container).reference_data
+
+
+def get_time_entries(request: Request) -> TimeEntryService:
+    return cast(Container, request.app.state.container).time_entries

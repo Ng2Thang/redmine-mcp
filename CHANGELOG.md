@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added `list_issue_time_entries` for paginated, credited-user attribution of visible direct
+  time entries on one issue.
+
 - Added `get_project` for one visible project's details.
 - Added the read-only global `list_issue_statuses` catalog.
 - Added the read-only global `list_trackers` catalog.

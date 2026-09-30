@@ -36,7 +36,7 @@ Authorization: Bearer <MCP_API_TOKEN from .env>
 Inspector's session token is different from the server's MCP token. Do not capture either in
 screenshots, reports, or logs.
 
-1. Connect and list tools. Expect exactly `list_projects`, `list_issues`, and `get_issue`.
+1. Connect and list tools. Confirm `list_issue_time_entries` appears with the existing readers.
 2. Call `list_projects` with `{"limit":25,"offset":0}`. Expect visible project objects and
    `total`, `limit`, and `offset` pagination values.
 3. Call `list_issues` with `{"status_id":"*","limit":25,"offset":0}`. Expect visible issues;
@@ -48,6 +48,11 @@ screenshots, reports, or logs.
    pagination fields. Omitted status defaults to `open`.
 6. If relevant to the change, exercise project, closed-status, and `assigned_to_id:"me"` filters
    using known visible data. `me` is the shared server account.
+7. On a marked synthetic issue with time entries, call `list_issue_time_entries` with
+   `{"issue_id":<returned ID>,"limit":25,"offset":0}` after replacing the placeholder.
+   Compare credited user IDs, hours, dates, and the visible count with Redmine's time-entry
+   page for that exact issue. Page through all entries before totaling. Record whether the
+   reader can see all users' entries; an empty page alone does not establish that.
 
 For the complete synthetic seed, the expected reader count with `status_id:"*"` is 128.
 After the optional history seed, the expected count is 391 before any manual changes.

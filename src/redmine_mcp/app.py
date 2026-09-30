@@ -12,6 +12,7 @@ from redmine_mcp.config import Settings
 from redmine_mcp.features.issues.router import router as issues_router
 from redmine_mcp.features.projects.router import router as projects_router
 from redmine_mcp.features.reference_data.router import router as reference_data_router
+from redmine_mcp.features.time_entries.router import router as time_entries_router
 from redmine_mcp.mcp.registration import register_mcp, shutdown_mcp
 from redmine_mcp.observability import configure_logging
 
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(projects_router)
     app.include_router(issues_router)
+    app.include_router(time_entries_router)
     app.include_router(reference_data_router)
     internal = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),

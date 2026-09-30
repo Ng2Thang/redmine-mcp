@@ -11,6 +11,7 @@ OPERATIONS = [
     "list_project_issue_categories",
     "list_issues",
     "get_issue",
+    "list_issue_time_entries",
     "list_issue_statuses",
     "list_trackers",
     "list_issue_priorities",

@@ -24,6 +24,7 @@ without revealing what was hidden.
 | `list_project_issue_categories` | `GET /api/v1/projects/{project_id}/issue-categories` | Required positive integer `project_id` |
 | `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
+| `list_issue_time_entries` | `GET /api/v1/issues/{issue_id}/time-entries` | Required positive integer `issue_id`; optional `limit`, `offset` |
 | `list_issue_statuses` | `GET /api/v1/issue-statuses` | None |
 | `list_trackers` | `GET /api/v1/trackers` | None |
 | `list_issue_priorities` | `GET /api/v1/issue-priorities` | None |
@@ -185,6 +186,18 @@ inclusive range `2026-09-01` through `2026-09-30`, count each issue ID once, and
 total as unavailable or partial. Do not add `total_spent_hours`, since parent and child time can
 overlap. This range selects issues by their schedule dates; it does not filter when time was
 logged. Paging is not a snapshot if Redmine changes during the query.
+
+`list_issue_time_entries` returns a page of entries logged directly on one visible issue.
+Each entry has `id`, `issue_id`, credited `user` (`id` and `name`), numeric `hours`, and
+`spent_on` (ISO date). The credited user may differ from the person who submitted the entry;
+the tool does not identify the submitter. Page through every result, deduplicate by entry ID,
+then group by `user.id` and sum hours using decimal arithmetic. Its `total` counts only entries
+visible to the shared Redmine account. Empty results do not prove no other entries exist.
+The issue must be visible and Redmine must allow this account to view time entries. An August
+issue schedule does not restrict the entry dates returned by this tool.
+
+Illustrative input: `{"issue_id":181,"limit":25,"offset":0}`.
+
 Use `get_issue` for visible journals and attachment metadata by default. Its `include` accepts
 `children`, `attachments`, `relations`, `changesets`, `journals`, `watchers`, and
 `allowed_statuses` in caller order. Omission requests journals and attachments; `include=""`

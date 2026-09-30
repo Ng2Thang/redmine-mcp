@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Protocol
 
 from redmine_mcp.common.pagination import Page
@@ -12,6 +13,11 @@ class IssueReader(Protocol):
         assigned_to_id: str | None,
         limit: int,
         offset: int,
+        tracker_id: int | None,
+        parent_id: int | None,
+        updated_since: datetime | None,
+        sort: str,
+        category_id: int | None,
     ) -> Page[Issue]: ...
 
-    async def get_issue(self, issue_id: int) -> Issue: ...
+    async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> Issue: ...

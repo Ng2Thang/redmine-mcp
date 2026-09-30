@@ -4,7 +4,17 @@ from fastapi_mcp import AuthConfig, FastApiMCP
 
 from redmine_mcp.api.security import require_token
 
-OPERATIONS = ["list_projects", "list_issues", "get_issue"]
+OPERATIONS = [
+    "list_projects",
+    "get_project",
+    "list_project_versions",
+    "list_project_issue_categories",
+    "list_issues",
+    "get_issue",
+    "list_issue_statuses",
+    "list_trackers",
+    "list_issue_priorities",
+]
 
 
 def register_mcp(app: FastAPI, client: httpx.AsyncClient) -> FastApiMCP:

@@ -11,7 +11,7 @@ Follow active execution-mode restrictions; Plan mode permits planning, not file 
 
 ## Establish the assignment
 
-Read the assigned `docs/plans/<feature>/<task-id>.md`, applicable repository instructions,
+Read the assigned `docs/plans/tasks/<task-id>.md`, the matching row in `docs/plans/index.md`, applicable repository instructions,
 `docs/workflows/redmine-tools.md`, and `docs/templates/redmine-tool-task.md`. Inspect relevant
 source references, current code, dependencies, and existing review findings. If no task was
 identified unambiguously, ask which task to implement. If the task file is missing, report that
@@ -110,10 +110,11 @@ acceptance criteria or the feature complete because static checks pass. If codin
 blocked, describe the unfinished behavior rather than claiming implementation is finished.
 
 The final response states code changes, static-check outcomes, compatibility implications, and
-remaining verification. Stop after this assignment; do not start testing, publish, commit, deploy,
-or implement another task implicitly.
+remaining verification. Stop this coding stage without starting tests. An orchestrator with an
+explicit broader assignment may begin a separate verification stage afterward; this skill never
+writes or runs those tests. Do not publish, commit, deploy, or implement another task implicitly.
 
 Example invocation:
 
-> Use $redmine-implement-task for docs/plans/issues/issues-001-list-filters.md. Implement code and
+> Use $redmine-implement-task for docs/plans/tasks/tool-003-get-project.md. Implement code and
 > relevant documentation, run static checks, and hand off testing without writing or running tests.

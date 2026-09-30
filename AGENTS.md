@@ -18,6 +18,7 @@ ignored `.local/`. No automated test directory currently exists.
 Run commands from the repository root using Git Bash on Windows:
 
 ```bash
+bash scripts/doctor.sh                  # Check local prerequisites before implementation
 uv sync --frozen                         # Install locked dependencies
 bash scripts/check.sh                    # Run lint, formatting, and type checks
 uv build                                # Build source and wheel distributions
@@ -41,12 +42,13 @@ changes with `uv.lock`. All Markdown must be English; provide Bash commands only
 
 ## Testing Guidelines
 
-The issue-tool workflow authorizes automated testing as a prerequisite for future
-issue capabilities; its baseline is not implemented yet. Coverage thresholds and
+The tool workflow requires automated testing as a prerequisite for future
+reader capabilities; its baseline is not implemented yet. Coverage thresholds and
 testing CI remain deferred. Coding-without-tests assignments must hand off testing
 dependencies, fixtures, and execution separately. For relevant changes, check service startup and call
 the affected tools through Inspector. Record verification limitations; follow
 `docs/testing-roadmap.md` when testing work begins.
+Track proposed MCP capabilities and task status in `docs/plans/index.md`.
 
 Pre-commit hooks are opt-in; do not install them automatically. See `CONTRIBUTING.md`,
 `docs/development.md`, and `docs/manual-verification.md` for contributor rules and checks.

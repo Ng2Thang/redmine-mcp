@@ -91,4 +91,5 @@ future writes from MCP discovery as well as reject direct REST mutations.
 
 This prerequisite provides configuration and an authorization dependency only. No write route or
 MCP tool is exposed yet. Required test baseline, synthetic writer credentials, least-permission
-verification and disposable data remain separate testing work in the [backlog](plans/issues/index.md).
+verification and disposable data remain separate testing work. The [MCP tool dashboard](plans/index.md)
+tracks the reader-first release; writer tools are future ideas, not assigned tasks.

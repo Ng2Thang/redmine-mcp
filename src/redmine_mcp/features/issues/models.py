@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Annotated
+
+from pydantic import BaseModel, Field, JsonValue, WithJsonSchema
 
 from redmine_mcp.features.projects.models import Reference
 
@@ -36,6 +38,55 @@ class Attachment(BaseModel):
     author: Reference
 
 
+class IssueChild(BaseModel):
+    id: int = Field(gt=0)
+    tracker: Reference | None = None
+    subject: str
+    # FastAPI-MCP 0.4 cannot expand recursive OpenAPI references.
+    children: Annotated[
+        list["IssueChild"],
+        WithJsonSchema(
+            {
+                "type": "array",
+                "description": "Child issues may contain further nested children.",
+                "items": {
+                    "type": "object",
+                    "required": ["id", "subject"],
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "tracker": {
+                            "anyOf": [
+                                {"$ref": "#/components/schemas/Reference"},
+                                {"type": "null"},
+                            ]
+                        },
+                        "subject": {"type": "string"},
+                        "children": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                            "description": "Nested issue children have the same fields.",
+                        },
+                    },
+                },
+            }
+        ),
+    ] = Field(default_factory=list)
+
+
+class IssueRelation(BaseModel):
+    id: int = Field(gt=0)
+    issue_id: int = Field(gt=0)
+    issue_to_id: int = Field(gt=0)
+    relation_type: str
+    delay: int | None = None
+
+
+class AllowedStatus(BaseModel):
+    id: int = Field(gt=0)
+    name: str
+    is_closed: bool
+
+
 class Issue(BaseModel):
     id: int
     subject: str
@@ -46,6 +97,7 @@ class Issue(BaseModel):
     priority: Reference
     author: Reference
     assigned_to: Reference | None = None
+    category: Reference | None = None
     parent: dict[str, int] | None = None
     is_private: bool = False
     done_ratio: int = 0
@@ -54,3 +106,12 @@ class Issue(BaseModel):
     custom_fields: list[CustomField] = Field(default_factory=list)
     journals: list[Journal] = Field(default_factory=list)
     attachments: list[Attachment] = Field(default_factory=list)
+    children: list[IssueChild] = Field(default_factory=list)
+    relations: list[IssueRelation] = Field(default_factory=list)
+    # JsonValue also uses a recursive OpenAPI reference; keep runtime validation.
+    changesets: Annotated[
+        list[dict[str, JsonValue]],
+        WithJsonSchema({"type": "array", "items": {"type": "object"}}),
+    ] = Field(default_factory=list)
+    watchers: list[Reference] = Field(default_factory=list)
+    allowed_statuses: list[AllowedStatus] = Field(default_factory=list)

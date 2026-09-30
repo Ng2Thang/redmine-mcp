@@ -1,8 +1,9 @@
 # <TASK-ID>: <Capability title>
 
-Copy this template to `docs/plans/<feature>/<task-id>.md` (for example,
-`docs/plans/issues/<task-id>.md`) and follow
-`docs/workflows/redmine-tools.md`. Paths are repository-relative. Replace placeholders as each
+Copy this template to `docs/plans/tasks/<task-id>.md` and follow
+`docs/workflows/redmine-tools.md`. Paths are repository-relative. Start with the client's
+outcome and the existing MCP catalog; use Redmine REST evidence to resolve implementation
+details, not to generate one task per endpoint. Replace placeholders as each
 phase completes; use `N/A - <reason>` for irrelevant fields. Do not leave contract decisions as
 `TBD` when coding begins. Planned checks are not passing evidence. Keep evidence synthetic and
 redacted. Add table rows as needed without renumbering existing requirements or criteria.
@@ -12,12 +13,12 @@ redacted. Add table rows as needed without renumbering existing requirements or 
 | Field | Value |
 |---|---|
 | Task ID | <Stable task ID; use a lowercase kebab-case filename> |
-| Assigned capability | <User request and intended outcome> |
+| Assigned capability | <Who calls the MCP tool and what outcome they need> |
 | Type | <Extend existing tool / add tool / shared prerequisite> |
 | Access | <Read / write; identify mixed behavior explicitly> |
 | Destructive effects | <None, or exact destructive effects> |
 | Status | <discovery / specified / planned / implementing / verifying / complete / blocked> |
-| Dependencies | <Task IDs and completion evidence; include policy/testing prerequisite> |
+| Dependencies | <Dashboard task IDs and completion evidence; include testing/access prerequisites> |
 | Related tasks | <Links or N/A> |
 | Target Redmine version | <Confirm deploy/compose.test.yaml; default currently 6.0.5> |
 | Last updated | <Date and author/agent identifier> |
@@ -26,8 +27,10 @@ redacted. Add table rows as needed without renumbering existing requirements or 
 
 ## 2. Discovery and evidence
 
-### Repository baseline
+### Client outcome and repository baseline
 
+- Client question or workflow this tool answers: <Concrete example>.
+- Why an existing tool cannot already answer it, or which existing tool this extends: <Evidence>.
 - Applicable instructions and policies: <Sources and relevant constraints>.
 - Current tool names, defaults, schemas, and behavior: <Findings>.
 - Relevant routers, services, ports, gateways, models, and bootstrap wiring: <Paths/symbols>.
@@ -44,9 +47,9 @@ redacted. Add table rows as needed without renumbering existing requirements or 
 Differences between upstream API and current public contract: <Fields, defaults, errors, or
 capabilities that need mapping; unsupported features and explicit compatibility handling>.
 
-For a broad assignment, complete this capability inventory before dependent implementation:
+For a broad assignment, inventory requested MCP outcomes before dependent implementation:
 
-| Capability | Existing coverage | Read/write | Version support | Task ID | Dependencies | In scope/deferred |
+| Client outcome / tool | Existing coverage | Read/write | Version support | Task ID | Dependencies | In scope/deferred |
 |---|---|---|---|---|---|---|
 | <Capability or N/A for an already scoped task> | <Tool> | <Access> | <Evidence> | <ID> | <IDs> | <Decision> |
 
@@ -60,7 +63,7 @@ For a broad assignment, complete this capability inventory before dependent impl
 
 ### Goal and boundaries
 
-- Intended user and outcome: <Who needs this and why>.
+- Intended user and outcome: <Who calls the MCP tool, what question it answers, and why>.
 - In scope: <Observable capabilities>.
 - Out of scope: <Explicit boundaries>.
 - Future enhancements: <Deferred behavior, separate from requirements>.

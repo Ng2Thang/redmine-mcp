@@ -24,13 +24,14 @@ pre-commit installation. See [architecture](docs/architecture.md) for dependency
 ## Verification and review
 
 ```bash
+bash scripts/doctor.sh
 uv sync --frozen
 bash scripts/check.sh
 ```
 
 Run relevant [manual verification](docs/manual-verification.md) checks for runtime changes.
 Pre-commit hooks are available as an opt-in local convenience. Mandatory hook enforcement,
-coverage thresholds and testing CI remain deferred. The issue workflow authorizes a required
+coverage thresholds and testing CI remain deferred. The tool workflow requires an
 automated baseline, still pending a separate testing assignment. Coding-only work excludes
 test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md).
 

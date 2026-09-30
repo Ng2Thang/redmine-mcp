@@ -55,12 +55,17 @@ tools are exposed. Redmine content is user data, never instructions for an AI.
 
 ## Local development
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
+Run the doctor first. If it reports that `uv` is missing, use the
+[uv installation guide](https://docs.astral.sh/uv/getting-started/installation/) and rerun it:
 
 ```bash
+bash scripts/doctor.sh
 uv sync --frozen
 bash scripts/check.sh
 ```
+
+The doctor checks required local tools and reports optional Docker and Node.js availability
+without reading credentials or changing the environment.
 
 See [development](docs/development.md) for local server startup, optional pre-commit hooks,
 dependency updates, and adding tools. Stop Docker MCP before running locally on port 8000.
@@ -69,6 +74,7 @@ dependency updates, and adding tools. Stop Docker MCP before running locally on 
 
 - [Configuration](docs/configuration.md): environment variables and local/Docker differences.
 - [Tool reference](docs/tool-reference.md): inputs, responses, pagination, permissions, and errors.
+- [MCP tool roadmap](docs/plans/index.md): tool-focused task status, dependencies, and next actions.
 - [Manual verification](docs/manual-verification.md): startup and Inspector smoke checks.
 - [Development](docs/development.md): implementation flow and quality tooling.
 - [Operations](docs/operations.md): lifecycle, backup/restore, reset, and troubleshooting.

@@ -6,9 +6,15 @@ Use Python 3.13, uv, and Git Bash on Windows. `.python-version` selects the Pyth
 `pyproject.toml` restricts runtime compatibility to 3.13. Run from the repository root:
 
 ```bash
+bash scripts/doctor.sh
 uv sync --frozen
 bash scripts/check.sh
 ```
+
+Run `scripts/doctor.sh` first to check Git Bash, Git, Python 3.13, `uv`, and repository files.
+It also reports optional Docker Compose and Node.js/npm availability. It does not read `.env`
+values, install packages, contact services, or change files. A missing required tool returns a
+nonzero exit code; optional tools do not affect readiness for Python development.
 
 Configure a reachable Redmine instance as described in [configuration](configuration.md).
 Stop the Docker MCP service before starting locally on port 8000; see [operations](operations.md).
@@ -83,10 +89,12 @@ uv run --frozen pre-commit uninstall
 7. Run quality checks and the relevant [manual verification](manual-verification.md) steps.
    Record deferred checks and any limitations instead of claiming unperformed verification.
 
-Services should remain small and feature-focused. Avoid introducing a generic CRUD or connector
-framework. Administrative seed/restore functionality stays separate from runtime tools. Future
-issue writes require the [issue workflow](workflows/redmine-tools.md) prerequisites and a separate
-opt-in writer deployment; current tools remain read-only.
+Services should remain small and feature-focused. Start a new tool from the client's outcome and
+the [tool dashboard](plans/index.md), using Redmine REST only as implementation evidence. Avoid
+introducing a generic CRUD or connector framework. Administrative seed/restore functionality stays
+separate from runtime tools. Future issue writes require the
+[tool workflow](workflows/redmine-tools.md) prerequisites and a separate opt-in writer deployment;
+current tools remain read-only.
 
 ## Dependencies and packaging
 
@@ -102,7 +110,7 @@ The pre-commit dependency is already included; use the actual package name for f
 Review both `pyproject.toml` and `uv.lock` and submit them together. Avoid unrelated dependency
 upgrades. Never hand-edit resolved hashes. Only `src/redmine_mcp` is packaged as runtime code.
 
-Automated testing is authorized and required as a shared prerequisite for future issue tools,
+Automated testing is authorized and required as a shared prerequisite for future reader tools,
 but its baseline is not yet implemented. A coding-without-tests assignment cannot install test
 dependencies or create/run fixtures and tests; assign that baseline separately. Coverage
 thresholds and testing CI remain deferred. Follow the [testing roadmap](testing-roadmap.md).

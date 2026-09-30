@@ -18,6 +18,9 @@ case "${1:-}" in
     pg_dump --format=custom --file="$snapshot/database.dump"
     tar -czf "$snapshot/attachments.tar.gz" -C /redmine-files .
     cp /state/environment.json /state/manifest.json /state/credentials.json "$snapshot/"
+    if test -f /state/history-manifest.json; then
+      cp /state/history-manifest.json "$snapshot/"
+    fi
     printf '%s\n' 'redmine=6.0.5-bookworm' 'postgres=16.8-bookworm' > "$snapshot/versions.txt"
     touch "$snapshot/COMPLETE"
     echo 'Backup complete; contains test credentials. Keep outside version control.'
@@ -35,6 +38,10 @@ case "${1:-}" in
     find /redmine-files -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
     tar -xzf "$snapshot/attachments.tar.gz" -C /redmine-files
     cp "$snapshot/environment.json" "$snapshot/manifest.json" "$snapshot/credentials.json" /state/
+    rm -f /state/history-manifest.json /state/history-manifest.tmp
+    if test -f "$snapshot/history-manifest.json"; then
+      cp "$snapshot/history-manifest.json" /state/
+    fi
     echo 'Restore commands completed; full restore validation remains deferred.'
     ;;
   *) echo 'Use backup or restore'; exit 1 ;;

@@ -62,6 +62,7 @@ services:
     environment:
       REDMINE_URL: http://redmine:3000
       REDMINE_TEST_MARKER: redmine-mcp-synthetic-v1
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:?Set test password}
     volumes:
       - ../tools:/tools:ro
       - ../.local:/seed-state

@@ -73,6 +73,22 @@ bash scripts/reset-test-env.sh --confirm-reset
 Read IDs from `.local/manifest.json` after reset rather than assuming IDs remain the same.
 See [synthetic data](test-data.md) for expected counts and visibility cases.
 
+To add three months of project, sprint-version, issue, and spent-time history to an already
+seeded synthetic instance, run:
+
+```bash
+bash scripts/seed-history.sh
+```
+
+This adds 8 projects, 20 users, 12 versions, 300 issues, and 900 time entries. It preserves
+the base dataset, skips a completed rerun, and resumes an interrupted run. Read generated IDs
+from `.local/history-manifest.json`. Run the command a second time to confirm it reports a skip.
+In Redmine, inspect the History Alpha/Beta project trees, memberships, versions, issue schedules,
+and Spent time reports. In MCP Inspector, use manifest project and issue IDs to check visible
+projects, versions, and issues, then confirm `History Beta Private` is inaccessible to MCP Reader.
+The existing MCP tools do not read time entries. See [synthetic data](test-data.md) for counts
+and the date window.
+
 ## Backup and restore
 
 These are development helpers, not a validated production recovery procedure. Snapshot IDs must

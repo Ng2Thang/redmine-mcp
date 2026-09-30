@@ -54,7 +54,14 @@ def main() -> None:
         values["REDMINE_API_KEY"] = credentials["reader_key"]
         write_env(values)
     elif action == "reset-state":
-        for name in ("manifest.json", "manifest.tmp", "credentials.json", "environment.json"):
+        for name in (
+            "manifest.json",
+            "manifest.tmp",
+            "history-manifest.json",
+            "history-manifest.tmp",
+            "credentials.json",
+            "environment.json",
+        ):
             target = (STATE / name).resolve()
             if target.parent != STATE.resolve():
                 raise SystemExit("Path outside local state")

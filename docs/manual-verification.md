@@ -50,6 +50,7 @@ screenshots, reports, or logs.
    using known visible data. `me` is the shared server account.
 
 For the complete synthetic seed, the expected reader count with `status_id:"*"` is 128.
+After the optional history seed, the expected count is 391 before any manual changes.
 Compare against [synthetic data](test-data.md) and the private local manifest. Record mismatches;
 do not treat one matching count as proof that every permission boundary is correct.
 

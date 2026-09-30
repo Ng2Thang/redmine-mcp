@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Protocol
 
 from redmine_mcp.common.pagination import Page
-from redmine_mcp.features.issues.models import Issue
+from redmine_mcp.features.issues.models import Issue, IssueDetail
 
 
 class IssueReader(Protocol):
@@ -18,6 +18,10 @@ class IssueReader(Protocol):
         updated_since: datetime | None,
         sort: str,
         category_id: int | None,
+        fixed_version_id: int | None,
+        include_subprojects: bool,
     ) -> Page[Issue]: ...
 
-    async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> Issue: ...
+    async def get_issue(
+        self, issue_id: int, include: tuple[str, ...] | None = None
+    ) -> IssueDetail: ...

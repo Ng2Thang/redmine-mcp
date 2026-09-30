@@ -29,8 +29,10 @@ Bearer dependencies protect REST and MCP; authorization is forwarded to internal
 Pydantic models are shared with response schemas until the contracts diverge.
 
 Only bootstrap selects concrete implementations. Gateways do not import routers/services.
-Common code contains only errors and pagination. No generic CRUD repository or connector
-framework is needed. MCP owns no database/cache; PostgreSQL belongs to Redmine.
+Common code contains errors, pagination, and shared visibility response models. The Redmine
+gateway records field omissions before Pydantic supplies optional defaults. No generic CRUD
+repository or connector framework is needed. MCP owns no database/cache; PostgreSQL belongs to
+Redmine.
 
 Errors are sanitized. Credentials and complete issue bodies must not be logged.
 HTTPX/FastAPI-MCP debug logging is suppressed. Docker Uvicorn access logging is disabled.

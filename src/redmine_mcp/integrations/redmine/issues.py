@@ -1,9 +1,11 @@
 from datetime import UTC, datetime
 
 from redmine_mcp.common.pagination import Page
-from redmine_mcp.features.issues.models import Issue
+from redmine_mcp.features.issues.models import ISSUE_INCLUDES, Issue, IssueDetail
 from redmine_mcp.integrations.redmine.client import RedmineClient
-from redmine_mcp.integrations.redmine.mapping import item, page
+from redmine_mcp.integrations.redmine.mapping import page, visible_item
+
+ISSUE_HOUR_FIELDS = ("spent_hours", "total_spent_hours")
 
 
 class RedmineIssues:
@@ -22,6 +24,8 @@ class RedmineIssues:
         updated_since: datetime | None,
         sort: str,
         category_id: int | None,
+        fixed_version_id: int | None,
+        include_subprojects: bool,
     ) -> Page[Issue]:
         params: dict[str, str | int] = {
             "limit": limit,
@@ -33,6 +37,10 @@ class RedmineIssues:
             params["project_id"] = project_id
         if category_id is not None:
             params["category_id"] = category_id
+        if fixed_version_id is not None:
+            params["fixed_version_id"] = fixed_version_id
+        if not include_subprojects:
+            params["subproject_id"] = "!*"
         if assigned_to_id is not None:
             params["assigned_to_id"] = assigned_to_id
         if tracker_id is not None:
@@ -43,10 +51,16 @@ class RedmineIssues:
             utc_timestamp = updated_since.astimezone(UTC).isoformat().replace("+00:00", "Z")
             params["updated_on"] = f">={utc_timestamp}"
         data = await self.client.get("issues.json", params)
-        return page(Issue, data, "issues", limit, offset)
+        return page(Issue, data, "issues", limit, offset, observed_fields=ISSUE_HOUR_FIELDS)
 
-    async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> Issue:
+    async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> IssueDetail:
         selected = ("journals", "attachments") if include is None else include
         params: dict[str, str | int] = {"include": ",".join(selected)} if selected else {}
         data = await self.client.get(f"issues/{issue_id}.json", params)
-        return item(Issue, data.get("issue"))
+        return visible_item(
+            IssueDetail,
+            data.get("issue"),
+            observed_fields=ISSUE_HOUR_FIELDS,
+            requested_fields=selected,
+            unrequested_fields=sorted(ISSUE_INCLUDES.difference(selected)),
+        )

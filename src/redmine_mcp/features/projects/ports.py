@@ -1,6 +1,7 @@
 from typing import Protocol
 
 from redmine_mcp.common.pagination import Page
+from redmine_mcp.common.visibility import Collection
 from redmine_mcp.features.projects.models import IssueCategory, Project, ProjectDetail, Version
 
 
@@ -9,6 +10,6 @@ class ProjectReader(Protocol):
 
     async def get_project(self, project_id: int) -> ProjectDetail: ...
 
-    async def list_project_versions(self, project_id: int) -> list[Version]: ...
+    async def list_project_versions(self, project_id: int) -> Collection[Version]: ...
 
-    async def list_project_issue_categories(self, project_id: int) -> list[IssueCategory]: ...
+    async def list_project_issue_categories(self, project_id: int) -> Collection[IssueCategory]: ...

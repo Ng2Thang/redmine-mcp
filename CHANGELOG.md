@@ -32,5 +32,9 @@ that a release has been published.
 - Extended `list_issues` with tracker, parent, and inclusive update-time filters and bounded sorting.
 - Extended `list_issues` with project category filtering and added nullable category references
   to list and detail issue responses.
+- Extended `list_issues` with Target version filtering and exact-project scoping, and added
+  nullable Target version references to list and detail issue responses.
+- Added nullable issue start/due dates and permission-gated direct and descendant-inclusive
+  spent hours to `list_issues` and `get_issue` responses.
 - Organized README and contributor guidance around quick start and task-specific documentation.
 - Expanded architecture documentation and Git line-ending rules.

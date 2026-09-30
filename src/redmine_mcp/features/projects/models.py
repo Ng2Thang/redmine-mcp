@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from redmine_mcp.common.visibility import Visibility
+
 
 class Reference(BaseModel):
     id: int
@@ -21,6 +23,7 @@ class ProjectDetail(Project):
     is_public: bool | None = None
     created_on: str | None = None
     updated_on: str | None = None
+    visibility: Visibility = Field(default_factory=Visibility)
 
 
 class Version(BaseModel):

@@ -7,7 +7,7 @@ from pydantic import AwareDatetime, BeforeValidator
 from redmine_mcp.api.dependencies import get_issues
 from redmine_mcp.api.security import require_token
 from redmine_mcp.common.pagination import Page
-from redmine_mcp.features.issues.models import Issue
+from redmine_mcp.features.issues.models import ISSUE_INCLUDES, Issue, IssueDetail
 from redmine_mcp.features.issues.service import IssueService
 
 router = APIRouter(prefix="/api/v1/issues", tags=["issues"], dependencies=[Depends(require_token)])
@@ -24,17 +24,6 @@ def require_rfc3339(value: object) -> object:
 
 UpdatedSince = Annotated[AwareDatetime, BeforeValidator(require_rfc3339)]
 IssueSort = Literal["id:asc", "id:desc", "updated_on:asc", "updated_on:desc"]
-ISSUE_INCLUDES = frozenset(
-    {
-        "children",
-        "attachments",
-        "relations",
-        "changesets",
-        "journals",
-        "watchers",
-        "allowed_statuses",
-    }
-)
 
 
 def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
@@ -59,7 +48,12 @@ def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
         "use '*' to include all statuses. assigned_to_id='me' means the shared "
         "server account, not the individual MCP user. Filter by tracker, parent, "
         "or last update, and choose ID or update-time ordering. Filter by category "
-        "ID within a project. Results are paginated."
+        "ID within a project or Target version ID. Set include_subprojects to false "
+        "to restrict a project query to that project. Results are paginated. "
+        "Each issue includes nullable start/due dates and permission-gated direct "
+        "spent_hours and descendant-inclusive total_spent_hours. Page through all "
+        "matches before summing direct spent_hours. Visibility metadata reports "
+        "selected fields omitted by Redmine without asserting the cause."
     ),
 )
 async def list_issues(
@@ -99,6 +93,14 @@ async def list_issues(
         int | None,
         Query(ge=1, description="Filter by category ID within the selected project"),
     ] = None,
+    fixed_version_id: Annotated[
+        int | None,
+        Query(ge=1, description="Filter by Target version ID"),
+    ] = None,
+    include_subprojects: Annotated[
+        bool,
+        Query(description="Include descendant-project issues when filtering by project"),
+    ] = True,
 ) -> Page[Issue]:
     """List visible issues. Status defaults to open; '*' means all.
     Assignee 'me' means the shared server account, not the individual MCP user.
@@ -106,6 +108,11 @@ async def list_issues(
     """
     if category_id is not None and project_id is None:
         raise HTTPException(status_code=422, detail="project_id is required with category_id")
+    if not include_subprojects and project_id is None:
+        raise HTTPException(
+            status_code=422,
+            detail="project_id is required when include_subprojects is false",
+        )
     return await service.list_issues(
         project_id,
         status_id,
@@ -117,18 +124,23 @@ async def list_issues(
         updated_since,
         sort,
         category_id,
+        fixed_version_id,
+        include_subprojects,
     )
 
 
 @router.get(
     "/{issue_id}",
     operation_id="get_issue",
-    response_model=Issue,
+    response_model=IssueDetail,
     description=(
         "Read one visible issue. By default include journals and attachment metadata. "
         "Select children, attachments, relations, changesets, journals, watchers, or "
         "allowed_statuses with a comma-separated include; an empty include requests none. "
-        "Unrequested collections appear empty and do not establish that no related data exists."
+        "Unrequested collections appear empty and do not establish that no related data exists. "
+        "The issue includes nullable start/due dates and permission-gated direct "
+        "spent_hours and descendant-inclusive total_spent_hours. Visibility metadata "
+        "distinguishes fields not returned from expansions not requested."
     ),
 )
 async def get_issue(
@@ -138,6 +150,6 @@ async def get_issue(
         str | None,
         Query(description="Comma-separated issue expansions; empty string requests none"),
     ] = None,
-) -> Issue:
+) -> IssueDetail:
     """Read an issue with selected related context."""
     return await service.get_issue(issue_id, parse_issue_includes(include))

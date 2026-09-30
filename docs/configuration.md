@@ -23,6 +23,12 @@ The MCP token and Redmine API key serve different purposes: clients send the MCP
 the server uses the Redmine key upstream. All clients share that Redmine account's permissions.
 See [security guidance](../SECURITY.md).
 
+Read results report `visibility.scope=shared_redmine_account`. A field observation reports only
+that Redmine omitted a selected field; it cannot identify the reason or detect hidden records.
+If a workflow requires complete project data, grant the dedicated reader account the necessary
+read permissions and visibility on each relevant project, then verify with that account. Give
+the MCP token only to callers authorized for the reader account's data.
+
 ## Synthetic environment
 
 Run `bash scripts/dev-up.sh` from the repository root. It generates `.env` with random secrets

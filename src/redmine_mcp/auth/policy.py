@@ -6,6 +6,7 @@ from redmine_mcp.constants import auth as auth_text
 from redmine_mcp.constants import codes as codes_text
 
 READ_OPERATIONS = (
+    "get_current_user",
     "list_projects",
     "get_project",
     "list_project_versions",
@@ -14,8 +15,8 @@ READ_OPERATIONS = (
     "get_issue",
     "list_issue_time_entries",
     "list_issue_statuses",
-    "list_trackers",
     "list_issue_priorities",
+    "list_trackers",
 )
 
 

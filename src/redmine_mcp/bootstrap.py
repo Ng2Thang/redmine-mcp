@@ -4,7 +4,13 @@ import httpx
 
 from redmine_mcp.auth import AuthenticationService
 from redmine_mcp.config import Settings
-from redmine_mcp.features import IssueService, ProjectService, ReferenceService, TimeEntryService
+from redmine_mcp.features import (
+    IssueService,
+    ProjectService,
+    ReferenceService,
+    TimeEntryService,
+    UserService,
+)
 from redmine_mcp.integrations.redmine import (
     ReadPolicy,
     RedmineClient,
@@ -13,6 +19,7 @@ from redmine_mcp.integrations.redmine import (
     RedmineProjects,
     RedmineReferenceData,
     RedmineTimeEntries,
+    RedmineUsers,
 )
 
 
@@ -22,6 +29,7 @@ class Container:
     issues: IssueService
     reference_data: ReferenceService
     time_entries: TimeEntryService
+    users: UserService
 
 
 def read_policy(settings: Settings | None) -> ReadPolicy:
@@ -48,4 +56,5 @@ def build_container(
         IssueService(RedmineIssues(client)),
         ReferenceService(RedmineReferenceData(client)),
         TimeEntryService(RedmineTimeEntries(client)),
+        UserService(RedmineUsers(client)),
     )

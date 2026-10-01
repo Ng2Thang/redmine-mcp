@@ -17,6 +17,7 @@ false-default write gate, but this release adds no write operation.
 | `list_projects` | Page through projects visible to the requesting Redmine user. | Implemented; runtime acceptance not established by this plan |
 | `list_issues` | Page through issues by project, status, and assignee. | Implemented; extension task below |
 | `get_issue` | Read one visible issue with journals and attachment metadata. | Implemented; extension task below |
+| `get_current_user` | Identify the caller and read visible project memberships with roles. | Implementation finished; acceptance pending in tool-013 |
 
 ## Ordered task dashboard
 
@@ -36,8 +37,9 @@ false-default write gate, but this release adds no write operation.
 | 12 | [tool-010-list-issues-by-target-version](tasks/tool-010-list-issues-by-target-version.md) | Find visible issues in a Target version and optionally exclude subprojects. | prep-002; tool-007 for Target version ID discovery | blocked | Implementation finished; run TARGETISSUE-001 through TARGETISSUE-005 and marked synthetic Inspector acceptance separately. |
 | 13 | [tool-011-expose-issue-schedule-and-spent-hours](tasks/tool-011-expose-issue-schedule-and-spent-hours.md) | Read issue start/due dates and visible direct spent hours so clients can identify dated Bugs and sum their hours. | prep-002; tool-001 issue search; tool-010 exact-project scoping | blocked | Implementation finished; static checks pass. Run DATE/HOURS/AGG/COMPAT/MCP scenarios and marked synthetic Inspector acceptance in a separate authorized testing stage. |
 | 14 | [tool-012-list-issue-time-entries](tasks/tool-012-list-issue-time-entries.md) | Identify the users credited with visible spent hours on selected issues. | prep-002; tool-011 issue selection and direct-hours context | blocked | Implementation finished; run planned offline scenarios and marked synthetic Inspector acceptance in a separate authorized testing stage. |
+| 15 | [tool-013-get-current-user](tasks/tool-013-get-current-user.md) | Identify the caller and their visible project memberships and roles. | prep-002; prep-003 identity foundation (runtime acceptance pending) | blocked | Implementation finished; static checks pass. Run USER-001 through USER-010 and foundation acceptance in a separately authorized testing stage. |
 
-Tasks 3, 4, 11, 12, and 13 extend existing tools. Tasks 5 through 10 and 14 add seven operations. Each task has one
+Tasks 3, 4, 11, 12, and 13 extend existing tools. Tasks 5 through 10, 14, and 15 add eight operations. Each task has one
 contract owner; supporting model, service, gateway, route, and registration edits belong to that
 owner. The issue extensions and lookup tasks may be implemented in any order after prep-002;
 the table gives the preferred release order, not a code dependency.

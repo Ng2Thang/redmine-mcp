@@ -22,6 +22,7 @@ or guarantees that repeated reads return identical data. The external Redmine da
 
 | Tool | REST endpoint | Inputs |
 |---|---|---|
+| `get_current_user` | `GET /api/v1/users/current` | None; always includes visible project memberships and roles |
 | `list_projects` | `GET /api/v1/projects` | `limit`, `offset` |
 | `get_project` | `GET /api/v1/projects/{project_id}` | Required positive integer `project_id` |
 | `list_project_versions` | `GET /api/v1/projects/{project_id}/versions` | Required positive integer `project_id` |
@@ -91,6 +92,43 @@ Illustrative Inspector inputs (replace IDs with values visible in your environme
 ```
 
 ## Responses
+
+`get_current_user` takes `{}` in Inspector and returns the user associated with the supplied
+personal API key. Its fields are `id`, `login`, `firstname`, `lastname`, nullable `mail`,
+`memberships`, and `visibility`. Each membership has an `id`, a project `{id, name}`, and
+`roles` containing `{id, name, inherited}`. Omitted role inheritance defaults to `false`.
+An omitted email becomes `null` with a `/mail` observation of `not_returned`; an explicit
+upstream null does not add an observation. The tool excludes API keys and other account metadata.
+
+Memberships follow Redmine project visibility and are not a complete list of accessible
+projects or effective permissions. There are no pagination or expansion arguments.
+An empty returned memberships array is valid; an omitted or malformed memberships array
+returns sanitized `502 upstream_response`. The returned user ID must match the authenticated
+principal. Authentication still performs its original identity lookup, followed by a separate
+profile read using the same personal key.
+
+Illustrative REST body (MCP wraps this in its tool-result envelope):
+
+```json
+{
+  "id": 2,
+  "login": "demo-reader",
+  "firstname": "Demo",
+  "lastname": "Reader",
+  "mail": null,
+  "memberships": [
+    {
+      "id": 3,
+      "project": {"id": 1, "name": "Demo"},
+      "roles": [{"id": 4, "name": "Reporter", "inherited": false}]
+    }
+  ],
+  "visibility": {
+    "scope": "requesting_redmine_user",
+    "observations": [{"path": "/mail", "state": "not_returned"}]
+  }
+}
+```
 
 These examples show REST response bodies. MCP presents results through its tool-result envelope;
 inspect the returned content in Inspector rather than assuming the REST body is the outer envelope.

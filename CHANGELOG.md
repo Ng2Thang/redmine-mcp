@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added read-only `get_current_user` for the caller's basic profile and visible project
+  memberships with roles; credentials and additional account metadata are excluded.
+
 - Added `list_issue_time_entries` for paginated, credited-user attribution of visible direct
   time entries on one issue.
 

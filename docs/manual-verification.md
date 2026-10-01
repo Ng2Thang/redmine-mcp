@@ -36,7 +36,8 @@ X-Redmine-API-Key: <your personal Redmine API key>
 Inspector's session token is different from the Redmine API key. Do not capture either in
 screenshots, reports, or logs.
 
-1. Connect and list tools. Confirm `list_issue_time_entries` appears with the existing readers.
+1. Connect and list tools. Confirm `get_current_user` and `list_issue_time_entries` appear with
+   the existing readers.
 2. Call `list_projects` with `{"limit":25,"offset":0}`. Expect visible project objects and
    `total`, `limit`, and `offset` pagination values.
 3. Call `list_issues` with `{"status_id":"*","limit":25,"offset":0}`. Expect visible issues;
@@ -63,6 +64,20 @@ Compare against [synthetic data](test-data.md) and the private local manifest. R
 do not treat one matching count as proof that every permission boundary is correct.
 
 ## Authentication and validation
+
+For `get_current_user`, call with `{}` using an ordinary synthetic user's personal key.
+Compare ID, login, names, returned email, visible project memberships, and roles against Redmine.
+Repeat with another user's key to confirm caller identity changes. Where available, compare an
+inherited role (`inherited=true`) and a non-inherited role (`inherited=false`). Check an account
+with no visible memberships returns `memberships=[]`. Omitted email must be null with a `/mail`
+`not_returned` observation. An empty membership list does not prove the user cannot access any
+project. Confirm the result has no API key or additional account metadata and the catalog
+publishes the existing read-only annotations. Keep credentials private.
+
+Missing or rejected credentials must fail under the existing authentication contract.
+Identity mismatch and malformed membership responses require separate offline adapter checks;
+do not change live Redmine responses to simulate them. Detailed pending scenarios are in
+[tool-013-get-current-user](plans/tasks/tool-013-get-current-user.md).
 
 Without the personal-key header, the following read-only REST request should return `401`
 and `{"detail":"Missing or invalid Redmine API key"}`:

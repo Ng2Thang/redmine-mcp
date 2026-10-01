@@ -11,6 +11,7 @@ from redmine_mcp.auth import READ_OPERATIONS
 from redmine_mcp.constants import mcp as mcp_text
 
 OPERATIONS = (
+    "get_current_user",
     "list_projects",
     "get_project",
     "list_project_versions",
@@ -19,8 +20,8 @@ OPERATIONS = (
     "get_issue",
     "list_issue_time_entries",
     "list_issue_statuses",
-    "list_trackers",
     "list_issue_priorities",
+    "list_trackers",
 )
 
 

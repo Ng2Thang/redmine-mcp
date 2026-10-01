@@ -6,6 +6,7 @@ from redmine_mcp.api.dependencies import (
     get_projects,
     get_reference_data,
     get_time_entries,
+    get_users,
 )
 from redmine_mcp.api.error_handlers import application_error, unexpected_error
 from redmine_mcp.api.health import router as health_router
@@ -31,6 +32,7 @@ __all__ = [
     "get_settings",
     "get_time_entries",
     "get_upstream",
+    "get_users",
     "health_router",
     "require_mcp_access",
     "require_read_access",

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from redmine_mcp.features.projects.models import Reference
+from redmine_mcp.features.projects import Reference
 
 
 class IssueStatus(BaseModel):

@@ -1,12 +1,8 @@
-from typing import Any
-
-from pydantic import ValidationError
-
-from redmine_mcp.common.errors import ApplicationError
-from redmine_mcp.common.pagination import Page
-from redmine_mcp.features.time_entries.models import IssueTimeEntry
+from redmine_mcp.common import Page
+from redmine_mcp.features.time_entries import IssueTimeEntry
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import item
+from redmine_mcp.integrations.redmine.responses import resource_object, response_page
 
 
 class RedmineTimeEntries:
@@ -17,46 +13,22 @@ class RedmineTimeEntries:
         self, issue_id: int, limit: int, offset: int
     ) -> Page[IssueTimeEntry]:
         issue_data = await self.client.get(f"issues/{issue_id}.json", {})
-        issue = issue_data.get("issue")
-        if (
-            not isinstance(issue, dict)
-            or type(issue.get("id")) is not int
-            or issue["id"] != issue_id
-        ):
-            raise ApplicationError("upstream_response", "Unexpected Redmine data", 502)
+        resource_object(issue_data.get("issue"), issue_id)
 
         data = await self.client.get(
             "time_entries.json", {"issue_id": issue_id, "limit": limit, "offset": offset}
         )
-        entries = data.get("time_entries")
-        total = data.get("total_count")
-        if (
-            not isinstance(entries, list)
-            or type(total) is not int
-            or total < 0
-            or len(entries) > limit
-        ):
-            raise ApplicationError("upstream_response", "Unexpected Redmine page", 502)
-        if data.get("limit") != limit or data.get("offset") != offset:
-            raise ApplicationError("upstream_response", "Unexpected Redmine page", 502)
-
-        mapped = [self._map_entry(entry, issue_id) for entry in entries]
-        try:
-            return Page[IssueTimeEntry](items=mapped, total=total, limit=limit, offset=offset)
-        except ValidationError:
-            raise ApplicationError("upstream_response", "Unexpected Redmine page", 502) from None
+        envelope = response_page(data, "time_entries", limit, offset, require_metadata=True)
+        return Page[IssueTimeEntry](
+            items=[self._map_entry(entry, issue_id) for entry in envelope.items],
+            total=envelope.total,
+            limit=envelope.limit,
+            offset=envelope.offset,
+        )
 
     @staticmethod
-    def _map_entry(entry: Any, issue_id: int) -> IssueTimeEntry:
-        if not isinstance(entry, dict):
-            raise ApplicationError("upstream_response", "Unexpected Redmine data", 502)
-        issue = entry.get("issue")
-        if (
-            not isinstance(issue, dict)
-            or type(issue.get("id")) is not int
-            or issue["id"] != issue_id
-        ):
-            raise ApplicationError("upstream_response", "Unexpected Redmine data", 502)
+    def _map_entry(entry: dict[str, object], issue_id: int) -> IssueTimeEntry:
+        issue = resource_object(entry.get("issue"), issue_id)
         return item(
             IssueTimeEntry,
             {

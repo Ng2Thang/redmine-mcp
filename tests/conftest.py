@@ -6,6 +6,7 @@ import httpx
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
+from fastapi import status as http_status
 from pydantic import SecretStr
 
 from redmine_mcp.config import Settings
@@ -23,7 +24,7 @@ def fake_settings() -> Settings:
 
 @pytest.fixture
 def upstream() -> dict[str, Any]:
-    return {"requests": [], "status": 200, "body": {}}
+    return {"requests": [], "status": http_status.HTTP_200_OK, "body": {}}
 
 
 @pytest_asyncio.fixture

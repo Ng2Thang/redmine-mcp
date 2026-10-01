@@ -1,0 +1,9 @@
+"""Limits for one upstream read, distinct from connection-pool configuration."""
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ReadPolicy:
+    deadline_seconds: float = 60
+    max_response_bytes: int = 10 * 1024 * 1024

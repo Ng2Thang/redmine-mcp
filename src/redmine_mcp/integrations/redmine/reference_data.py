@@ -1,5 +1,5 @@
-from redmine_mcp.common.visibility import Collection
-from redmine_mcp.features.reference_data.models import IssuePriority, IssueStatus, Tracker
+from redmine_mcp.common import Collection
+from redmine_mcp.features.reference_data import IssuePriority, IssueStatus, Tracker
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import wrapped_collection
 

@@ -14,7 +14,7 @@ false-default write gate, but this release adds no write operation.
 
 | Tool | What a client can do today | Status |
 |---|---|---|
-| `list_projects` | Page through projects visible to the shared Redmine account. | Implemented; runtime acceptance not established by this plan |
+| `list_projects` | Page through projects visible to the requesting Redmine user. | Implemented; runtime acceptance not established by this plan |
 | `list_issues` | Page through issues by project, status, and assignee. | Implemented; extension task below |
 | `get_issue` | Read one visible issue with journals and attachment metadata. | Implemented; extension task below |
 
@@ -41,6 +41,12 @@ Tasks 3, 4, 11, 12, and 13 extend existing tools. Tasks 5 through 10 and 14 add 
 contract owner; supporting model, service, gateway, route, and registration edits belong to that
 owner. The issue extensions and lookup tasks may be implemented in any order after prep-002;
 the table gives the preferred release order, not a code dependency.
+
+## Runtime infrastructure work
+
+| Task | Outcome | Status | Blocker / next action |
+|---|---|---|---|
+| [prep-003-runtime-foundation](tasks/prep-003-runtime-foundation.md) | Bound auth identity, strict service queries, bounded HTTP reads, exception/logging boundaries, lifecycle ownership, validated MCP exposure, and static architecture gate | blocked | Implementation/static checks finished; startup/shutdown and missing-key smoke pass. Run FOUNDATION-001 through FOUNDATION-012 and synthetic Inspector acceptance in a separate authorized testing stage. |
 
 ## Future ideas, not assigned tasks
 

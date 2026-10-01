@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from redmine_mcp.features.issues.models import IssueDate, IssueHours
+from redmine_mcp.features.issues import IssueDate, IssueHours
 
 
 class CreditedUser(BaseModel):

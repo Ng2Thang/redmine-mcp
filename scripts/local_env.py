@@ -32,8 +32,6 @@ def main() -> None:
         write_env(
             {
                 "REDMINE_URL": "http://localhost:3000",
-                "REDMINE_API_KEY": "bootstrap-pending",
-                "MCP_API_TOKEN": secrets.token_hex(32),
                 "POSTGRES_PASSWORD": secrets.token_hex(32),
                 "TEST_USER_PASSWORD": secrets.token_hex(24),
                 "REDMINE_SECRET_KEY_BASE": secrets.token_hex(64),
@@ -44,16 +42,17 @@ def main() -> None:
         )
     if not ENV.exists() or read_env().get("REDMINE_TEST_MARKER") != KIND:
         raise SystemExit("Not a marked synthetic .env; keep real configuration separate.")
-    if action in {"assert", "reader", "reset-state"}:
+    original = read_env()
+    values = original.copy()
+    for legacy_key in ("REDMINE_API_KEY", "MCP_API_TOKEN"):
+        values.pop(legacy_key, None)
+    if values != original:
+        write_env(values)
+    if action in {"assert", "runtime", "reset-state"}:
         marker = STATE / "environment.json"
         if not marker.exists() or json.loads(marker.read_text())["kind"] != KIND:
             raise SystemExit("Missing/invalid synthetic environment marker.")
-    if action == "reader":
-        credentials = json.loads((STATE / "credentials.json").read_text())
-        values = read_env()
-        values["REDMINE_API_KEY"] = credentials["reader_key"]
-        write_env(values)
-    elif action == "reset-state":
+    if action == "reset-state":
         for name in (
             "manifest.json",
             "manifest.tmp",
@@ -66,7 +65,7 @@ def main() -> None:
             if target.parent != STATE.resolve():
                 raise SystemExit("Path outside local state")
             target.unlink(missing_ok=True)
-    elif action not in {"init", "assert"}:
+    elif action not in {"init", "assert", "runtime"}:
         raise SystemExit("Unknown action")
 
 

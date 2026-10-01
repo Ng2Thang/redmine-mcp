@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Protocol
 
-from redmine_mcp.common.pagination import Page
+from redmine_mcp.common import Page
 from redmine_mcp.features.issues.models import Issue, IssueDetail
 
 

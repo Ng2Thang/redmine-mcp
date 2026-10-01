@@ -9,7 +9,7 @@ class FieldObservation(BaseModel):
 
 
 class Visibility(BaseModel):
-    scope: Literal["shared_redmine_account"] = "shared_redmine_account"
+    scope: Literal["requesting_redmine_user"] = "requesting_redmine_user"
     observations: list[FieldObservation] = Field(default_factory=list)
 
 

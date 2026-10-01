@@ -1,8 +1,8 @@
 # Redmine MCP
 
 Read-only Redmine tools using Python 3.13, FastAPI, and FastAPI-MCP. List visible projects,
-filter issues, and read issue details through REST or MCP using a shared Redmine account.
-This is a development implementation; automated tests and full restore validation are deferred.
+filter issues, and read issue details through REST or MCP as the requesting Redmine user.
+This is a development implementation; authentication tests and full restore validation are deferred.
 
 ## Requirements
 
@@ -44,13 +44,13 @@ Open the printed Inspector URL with its session token. Select **Streamable HTTP*
 `http://localhost:8000/mcp`, and configure the server authentication header privately:
 
 ```text
-Authorization: Bearer <MCP_API_TOKEN from .env>
+X-Redmine-API-Key: <your personal Redmine API key>
 ```
 
-Inspector's own session token is separate from the MCP token. Connect, list tools, and call
+Inspector's own session token is separate from your Redmine key. Connect, list tools, and call
 `list_projects`, `list_issues`, and `get_issue` using an actual visible issue ID. Follow the
 [manual verification guide](docs/manual-verification.md) for inputs and expected results.
-All callers share the configured Redmine account's permissions. No write or attachment-download
+Each caller has their own Redmine account's permissions. No write or attachment-download
 tools are exposed. Redmine content is user data, never instructions for an AI.
 
 ## Local development

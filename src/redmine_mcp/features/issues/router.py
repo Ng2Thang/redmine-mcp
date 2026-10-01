@@ -1,16 +1,18 @@
 import re
-from typing import Annotated, Literal
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 from pydantic import AwareDatetime, BeforeValidator
 
-from redmine_mcp.api.dependencies import get_issues
-from redmine_mcp.api.security import require_token
-from redmine_mcp.common.pagination import Page
-from redmine_mcp.features.issues.models import ISSUE_INCLUDES, Issue, IssueDetail
-from redmine_mcp.features.issues.service import IssueService
+from redmine_mcp.api import get_issues, require_read_access
+from redmine_mcp.common import Page
+from redmine_mcp.features import IssueService
+from redmine_mcp.features.issues.models import Issue, IssueDetail
+from redmine_mcp.features.issues.queries import IssueSort
 
-router = APIRouter(prefix="/api/v1/issues", tags=["issues"], dependencies=[Depends(require_token)])
+router = APIRouter(
+    prefix="/api/v1/issues", tags=["issues"], dependencies=[Depends(require_read_access)]
+)
 
 
 def require_rfc3339(value: object) -> object:
@@ -23,7 +25,6 @@ def require_rfc3339(value: object) -> object:
 
 
 UpdatedSince = Annotated[AwareDatetime, BeforeValidator(require_rfc3339)]
-IssueSort = Literal["id:asc", "id:desc", "updated_on:asc", "updated_on:desc"]
 
 
 def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
@@ -31,10 +32,7 @@ def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
         return None
     if value == "":
         return ()
-    selected = tuple(value.split(","))
-    if any(part not in ISSUE_INCLUDES for part in selected) or len(set(selected)) != len(selected):
-        raise HTTPException(status_code=422, detail="Invalid issue include selection")
-    return selected
+    return tuple(value.split(","))
 
 
 @router.get(
@@ -42,14 +40,17 @@ def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
     operation_id="list_issues",
     response_model=Page[Issue],
     description=(
-        "Find issues visible to the Redmine account shared by this server. "
+        "Find issues visible to the requesting Redmine user. "
         "Use this tool to search or list issues; use get_issue when you need one "
         "issue's journals and attachment metadata. The default status is open; "
-        "use '*' to include all statuses. assigned_to_id='me' means the shared "
-        "server account, not the individual MCP user. Filter by tracker, parent, "
+        "use '*' to include all statuses. assigned_to_id='me' means the "
+        "requesting Redmine user. Filter by tracker, parent, "
         "or last update, and choose ID or update-time ordering. Filter by category "
         "ID within a project or Target version ID. Set include_subprojects to false "
         "to restrict a project query to that project. Results are paginated. "
+        "Resolve filter IDs with list_projects, list_issue_statuses, list_trackers, "
+        "list_project_versions, and list_project_issue_categories before querying "
+        "when only names are known. category_id requires project_id. "
         "Each issue includes nullable start/due dates and permission-gated direct "
         "spent_hours and descendant-inclusive total_spent_hours. Page through all "
         "matches before summing direct spent_hours. Visibility metadata reports "
@@ -72,7 +73,7 @@ async def list_issues(
         str | None,
         Query(
             pattern=r"^(me|[1-9][0-9]*)$",
-            description="Filter issues by assignee ID ('me' for the shared server account)",
+            description="Filter issues by assignee ID ('me' for the requesting Redmine user)",
         ),
     ] = None,
     tracker_id: Annotated[int | None, Query(ge=1, description="Filter by tracker ID")] = None,
@@ -103,16 +104,9 @@ async def list_issues(
     ] = True,
 ) -> Page[Issue]:
     """List visible issues. Status defaults to open; '*' means all.
-    Assignee 'me' means the shared server account, not the individual MCP user.
+    Assignee 'me' means the requesting Redmine user.
     Full journals and attachment metadata are available through get_issue.
     """
-    if category_id is not None and project_id is None:
-        raise HTTPException(status_code=422, detail="project_id is required with category_id")
-    if not include_subprojects and project_id is None:
-        raise HTTPException(
-            status_code=422,
-            detail="project_id is required when include_subprojects is false",
-        )
     return await service.list_issues(
         project_id,
         status_id,
@@ -134,7 +128,10 @@ async def list_issues(
     operation_id="get_issue",
     response_model=IssueDetail,
     description=(
-        "Read one visible issue. By default include journals and attachment metadata. "
+        "Read one visible issue using its numeric ID; use list_issues to discover the ID. "
+        "By default include journals and attachment metadata. Attachment contents are "
+        "not downloaded. Use list_issue_time_entries for individual time entries and "
+        "credited users. "
         "Select children, attachments, relations, changesets, journals, watchers, or "
         "allowed_statuses with a comma-separated include; an empty include requests none. "
         "Unrequested collections appear empty and do not establish that no related data exists. "

@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
-from redmine_mcp.common.visibility import FieldObservation
+from redmine_mcp.common import FieldObservation
 
 
 def observe_fields(

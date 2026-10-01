@@ -65,13 +65,13 @@ limits the assignment accordingly.
 Keep router → service → Protocol port → Redmine gateway. Services import neither FastAPI nor
 HTTPX. Register REST routes before MCP creation and add each stable `operation_id` explicitly to
 the MCP allowlist. MCP reuses REST routes; it never queries PostgreSQL. Use typed models,
-validated inputs, async HTTP, lifespan-managed clients, sanitized errors, and shared bearer
-authentication. Keep existing names/defaults compatible unless a task explicitly changes them.
+validated inputs, async HTTP, lifespan-managed clients, sanitized errors, and per-user Redmine
+key authentication. Keep existing names/defaults compatible unless a task explicitly changes them.
 Avoid a generic CRUD proxy and never log API keys, tokens, or complete issue bodies.
 
 Current tools are read-only. Future writes are authorized only after their task defines exact
-side effects, least Redmine permissions, a separate opt-in restricted writer deployment with
-distinct credentials, and disposable synthetic verification. Administrative seeding stays
+side effects, least Redmine permissions, a separate opt-in writer deployment with application
+permission rules, and disposable synthetic verification. Administrative seeding stays
 separate. For each write, define success status/body, duplicates, retries, timeout uncertainty,
 partial success, concurrency, state reconciliation, and cleanup; do not invent upstream
 idempotency or rollback. A failed read-back cannot prove a preceding write failed.

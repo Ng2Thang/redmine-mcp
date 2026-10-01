@@ -4,6 +4,6 @@ python scripts/local_env.py init
 compose exec -T redmine bundle exec rails runner /opt/seed/bootstrap.rb
 assert_environment
 compose --profile tools run --build --rm seed
-python scripts/local_env.py reader
-echo 'Seed ready; read-only API key saved to .env.'
+python scripts/local_env.py runtime
+echo 'Seed ready; use a personal Redmine API key in the request header.'
 

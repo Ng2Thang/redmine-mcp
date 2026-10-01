@@ -1,3 +1,3 @@
-from tools.seed.generator import main
+from tools.seed import main
 
 main()

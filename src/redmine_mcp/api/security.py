@@ -1,31 +1,55 @@
-import secrets
-from typing import Annotated, cast
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import status as http_status
+from fastapi.routing import APIRoute
+from fastapi.security import APIKeyHeader
 
-from redmine_mcp.config import Settings
+from redmine_mcp.api.runtime import get_settings, get_upstream
+from redmine_mcp.auth import READ_OPERATIONS, AuthContext, AuthorizationPolicy, normalize_api_key
+from redmine_mcp.bootstrap import build_authentication
+from redmine_mcp.common import ApplicationError
 
-bearer = HTTPBearer(auto_error=False)
+policy = AuthorizationPolicy(READ_OPERATIONS)
+api_key_header = APIKeyHeader(name="X-Redmine-API-Key", auto_error=False)
 
 
-def require_token(
-    request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+async def get_auth_context(
+    request: Request, key: Annotated[str | None, Depends(api_key_header)]
+) -> AuthContext:
+    keys = request.headers.getlist("x-redmine-api-key")
+    if len(keys) != 1 or key is None:
+        raise HTTPException(http_status.HTTP_401_UNAUTHORIZED, "Missing or invalid Redmine API key")
+    try:
+        api_key = normalize_api_key(key)
+        service = build_authentication(get_upstream(request), get_settings(request))
+        return await service.authenticate(api_key)
+    except ApplicationError as exc:
+        if exc.status in (http_status.HTTP_401_UNAUTHORIZED, http_status.HTTP_403_FORBIDDEN):
+            raise HTTPException(
+                http_status.HTTP_401_UNAUTHORIZED, "Missing or invalid Redmine API key"
+            ) from None
+        raise
+
+
+def require_read_access(
+    request: Request, context: Annotated[AuthContext, Depends(get_auth_context)]
 ) -> None:
-    settings = cast(Settings, request.app.state.settings)
-    if credentials is None or not secrets.compare_digest(
-        credentials.credentials.encode(), settings.mcp_api_token.get_secret_value().encode()
-    ):
-        raise HTTPException(
-            401, "Missing or invalid MCP token", headers={"WWW-Authenticate": "Bearer"}
-        )
+    route = request.scope.get("route")
+    if not isinstance(route, APIRoute) or not route.operation_id:
+        raise HTTPException(http_status.HTTP_403_FORBIDDEN, "Permission denied")
+    policy.authorize(context.principal, f"read:{route.operation_id}")
+
+
+def require_mcp_access(context: Annotated[AuthContext, Depends(get_auth_context)]) -> None:
+    policy.authorize(context.principal, "mcp:connect")
 
 
 def require_write_access(
     request: Request,
-    authenticated: Annotated[None, Depends(require_token)],
+    context: Annotated[AuthContext, Depends(get_auth_context)],
 ) -> None:
-    settings = cast(Settings, request.app.state.settings)
+    settings = get_settings(request)
     if not settings.redmine_write_enabled:
-        raise HTTPException(403, "Write access is disabled")
+        raise HTTPException(http_status.HTTP_403_FORBIDDEN, "Write access is disabled")
+    policy.authorize(context.principal, "write:issues")

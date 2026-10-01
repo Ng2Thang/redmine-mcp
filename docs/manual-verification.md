@@ -30,10 +30,10 @@ Open the printed Inspector URL with its session token. Select **Streamable HTTP*
 URL to `http://localhost:8000/mcp`, and configure its authentication header privately:
 
 ```text
-Authorization: Bearer <MCP_API_TOKEN from .env>
+X-Redmine-API-Key: <your personal Redmine API key>
 ```
 
-Inspector's session token is different from the server's MCP token. Do not capture either in
+Inspector's session token is different from the Redmine API key. Do not capture either in
 screenshots, reports, or logs.
 
 1. Connect and list tools. Confirm `list_issue_time_entries` appears with the existing readers.
@@ -47,32 +47,35 @@ screenshots, reports, or logs.
    On an unchanged dataset with at least two open issues, expect different issue IDs and matching
    pagination fields. Omitted status defaults to `open`.
 6. If relevant to the change, exercise project, closed-status, and `assigned_to_id:"me"` filters
-   using known visible data. `me` is the shared server account.
+   using known visible data. `me` is the requesting Redmine user.
 7. On a marked synthetic issue with time entries, call `list_issue_time_entries` with
    `{"issue_id":<returned ID>,"limit":25,"offset":0}` after replacing the placeholder.
    Compare credited user IDs, hours, dates, and the visible count with Redmine's time-entry
    page for that exact issue. Page through all entries before totaling. Record whether the
    reader can see all users' entries; an empty page alone does not establish that.
 
-For the complete synthetic seed, the expected reader count with `status_id:"*"` is 128.
+For the complete synthetic seed, the expected count using the `demo-mcp-reader` key with
+`status_id:"*"` is 128.
 After the optional history seed, the expected count is 391 before any manual changes.
+Repeat a read with another synthetic user's personal key and compare visible projects and
+issues. The server must use that user's Redmine visibility; exact counts depend on their role.
 Compare against [synthetic data](test-data.md) and the private local manifest. Record mismatches;
 do not treat one matching count as proof that every permission boundary is correct.
 
 ## Authentication and validation
 
-Without a bearer header, the following read-only REST request should return `401`, a bearer
-challenge, and `{"detail":"Missing or invalid MCP token"}`:
+Without the personal-key header, the following read-only REST request should return `401`
+and `{"detail":"Missing or invalid Redmine API key"}`:
 
 ```bash
 curl --silent --show-error --include http://localhost:8000/api/v1/projects
 ```
 
-Repeat the Inspector connection using an omitted or deliberately invalid server token and confirm
-that protected tool access is rejected. Restore the valid token privately afterward.
+Repeat the Inspector connection using an omitted or deliberately invalid Redmine key and confirm
+that protected tool access is rejected. Restore the valid key privately afterward.
 
-In Swagger at `http://localhost:8000/docs`, use **Authorize** with the MCP token. Request
-`GET /api/v1/issues` with `limit=0`; expect REST status `422` and validation details.
+In Swagger at `http://localhost:8000/docs`, use **Authorize** with your Redmine API key.
+Request `GET /api/v1/issues` with `limit=0`; expect REST status `422` and validation details.
 If a known absent or inaccessible issue ID is available, read it and check that the response does
 not disclose its contents; Redmine may return forbidden or not-found behavior depending on access.
 Do not guess sensitive IDs on a real instance. See the [tool reference](tool-reference.md) for

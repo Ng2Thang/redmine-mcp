@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from redmine_mcp.common.pagination import Page
+from redmine_mcp.common import Page, require_positive_id, validated_query
 from redmine_mcp.features.issues.models import Issue, IssueDetail
 from redmine_mcp.features.issues.ports import IssueReader
+from redmine_mcp.features.issues.queries import IssueSearch, validate_issue_includes
 
 
 class IssueService:
@@ -24,20 +25,38 @@ class IssueService:
         fixed_version_id: int | None = None,
         include_subprojects: bool = True,
     ) -> Page[Issue]:
+        query = validated_query(
+            IssueSearch,
+            {
+                "project_id": project_id,
+                "status_id": status_id,
+                "assigned_to_id": assigned_to_id,
+                "limit": limit,
+                "offset": offset,
+                "tracker_id": tracker_id,
+                "parent_id": parent_id,
+                "updated_since": updated_since,
+                "sort": sort,
+                "category_id": category_id,
+                "fixed_version_id": fixed_version_id,
+                "include_subprojects": include_subprojects,
+            },
+        )
         return await self.reader.list_issues(
-            project_id,
-            status_id,
-            assigned_to_id,
-            limit,
-            offset,
-            tracker_id,
-            parent_id,
-            updated_since,
-            sort,
-            category_id,
-            fixed_version_id,
-            include_subprojects,
+            project_id=query.project_id,
+            status_id=query.status_id,
+            assigned_to_id=query.assigned_to_id,
+            limit=query.limit,
+            offset=query.offset,
+            tracker_id=query.tracker_id,
+            parent_id=query.parent_id,
+            updated_since=query.updated_since,
+            sort=query.sort,
+            category_id=query.category_id,
+            fixed_version_id=query.fixed_version_id,
+            include_subprojects=query.include_subprojects,
         )
 
     async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> IssueDetail:
-        return await self.reader.get_issue(issue_id, include)
+        require_positive_id(issue_id, "issue_id")
+        return await self.reader.get_issue(issue_id, validate_issue_includes(include))

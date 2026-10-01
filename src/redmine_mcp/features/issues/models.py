@@ -4,8 +4,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, JsonValue, WithJsonSchema
 
-from redmine_mcp.common.visibility import Visibility
-from redmine_mcp.features.projects.models import Reference
+from redmine_mcp.common import Visibility
+from redmine_mcp.features.projects import Reference
 
 ISSUE_INCLUDES = frozenset(
     {

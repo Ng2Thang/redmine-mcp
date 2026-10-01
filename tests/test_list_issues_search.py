@@ -4,6 +4,7 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import FastAPI
+from fastapi import status as http_status
 from test_offline_baseline import ISSUE, mcp_session
 
 
@@ -13,7 +14,7 @@ async def test_defaults_pagination_and_combined_filters(
 ) -> None:
     upstream["body"] = {"issues": [ISSUE], "total_count": 12}
     default = await rest_client.get("/api/v1/issues", params={"limit": 1, "offset": 2})
-    assert default.status_code == 200
+    assert default.status_code == http_status.HTTP_200_OK
     assert default.json()["items"][0]["id"] == 42
     assert (default.json()["total"], default.json()["limit"], default.json()["offset"]) == (
         12,
@@ -39,7 +40,7 @@ async def test_defaults_pagination_and_combined_filters(
             "sort": "updated_on:desc",
         },
     )
-    assert filtered.status_code == 200
+    assert filtered.status_code == http_status.HTTP_200_OK
     request = upstream["requests"][-1]
     assert request.url.path == "/issues.json"
     assert dict(request.url.params) == {
@@ -63,7 +64,7 @@ async def test_supported_sorts(
 ) -> None:
     upstream["body"] = {"issues": [], "total_count": 0}
     response = await rest_client.get("/api/v1/issues", params={"sort": sort})
-    assert response.status_code == 200
+    assert response.status_code == http_status.HTTP_200_OK
     assert response.json()["items"] == []
     assert upstream["requests"][-1].url.params["sort"] == sort
 
@@ -89,7 +90,7 @@ async def test_invalid_inputs_rejected_before_upstream(
     rest_client: httpx.AsyncClient, upstream: dict[str, Any], name: str, value: str
 ) -> None:
     response = await rest_client.get("/api/v1/issues", params={name: value})
-    assert response.status_code == 422
+    assert response.status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
     assert upstream["requests"] == []
 
 
@@ -97,10 +98,20 @@ async def test_invalid_inputs_rejected_before_upstream(
 @pytest.mark.parametrize(
     ("status", "body", "expected_status", "code"),
     [
-        (403, {}, 403, "access_denied"),
-        (404, {}, 404, "resource_not_found"),
-        (200, {"issues": [{}], "total_count": 1}, 502, "upstream_response"),
-        (200, {"unexpected": []}, 502, "upstream_response"),
+        (http_status.HTTP_403_FORBIDDEN, {}, http_status.HTTP_403_FORBIDDEN, "access_denied"),
+        (http_status.HTTP_404_NOT_FOUND, {}, http_status.HTTP_404_NOT_FOUND, "resource_not_found"),
+        (
+            http_status.HTTP_200_OK,
+            {"issues": [{}], "total_count": 1},
+            http_status.HTTP_502_BAD_GATEWAY,
+            "upstream_response",
+        ),
+        (
+            http_status.HTTP_200_OK,
+            {"unexpected": []},
+            http_status.HTTP_502_BAD_GATEWAY,
+            "upstream_response",
+        ),
     ],
 )
 async def test_list_errors(
@@ -121,7 +132,7 @@ async def test_list_errors(
 async def test_list_timeout(rest_client: httpx.AsyncClient, upstream: dict[str, Any]) -> None:
     upstream["exception"] = httpx.ReadTimeout("offline timeout")
     response = await rest_client.get("/api/v1/issues")
-    assert response.status_code == 504
+    assert response.status_code == http_status.HTTP_504_GATEWAY_TIMEOUT
     assert response.json()["error"]["code"] == "upstream_timeout"
 
 
@@ -142,7 +153,7 @@ async def test_mcp_contract_and_error(app: FastAPI, upstream: dict[str, Any]) ->
         assert json.loads(result.content[0].text)["items"][0]["id"] == 42
         assert upstream["requests"][-1].url.params["tracker_id"] == "2"
         assert upstream["requests"][-1].url.params["sort"] == "updated_on:desc"
-        upstream["status"] = 403
+        upstream["status"] = http_status.HTTP_403_FORBIDDEN
         error = await session.call_tool("list_issues", {})
         assert error.isError
         assert "access_denied" in str(error.content)

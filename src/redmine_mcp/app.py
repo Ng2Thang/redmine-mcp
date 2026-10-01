@@ -1,55 +1,44 @@
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-
 import httpx
 from fastapi import FastAPI
 
-from redmine_mcp.api.error_handlers import application_error
-from redmine_mcp.api.health import router as health_router
-from redmine_mcp.bootstrap import build_container
-from redmine_mcp.common.errors import ApplicationError
+from redmine_mcp.api import (
+    RequestContextMiddleware,
+    application_error,
+    health_router,
+    unexpected_error,
+)
+from redmine_mcp.common import ApplicationError
 from redmine_mcp.config import Settings
 from redmine_mcp.features.issues.router import router as issues_router
 from redmine_mcp.features.projects.router import router as projects_router
 from redmine_mcp.features.reference_data.router import router as reference_data_router
 from redmine_mcp.features.time_entries.router import router as time_entries_router
-from redmine_mcp.mcp.registration import register_mcp, shutdown_mcp
+from redmine_mcp.lifecycle import RuntimeLifecycle
+from redmine_mcp.mcp import register_mcp
 from redmine_mcp.observability import configure_logging
 
 
-def create_app() -> FastAPI:
-    settings = Settings()
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = Settings() if settings is None else settings
     configure_logging(settings.log_level)
 
-    @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        async with httpx.AsyncClient(
-            base_url=str(settings.redmine_url).rstrip("/") + "/",
-            headers={"X-Redmine-API-Key": settings.redmine_api_key.get_secret_value()},
-            timeout=settings.redmine_timeout_seconds,
-            follow_redirects=False,
-        ) as upstream:
-            app.state.container = build_container(upstream)
-            try:
-                yield
-            finally:
-                try:
-                    await shutdown_mcp(app.state.mcp)
-                finally:
-                    await internal.aclose()
-
-    app = FastAPI(title="Redmine MCP", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Redmine MCP", version="0.1.0")
     app.state.settings = settings
+    app.state.upstream = None
+    app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(ApplicationError, application_error)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, unexpected_error)
     app.include_router(health_router)
     app.include_router(projects_router)
     app.include_router(issues_router)
     app.include_router(time_entries_router)
     app.include_router(reference_data_router)
     internal = httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app),
+        transport=httpx.ASGITransport(app=app, raise_app_exceptions=False),
         base_url="http://apiserver",
         timeout=settings.redmine_timeout_seconds + 5,
     )
     app.state.mcp = register_mcp(app, internal)
+    runtime = RuntimeLifecycle(settings, internal, app.state.mcp)
+    app.router.lifespan_context = runtime.lifespan
     return app

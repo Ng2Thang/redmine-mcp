@@ -2,31 +2,27 @@ import httpx
 from fastapi import Depends, FastAPI
 from fastapi_mcp import AuthConfig, FastApiMCP
 
-from redmine_mcp.api.security import require_token
-
-OPERATIONS = [
-    "list_projects",
-    "get_project",
-    "list_project_versions",
-    "list_project_issue_categories",
-    "list_issues",
-    "get_issue",
-    "list_issue_time_entries",
-    "list_issue_statuses",
-    "list_trackers",
-    "list_issue_priorities",
-]
+from redmine_mcp.api import require_mcp_access
+from redmine_mcp.mcp.annotations import annotate_read_tools
+from redmine_mcp.mcp.catalog import (
+    OPERATIONS,
+    validate_generated_tools,
+    validate_operation_catalog,
+)
 
 
 def register_mcp(app: FastAPI, client: httpx.AsyncClient) -> FastApiMCP:
+    validate_operation_catalog(app)
     mcp = FastApiMCP(
         app,
         name="Redmine MCP",
-        include_operations=OPERATIONS,
+        include_operations=list(OPERATIONS),
         http_client=client,
-        headers=["authorization"],
-        auth_config=AuthConfig(dependencies=[Depends(require_token)]),
+        headers=["x-redmine-api-key"],
+        auth_config=AuthConfig(dependencies=[Depends(require_mcp_access)]),
     )
+    validate_generated_tools(mcp.tools)
+    annotate_read_tools(mcp.tools)
     mcp.mount_http()
     return mcp
 

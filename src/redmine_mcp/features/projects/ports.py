@@ -1,7 +1,6 @@
 from typing import Protocol
 
-from redmine_mcp.common.pagination import Page
-from redmine_mcp.common.visibility import Collection
+from redmine_mcp.common import Collection, Page
 from redmine_mcp.features.projects.models import IssueCategory, Project, ProjectDetail, Version
 
 

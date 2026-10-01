@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
 
-from redmine_mcp.common.pagination import Page
-from redmine_mcp.features.issues.models import ISSUE_INCLUDES, Issue, IssueDetail
+from redmine_mcp.common import Page
+from redmine_mcp.features.issues import ISSUE_INCLUDES, Issue, IssueDetail
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import page, visible_item
+from redmine_mcp.integrations.redmine.responses import resource_object
 
 ISSUE_HOUR_FIELDS = ("spent_hours", "total_spent_hours")
 
@@ -59,7 +60,7 @@ class RedmineIssues:
         data = await self.client.get(f"issues/{issue_id}.json", params)
         return visible_item(
             IssueDetail,
-            data.get("issue"),
+            resource_object(data.get("issue"), issue_id),
             observed_fields=ISSUE_HOUR_FIELDS,
             requested_fields=selected,
             unrequested_fields=sorted(ISSUE_INCLUDES.difference(selected)),

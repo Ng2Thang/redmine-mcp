@@ -23,7 +23,7 @@ read-only. See the [MCP tool dashboard](plans/index.md) for dependency and scena
 
 Future work:
 - Unit: service filters/defaults/pagination with fake gateways.
-- Integration: mapping, upstream errors, TLS/timeouts, bearer auth and forwarding.
+- Integration: mapping, upstream errors, TLS/timeouts, personal-key authentication and forwarding.
 - MCP: schemas/names, error responses, shutdown and session cleanup.
 - E2E: restricted projects/private issues/private journals, filters and pagination.
 - Seed: reruns, interrupted writes, expected counts and access boundaries.
@@ -32,4 +32,18 @@ Future work:
 - Packaging: isolated wheel, non-root image, import boundaries and CI.
 
 Successful basic calls do not establish production readiness.
+
+## Per-user authentication scenarios for a separately authorized test stage
+
+Do not create or run automated tests for this change without separate authorization. When
+authorized, cover these scenarios with mocked Redmine responses and REST/MCP requests:
+
+- Two distinct keys resolve different Redmine user IDs. Interleaved and concurrent calls forward
+  each key only to its own `/users/current.json` and resource requests; `me` remains upstream.
+- Missing, blank, duplicate, and rejected keys return 401 before a resource request. MCP
+  connection and tool discovery reject invalid keys. No key appears in tool arguments or errors.
+- A malformed current-user response, timeout, transport error, and later key revocation yield
+  sanitized 502, 504, 502, and 401 responses respectively.
+- Visibility scope is `requesting_redmine_user`; existing operation IDs, inputs, pagination, and
+  response wrappers remain stable. The write gate remains closed on reader deployments.
 

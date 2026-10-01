@@ -21,7 +21,7 @@ that a release has been published.
   current tools remain read-only. Compose supports a configurable localhost MCP host port.
 
 - Read-only project listing, issue listing, and issue detail tools through REST and MCP.
-- Shared-account Redmine access with MCP bearer authentication and paginated results.
+- Per-user Redmine API key authentication with request-scoped identity and paginated results.
 - Synthetic Redmine/PostgreSQL development environment and separate data-operation helpers.
 - EditorConfig, Python version selection, optional Flake8 compatibility settings, optional
   pre-commit checks, and a shared Git Bash quality-check command.
@@ -31,6 +31,35 @@ that a release has been published.
 
 ### Changed
 
+- Expanded descriptions for all ten MCP tools with selection guidance, related-tool lookups,
+  pagination behavior, and resource-specific limitations; documented project pagination inputs.
+- Declared public feature services in package initializers with explicit `__all__` exports and
+  shortened service imports in composition and feature routers.
+- Extended public package exports to auth, common, API, MCP, integrations, feature contracts,
+  application entry points, and administrative seed entry points. Architecture checks resolve
+  re-exported symbols to preserve dependency boundaries.
+- Replaced HTTP status literals with FastAPI status constants across runtime and existing test
+  assertions; allowed only the status namespace through the domain import boundary.
+- Bound identity verification to the same normalized key retained by the authentication context.
+- Added per-read HTTP deadlines and streamed decoded-payload limits with guaranteed response
+  closure and sanitized oversized-response errors.
+- Strengthened MCP startup checks for route authorization, response schemas, hidden/duplicate
+  routes, and exact generated tool names; isolated FastAPI route-context compatibility.
+- Extended static architecture rules to package roots, nested contracts, and shared-layer direction.
+- Organized authentication into `auth/` and moved concrete identity wiring to bootstrap.
+- Added strict immutable query contracts and service-level validation for IDs, pagination,
+  issue filters, timezone requirements, and expansions.
+- Extracted lifecycle ownership with ordered cleanup and checked runtime-client access.
+- Published read-only/idempotence MCP hints and added static import-boundary/cycle checks.
+- Split framework-independent authentication and explicit read permissions from FastAPI
+  dependencies, and isolated Redmine identity lookup and HTTP transport configuration.
+- Added bounded HTTP pooling, separate connect/pool timeouts, cookie isolation, and distinct
+  rate-limit, pool-exhaustion, and upstream timeout errors.
+- Added request correlation, sanitized unexpected-error handling, and metadata-only timing logs.
+- Centralized upstream envelope checks across readers, including strict pagination metadata and
+  requested-resource identity checks.
+- REST and MCP now require each caller's `X-Redmine-API-Key` header. Visibility and `me` refer to
+  that Redmine user; shared runtime credentials and bearer token settings are retired.
 - Extended `get_issue` with selectable related context while keeping the default expansions.
 - Extended `list_issues` with tracker, parent, and inclusive update-time filters and bounded sorting.
 - Extended `list_issues` with project category filtering and added nullable category references

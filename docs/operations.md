@@ -11,7 +11,7 @@ bash scripts/dev-up.sh
 ```
 
 The script generates marked local configuration if absent, starts PostgreSQL and Redmine, seeds
-sample data, switches to the reader API key, and builds/starts MCP. First startup downloads and
+sample data, and builds/starts MCP. First startup downloads and
 builds images. It requires Python 3.13 on PATH and host ports 3000, 8000, and 5433 to be available.
 
 | Service | Address |
@@ -24,7 +24,7 @@ builds images. It requires Python 3.13 on PATH and host ports 3000, 8000, and 54
 
 For database clients, read `POSTGRES_PASSWORD` privately from `.env`. Synthetic accounts are
 `admin`, `demo-manager`, `demo-developer`, `demo-reporter`, and `demo-mcp-reader`; their password
-is `TEST_USER_PASSWORD`. The reader account represents MCP visibility.
+is `TEST_USER_PASSWORD`. Use each account's personal key to inspect its visibility.
 
 Wrappers disable Git Bash path rewriting for Docker. For manual Compose operations, set:
 
@@ -86,7 +86,7 @@ from `.local/history-manifest.json`. Run the command a second time to confirm it
 In Redmine, inspect the History Alpha/Beta project trees, memberships, versions, issue schedules,
 and Spent time reports. In MCP Inspector, use manifest project and issue IDs to check visible
 projects, versions, and issues, then confirm `History Beta Private` is inaccessible to MCP Reader.
-The existing MCP tools do not read time entries. See [synthetic data](test-data.md) for counts
+The MCP tools can read visible time entries. See [synthetic data](test-data.md) for counts
 and the date window.
 
 ## Backup and restore
@@ -113,7 +113,7 @@ bash scripts/restore.sh baseline
 
 Only restore trusted snapshots from matching repository and image versions. The helper checks
 the synthetic markers, completion marker, Redmine/PostgreSQL image versions, dump listing, and
-archive readability. It restores the database, replaces attachments, refreshes the reader key,
+archive readability. It restores the database and replaces attachments,
 and restarts applications on success. These checks do not establish full recovery correctness.
 
 If restore fails, MCP and Redmine remain stopped. Inspect the failure privately, verify snapshot
@@ -132,8 +132,7 @@ docker compose -p redmine-mcp-external --env-file .local/external.env -f deploy/
 
 This uses base Compose, which runs MCP only. Never add the synthetic override or invoke the
 seed/reset/restore helpers for an external instance. Inside Docker, use `host.docker.internal`
-for Redmine running on the Windows host. Hosting, HTTPS ingress, OAuth, and individual identities
-remain deferred.
+for Redmine running on the Windows host. Hosting, HTTPS ingress, and OAuth remain deferred.
 
 ## Troubleshooting
 
@@ -141,8 +140,8 @@ remain deferred.
 |---|---|
 | Docker engine unavailable | Start Docker Desktop with Linux containers. |
 | Port occupied | Free 3000, 8000, or 5433 as applicable; stop container MCP before local execution. |
-| MCP/REST `401` | Check the MCP bearer token; Inspector's own token is separate. |
-| Upstream authentication error | Check the configured Redmine API key and account access. |
+| MCP/REST `401` | Check the personal Redmine API key header; Inspector's own token is separate. |
+| Redmine key rejected | Check the requesting user's API key and account access. |
 | TLS connection failure | Configure trusted certificates; keep verification enabled. |
 | Synthetic marker rejected | Verify you selected the synthetic configuration; do not bypass validation. |
 | Seed interrupted | Correct the cause, then explicitly reset if synthetic data is disposable. |

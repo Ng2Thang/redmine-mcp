@@ -1,11 +1,12 @@
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
 import httpx
 import pytest
 from fastapi import FastAPI
+from fastapi import status as http_status
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
@@ -26,7 +27,7 @@ ISSUE = {
 @asynccontextmanager
 async def mcp_session(
     app: FastAPI, token: str | None = "offline-mcp-token"
-) -> AsyncIterator[ClientSession]:
+) -> AsyncGenerator[ClientSession]:
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url="http://testserver",
@@ -44,7 +45,7 @@ async def test_rest_success_and_upstream_mapping(
 ) -> None:
     upstream["body"] = {"projects": [PROJECT], "total_count": 1}
     response = await rest_client.get("/api/v1/projects", params={"limit": 1, "offset": 2})
-    assert response.status_code == 200
+    assert response.status_code == http_status.HTTP_200_OK
     assert response.json()["items"][0]["identifier"] == "demo"
     assert response.json()["limit"] == 1
     assert upstream["requests"][-1].url.path == "/projects.json"
@@ -52,7 +53,7 @@ async def test_rest_success_and_upstream_mapping(
     assert dict(upstream["requests"][-1].url.params) == {"limit": "1", "offset": "2"}
     upstream["body"] = {"issues": [ISSUE], "total_count": 1}
     response = await rest_client.get("/api/v1/issues")
-    assert response.status_code == 200
+    assert response.status_code == http_status.HTTP_200_OK
     assert response.json()["items"][0]["id"] == 42
     assert dict(upstream["requests"][-1].url.params) == {
         "limit": "25",
@@ -62,7 +63,7 @@ async def test_rest_success_and_upstream_mapping(
     }
     upstream["body"] = {"issue": ISSUE}
     response = await rest_client.get("/api/v1/issues/42")
-    assert response.status_code == 200
+    assert response.status_code == http_status.HTTP_200_OK
     assert response.json()["id"] == 42
     assert upstream["requests"][-1].url.path == "/issues/42.json"
     assert upstream["requests"][-1].url.params["include"] == "journals,attachments"
@@ -75,17 +76,23 @@ async def test_rest_auth_and_validation_before_upstream(
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
     ) as anonymous:
-        assert (await anonymous.get("/api/v1/projects")).status_code == 401
+        assert (
+            await anonymous.get("/api/v1/projects")
+        ).status_code == http_status.HTTP_401_UNAUTHORIZED
     assert (
         await rest_client.get("/api/v1/projects", headers={"Authorization": ""})
-    ).status_code == 401
+    ).status_code == http_status.HTTP_401_UNAUTHORIZED
     assert (
         await rest_client.get(
             "/api/v1/projects", headers={"Authorization": "Bearer incorrect-token"}
         )
-    ).status_code == 401
-    assert (await rest_client.get("/api/v1/issues", params={"limit": 0})).status_code == 422
-    assert (await rest_client.get("/api/v1/issues/0")).status_code == 422
+    ).status_code == http_status.HTTP_401_UNAUTHORIZED
+    assert (
+        await rest_client.get("/api/v1/issues", params={"limit": 0})
+    ).status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert (
+        await rest_client.get("/api/v1/issues/0")
+    ).status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
     assert upstream["requests"] == []
 
 
@@ -93,10 +100,20 @@ async def test_rest_auth_and_validation_before_upstream(
 @pytest.mark.parametrize(
     ("status", "body", "expected_status", "code"),
     [
-        (403, {}, 403, "access_denied"),
-        (404, {}, 404, "resource_not_found"),
-        (200, {"issue": {}}, 502, "upstream_response"),
-        (200, {"invalid": []}, 502, "upstream_response"),
+        (http_status.HTTP_403_FORBIDDEN, {}, http_status.HTTP_403_FORBIDDEN, "access_denied"),
+        (http_status.HTTP_404_NOT_FOUND, {}, http_status.HTTP_404_NOT_FOUND, "resource_not_found"),
+        (
+            http_status.HTTP_200_OK,
+            {"issue": {}},
+            http_status.HTTP_502_BAD_GATEWAY,
+            "upstream_response",
+        ),
+        (
+            http_status.HTTP_200_OK,
+            {"invalid": []},
+            http_status.HTTP_502_BAD_GATEWAY,
+            "upstream_response",
+        ),
     ],
 )
 async def test_rest_upstream_errors(
@@ -117,7 +134,7 @@ async def test_rest_upstream_errors(
 async def test_rest_timeout(rest_client: httpx.AsyncClient, upstream: dict[str, Any]) -> None:
     upstream["exception"] = httpx.ReadTimeout("offline timeout")
     response = await rest_client.get("/api/v1/issues/42")
-    assert response.status_code == 504
+    assert response.status_code == http_status.HTTP_504_GATEWAY_TIMEOUT
     assert response.json()["error"]["code"] == "upstream_timeout"
 
 
@@ -133,7 +150,7 @@ async def test_mcp_discovery_invocation_and_error(app: FastAPI, upstream: dict[s
         invalid = await session.call_tool("list_issues", {"limit": 0})
         assert invalid.isError
         assert "Input validation error" in str(invalid.content)
-        upstream["status"] = 403
+        upstream["status"] = http_status.HTTP_403_FORBIDDEN
         error = await session.call_tool("get_issue", {"issue_id": 42})
         assert error.isError
         assert "access_denied" in str(error.content)

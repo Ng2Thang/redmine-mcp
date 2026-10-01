@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from redmine_mcp.common.visibility import Visibility
+from redmine_mcp.common import Visibility
 
 
 class Reference(BaseModel):

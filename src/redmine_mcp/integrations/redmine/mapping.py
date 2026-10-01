@@ -1,11 +1,15 @@
 from collections.abc import Sequence
 from typing import Any, TypeVar
 
+from fastapi import status as http_status
 from pydantic import BaseModel, ValidationError
 
-from redmine_mcp.common.errors import ApplicationError
-from redmine_mcp.common.pagination import Page
-from redmine_mcp.common.visibility import Collection, Visibility
+from redmine_mcp.common import ApplicationError, Collection, Page, Visibility
+from redmine_mcp.integrations.redmine.responses import (
+    response_count,
+    response_items,
+    response_page,
+)
 from redmine_mcp.integrations.redmine.visibility import observe_fields
 
 T = TypeVar("T", bound=BaseModel)
@@ -25,7 +29,9 @@ def item[T: BaseModel](model: type[T], value: Any) -> T:
             raise ValueError
         return model.model_validate(value)
     except (ValidationError, ValueError):
-        raise ApplicationError("upstream_response", "Unexpected Redmine data", 502) from None
+        raise ApplicationError(
+            "upstream_response", "Unexpected Redmine data", http_status.HTTP_502_BAD_GATEWAY
+        ) from None
 
 
 def visible_item[T: BaseModel](
@@ -48,20 +54,15 @@ def visible_item[T: BaseModel](
 
 
 def collection[T: BaseModel](model: type[T], data: dict[str, Any], key: str) -> list[T]:
-    try:
-        values = data[key]
-        if not isinstance(values, list):
-            raise TypeError
-        return [item(model, value) for value in values]
-    except (KeyError, TypeError):
-        raise ApplicationError("upstream_response", "Unexpected Redmine data", 502) from None
+    return [item(model, value) for value in response_items(data, key)]
 
 
 def complete_collection[T: BaseModel](model: type[T], data: dict[str, Any], key: str) -> list[T]:
     values = collection(model, data, key)
-    count = data.get("total_count")
-    if type(count) is not int or count < 0 or count != len(values):
-        raise ApplicationError("upstream_response", "Unexpected Redmine data", 502)
+    if response_count(data) != len(values):
+        raise ApplicationError(
+            "upstream_response", "Unexpected Redmine data", http_status.HTTP_502_BAD_GATEWAY
+        )
     return values
 
 
@@ -75,27 +76,20 @@ def page[T: BaseModel](
     observed_fields: tuple[str, ...] = (),
 ) -> Page[T]:
     require_observable_fields(model, observed_fields)
-    try:
-        values = data[key]
-        if not isinstance(values, list):
-            raise TypeError
-        return Page(
-            items=[item(model, entry) for entry in values],
-            total=data["total_count"],
-            limit=limit,
-            offset=offset,
-            visibility=Visibility(
-                observations=[
-                    observation
-                    for index, entry in enumerate(values)
-                    for observation in observe_fields(
-                        entry, observed_fields, prefix=f"/items/{index}"
-                    )
-                ]
-            ),
-        )
-    except (KeyError, TypeError, ValidationError):
-        raise ApplicationError("upstream_response", "Unexpected Redmine page", 502) from None
+    envelope = response_page(data, key, limit, offset)
+    return Page(
+        items=[item(model, entry) for entry in envelope.items],
+        total=envelope.total,
+        limit=envelope.limit,
+        offset=envelope.offset,
+        visibility=Visibility(
+            observations=[
+                observation
+                for index, entry in enumerate(envelope.items)
+                for observation in observe_fields(entry, observed_fields, prefix=f"/items/{index}")
+            ]
+        ),
+    )
 
 
 def wrapped_collection[T: BaseModel](

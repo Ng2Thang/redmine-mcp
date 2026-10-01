@@ -19,13 +19,12 @@ will assess the report and coordinate remediation and disclosure through the pri
 
 ## Configuration and data handling
 
-- Default deployments use a dedicated account with only the needed read permissions. Future
-  authorized issue writes require a separate opt-in deployment with its own restricted writer
-  account and bearer token, after the workflow prerequisites. Never use an administrator key
-  or replace the synthetic reader credential to enable writes.
-- All MCP users share that account's visibility. The MCP bearer token does not provide individual
-  Redmine identities or per-user authorization.
-- Keep `.env`, `.local/`, API keys, bearer tokens, and database/attachment snapshots out of Git,
+- Each caller supplies a personal Redmine API key; Redmine controls that user's visibility.
+  Future authorized issue writes require a separate opt-in deployment and application permission
+  rules, after the workflow prerequisites. Do not use an administrator key for ordinary reads.
+- The server verifies each key against Redmine and resolves the requesting user ID. Application
+  roles and permissions are not assigned yet.
+- Keep `.env`, `.local/`, API keys, and database/attachment snapshots out of Git,
   logs, screenshots, and public reports. Rotate exposed credentials through their issuing systems.
 - Keep published development ports bound to localhost. Hosting, HTTPS ingress, and OAuth are
   deferred; do not treat the development Compose setup as a production deployment guide.

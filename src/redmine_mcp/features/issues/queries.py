@@ -1,0 +1,41 @@
+from typing import Literal
+
+from pydantic import AwareDatetime, Field, model_validator
+
+from redmine_mcp.common import InvalidInputError, PageRequest
+from redmine_mcp.features.issues.models import ISSUE_INCLUDES
+
+IssueSort = Literal["id:asc", "id:desc", "updated_on:asc", "updated_on:desc"]
+
+
+class IssueSearch(PageRequest):
+    project_id: int | None = Field(default=None, gt=0)
+    status_id: str = Field(default="open", pattern=r"^(open|closed|\*|[1-9][0-9]*)$")
+    assigned_to_id: str | None = Field(default=None, pattern=r"^(me|[1-9][0-9]*)$")
+    tracker_id: int | None = Field(default=None, gt=0)
+    parent_id: int | None = Field(default=None, gt=0)
+    updated_since: AwareDatetime | None = None
+    sort: IssueSort = "id:asc"
+    category_id: int | None = Field(default=None, gt=0)
+    fixed_version_id: int | None = Field(default=None, gt=0)
+    include_subprojects: bool = True
+
+    @model_validator(mode="after")
+    def require_project_scope(self) -> "IssueSearch":
+        if self.category_id is not None and self.project_id is None:
+            raise InvalidInputError("project_id is required with category_id")
+        if not self.include_subprojects and self.project_id is None:
+            raise InvalidInputError("project_id is required when include_subprojects is false")
+        return self
+
+
+def validate_issue_includes(include: tuple[str, ...] | None) -> tuple[str, ...] | None:
+    if include is None:
+        return None
+    if (
+        not isinstance(include, tuple)
+        or any(not isinstance(part, str) or part not in ISSUE_INCLUDES for part in include)
+        or len(set(include)) != len(include)
+    ):
+        raise InvalidInputError("Invalid issue include selection")
+    return include

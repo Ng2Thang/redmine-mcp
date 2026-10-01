@@ -26,6 +26,15 @@ uv run --frozen uvicorn redmine_mcp.app:create_app --factory --host 127.0.0.1 --
 Settings load at app creation. HTTP clients are managed by application lifespan; imports must not
 read credentials or contact upstream services. See the [architecture](architecture.md).
 
+## Request concurrency
+
+REST routes and Redmine gateway calls are async. While one request awaits Redmine through the
+shared `httpx.AsyncClient`, Uvicorn can handle other requests; MCP calls use the same REST routes.
+The client shares connections, while each request supplies its own Redmine API key. Keep network
+and other blocking I/O asynchronous in request handlers. If CPU-heavy work is added later,
+measure its effect and move only that work off the event loop when needed. Do not put entire async
+requests in worker threads to achieve concurrency.
+
 ## Quality checks
 
 `scripts/check.sh` can be invoked by its path from any working directory. It checks the whole
@@ -76,18 +85,61 @@ uv run --frozen pre-commit uninstall
 
 ## Add a read-only tool
 
+Packages declare their public interfaces in `__init__.py` with explicit `__all__` exports.
+External callers use package imports for published symbols. Implementation modules keep direct
+imports within their own package to avoid importing a partially initialized public interface.
+Feature packages publish models, ports, queries, and services; `features` groups service exports.
+Keep feature routers out of package initializers to avoid API/composition import cycles.
+
+| Package | Public interface |
+|---|---|
+| `redmine_mcp` | `Settings`, lazily imported `create_app` |
+| `redmine_mcp.auth` | Identity/context, identity port, authentication, permission policy, key normalization |
+| `redmine_mcp.common` | Errors, pagination, visibility, validation helpers |
+| `redmine_mcp.api` | HTTP dependencies, security adapters, middleware, error handlers, route inspection, health router |
+| `redmine_mcp.mcp` | Catalog, annotations, registration, shutdown |
+| `redmine_mcp.integrations` | Supported integration namespaces |
+| `redmine_mcp.integrations.redmine` | Redmine client, policy, gateways, transport factory |
+| `tools`, `tools.seed` | Baseline synthetic seed entry point; importing does not execute seeding |
+
+The root app factory is loaded on access, allowing domain imports without loading HTTP adapters.
+Architecture checks resolve public re-exports back to their defining modules before evaluating
+boundaries and import cycles. Re-exporting a symbol does not change its architectural ownership.
+
+```python
+from redmine_mcp.features import IssueService, ProjectService, ReferenceService, TimeEntryService
+from redmine_mcp.features.issues import IssueService
+from redmine_mcp.auth import AuthContext, AuthenticationService
+from redmine_mcp.common import ApplicationError, Page
+from redmine_mcp.integrations.redmine import RedmineClient, RedmineIssues
+from redmine_mcp.mcp import register_mcp
+```
+
 1. Define the feature's typed request/response models and Protocol port under `features/`.
 2. Implement business behavior in a service depending on the port. Keep FastAPI and HTTPX out
    of services; preserve the router -> service -> port -> gateway flow.
-3. Implement Redmine access in `integrations/redmine/` using the shared async client and sanitized
+3. Implement Redmine access in `integrations/redmine/` using the shared credential-free async client and sanitized
    error mapping. MCP must never access PostgreSQL directly.
 4. Wire concrete dependencies in `bootstrap.py` and expose service dependencies to the router.
-5. Add a validated, bearer-protected REST route with a stable, unique `operation_id`. Register
-   the router before MCP is created, and explicitly add the operation to the MCP allowlist.
+5. Add a validated, personal-key-protected REST GET route under `/api/v1/` with a stable, unique
+   `operation_id`. Add its read permission to `auth/policy.py`; MCP exposure is a separate
+   allowlist decision. The route owns the tool description and schemas. Register the router before MCP
+   is created, then add the operation ID to `src/redmine_mcp/mcp/catalog.py` in the intended tool
+   order. Startup fails if a catalog ID is duplicated or does not match exactly one GET route.
 6. Update the [tool reference](tool-reference.md), relevant configuration documentation, and
    [changelog](../CHANGELOG.md). Keep existing public tool names stable.
 7. Run quality checks and the relevant [manual verification](manual-verification.md) steps.
    Record deferred checks and any limitations instead of claiming unperformed verification.
+
+Use `http_status.HTTP_*` constants imported from `fastapi.status` through
+`from fastapi import status as http_status` for HTTP statuses. The architecture gate permits
+this constants namespace in domain code while continuing to reject other FastAPI APIs there.
+Do not replace unrelated numeric values, such as pagination limits, with HTTP constants.
+
+Services own business validation for direct and HTTP callers. Define strict query contracts and
+validate IDs and cross-field relationships before port dispatch; routers decode HTTP syntax.
+Use named arguments for port calls. `scripts/check_architecture.py` runs with the normal static
+checks to enforce import boundaries and detect cycles without running application code or tests.
 
 Services should remain small and feature-focused. Start a new tool from the client's outcome and
 the [tool dashboard](plans/index.md), using Redmine REST only as implementation evidence. Avoid

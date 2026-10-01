@@ -1,25 +1,31 @@
-from typing import cast
+from typing import Annotated
 
-from fastapi import Request
+from fastapi import Depends, Request
 
-from redmine_mcp.bootstrap import Container
-from redmine_mcp.features.issues.service import IssueService
-from redmine_mcp.features.projects.service import ProjectService
-from redmine_mcp.features.reference_data.service import ReferenceService
-from redmine_mcp.features.time_entries.service import TimeEntryService
-
-
-def get_projects(request: Request) -> ProjectService:
-    return cast(Container, request.app.state.container).projects
+from redmine_mcp.api.runtime import get_settings, get_upstream
+from redmine_mcp.api.security import get_auth_context
+from redmine_mcp.auth import AuthContext
+from redmine_mcp.bootstrap import Container, build_container
+from redmine_mcp.features import IssueService, ProjectService, ReferenceService, TimeEntryService
 
 
-def get_issues(request: Request) -> IssueService:
-    return cast(Container, request.app.state.container).issues
+def get_container(
+    request: Request, context: Annotated[AuthContext, Depends(get_auth_context)]
+) -> Container:
+    return build_container(get_upstream(request), context.api_key, get_settings(request))
 
 
-def get_reference_data(request: Request) -> ReferenceService:
-    return cast(Container, request.app.state.container).reference_data
+def get_projects(container: Annotated[Container, Depends(get_container)]) -> ProjectService:
+    return container.projects
 
 
-def get_time_entries(request: Request) -> TimeEntryService:
-    return cast(Container, request.app.state.container).time_entries
+def get_issues(container: Annotated[Container, Depends(get_container)]) -> IssueService:
+    return container.issues
+
+
+def get_reference_data(container: Annotated[Container, Depends(get_container)]) -> ReferenceService:
+    return container.reference_data
+
+
+def get_time_entries(container: Annotated[Container, Depends(get_container)]) -> TimeEntryService:
+    return container.time_entries

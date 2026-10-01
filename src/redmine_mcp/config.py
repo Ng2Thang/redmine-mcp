@@ -1,26 +1,33 @@
-from pydantic import HttpUrl, SecretStr, field_validator
+from typing import Literal
+
+from pydantic import Field, HttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
     redmine_url: HttpUrl
-    redmine_api_key: SecretStr
-    mcp_api_token: SecretStr
     redmine_write_enabled: bool = False
-    redmine_timeout_seconds: float = 20
-    log_level: str = "INFO"
+    redmine_timeout_seconds: float = Field(default=20, gt=0, allow_inf_nan=False)
+    redmine_connect_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
+    redmine_pool_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
+    redmine_request_deadline_seconds: float = Field(default=60, gt=0, allow_inf_nan=False)
+    redmine_max_response_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
+    redmine_max_connections: int = Field(default=100, ge=1)
+    redmine_max_keepalive_connections: int = Field(default=20, ge=0)
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
-    @field_validator("redmine_api_key", "mcp_api_token")
+    @field_validator("log_level", mode="before")
     @classmethod
-    def nonempty_secret(cls, value: SecretStr) -> SecretStr:
-        if not value.get_secret_value().strip() or value.get_secret_value().startswith("replace-"):
-            raise ValueError("Configure a real local credential")
-        return value
+    def normalize_log_level(cls, value: object) -> object:
+        return value.upper() if isinstance(value, str) else value
 
-    @field_validator("redmine_timeout_seconds")
-    @classmethod
-    def positive_timeout(cls, value: float) -> float:
-        if value <= 0:
-            raise ValueError("Timeout must be positive")
-        return value
+    @model_validator(mode="after")
+    def validate_transport(self) -> "Settings":
+        if self.redmine_max_keepalive_connections > self.redmine_max_connections:
+            raise ValueError("Keepalive connections cannot exceed maximum connections")
+        if self.redmine_url.username or self.redmine_url.password:
+            raise ValueError("Redmine URL must not contain credentials")
+        if self.redmine_url.query is not None or self.redmine_url.fragment is not None:
+            raise ValueError("Redmine URL must not contain a query or fragment")
+        return self

@@ -148,6 +148,39 @@ separate from runtime tools. Future issue writes require the
 [tool workflow](workflows/redmine-tools.md) prerequisites and a separate opt-in writer deployment;
 current tools remain read-only.
 
+## Shared text constants
+
+Runtime-owned error messages, error codes, and log templates live in
+`src/redmine_mcp/constants/`. Import a public namespace from its
+initializer, for example:
+
+```python
+from redmine_mcp.common import InvalidInputError
+from redmine_mcp.constants import issues as issues_text
+
+raise InvalidInputError(issues_text.PROJECT_REQUIRED_FOR_CATEGORY)
+```
+
+Each constant is annotated as `Final[str]`. Group messages by ownership: `auth`, `api`,
+`runtime`, `redmine`, or a feature such as `issues`.
+Shared validation text belongs in `common`, stable machine-readable error codes in `codes`,
+MCP catalog diagnostics in `mcp`, and logging format strings in `logs`.
+
+Keep tool and parameter descriptions inline in `features/{feature}/router.py`, so readers
+can see the tool contract beside its route and inputs. Keep response schema descriptions
+beside their model declarations. Do not move these descriptions into shared constants.
+
+Use named `.format(...)` placeholders for dynamic diagnostic messages, such as
+`common_text.POSITIVE_INTEGER_REQUIRED.format(name="issue_id")`. Keep log placeholders in
+logging's `%s` style and pass values as separate arguments. Never interpolate credentials,
+request bodies, or upstream error content into public messages or logs.
+
+Constants must not import runtime layers or framework libraries; the architecture check
+enforces this boundary. Wire field names, URLs, permission identifiers, schema literals,
+and empty defaults stay with their contracts. Framework-generated validation messages are
+still managed by FastAPI and Pydantic. Changing a constant changes all of its consumers;
+review public wording and stable error codes accordingly.
+
 ## Dependencies and packaging
 
 Use uv to update dependency metadata and resolution together, for example:

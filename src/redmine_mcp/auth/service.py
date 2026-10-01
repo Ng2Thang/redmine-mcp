@@ -3,6 +3,8 @@ from fastapi import status as http_status
 from redmine_mcp.auth.models import AuthContext
 from redmine_mcp.auth.ports import IdentityReader
 from redmine_mcp.common import ApplicationError
+from redmine_mcp.constants import auth as auth_text
+from redmine_mcp.constants import codes as codes_text
 
 
 def normalize_api_key(value: str) -> str:
@@ -13,8 +15,8 @@ def normalize_api_key(value: str) -> str:
         or any(ord(character) < 33 or ord(character) > 126 for character in key)
     ):
         raise ApplicationError(
-            "invalid_credentials",
-            "Missing or invalid Redmine API key",
+            codes_text.INVALID_CREDENTIALS,
+            auth_text.INVALID_API_KEY,
             http_status.HTTP_401_UNAUTHORIZED,
         )
     return key
@@ -31,8 +33,8 @@ class AuthenticationService:
         except ApplicationError as exc:
             if exc.status in (http_status.HTTP_401_UNAUTHORIZED, http_status.HTTP_403_FORBIDDEN):
                 raise ApplicationError(
-                    "invalid_credentials",
-                    "Missing or invalid Redmine API key",
+                    codes_text.INVALID_CREDENTIALS,
+                    auth_text.INVALID_API_KEY,
                     http_status.HTTP_401_UNAUTHORIZED,
                 ) from None
             raise

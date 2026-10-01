@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi_mcp import FastApiMCP
 
 from redmine_mcp.config import Settings
+from redmine_mcp.constants import runtime as runtime_text
 from redmine_mcp.integrations.redmine import create_upstream_client
 from redmine_mcp.mcp import shutdown_mcp
 
@@ -22,7 +23,7 @@ class RuntimeLifecycle:
     @asynccontextmanager
     async def lifespan(self, app: FastAPI) -> AsyncGenerator[None]:
         if self.started:
-            raise RuntimeError("Create a new application instance for each runtime lifespan")
+            raise RuntimeError(runtime_text.LIFESPAN_ALREADY_STARTED)
         self.started = True
         async with AsyncExitStack() as resources:
             # Register cleanup before any later resource acquisition can fail.

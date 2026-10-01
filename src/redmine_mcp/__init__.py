@@ -18,4 +18,8 @@ def __getattr__(name: str) -> Callable[..., object]:
 
         globals()[name] = create_app
         return create_app
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from redmine_mcp.constants import runtime as runtime_text
+
+    raise AttributeError(
+        runtime_text.MODULE_ATTRIBUTE_NOT_FOUND.format(module=__name__, attribute=name)
+    )

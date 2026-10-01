@@ -19,10 +19,11 @@ router = APIRouter(
     description=(
         "Resolve issue status names to IDs and determine which statuses are closed. "
         "Returns the global status catalog in items with visibility metadata and no "
-        "pagination inputs. Pass a returned ID as a string in list_issues.status_id to "
-        "filter by a specific status. This catalog does not describe permitted transitions "
-        "for an individual issue; use get_issue with include='allowed_statuses' for that "
-        "context. This tool only reads status definitions."
+        "pagination inputs. Pass a returned ID as a string in list_issues.status_id "
+        "to filter by a specific status. This catalog does not describe permitted "
+        "transitions for an individual issue; use get_issue with "
+        "include='allowed_statuses' for that context. This tool only reads status "
+        "definitions."
     ),
 )
 async def list_issue_statuses(
@@ -37,11 +38,12 @@ async def list_issue_statuses(
     operation_id="list_trackers",
     response_model=Collection[Tracker],
     description=(
-        "Resolve tracker names, such as Bug or Feature, to IDs for list_issues.tracker_id. "
-        "Returns the global tracker catalog, including optional descriptions, default "
-        "statuses, and enabled standard fields, in items with visibility metadata. "
-        "This collection has no pagination inputs. Global availability does not establish "
-        "that a tracker is enabled for a particular project."
+        "Resolve tracker names, such as Bug or Feature, to IDs for "
+        "list_issues.tracker_id. Returns the global tracker catalog, including "
+        "optional descriptions, default statuses, and enabled standard fields, in "
+        "items with visibility metadata. This collection has no pagination inputs. "
+        "Global availability does not establish that a tracker is enabled for a "
+        "particular project."
     ),
 )
 async def list_trackers(
@@ -56,11 +58,11 @@ async def list_trackers(
     operation_id="list_issue_priorities",
     response_model=Collection[IssuePriority],
     description=(
-        "Look up issue priority IDs and names and identify the configured default priority. "
-        "Use this catalog to interpret priority references returned by list_issues or "
-        "get_issue. Returns items with visibility metadata and no pagination inputs. "
-        "The current list_issues tool has no priority filter, and this tool does not "
-        "change an issue's priority."
+        "Look up issue priority IDs and names and identify the configured default "
+        "priority. Use this catalog to interpret priority references returned by "
+        "list_issues or get_issue. Returns items with visibility metadata and no "
+        "pagination inputs. The current list_issues tool has no priority filter, "
+        "and this tool does not change an issue's priority."
     ),
 )
 async def list_issue_priorities(

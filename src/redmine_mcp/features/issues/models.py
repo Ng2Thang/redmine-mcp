@@ -5,6 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, BeforeValidator, Field, JsonValue, WithJsonSchema
 
 from redmine_mcp.common import Visibility
+from redmine_mcp.constants import issues as issues_text
 from redmine_mcp.features.projects import Reference
 
 ISSUE_INCLUDES = frozenset(
@@ -22,13 +23,13 @@ ISSUE_INCLUDES = frozenset(
 
 def require_issue_date(value: object) -> object:
     if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-        raise ValueError("Expected an ISO calendar date")
+        raise ValueError(issues_text.ISO_DATE_REQUIRED)
     return value
 
 
 def require_hour_number(value: object) -> object:
     if type(value) not in (int, float):
-        raise ValueError("Expected a JSON number")
+        raise ValueError(issues_text.JSON_NUMBER_REQUIRED)
     return value
 
 
@@ -83,7 +84,7 @@ class IssueChild(BaseModel):
         WithJsonSchema(
             {
                 "type": "array",
-                "description": "Child issues may contain further nested children.",
+                "description": ("Child issues may contain further nested children."),
                 "items": {
                     "type": "object",
                     "required": ["id", "subject"],
@@ -99,7 +100,7 @@ class IssueChild(BaseModel):
                         "children": {
                             "type": "array",
                             "items": {"type": "object"},
-                            "description": "Nested issue children have the same fields.",
+                            "description": ("Nested issue children have the same fields."),
                         },
                     },
                 },

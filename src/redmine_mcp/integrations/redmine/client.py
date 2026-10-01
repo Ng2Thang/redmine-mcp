@@ -8,6 +8,9 @@ import httpx
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
+from redmine_mcp.constants import codes as codes_text
+from redmine_mcp.constants import logs as logs_text
+from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
 
 logger = logging.getLogger(__name__)
@@ -16,33 +19,33 @@ logger = logging.getLogger(__name__)
 def raise_for_upstream_status(status: int) -> None:
     failures = {
         http_status.HTTP_401_UNAUTHORIZED: (
-            "invalid_credentials",
-            "Invalid Redmine API key",
+            codes_text.INVALID_CREDENTIALS,
+            redmine_text.INVALID_API_KEY,
             http_status.HTTP_401_UNAUTHORIZED,
         ),
         http_status.HTTP_403_FORBIDDEN: (
-            "access_denied",
-            "Redmine access denied",
+            codes_text.ACCESS_DENIED,
+            redmine_text.ACCESS_DENIED,
             http_status.HTTP_403_FORBIDDEN,
         ),
         http_status.HTTP_404_NOT_FOUND: (
-            "resource_not_found",
-            "Resource unavailable or not visible",
+            codes_text.RESOURCE_NOT_FOUND,
+            redmine_text.RESOURCE_UNAVAILABLE,
             http_status.HTTP_404_NOT_FOUND,
         ),
         http_status.HTTP_429_TOO_MANY_REQUESTS: (
-            "upstream_rate_limited",
-            "Redmine rate limit exceeded",
+            codes_text.UPSTREAM_RATE_LIMITED,
+            redmine_text.RATE_LIMIT_EXCEEDED,
             http_status.HTTP_502_BAD_GATEWAY,
         ),
         http_status.HTTP_503_SERVICE_UNAVAILABLE: (
-            "upstream_unavailable",
-            "Redmine is unavailable",
+            codes_text.UPSTREAM_UNAVAILABLE,
+            redmine_text.UNAVAILABLE,
             http_status.HTTP_502_BAD_GATEWAY,
         ),
         http_status.HTTP_504_GATEWAY_TIMEOUT: (
-            "upstream_timeout",
-            "Redmine timed out",
+            codes_text.UPSTREAM_TIMEOUT,
+            redmine_text.TIMED_OUT,
             http_status.HTTP_504_GATEWAY_TIMEOUT,
         ),
     }
@@ -50,7 +53,7 @@ def raise_for_upstream_status(status: int) -> None:
         raise ApplicationError(*failures[status])
     if not http_status.HTTP_200_OK <= status < http_status.HTTP_300_MULTIPLE_CHOICES:
         raise ApplicationError(
-            "upstream_error", "Redmine request failed", http_status.HTTP_502_BAD_GATEWAY
+            codes_text.UPSTREAM_ERROR, redmine_text.REQUEST_FAILED, http_status.HTTP_502_BAD_GATEWAY
         )
 
 
@@ -69,7 +72,7 @@ class RedmineClient:
             or any(character in path for character in (":", "?", "#", "\\"))
             or any(part in (".", "..") for part in path.split("/"))
         ):
-            raise ValueError("Redmine requests require a relative resource path")
+            raise ValueError(redmine_text.RELATIVE_PATH_REQUIRED)
         started = perf_counter()
         status: int | None = None
         try:
@@ -91,8 +94,8 @@ class RedmineClient:
                     async for chunk in response.aiter_bytes(chunk_size=64 * 1024):
                         if len(content) + len(chunk) > self.policy.max_response_bytes:
                             raise ApplicationError(
-                                "upstream_response_too_large",
-                                "Redmine response exceeds limit",
+                                codes_text.UPSTREAM_RESPONSE_TOO_LARGE,
+                                redmine_text.RESPONSE_TOO_LARGE,
                                 http_status.HTTP_502_BAD_GATEWAY,
                             )
                         content.extend(chunk)
@@ -105,27 +108,31 @@ class RedmineClient:
                 return result
             except (ValueError, RecursionError):
                 raise ApplicationError(
-                    "upstream_response",
-                    "Invalid Redmine response",
+                    codes_text.UPSTREAM_RESPONSE,
+                    redmine_text.INVALID_RESPONSE,
                     http_status.HTTP_502_BAD_GATEWAY,
                 ) from None
         except httpx.PoolTimeout:
             raise ApplicationError(
-                "upstream_busy",
-                "Redmine connection pool is busy",
+                codes_text.UPSTREAM_BUSY,
+                redmine_text.CONNECTION_POOL_BUSY,
                 http_status.HTTP_503_SERVICE_UNAVAILABLE,
             ) from None
         except (httpx.TimeoutException, TimeoutError):
             raise ApplicationError(
-                "upstream_timeout", "Redmine timed out", http_status.HTTP_504_GATEWAY_TIMEOUT
+                codes_text.UPSTREAM_TIMEOUT,
+                redmine_text.TIMED_OUT,
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
             ) from None
         except httpx.RequestError:
             raise ApplicationError(
-                "upstream_unavailable", "Cannot reach Redmine", http_status.HTTP_502_BAD_GATEWAY
+                codes_text.UPSTREAM_UNAVAILABLE,
+                redmine_text.UNREACHABLE,
+                http_status.HTTP_502_BAD_GATEWAY,
             ) from None
         finally:
             logger.info(
-                "upstream_completed method=GET status=%s duration_ms=%.1f",
+                logs_text.UPSTREAM_COMPLETED,
                 status,
                 (perf_counter() - started) * 1000,
             )

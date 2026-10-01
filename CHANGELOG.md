@@ -31,6 +31,9 @@ that a release has been published.
 
 ### Changed
 
+- Centralized runtime messages, stable error codes, and log templates in typed constants
+  grouped by feature and responsibility, preserving existing text. Tool and parameter
+  descriptions remain inline in feature routers; schema descriptions remain beside models.
 - Expanded descriptions for all ten MCP tools with selection guidance, related-tool lookups,
   pagination behavior, and resource-specific limitations; documented project pagination inputs.
 - Declared public feature services in package initializers with explicit `__all__` exports and

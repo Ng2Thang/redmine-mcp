@@ -1,5 +1,8 @@
 # Architecture
 
+See [MCP request and response flow](mcp-request-flow.md) for the complete startup,
+authentication, tool dispatch, validation, response, error, and shutdown sequence.
+
 ```mermaid
 flowchart TD
     Client[REST client] --> Router[Feature router]

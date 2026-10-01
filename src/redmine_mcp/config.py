@@ -3,6 +3,8 @@ from typing import Literal
 from pydantic import Field, HttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from redmine_mcp.constants import runtime as runtime_text
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
@@ -25,9 +27,9 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_transport(self) -> "Settings":
         if self.redmine_max_keepalive_connections > self.redmine_max_connections:
-            raise ValueError("Keepalive connections cannot exceed maximum connections")
+            raise ValueError(runtime_text.INVALID_KEEPALIVE_LIMIT)
         if self.redmine_url.username or self.redmine_url.password:
-            raise ValueError("Redmine URL must not contain credentials")
+            raise ValueError(runtime_text.URL_CONTAINS_CREDENTIALS)
         if self.redmine_url.query is not None or self.redmine_url.fragment is not None:
-            raise ValueError("Redmine URL must not contain a query or fragment")
+            raise ValueError(runtime_text.URL_CONTAINS_QUERY_OR_FRAGMENT)
         return self

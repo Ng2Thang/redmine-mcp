@@ -69,6 +69,16 @@ def resolve_export(target: str, aliases: dict[str, str]) -> str:
 
 
 def forbidden(source: str, target: str) -> bool:
+    if in_package(source, "redmine_mcp.constants"):
+        # Constants are shared by every layer and must not pull in runtime code.
+        return (
+            in_package(target, "redmine_mcp")
+            and not in_package(target, "redmine_mcp.constants")
+            or any(
+                in_package(target, name)
+                for name in ("fastapi", "fastapi_mcp", "starlette", "httpx", "pydantic")
+            )
+        )
     if in_package(target, "fastapi.status"):
         return False
     domain = any(

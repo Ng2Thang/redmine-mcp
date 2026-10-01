@@ -5,6 +5,8 @@ from fastapi import status as http_status
 from pydantic import BaseModel, ValidationError
 
 from redmine_mcp.common import ApplicationError, Collection, Page, Visibility
+from redmine_mcp.constants import codes as codes_text
+from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.integrations.redmine.responses import (
     response_count,
     response_items,
@@ -19,7 +21,9 @@ def require_observable_fields(model: type[BaseModel], fields: Sequence[str]) -> 
     unknown = set(fields).difference(model.model_fields)
     if unknown:
         raise ValueError(
-            f"Observable fields are not declared on {model.__name__}: {sorted(unknown)}"
+            redmine_text.UNKNOWN_OBSERVABLE_FIELDS.format(
+                model=model.__name__, fields=sorted(unknown)
+            )
         )
 
 
@@ -30,7 +34,9 @@ def item[T: BaseModel](model: type[T], value: Any) -> T:
         return model.model_validate(value)
     except (ValidationError, ValueError):
         raise ApplicationError(
-            "upstream_response", "Unexpected Redmine data", http_status.HTTP_502_BAD_GATEWAY
+            codes_text.UPSTREAM_RESPONSE,
+            redmine_text.UNEXPECTED_DATA,
+            http_status.HTTP_502_BAD_GATEWAY,
         ) from None
 
 
@@ -44,7 +50,7 @@ def visible_item[T: BaseModel](
 ) -> T:
     require_observable_fields(model, (*observed_fields, *requested_fields, *unrequested_fields))
     if "visibility" not in model.model_fields:
-        raise ValueError(f"{model.__name__} has no visibility field")
+        raise ValueError(redmine_text.VISIBILITY_FIELD_REQUIRED.format(model=model.__name__))
     if not isinstance(value, dict):
         return item(model, value)
     observations = observe_fields(value, observed_fields)
@@ -61,7 +67,9 @@ def complete_collection[T: BaseModel](model: type[T], data: dict[str, Any], key:
     values = collection(model, data, key)
     if response_count(data) != len(values):
         raise ApplicationError(
-            "upstream_response", "Unexpected Redmine data", http_status.HTTP_502_BAD_GATEWAY
+            codes_text.UPSTREAM_RESPONSE,
+            redmine_text.UNEXPECTED_DATA,
+            http_status.HTTP_502_BAD_GATEWAY,
         )
     return values
 

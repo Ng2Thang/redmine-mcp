@@ -7,6 +7,8 @@ from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from redmine_mcp.api.error_handlers import unexpected_error
+from redmine_mcp.constants import api as api_text
+from redmine_mcp.constants import logs as logs_text
 from redmine_mcp.observability import request_id
 
 logger = logging.getLogger("redmine_mcp.requests")
@@ -52,13 +54,13 @@ class RequestContextMiddleware:
             response = await unexpected_error(Request(scope), exc)
             if response_started:
                 # Preserve a failed stream without propagating sensitive exception text.
-                raise RuntimeError("Response streaming failed") from None
+                raise RuntimeError(api_text.RESPONSE_STREAM_FAILED) from None
             await response(scope, receive, send_response)
         finally:
             route = scope.get("route")
             operation = getattr(route, "operation_id", None) or "transport"
             logger.info(
-                "request_completed operation=%s status=%s duration_ms=%.1f",
+                logs_text.REQUEST_COMPLETED,
                 operation,
                 status,
                 (perf_counter() - started) * 1000,

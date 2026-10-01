@@ -2,6 +2,8 @@ from fastapi import status as http_status
 
 from redmine_mcp.auth.models import Principal
 from redmine_mcp.common import ApplicationError
+from redmine_mcp.constants import auth as auth_text
+from redmine_mcp.constants import codes as codes_text
 
 READ_OPERATIONS = (
     "list_projects",
@@ -30,5 +32,7 @@ class AuthorizationPolicy:
             or (permission != "mcp:connect" and permission not in self.permissions)
         ):
             raise ApplicationError(
-                "permission_denied", "Permission denied", http_status.HTTP_403_FORBIDDEN
+                codes_text.PERMISSION_DENIED,
+                auth_text.PERMISSION_DENIED,
+                http_status.HTTP_403_FORBIDDEN,
             )

@@ -30,6 +30,7 @@ or guarantees that repeated reads return identical data. The external Redmine da
 | `list_project_files` | `GET /api/v1/projects/{project_id}/files` | Required positive integer `project_id` |
 | `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
+| `get_attachment` | `GET /api/v1/attachments/{attachment_id}` | Required positive integer `attachment_id` |
 | `list_issue_time_entries` | `GET /api/v1/issues/{issue_id}/time-entries` | Required positive integer `issue_id`; optional `limit`, `offset` |
 | `list_issue_statuses` | `GET /api/v1/issue-statuses` | None |
 | `list_trackers` | `GET /api/v1/trackers` | None |
@@ -291,6 +292,12 @@ category fields; this tool exposes only these three fields.
 contains file metadata, a content URL, digest, download count, and an optional version reference.
 This endpoint has no pagination or total count. Listing files does not download their content;
 Redmine checks the caller's View files permission on the project.
+
+`get_attachment` returns metadata for one attachment visible to the caller, including its
+filename, size, content type, description, content URL, author, and creation time. Redmine checks
+access through the attachment's container. This tool does not fetch the content URL. Visibility
+observations identify absent optional content type, description, or author fields. Redmine can
+return 404 when the stored file is unreadable, even though this tool reads only metadata.
 
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains

@@ -1,6 +1,7 @@
 """Public HTTP adapters and dependency entry points."""
 
 from redmine_mcp.api.dependencies import (
+    get_attachments,
     get_container,
     get_issues,
     get_projects,
@@ -25,6 +26,7 @@ __all__ = [
     "RouteContract",
     "application_error",
     "get_auth_context",
+    "get_attachments",
     "get_container",
     "get_issues",
     "get_projects",

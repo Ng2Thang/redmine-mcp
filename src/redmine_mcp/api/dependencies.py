@@ -7,6 +7,7 @@ from redmine_mcp.api.security import get_auth_context
 from redmine_mcp.auth import AuthContext
 from redmine_mcp.bootstrap import Container, build_container
 from redmine_mcp.features import (
+    AttachmentService,
     IssueService,
     ProjectService,
     ReferenceService,
@@ -23,6 +24,10 @@ def get_container(
 
 def get_projects(container: Annotated[Container, Depends(get_container)]) -> ProjectService:
     return container.projects
+
+
+def get_attachments(container: Annotated[Container, Depends(get_container)]) -> AttachmentService:
+    return container.attachments
 
 
 def get_issues(container: Annotated[Container, Depends(get_container)]) -> IssueService:

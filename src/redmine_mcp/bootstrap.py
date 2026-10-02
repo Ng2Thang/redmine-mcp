@@ -5,6 +5,7 @@ import httpx
 from redmine_mcp.auth import AuthenticationService
 from redmine_mcp.config import Settings
 from redmine_mcp.features import (
+    AttachmentService,
     IssueService,
     ProjectService,
     ReferenceService,
@@ -13,6 +14,7 @@ from redmine_mcp.features import (
 )
 from redmine_mcp.integrations.redmine import (
     ReadPolicy,
+    RedmineAttachments,
     RedmineClient,
     RedmineIdentity,
     RedmineIssues,
@@ -25,6 +27,7 @@ from redmine_mcp.integrations.redmine import (
 
 @dataclass(frozen=True)
 class Container:
+    attachments: AttachmentService
     projects: ProjectService
     issues: IssueService
     reference_data: ReferenceService
@@ -52,6 +55,7 @@ def build_container(
 ) -> Container:
     client = RedmineClient(http, api_key, read_policy(settings))
     return Container(
+        AttachmentService(RedmineAttachments(client)),
         ProjectService(RedmineProjects(client)),
         IssueService(RedmineIssues(client)),
         ReferenceService(RedmineReferenceData(client)),

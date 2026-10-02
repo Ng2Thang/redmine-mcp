@@ -14,6 +14,7 @@ READ_OPERATIONS = (
     "list_project_files",
     "list_issues",
     "get_issue",
+    "get_attachment",
     "list_issue_time_entries",
     "list_issue_statuses",
     "list_issue_priorities",

@@ -1,5 +1,6 @@
 """Public Redmine adapters used by dependency composition."""
 
+from redmine_mcp.integrations.redmine.attachments import RedmineAttachments
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.identity import RedmineIdentity
 from redmine_mcp.integrations.redmine.issues import RedmineIssues
@@ -12,6 +13,7 @@ from redmine_mcp.integrations.redmine.users import RedmineUsers
 
 __all__ = [
     "ReadPolicy",
+    "RedmineAttachments",
     "RedmineClient",
     "RedmineIdentity",
     "RedmineIssues",

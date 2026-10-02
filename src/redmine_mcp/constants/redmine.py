@@ -22,6 +22,7 @@ REQUEST_FAILED: Final[str] = "Redmine request failed"
 RELATIVE_PATH_REQUIRED: Final[str] = "Redmine requests require a relative resource path"
 
 RESPONSE_TOO_LARGE: Final[str] = "Redmine response exceeds limit"
+REQUEST_TOO_LARGE: Final[str] = "Redmine request exceeds limit"
 
 INVALID_RESPONSE: Final[str] = "Invalid Redmine response"
 
@@ -47,6 +48,7 @@ __all__ = [
     "REQUEST_FAILED",
     "RELATIVE_PATH_REQUIRED",
     "RESPONSE_TOO_LARGE",
+    "REQUEST_TOO_LARGE",
     "INVALID_RESPONSE",
     "CONNECTION_POOL_BUSY",
     "UNREACHABLE",

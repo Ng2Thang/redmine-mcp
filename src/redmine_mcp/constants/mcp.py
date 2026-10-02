@@ -20,6 +20,13 @@ RESPONSE_SCHEMA_REQUIRED: Final[str] = "MCP operation {operation!r} must publish
 READ_AUTHORIZATION_REQUIRED: Final[str] = (
     "MCP operation {operation!r} must enforce read authorization"
 )
+WRITE_AUTHORIZATION_REQUIRED: Final[str] = (
+    "MCP operation {operation!r} must enforce write authorization"
+)
+WRITE_ROUTE_REQUIRED: Final[str] = (
+    "MCP operation {operation!r} must use a write route under /api/v1/"
+)
+UNKNOWN_WRITE_OPERATIONS: Final[str] = "Unknown writer operation IDs: {operations}"
 
 __all__ = [
     "CATALOG_MISMATCH",
@@ -29,4 +36,7 @@ __all__ = [
     "GET_ROUTE_REQUIRED",
     "RESPONSE_SCHEMA_REQUIRED",
     "READ_AUTHORIZATION_REQUIRED",
+    "WRITE_AUTHORIZATION_REQUIRED",
+    "WRITE_ROUTE_REQUIRED",
+    "UNKNOWN_WRITE_OPERATIONS",
 ]

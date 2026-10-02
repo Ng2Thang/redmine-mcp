@@ -10,6 +10,7 @@ from redmine_mcp.integrations.redmine.reference_data import RedmineReferenceData
 from redmine_mcp.integrations.redmine.time_entries import RedmineTimeEntries
 from redmine_mcp.integrations.redmine.transport import create_upstream_client
 from redmine_mcp.integrations.redmine.users import RedmineUsers
+from redmine_mcp.integrations.redmine.write import RedmineWriter, WriteReceipt
 
 __all__ = [
     "ReadPolicy",
@@ -21,5 +22,7 @@ __all__ = [
     "RedmineReferenceData",
     "RedmineTimeEntries",
     "RedmineUsers",
+    "RedmineWriter",
+    "WriteReceipt",
     "create_upstream_client",
 ]

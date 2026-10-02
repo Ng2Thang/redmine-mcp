@@ -9,7 +9,10 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | Variable | Default | Requirements and purpose |
 |---|---|---|
 | `REDMINE_URL` | Required | HTTP or HTTPS base URL reachable from MCP; no embedded credentials, query, or fragment. A deployment subpath is supported. |
-| `REDMINE_WRITE_ENABLED` | `false` | Opt-in gate for future issue write routes; current release exposes only reads even when true. |
+| `REDMINE_WRITE_ENABLED` | `false` | Enables the separate writer runtime. Base Compose forces this false on `mcp-server` and true on the opt-in `mcp-writer` profile. |
+| `REDMINE_WRITER_USER_IDS` | Empty | Comma-separated positive Redmine user IDs permitted on the writer runtime; required when enabled. |
+| `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs permitted on the writer runtime. Empty permits no mutations. Unknown IDs prevent startup. |
+| `REDMINE_WRITER_KEY_SHA256` | Empty | Lowercase SHA-256 hex digest of the one restricted personal key accepted by the writer runtime; required when enabled. Keep it private. |
 | `REDMINE_TIMEOUT_SECONDS` | `20` | Positive finite read/write timeout in seconds; an inactivity timeout, not an end-to-end deadline. |
 | `REDMINE_CONNECT_TIMEOUT_SECONDS` | `5` | Positive finite connection timeout in seconds. |
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
@@ -106,21 +109,34 @@ configure external Redmine. Start MCP using the [operations guide](operations.md
 Do not run seed, reset, or restore against an external instance. Do not disable TLS verification.
 Do not share `docker compose config` output because interpolation can expose secrets.
 
-## Separate writer deployment prerequisite
+## Separate writer deployment
 
-The owner selected separate reader and writer deployments for future issue writes. Keep the
-existing reader deployment read-only. A writer configuration uses `REDMINE_WRITE_ENABLED=true`
-and a separate localhost `MCP_HOST_PORT`, such as `8001`. Each caller still supplies a personal
-Redmine key. Future application permissions must also authorize writes. Never use an admin key.
+Base Compose always keeps `mcp-server` read-only. The opt-in `mcp-writer` profile binds to
+localhost port `8001` by default (`MCP_WRITER_HOST_PORT`). It needs a separate ignored env-file
+with `REDMINE_WRITER_USER_IDS` and `REDMINE_WRITER_KEY_SHA256`. Generate the digest locally in Git
+Bash without putting the personal key in a command argument or history:
 
-Keep writer configuration in a separate ignored env-file and use a different Compose project name
-so containers do not replace the reader deployment. The writer may use the same intended Redmine
-URL. The flag is forwarded by base Compose and defaults false for existing deployments.
-Future write routes must authenticate with a personal key and use `require_write_access`;
-false returns `403` with `{"detail":"Write access is disabled"}`. Reader deployments must exclude
-future writes from MCP discovery as well as reject direct REST mutations.
+```bash
+read -rs writer_key; printf '\n'
+printf '%s' "$writer_key" | sha256sum | cut -d ' ' -f 1
+unset writer_key
+```
 
-This prerequisite provides configuration and an authorization dependency only. No write route or
-MCP tool is exposed yet. Application role rules, permission verification, and disposable data
-remain separate work. The [MCP tool dashboard](plans/index.md)
-tracks the reader-first release; writer tools are future ideas, not assigned tasks.
+Copy the digest into the ignored writer env-file. Use a dedicated ordinary Redmine user with only
+the needed project roles and personal key; never use an administrator key. Restrict access to the
+writer listener and env-file. The writer compares the key digest before calling Redmine, then
+checks the returned Redmine user ID. A different key receives 401, and a mismatched user receives
+403. Both REST and MCP requests use this boundary. The writer still exposes existing read tools
+to its restricted caller.
+
+The writer catalog contains only configured operation IDs from the code's explicit write allowlist.
+An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
+startup. Each future write route must use `require_write_access`, which checks its operation ID
+against the configured list. Reader REST write attempts return 403. No public write operation is
+part of this prerequisite.
+
+The write transport sends each mutation once, bounds JSON and binary requests and JSON responses,
+accepts 201 with a JSON object or 204 without a body, and returns an `uncertain` receipt when a
+request may have reached Redmine but a reliable response could not be obtained. Callers must
+inspect uncertain results before trying again. Logs record method, status, and timing without
+the request body, key, or response content. Live behavior still needs separate verification.

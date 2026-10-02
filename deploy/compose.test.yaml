@@ -7,6 +7,13 @@ services:
       redmine:
         condition: service_healthy
 
+  mcp-writer:
+    environment:
+      REDMINE_URL: http://redmine:3000
+    depends_on:
+      redmine:
+        condition: service_healthy
+
   postgres:
     image: postgres:16.8-bookworm
     environment:

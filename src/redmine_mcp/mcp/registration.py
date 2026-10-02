@@ -6,26 +6,35 @@ from fastapi_mcp import AuthConfig, FastApiMCP
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
 from redmine_mcp.api import require_mcp_access
+from redmine_mcp.config import Settings
 from redmine_mcp.constants import runtime as runtime_text
 from redmine_mcp.mcp.annotations import annotate_read_tools
 from redmine_mcp.mcp.catalog import (
     OPERATIONS,
     validate_generated_tools,
     validate_operation_catalog,
+    writer_catalog,
 )
 
 
-def register_mcp(app: FastAPI, client: httpx.AsyncClient) -> FastApiMCP:
-    validate_operation_catalog(app)
+def register_mcp(
+    app: FastAPI, client: httpx.AsyncClient, settings: Settings | None = None
+) -> FastApiMCP:
+    operations = (
+        writer_catalog(settings.writer_operations)
+        if settings is not None and settings.redmine_write_enabled
+        else OPERATIONS
+    )
+    validate_operation_catalog(app, operations)
     mcp = FastApiMCP(
         app,
         name="Redmine MCP",
-        include_operations=list(OPERATIONS),
+        include_operations=list(operations),
         http_client=client,
         headers=["x-redmine-api-key"],
         auth_config=AuthConfig(dependencies=[Depends(require_mcp_access)]),
     )
-    validate_generated_tools(mcp.tools)
+    validate_generated_tools(mcp.tools, operations)
     annotate_read_tools(mcp.tools)
     mcp.mount_http()
     return mcp

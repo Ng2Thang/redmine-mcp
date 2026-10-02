@@ -140,6 +140,18 @@ This uses base Compose, which runs MCP only. Never add the synthetic override or
 seed/reset/restore helpers for an external instance. Inside Docker, use `host.docker.internal`
 for Redmine running on the Windows host. Hosting, HTTPS ingress, and OAuth remain deferred.
 
+For the separate restricted writer, create an ignored `.local/writer.env` using the settings in
+[configuration](configuration.md). Start only the writer profile with its own Compose project:
+
+```bash
+docker compose -p redmine-mcp-writer --env-file .local/writer.env -f deploy/compose.yaml --profile writer up -d --build mcp-writer
+```
+
+It listens on `127.0.0.1:8001` unless `MCP_WRITER_HOST_PORT` is set. The reader deployment
+continues to use port 8000 and cannot enable writes through `REDMINE_WRITE_ENABLED`. At this
+foundation stage, no write operations are registered; leave `REDMINE_WRITER_OPERATIONS` empty.
+Do not share `docker compose config` output because it includes the writer key digest.
+
 ## Troubleshooting
 
 | Symptom | Action |

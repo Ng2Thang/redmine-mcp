@@ -7,13 +7,13 @@
 | Task ID | prep-007-restricted-writer-foundation |
 | Assigned capability | Establish an opt-in writer deployment before any write tool. |
 | Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
-| Status | blocked - documentation only |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-019-download-attachment](tool-019-download-attachment.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Prerequisite defined; no code, tests, or live check performed. |
-| Blocker / next action | Wait for tool-019 acceptance; review writer access contract and exact 7.0.2 behavior. |
+| Progress summary | Restricted writer configuration, catalog selection, authorization, Compose profile, and bounded single-attempt write transport implemented. |
+| Blocker / next action | User review, then separately authorized offline and synthetic verification; no write operation is public yet. |
 
 ## 2. Discovery and evidence
 
@@ -25,10 +25,9 @@ Establish an opt-in writer deployment before any write tool. Separate reader/wri
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is pinned; runtime acceptance remains pending. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
-Decisions: this prerequisite owns no public MCP operation; tool-019-download-attachment must be
-reviewed without rewriting prior evidence. Testing and any live rehearsal
-require separate user authorization. Target runtime verification and versioned source review remain execution
-blocker where 7.0.2 behavior is needed.
+Decisions: this prerequisite owns no public MCP operation. The owner approved tool-019 and its
+shared binary-limit correction on 2026-10-02. Testing and any live rehearsal require separate
+user authorization. Exact 7.0.2 runtime behavior remains unverified.
 
 ## 3. Requirements
 
@@ -49,7 +48,7 @@ production credential, and claims based on unrun checks.
 | Inputs | Existing configuration, bounded client, and reviewed prior task contract |
 | Outputs | Reader never exposes writes; writer rejects missing/unauthorized keys; no-body success and post-dispatch uncertainty are represented truthfully; old readers still work. |
 | Access | Restricted writer configuration; preserve reader-only catalog |
-| Version support | 7.0.2 exact build pending; exact target evidence is required before completion. |
+| Version support | 7.0.2 image pinned; exact target behavior remains unverified. |
 | Errors | Record failed prerequisite or recovery as blocked; never fabricate a successful result. |
 
 Write semantics: The foundation reports accepted writes and uncertain outcomes separately, does not retry after an unknown result, and never treats failed read-back as a failed write.
@@ -95,11 +94,19 @@ Testing is planned, not authorized or run. For prep-007-restricted-writer-founda
 
 ## 8. Implementation and review record
 
-- Changes made: this task document only.
-- Static checks: not run for this task.
+- Changes made: reader/writer catalog selection, restricted key and user identity, per-operation
+  write policy, separate writer Compose profile, bounded single-attempt JSON/binary transport,
+  accepted/uncertain receipt, configuration and operations documentation.
+- Contract: writer requires one personal key digest and permitted user IDs. Empty operation list
+  exposes no write tools. Unknown operation IDs prevent startup. Reader Compose forces writes off.
+- Static checks (2026-10-02): `.venv/Scripts/ruff.exe check .`,
+  `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, and
+  `git diff --check` passed. Git reported only line-ending conversion warnings.
 - Automated tests: not run.
 - Startup, Inspector, and live state checks: not run.
-- Remaining blocker: Wait for tool-019 acceptance; review writer access contract and exact 7.0.2 behavior.
+- Remaining blocker: User review and separate authorization for offline writer boundary tests,
+  synthetic startup, missing/incorrect key, role and operation denial, 201/204, oversized body,
+  timeout/uncertain receipt, and state inspection/cleanup. No live writes were attempted.
 
 ## 9. Completion and handoff
 
@@ -110,6 +117,7 @@ Testing is planned, not authorized or run. For prep-007-restricted-writer-founda
 - [ ] Dashboard and documentation match actual evidence.
 - [ ] User accepts this task before the next task starts.
 
-Final status: blocked. Next action: Wait for tool-019 acceptance; review writer access contract and exact 7.0.2 behavior.
+Final status: blocked. Next action: Review this foundation, then separately authorize the planned
+verification before acceptance. Coding finished; testing remains pending.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

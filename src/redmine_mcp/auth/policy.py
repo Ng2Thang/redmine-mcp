@@ -23,12 +23,21 @@ READ_OPERATIONS = (
     "list_trackers",
 )
 
+WRITE_OPERATIONS: tuple[str, ...] = ()
+
 
 class AuthorizationPolicy:
     """Explicit application permissions; Redmine owns resource visibility."""
 
-    def __init__(self, read_operations: tuple[str, ...]) -> None:
-        self.permissions = frozenset(f"read:{operation}" for operation in read_operations)
+    def __init__(
+        self, read_operations: tuple[str, ...], write_operations: tuple[str, ...] = ()
+    ) -> None:
+        self.permissions = frozenset(
+            [
+                *(f"read:{operation}" for operation in read_operations),
+                *(f"write:{operation}" for operation in write_operations),
+            ]
+        )
 
     def authorize(self, principal: Principal, permission: str) -> None:
         if (

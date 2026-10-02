@@ -42,7 +42,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         base_url="http://apiserver",
         timeout=settings.redmine_timeout_seconds + 5,
     )
-    app.state.mcp = register_mcp(app, internal)
+    app.state.mcp = register_mcp(app, internal, settings)
     runtime = RuntimeLifecycle(settings, internal, app.state.mcp)
     app.router.lifespan_context = runtime.lifespan
     return app

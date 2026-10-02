@@ -10,7 +10,7 @@
 | Status | blocked - implementation finished; testing pending |
 | Dependencies | prep-002 offline baseline complete; prep-003 identity foundation implemented with runtime acceptance pending |
 | Related tasks | Existing issue assignee `me` behavior; no additional tool dependency |
-| Target Redmine version | 6.0.5-bookworm, pinned in deploy/compose.test.yaml |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Approved contract implemented; lint, formatting, types, architecture, and diff checks pass; automated and runtime acceptance not executed. |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
@@ -34,8 +34,8 @@ were present before this assignment and must be preserved. No secrets were read 
 | Source | Checked | Version | Evidence / permission |
 |---|---|---|---|
 | [Users API](https://www.redmine.org/projects/redmine/wiki/Rest_Users) | 2026-10-01 | General reference | Current-user lookup and memberships expansion; ordinary users can read their own profile. |
-| [Users controller](https://github.com/redmine/redmine/blob/6.0.5/app/controllers/users_controller.rb) | 2026-10-01 | 6.0.5 | Show permits API authentication without the controller's admin gate; memberships are filtered by project visibility. |
-| [User serializer](https://github.com/redmine/redmine/blob/6.0.5/app/views/users/show.api.rsb) | 2026-10-01 | 6.0.5 | Membership IDs, project references, roles, optional inherited flags; email can be omitted; API key must be excluded. |
+| Users controller (prior source inspection; current release review pending) | 2026-10-01 | prior sample | Show permits API authentication without the controller's admin gate; memberships are filtered by project visibility. |
+| User serializer (prior source inspection; current release review pending) | 2026-10-01 | prior sample | Membership IDs, project references, roles, optional inherited flags; email can be omitted; API key must be excluded. |
 
 Versioned source was read directly during planning; no live acceptance is implied. User profile
 data is personal information, but returning the selected caller profile is explicitly authorized.

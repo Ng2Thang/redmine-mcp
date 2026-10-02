@@ -19,6 +19,7 @@ ISSUE_INCLUDES = frozenset(
         "allowed_statuses",
     }
 )
+ISSUE_LIST_INCLUDES = frozenset({"attachments", "relations"})
 
 
 def require_issue_date(value: object) -> object:
@@ -60,6 +61,8 @@ class Journal(BaseModel):
     user: Reference
     notes: str = ""
     created_on: str
+    updated_on: str | None = None
+    updated_by: Reference | None = None
     private_notes: bool = False
     details: list[JournalDetail] = Field(default_factory=list)
 
@@ -70,6 +73,7 @@ class Attachment(BaseModel):
     filesize: int
     content_type: str | None = None
     description: str | None = None
+    content_url: str | None = None
     created_on: str
     author: Reference
 
@@ -159,4 +163,6 @@ class Issue(BaseModel):
 
 
 class IssueDetail(Issue):
+    estimated_hours: IssueHours | None = None
+    total_estimated_hours: IssueHours | None = None
     visibility: Visibility = Field(default_factory=Visibility)

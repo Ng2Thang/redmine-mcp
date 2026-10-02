@@ -10,7 +10,7 @@
 | Status | blocked; implementation finished, testing pending |
 | Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
-| Target | Redmine 6.0.5-bookworm |
+| Target | Redmine 7.0.2; runtime acceptance pending |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence

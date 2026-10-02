@@ -21,13 +21,13 @@ case "${1:-}" in
     if test -f /state/history-manifest.json; then
       cp /state/history-manifest.json "$snapshot/"
     fi
-    printf '%s\n' 'redmine=6.0.5-bookworm' 'postgres=16.8-bookworm' > "$snapshot/versions.txt"
+    printf '%s\n' 'redmine=7.0.2-bookworm' 'postgres=16.8-bookworm' > "$snapshot/versions.txt"
     touch "$snapshot/COMPLETE"
     echo 'Backup complete; contains test credentials. Keep outside version control.'
     ;;
   restore)
     test -f "$snapshot/COMPLETE" || { echo 'Snapshot incomplete'; exit 1; }
-    grep -qx 'redmine=6.0.5-bookworm' "$snapshot/versions.txt"
+    grep -qx 'redmine=7.0.2-bookworm' "$snapshot/versions.txt"
     grep -qx 'postgres=16.8-bookworm' "$snapshot/versions.txt"
     grep -q "$expected" "$snapshot/environment.json"
     pg_restore --list "$snapshot/database.dump" >/dev/null

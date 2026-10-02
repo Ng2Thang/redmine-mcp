@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
 
   redmine:
-    image: redmine:6.0.5-bookworm
+    image: redmine:7.0.2-bookworm@sha256:5cb12288dbfb807f136adbee02d60a96acc24edad0404cbfce214a7ced39ff6a
     environment:
       REDMINE_DB_POSTGRES: postgres
       REDMINE_DB_DATABASE: redmine
@@ -93,7 +93,9 @@ volumes:
   redmine_db_data:
     labels:
       redmine-mcp.environment: synthetic-test
+      redmine-mcp.redmine-version: "7.0.2"
   redmine_files:
     labels:
       redmine-mcp.environment: synthetic-test
+      redmine-mcp.redmine-version: "7.0.2"
 

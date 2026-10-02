@@ -6,11 +6,12 @@ update this table in the same change when that status, blocker, or next action c
 below are new. The deleted `issues-000` through `issues-008` IDs remain retired.
 
 The next strictly sequential capability roadmap is specified in
-[Redmine 7.0.2 files and issues](redmine-7-1-capabilities.md).
-Its tasks are listed below. The 7.0.2 deployment target is configured; migration
-and tool acceptance remain pending.
+[Redmine 7.0.2 files and issues](redmine-7-0-2-capabilities.md).
+Its tasks are listed below. The 7.0.2 deployment target is configured and accepted;
+the user waived actual runtime verification on 2026-10-02. Runtime tool behavior
+remains unverified.
 
-Existing synthetic baseline: Redmine `6.0.5-bookworm` in `deploy/compose.test.yaml`. The isolated target is pinned to `7.0.2-bookworm` in `deploy/compose.redmine-7-0-2.yaml`; its migration has not been verified.
+Synthetic deployment: Redmine `7.0.2-bookworm` is pinned in `deploy/compose.test.yaml`.
 Planning baseline: 2026-09-30. Task records below contain the implementation and acceptance
 evidence completed since that baseline. Existing runtime configuration already has a
 false-default write gate, but the currently deployed catalog remains read-only.
@@ -58,18 +59,17 @@ the table gives the preferred release order, not a code dependency.
 ## Redmine 7.0.2 sequential capability roadmap
 
 This roadmap plans fifteen operations and extends `list_issues` and `get_issue`.
-The 7.0.2 image is pinned in isolated Compose; the original 6.0.5 fixture
-remains the source baseline. Each active row depends on accepted evidence and
-explicit user acceptance of its listed predecessor. Deferred rows do not block
-the 7.0.2 chain. Testing requires separate user authorization for each task;
-planned checks are not passing evidence.
+The 7.0.2 image is pinned in the synthetic Compose deployment. Each active row
+depends on accepted evidence and explicit user acceptance of its listed predecessor.
+Unit testing requires separate user authorization for each task. The user waived
+actual runtime verification on 2026-10-02; planned checks are not passing evidence.
 
 | Order | Task | Client outcome | Depends on | Status | Blocker / next action |
 |---|---|---|---|---|---|
 | 1 | [prep-004-accept-existing-baseline](tasks/prep-004-accept-existing-baseline.md) | Accept the existing reader baseline | prep-002-offline-tests accepted | complete | User accepted the revised offline baseline by directing continuation to prep-005 on 2026-10-02. Live waiver and prior limitations retained; see [dated evidence](prep-004-verification.md). |
-| 2 | [prep-005-upgrade-redmine-7-1](tasks/prep-005-upgrade-redmine-7-1.md) | Pin and rehearse Redmine 7.0.2 | prep-004-accept-existing-baseline accepted | blocked | Implementation finished: release source and image verified, isolated restore/migration/recovery helpers prepared. Separately authorized migration, API comparison and recovery acceptance remain pending; see [runbook](../redmine-upgrade.md). |
-| 3 | [tool-014-list-issues-associations](tasks/tool-014-list-issues-associations.md) | Extend issue lists with associations | prep-005-upgrade-redmine-7-1 accepted | blocked | Await prep-005-upgrade-redmine-7-1 acceptance and exact 7.0.2 evidence. |
-| 4 | [tool-015-get-issue-write-context](tasks/tool-015-get-issue-write-context.md) | Expose issue write and file context | tool-014-list-issues-associations accepted | blocked | Await tool-014-list-issues-associations acceptance and exact 7.0.2 evidence. |
+| 2 | [prep-005-redmine-7-0-2](tasks/prep-005-redmine-7-0-2.md) | Pin Redmine 7.0.2 | prep-004-accept-existing-baseline accepted | complete | User accepted the final 7.0.2 pin and waived actual runtime verification on 2026-10-02; live behavior remains unverified. |
+| 3 | [tool-014-list-issues-associations](tasks/tool-014-list-issues-associations.md) | Extend issue lists with associations | prep-005-redmine-7-0-2 accepted | complete | User directed continuation without verification on 2026-10-02; static checks pass, but unit and live behavior remain unverified. |
+| 4 | [tool-015-get-issue-write-context](tasks/tool-015-get-issue-write-context.md) | Expose issue write and file context | tool-014-list-issues-associations accepted | blocked | Implementation and static checks finished; unit tests unexecuted and live verification waived under user instructions. |
 | 5 | [tool-016-list-document-categories](tasks/tool-016-list-document-categories.md) | List document categories | tool-015-get-issue-write-context accepted | blocked | Await tool-015-get-issue-write-context acceptance and exact 7.0.2 evidence. |
 | 6 | [tool-019-list-project-files](tasks/tool-019-list-project-files.md) | List project files | tool-016-list-document-categories accepted | blocked | Await tool-016-list-document-categories acceptance and exact 7.0.2 evidence. |
 | 7 | [tool-020-get-attachment](tasks/tool-020-get-attachment.md) | Read attachment metadata | tool-019-list-project-files accepted | blocked | Await tool-019-list-project-files acceptance and exact 7.0.2 evidence. |
@@ -89,20 +89,6 @@ planned checks are not passing evidence.
 | 21 | [tool-034-add-issue-watcher](tasks/tool-034-add-issue-watcher.md) | Add one watcher | tool-033-delete-issue-relation accepted | blocked | Await tool-033-delete-issue-relation acceptance and exact 7.0.2 evidence. |
 | 22 | [tool-035-remove-issue-watcher](tasks/tool-035-remove-issue-watcher.md) | Remove one watcher | tool-034-add-issue-watcher accepted | blocked | Await tool-034-add-issue-watcher acceptance and exact 7.0.2 evidence. |
 | 23 | [prep-009-release-acceptance](tasks/prep-009-release-acceptance.md) | Review complete Redmine 7.0.2 release | tool-035-remove-issue-watcher accepted | blocked | Await tool-035-remove-issue-watcher acceptance and exact 7.0.2 evidence. |
-
-### Deferred Document REST tasks
-
-The Redmine REST index dates Documents REST to 7.1. These drafts are retained
-for history and are outside the supported 7.0.2 catalog. Document category
-enumeration (tool-016) remains active through the older Enumerations API.
-
-| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
-|---|---|---|---|---|---|
-| Deferred | [tool-017-list-project-documents](tasks/tool-017-list-project-documents.md) | List project documents | tool-016-list-document-categories accepted | blocked | Documents REST begins in 7.1; this historical draft is outside the 7.0.2 target. |
-| Deferred | [tool-018-get-document](tasks/tool-018-get-document.md) | Read one document | tool-017-list-project-documents accepted | blocked | Documents REST begins in 7.1; this historical draft is outside the 7.0.2 target. |
-| Deferred | [tool-026-create-document](tasks/tool-026-create-document.md) | Create a project document | tool-025-delete-attachment accepted | blocked | Documents REST begins in 7.1; this historical draft is outside the 7.0.2 target. |
-| Deferred | [tool-027-update-document](tasks/tool-027-update-document.md) | Update document fields or attachments | tool-026-create-document accepted | blocked | Documents REST begins in 7.1; this historical draft is outside the 7.0.2 target. |
-| Deferred | [tool-028-delete-document](tasks/tool-028-delete-document.md) | Delete a document | tool-027-update-document accepted | blocked | Documents REST begins in 7.1; this historical draft is outside the 7.0.2 target. |
 
 ## Future ideas, not assigned tasks
 

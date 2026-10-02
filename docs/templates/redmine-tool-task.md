@@ -20,7 +20,7 @@ redacted. Add table rows as needed without renumbering existing requirements or 
 | Status | <discovery / specified / planned / implementing / verifying / complete / blocked> |
 | Dependencies | <Dashboard task IDs and completion evidence; include testing/access prerequisites> |
 | Related tasks | <Links or N/A> |
-| Target Redmine version | <Confirm deploy/compose.test.yaml; default currently 6.0.5> |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | <Date and author/agent identifier> |
 | Progress summary | <What is complete and what remains> |
 | Next action | <Exact action another agent can take> |

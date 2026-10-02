@@ -12,7 +12,7 @@
 | Status | blocked |
 | Dependencies | [prep-002](prep-002-offline-tests.md) supplies offline verification; [tool-001](tool-001-list-issues-search.md) supplies project, tracker, status, and pagination; [tool-010](tool-010-list-issues-by-target-version.md) supplies `include_subprojects=false` for exact-project queries, with its acceptance still pending |
 | Related tasks | [tool-005](tool-005-list-trackers.md) resolves the Bug tracker ID; [tool-002](tool-002-get-issue-context.md) owns existing detail expansions |
-| Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Implementation finished; static checks pass. Offline and synthetic acceptance remain pending under a separate testing assignment. |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
@@ -41,9 +41,9 @@ English Markdown and no automatic unit-test execution instructions apply.
 
 | Source URL or versioned source | Date verified | Version supported | Endpoint/behavior | Permission required | Evidence or limitation |
 |---|---|---|---|---|---|
-| [Redmine 6.0.5 issue detail API view](https://raw.githubusercontent.com/redmine/redmine/6.0.5/app/views/issues/show.api.rsb) | 2026-09-30 | 6.0.5 | `GET /issues/{id}.json` emits `start_date`, `due_date`, `spent_hours`, and `total_spent_hours` | `spent_hours` fields only when `view_time_entries` is allowed on the project | Lines 13-22 show the dates and permission gate; detail is version-pinned evidence. |
-| [Redmine Issues REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-09-30 | General reference; detail checked against 6.0.5 source | `GET /issues.json`, paging, status/project/tracker filters, start and due date fields | Existing visible-issue access | The list example contains both dates; the guide does not prove a stable server-side date-range filter for both fields. |
-| [Redmine issue-list spent-hours change](https://www.redmine.org/issues/34857) and [5.0 changelog](https://www.redmine.org/projects/redmine/wiki/Changelog_5_0) | 2026-09-30 | Introduced in 5.0, therefore expected in 6.0.5 | Issue-list API adds `spent_hours` and `total_spent_hours` | Redmine's spent-time visibility rules | Historical release evidence; confirm the exact 6.0.5 list payload in opt-in synthetic acceptance. |
+| Previously inspected Redmine issue detail API view (prior source inspection; current release review pending) | 2026-09-30 | prior sample | `GET /issues/{id}.json` emits `start_date`, `due_date`, `spent_hours`, and `total_spent_hours` | `spent_hours` fields only when `view_time_entries` is allowed on the project | Lines 13-22 show the dates and permission gate; detail is version-pinned evidence. |
+| [Redmine Issues REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-09-30 | General reference; detail checked against prior sample source | `GET /issues.json`, paging, status/project/tracker filters, start and due date fields | Existing visible-issue access | The list example contains both dates; the guide does not prove a stable server-side date-range filter for both fields. |
+| [Redmine issue-list spent-hours change](https://www.redmine.org/issues/34857) and Redmine change record | 2026-09-30 | Previously observed; target verification pending | Issue-list API adds `spent_hours` and `total_spent_hours` | Redmine's spent-time visibility rules | Historical release evidence; confirm the exact prior sample list payload in opt-in synthetic acceptance. |
 | [Redmine roles reference](https://www.redmine.org/projects/redmine/wiki/RedmineRoles) | 2026-09-30 | General reference | View spent time and time-log visibility | `view_time_entries`; role can restrict visible entries to own | A visible issue does not prove that all project time entries are visible to the shared account. |
 | `src/redmine_mcp/features/issues/models.py`, `integrations/redmine/issues.py`, and `mcp/registration.py` | 2026-09-30 | Current repository | Shared issue projection and existing MCP operations | Existing shared reader | Static code inspection only; no live Redmine response was used as acceptance evidence. |
 
@@ -62,8 +62,8 @@ user's time logs.
 | Client outcome / tool | Existing coverage | Read/write | Version support | Task ID | Dependencies | In scope/deferred |
 |---|---|---|---|---|---|---|
 | Find all Bugs in one exact project | `list_issues` plus tracker lookup | Read | Current repository | Existing tools | tool-001, tool-005, tool-010 | Existing capability |
-| Identify issues with both dates in September | Dates are dropped | Read | 6.0.5 detail view and REST list example | tool-011 | prep-002 | In scope: expose dates and filter complete pages client-side |
-| Sum spent time for those issues | Hours are dropped | Read | 6.0.5 detail view; list introduced in 5.0 | tool-011 | prep-002 | In scope: expose direct hours and define client summation |
+| Identify issues with both dates in September | Dates are dropped | Read | prior sample detail view and REST list example | tool-011 | prep-002 | In scope: expose dates and filter complete pages client-side |
+| Sum spent time for those issues | Hours are dropped | Read | prior sample detail view; list field source review pending | tool-011 | prep-002 | In scope: expose direct hours and define client summation |
 | Filter time entries by `spent_on`, or return an aggregate in one server call | No current tool | Read | Separate Time Entries API | Unassigned | New client outcome | Deferred |
 
 ### Questions and decisions
@@ -242,7 +242,7 @@ HTTPX MockTransport, ASGI lifespan, and MCP SDK client checks; no real credentia
 | AGG-002 | AC-005 | Client workflow | One qualifying issue with null direct hours | Total marked incomplete, never 0. | Offline |
 | COMPAT-001 | AC-006 | REST regression | Existing list/detail inputs, defaults, expansions, auth, and failure fixture | Existing contracts preserved. | Offline |
 | MCP-001 | AC-006 | MCP SDK client | Discover and invoke `list_issues` and `get_issue` | Stable names and new response fields. | Offline |
-| LIVE-001 | AC-003, AC-005 | Inspector on marked synthetic Redmine 6.0.5 | Query exact History Alpha Operations Bug set; inspect list/detail, dates, hours, and reader permission | Pinned list payload and manually computed visible direct-hour total agree; do not seed/reset merely for this reader check. | Opt-in live |
+| LIVE-001 | AC-003, AC-005 | Inspector on marked synthetic Previously inspected Redmine | Query exact History Alpha Operations Bug set; inspect list/detail, dates, hours, and reader permission | Pinned list payload and manually computed visible direct-hour total agree; do not seed/reset merely for this reader check. | Opt-in live |
 
 - Defaults, filters, encoding, pagination, optional fields: DATE-001, DATE-002, AGG-001, COMPAT-001.
 - Invalid inputs rejected before upstream access: COMPAT-001, existing issue tests.

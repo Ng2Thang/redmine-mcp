@@ -82,8 +82,10 @@ def page[T: BaseModel](
     offset: int,
     *,
     observed_fields: tuple[str, ...] = (),
+    requested_fields: Sequence[str] = (),
+    unrequested_fields: Sequence[str] = (),
 ) -> Page[T]:
-    require_observable_fields(model, observed_fields)
+    require_observable_fields(model, (*observed_fields, *requested_fields, *unrequested_fields))
     envelope = response_page(data, key, limit, offset)
     return Page(
         items=[item(model, entry) for entry in envelope.items],
@@ -95,6 +97,18 @@ def page[T: BaseModel](
                 observation
                 for index, entry in enumerate(envelope.items)
                 for observation in observe_fields(entry, observed_fields, prefix=f"/items/{index}")
+            ]
+            + [
+                observation
+                for index, entry in enumerate(envelope.items)
+                for observation in observe_fields(entry, requested_fields, prefix=f"/items/{index}")
+            ]
+            + [
+                observation
+                for index, entry in enumerate(envelope.items)
+                for observation in observe_fields(
+                    entry, unrequested_fields, state="not_requested", prefix=f"/items/{index}"
+                )
             ]
         ),
     )

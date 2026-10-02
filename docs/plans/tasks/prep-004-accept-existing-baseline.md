@@ -1,8 +1,7 @@
 # prep-004-accept-existing-baseline: Accept existing reader baseline
 
-Historical acceptance record: references below to a future 7.1 target reflect the
-original plan. The roadmap was retargeted to 7.0.2 on 2026-10-02; this does not
-change the recorded 6.0.5 baseline evidence.
+Historical acceptance record: the live samples below predate the 7.0.2 pin.
+They do not establish runtime acceptance for the current target.
 
 ## 1. Task identity and status
 
@@ -13,8 +12,8 @@ change the recorded 6.0.5 baseline evidence.
 | Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
 | Status | complete - revised offline scope accepted |
 | Dependencies | [prep-002-offline-tests](prep-002-offline-tests.md); predecessor acceptance required |
-| Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 6.0.5 current synthetic; repository currently pins 6.0.5-bookworm |
+| Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
+| Target Redmine version | 7.0.2 target; repository pins 7.0.2 |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | 356 offline tests, static checks, and source/wheel builds pass. Authorized MCP startup race fix verified. User waived remaining prep-004 live checks on 2026-10-02; prior partial evidence retained. |
 | Blocker / next action | User accepted the revised offline baseline by directing continuation to prep-005 on 2026-10-02. Proceed under prep-005's independent release and verification requirements. |
@@ -26,14 +25,14 @@ The inventory and execution rows dated 2026-10-01 below remain historical eviden
 On 2026-10-02 the user requested skipping live checks. Remaining live procedures and their
 fixture requirements are waived for prep-004. Acceptance now uses the passing offline suite,
 static checks, builds, preserved evidence, and verified runtime fix. This waiver does not apply
-to later tasks or establish live permission, data completeness, or Redmine 7.1 compatibility.
+to later tasks or establish live permission, data completeness, or Redmine 7.0.2 compatibility.
 
 Reconcile acceptance of prep-003 and tool-002 through tool-013 without altering their historical evidence. Inventory unfinished criteria and exact blockers; obtain separate testing authorization; run only authorized offline and synthetic cases; update each existing task and the dashboard from actual evidence.
 
 | Source | Checked | Evidence and limitation |
 |---|---|---|
 | [Current roadmap](../index.md) | 2026-10-01 | Existing task status and architecture; no pending acceptance is treated as passed. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | Current synthetic Redmine is 6.0.5, so it cannot establish 7.1 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is now pinned; prior live samples do not establish its behavior. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
 ### Existing acceptance inventory (2026-10-01)
@@ -59,7 +58,7 @@ inventory does not change their status or count static checks as runtime accepta
 
 The pending set contains 81 named scenarios across 13 task records. Existing static evidence
 varies by task and must be read in each linked record before accepting that task. The current
-6.0.5 fixture can verify the reader baseline only; it cannot establish Redmine 7.1 behavior.
+prior live samples can inform the reader baseline only; they cannot establish Redmine 7.0.2 behavior.
 The original offline files covered the earlier generic baseline and issue search. The added
 reader cases partially cover lookup mapping, project detail, current-user selection, and
 time-entry mapping, but do not complete these 81 scenario groups. Several older task contracts
@@ -69,7 +68,7 @@ forward-looking contracts before full acceptance without rewriting historical ex
 
 Decisions: this prerequisite owns no public MCP operation; prep-003 and tool-002..tool-013 must be
 reviewed without rewriting prior evidence. The user authorized this prep-004 verification stage
-on 2026-10-01. The exact 7.1 build remains a later execution blocker for prep-005.
+on 2026-10-01. Redmine 7.0.2 runtime acceptance remains a later prerequisite for prep-005.
 
 ## 3. Requirements
 
@@ -93,7 +92,7 @@ production credential, and claims based on unrun checks.
 | Inputs | Existing task criteria, evidence records, and separately authorized verification procedures |
 | Outputs | Verified offline reader baseline, static/build results, dated scenario coverage and limitations; remaining live checks explicitly waived and earlier evidence preserved. |
 | Access | No new public permission |
-| Version support | 6.0.5 current synthetic; exact target evidence is required before completion. |
+| Version support | 7.0.2 target; exact target evidence is required before completion. |
 | Errors | Record failed prerequisite or recovery as blocked; never fabricate a successful result. |
 
 Write semantics: N/A - no Redmine mutation belongs to this planning task.
@@ -109,7 +108,7 @@ are assigned. Exact version and execution evidence remain pending.
    and MCP SDK sessions; use no real credentials. The expanded 356-case suite passes;
    named-scenario coverage and remaining variants are recorded in the verification ledger.
 4. In the authorized live stage, inspect all existing tools under ordinary keys on
-   the marked 6.0.5 synthetic environment. Resolve fixture IDs at runtime; do not seed, reset,
+   the previously marked synthetic environment. Resolve fixture IDs at runtime; do not seed, reset,
    restore, or mutate Redmine for a reader check. Record unavailable fixtures as limitations.
 5. Record dated commands, redacted actual results, failures, and recovery in each original task;
    synchronize its dashboard row. Preserve any existing passing static evidence.
@@ -143,15 +142,15 @@ remaining gaps are in the dated ledger. For prep-004-accept-existing-baseline, v
 |---|---|---|---|
 | EVID-001 | `bash scripts/check.sh` in Git Bash after test-fixture repair and new reader cases | Ruff, format (158 files), mypy (79 source files), architecture gate pass | Pass, 2026-10-01 |
 | EVID-002 | `uv run --frozen pytest -q --tb=short` in Git Bash | 46 cases pass; one Pydantic deprecation warning. Initial run had 30 authentication-fixture failures; the old bearer fixture was updated to the current personal-key contract. New cases cover populated/empty/malformed lookups, project detail/count, current-user selected fields, and time-entry mapping/cross-issue rejection. The 81 named scenario groups are not fully covered. | Partial, 2026-10-01 |
-| EVID-003 | Inspector 2.8.0 against marked 6.0.5 via local app on port 18080 and restricted reader key | 11 tools discovered. Ten sample calls succeeded; category lookup returned 403 for reader and succeeded for admin. Read-only REST health/projects/issues returned 200; visible issue count was 391. No second ordinary key or complete permission matrix checked. | Partial, 2026-10-01 |
+| EVID-003 | Inspector 2.8.0 against previously marked synthetic fixture via local app on port 18080 and restricted reader key | 11 tools discovered. Ten sample calls succeeded; category lookup returned 403 for reader and succeeded for admin. Read-only REST health/projects/issues returned 200; visible issue count was 391. No second ordinary key or complete permission matrix checked. | Partial, 2026-10-01 |
 | EVID-004 | Read-only audit of prep-003 and tool-002 through tool-013 task records; compare scenario IDs and statuses with dashboard | 13 records blocked; pending groups listed above; no execution claimed | Audit complete |
-| EVID-005 | Inspect Redmine 6.0.5 controller and permission mapping in the running synthetic container; compare category GET under reader and admin keys | Controller calls `authorize`; `lib/redmine/preparation.rb` maps issue-category index to `manage_categories`. Reader received 403 on 11 visible projects; admin received 200 on a sampled project. This is expected for the restricted reader role, not category-content acceptance for that role. | Permission boundary observed, 2026-10-01 |
+| EVID-005 | Inspect the controller and permission mapping in the previously observed synthetic container; compare category GET under reader and admin keys | Controller calls `authorize`; `lib/redmine/preparation.rb` maps issue-category index to `manage_categories`. Reader received 403 on 11 visible projects; admin received 200 on a sampled project. This is expected for the restricted reader role, not category-content acceptance for that role. | Permission boundary observed, 2026-10-01 |
 | EVID-006 | Read-only comparison of one marked history issue's time-entry page through app REST and Redmine REST under the same reader key | Issue 151 had three visible entries; IDs and count matched. Inspector invoked the tool separately on another visible issue. Credited-user/hours/date comparison and complete visibility remain pending. | Partial, 2026-10-01 |
 | EVID-007 | Inspect only synthetic credential artifact field names; do not print values | The local artifact exposes a restricted reader key and an administrator key. Other named ordinary accounts are recorded by user ID without personal keys; the two-ordinary-account Inspector scenarios cannot be completed from the current artifact alone. | Fixture gap, 2026-10-01 |
 | EVID-008 | `uv run --frozen pytest -q --tb=short -p no:cacheprovider` in Git Bash | 356 tests pass in 43.32 seconds; one existing Pydantic deprecation warning. Runtime/reader cases and limitations are mapped in the dated ledger. | Pass for executed offline suite, 2026-10-02 |
 | EVID-009 | `bash scripts/check.sh`, `uv build`, `git diff --check` | Ruff lint/format, mypy (79 source files), architecture gate (79 runtime modules), source/wheel build, and whitespace checks pass. | Pass, 2026-10-02 |
 | EVID-010 | Concurrent first MCP connections; authorized runtime correction and deterministic readiness/cleanup checks | Reproduced an SDK startup race producing 500; lifespan now waits for manager readiness. Concurrent identities, failed/cancelled startup, and open-session shutdown pass. | Fixed and verified, 2026-10-02 |
-| EVID-011 | Inspector 2.8.0 and same-key Redmine REST on marked 6.0.5; temporary localhost app | Catalog, profile, projects, registries, time-entry fields, and exact/descendant version comparisons recorded. Category access is 403; only one ordinary key and no qualifying September Bugs. Full matrix and clean rerun remain pending. | Partial, 2026-10-02 |
+| EVID-011 | Inspector 2.8.0 and same-key Redmine REST on previously marked synthetic fixture; temporary localhost app | Catalog, profile, projects, registries, time-entry fields, and exact/descendant version comparisons recorded. Category access is 403; only one ordinary key and no qualifying September Bugs. Full matrix and clean rerun remain pending. | Partial, 2026-10-02 |
 | EVID-012 | User decision to skip prep-004 live checks | Remaining live matrix, fixture acquisition, and clean Inspector rerun waived. Passing offline/static/build evidence is the revised acceptance scope; no unrun check is recorded as passed. | Scope revised, 2026-10-02 |
 
 ## 8. Implementation and review record

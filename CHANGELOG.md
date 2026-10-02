@@ -34,10 +34,14 @@ that a release has been published.
 
 ### Changed
 
-- Retargeted the future Redmine capability roadmap to 7.0.2. Added an isolated,
-  digest-pinned 7.0.2 Compose target, guarded copy/restore helpers and an independent
-  6.0.5 recovery project. Deferred Document REST operations that require Redmine 7.1.
-  The existing 6.0.5 synthetic baseline remains in place.
+- Extended `get_issue` with estimates, attachment content URLs, and journal edit metadata;
+  missing estimates are identified in visibility observations.
+
+- Extended `list_issues` with optional attachment and relation expansions, with page visibility
+  observations for requested and unrequested associations.
+
+- Pinned the synthetic Redmine deployment to 7.0.2 and removed the separate
+  version-transition configurations and instructions. Removed unsupported Document REST drafts.
 
 - Start the MCP session manager before accepting requests and wait for SDK readiness, preventing
   intermittent 500 responses when clients connect simultaneously. Add authorized offline runtime

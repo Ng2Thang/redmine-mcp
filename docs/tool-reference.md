@@ -27,7 +27,7 @@ or guarantees that repeated reads return identical data. The external Redmine da
 | `get_project` | `GET /api/v1/projects/{project_id}` | Required positive integer `project_id` |
 | `list_project_versions` | `GET /api/v1/projects/{project_id}/versions` | Required positive integer `project_id` |
 | `list_project_issue_categories` | `GET /api/v1/projects/{project_id}/issue-categories` | Required positive integer `project_id` |
-| `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset` |
+| `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
 | `list_issue_time_entries` | `GET /api/v1/issues/{issue_id}/time-entries` | Required positive integer `issue_id`; optional `limit`, `offset` |
 | `list_issue_statuses` | `GET /api/v1/issue-statuses` | None |
@@ -212,6 +212,17 @@ Example `get_issue` response:
 ```
 
 `list_issues` wraps issue objects in the same page structure as `list_projects`.
+`get_issue` also returns nullable `estimated_hours` and `total_estimated_hours` as finite,
+nonnegative numbers. Missing upstream estimates produce `not_returned` visibility observations;
+explicit upstream nulls do not. Attachments expose nullable `content_url`, and journals expose
+nullable `updated_on` and `updated_by` when Redmine supplies them. Reading a URL does not
+download its content. These values provide context and do not guarantee edit permissions.
+Its optional `include` accepts `attachments`, `relations`, or both in a comma-separated list.
+Without `include`, the existing issue search and ordering defaults apply and both association
+arrays stay empty. Page visibility observations mark unrequested arrays as `not_requested`;
+requested arrays missing from Redmine are marked `not_returned`. Redmine filters returned
+relations to issues visible to the requesting user. Duplicate, unknown, or empty include
+segments are rejected.
 The same nullable `category` and `fixed_version` (Target version) references appear on both list
 and detail issue responses.
 Both issue tools return `start_date` and `due_date` as ISO calendar dates or `null`. They return

@@ -55,7 +55,9 @@ def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
         "dates and permission-gated direct spent_hours and descendant-inclusive "
         "total_spent_hours. Page through all matches before summing direct "
         "spent_hours. Visibility metadata reports selected fields omitted by "
-        "Redmine without asserting the cause."
+        "Redmine without asserting the cause. Select attachments or relations "
+        "with a comma-separated include; omitted expansions remain empty with "
+        "not_requested visibility observations."
     ),
 )
 async def list_issues(
@@ -103,6 +105,10 @@ async def list_issues(
         bool,
         Query(description=("Include descendant-project issues when filtering by project")),
     ] = True,
+    include: Annotated[
+        str | None,
+        Query(description=("Comma-separated list expansions: attachments,relations")),
+    ] = None,
 ) -> Page[Issue]:
     """List visible issues. Status defaults to open; '*' means all.
     Assignee 'me' means the requesting Redmine user.
@@ -121,6 +127,7 @@ async def list_issues(
         category_id,
         fixed_version_id,
         include_subprojects,
+        parse_issue_includes(include),
     )
 
 
@@ -138,7 +145,9 @@ async def list_issues(
         "empty and do not establish that no related data exists. The issue includes "
         "nullable start/due dates and permission-gated direct spent_hours and "
         "descendant-inclusive total_spent_hours. Visibility metadata distinguishes "
-        "fields not returned from expansions not requested."
+        "fields not returned from expansions not requested. Estimated hours, "
+        "attachment content URLs, and journal edit metadata are returned when "
+        "available; visible values do not establish permission to edit."
     ),
 )
 async def get_issue(

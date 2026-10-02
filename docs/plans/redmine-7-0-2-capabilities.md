@@ -1,15 +1,12 @@
 # Redmine 7.0.2 files and issue capabilities
 
-Retargeted on 2026-10-02 at the user's request. The filename retains the
-original roadmap identifier so existing task links keep working. This plan
-supports Redmine through 7.0.2. Document REST operations are deferred. The
-document category enumeration remains available through the older API.
+This plan supports Redmine 7.0.2. Document REST operations are outside its scope.
+Document category enumeration remains available through the Enumerations API.
 
 Checked: 2026-10-01. This is the master plan for the requested MCP capability set.
 The [dashboard](index.md) is the execution ledger; child contracts live in
 `tasks/<task-id>.md`. This plan assigns documentation and future implementation work.
 It does not authorize running tests, modifying a Redmine instance, or deploying a writer.
-The [planning review](review.md) records findings and their current resolution.
 
 ## Outcome and boundaries
 
@@ -34,19 +31,17 @@ authorize an Issue attachment.
 
 ## Version evidence and prerequisite
 
-`deploy/compose.test.yaml` pins the original `redmine:6.0.5-bookworm` baseline.
-The isolated [7.0.2 Compose target](../../deploy/compose.redmine-7-0-2.yaml)
-pins `redmine:7.0.2-bookworm` by immutable index digest. The image has not
-been started or accepted as a migrated environment.
+The [synthetic Compose deployment](../../deploy/compose.test.yaml) pins
+`redmine:7.0.2-bookworm` by immutable index digest. The user waived actual runtime
+verification on 2026-10-02; no runtime acceptance result is claimed.
 The [Redmine REST index](https://www.redmine.org/projects/redmine/wiki/Rest_api)
-lists Documents support from 7.1, which exceeds the selected maximum version.
-Tasks `tool-017`, `tool-018` and `tool-026` through `tool-028` are deferred.
+does not establish Documents REST for this target. Document REST task drafts
+are excluded from this roadmap.
 `tool-016` remains in scope because
 [Enumerations REST](https://www.redmine.org/projects/redmine/wiki/Rest_Enumerations)
 documents the document category endpoint separately.
-`prep-005-upgrade-redmine-7-1` retains its stable task ID but now targets 7.0.2;
-it must review versioned source, rehearse backup/restore and migrations on an
-isolated copy, and verify supported REST/API-key behavior before dependent work.
+`prep-005-redmine-7-0-2` pins the target. The user accepted continuation without
+runtime verification, so dependent coding uses exact 7.0.2 source evidence.
 
 The following authoritative references are evidence, not permission to expand
 the catalog: [Documents](https://www.redmine.org/projects/redmine/wiki/Rest_Documents),
@@ -88,7 +83,6 @@ but is absent from the public Issues API reference; exact 7.0.2 source must veri
 | `add_issue_watcher` | tool-034 | POST /issues/{issue_id}/watchers.json |
 | `remove_issue_watcher` | tool-035 | DELETE /issues/{issue_id}/watchers/{user_id}.json |
 
-The five deferred Document task IDs remain in the dashboard as historical drafts.
 `create_issue(copy_from=...)` requires source Copy issues
 and destination Add issues. `update_issue(notes=...)` allows notes-only updates
 without imposing Edit issues; field changes use Edit issues/Edit own issues.

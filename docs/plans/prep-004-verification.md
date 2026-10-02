@@ -79,7 +79,7 @@ stable. FastAPI-MCP's private transport access remains isolated in the adapter f
 ## Read-only synthetic execution
 
 The existing marker and complete manifests were checked. Docker reported the pinned
-`redmine:6.0.5-bookworm` container healthy. Inspector 2.8.0 used a temporary localhost app on
+the previously observed Redmine container healthy. Inspector 2.8.0 used a temporary localhost app on
 port 18080 and the existing restricted ordinary-user key. Comparisons used direct Redmine
 REST under the same key. No seeding, resets, role/token changes, or Redmine writes occurred.
 Private harnesses and redacted result files remain in ignored `.local/`.

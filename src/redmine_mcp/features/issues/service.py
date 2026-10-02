@@ -3,7 +3,11 @@ from datetime import datetime
 from redmine_mcp.common import Page, require_positive_id, validated_query
 from redmine_mcp.features.issues.models import Issue, IssueDetail
 from redmine_mcp.features.issues.ports import IssueReader
-from redmine_mcp.features.issues.queries import IssueSearch, validate_issue_includes
+from redmine_mcp.features.issues.queries import (
+    IssueSearch,
+    validate_issue_includes,
+    validate_issue_list_includes,
+)
 
 
 class IssueService:
@@ -24,6 +28,7 @@ class IssueService:
         category_id: int | None = None,
         fixed_version_id: int | None = None,
         include_subprojects: bool = True,
+        include: tuple[str, ...] | None = None,
     ) -> Page[Issue]:
         query = validated_query(
             IssueSearch,
@@ -55,6 +60,7 @@ class IssueService:
             category_id=query.category_id,
             fixed_version_id=query.fixed_version_id,
             include_subprojects=query.include_subprojects,
+            include=validate_issue_list_includes(include),
         )
 
     async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> IssueDetail:

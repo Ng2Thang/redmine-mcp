@@ -10,7 +10,7 @@
 | Status | blocked; implementation finished, testing pending |
 | Dependencies | [prep-002](prep-002-offline-tests.md); [tool-008](tool-008-list-project-issue-categories.md) supplies category ID discovery, but its pending acceptance does not block this read filter's implementation |
 | Related tasks | [tool-001](tool-001-list-issues-search.md) owns existing filters and defaults; [tool-008](tool-008-list-project-issue-categories.md) owns category discovery |
-| Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Filter, category output, and public documentation implemented. Ruff and mypy static checks pass; acceptance verification is pending. |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
@@ -40,13 +40,13 @@ prohibit automatic unit test execution without user acceptance or mention.
 | Source URL or versioned source | Date verified | Version supported | Endpoint/behavior | Permission evidence | Finding |
 |---|---|---|---|---|---|
 | [Redmine Issues REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-09-30 | General documentation; checked against source below | `GET /issues.json` | API returns issues visible to caller | Lists pagination and default open status; category is present in example issue output. |
-| [Redmine 6.0.5 issue query](https://github.com/redmine/redmine/blob/6.0.5/app/models/issue_query.rb) | 2026-09-30 | 6.0.5 | `category_id` filter | Available only when a project query is selected | Adds `category_id` as a project-scoped list filter. |
-| [Redmine 6.0.5 issues controller](https://github.com/redmine/redmine/blob/6.0.5/app/controllers/issues_controller.rb) | 2026-09-30 | 6.0.5 | `index` API query | Uses existing issue query visibility | API count and rows come from the same query; no separate category lookup is needed per issue. |
-| [Redmine 6.0.5 issue API view](https://github.com/redmine/redmine/blob/6.0.5/app/views/issues/show.api.rsb) | 2026-09-30 | 6.0.5 | Issue serialization | Existing issue visibility | Emits `category` with ID and name when assigned; omits it otherwise. |
+| Previously inspected Redmine issue query (prior source inspection; current release review pending) | 2026-09-30 | prior sample | `category_id` filter | Available only when a project query is selected | Adds `category_id` as a project-scoped list filter. |
+| Previously inspected Redmine issues controller (prior source inspection; current release review pending) | 2026-09-30 | prior sample | `index` API query | Uses existing issue query visibility | API count and rows come from the same query; no separate category lookup is needed per issue. |
+| Previously inspected Redmine issue API view (prior source inspection; current release review pending) | 2026-09-30 | prior sample | Issue serialization | Existing issue visibility | Emits `category` with ID and name when assigned; omits it otherwise. |
 
 Current public differences: the gateway drops Redmine's `category` reference during model
 validation, and the route cannot forward `category_id`. The category filter should require a
-project because Redmine 6.0.5 only exposes it for a project query. No database access or new
+project because Previously inspected Redmine only exposes it for a project query. No database access or new
 MCP operation is needed. Synthetic acceptance must confirm actual `GET issues.json` behavior
 because source inspection alone is not runtime verification.
 
@@ -157,7 +157,7 @@ Dependency or configuration changes: none expected. No new package, write gate, 
 | CATISSUE-002 | AC-002 | Offline list and detail mapping with populated, missing, and malformed category | Reference, `null`, and sanitized 502 respectively | Offline, pending |
 | CATISSUE-003 | AC-003 | REST/MCP invalid inputs with upstream spy | 422 and no resource request (identity verification may run) | Offline, pending |
 | CATISSUE-004 | AC-001, AC-003, AC-004 | REST/MCP pagination, empty page, auth, 403/404, timeout, and discovery | Stable operation and envelopes; filtered total and page bounds | Offline, pending |
-| CATISSUE-005 | AC-001, AC-005 | Inspector on marked synthetic Redmine 6.0.5 with a category that has issues and restricted visibility fixture | Category membership, all-status page count, and permission boundary verified | Opt-in live, pending |
+| CATISSUE-005 | AC-001, AC-005 | Inspector on marked synthetic Previously inspected Redmine with a category that has issues and restricted visibility fixture | Category membership, all-status page count, and permission boundary verified | Opt-in live, pending |
 
 Execution evidence: `uv run --frozen --no-sync ruff check .` passed; `uv run --frozen --no-sync
 ruff format --check .` passed (78 files); `uv run --frozen --no-sync mypy src` passed (38 source

@@ -9,8 +9,8 @@
 | Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
 | Status | blocked - documentation draft; no code or verification performed |
 | Dependencies | [tool-025-delete-attachment](tool-025-delete-attachment.md); prior task must have evidence and user acceptance |
-| Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
+| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
 | Blocker / next action | Predecessor tool-025-delete-attachment must be accepted and exact 7.0.2 source/behavior rechecked. |
@@ -31,7 +31,7 @@ separate restricted deployment and synthetic verification prerequisites.
 |---|---|---|---|
 | [Redmine reference](https://github.com/redmine/redmine/blob/master/app/controllers/issues_controller.rb) | 2026-10-01 | General/current documentation | POST /issues.json; optional copy_from query; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | 6.0.5-bookworm | Existing synthetic environment is not evidence of 7.0.2 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
@@ -177,4 +177,4 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 Final status: blocked. Next action: Predecessor tool-025-delete-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
 
-Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum supported release. The original 6.0.5 fixture remains historical baseline evidence; the pinned isolated 7.0.2 target requires its own acceptance.
+Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

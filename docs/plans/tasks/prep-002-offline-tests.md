@@ -10,7 +10,7 @@
 | Status | complete; offline suite and repository checks pass |
 | Last updated | 2026-09-30 |
 | Dependencies | [prep-001](prep-001-ruff-checks.md) |
-| Target | Python 3.13; synthetic Redmine later uses 6.0.5 |
+| Target | Redmine 7.0.2; runtime acceptance pending |
 | Next action | None for this task. |
 
 ## 2. Discovery and evidence

@@ -20,6 +20,7 @@ class IssueReader(Protocol):
         category_id: int | None,
         fixed_version_id: int | None,
         include_subprojects: bool,
+        include: tuple[str, ...] | None,
     ) -> Page[Issue]: ...
 
     async def get_issue(

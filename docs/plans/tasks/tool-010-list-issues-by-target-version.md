@@ -12,7 +12,7 @@
 | Status | blocked; implementation finished, testing pending |
 | Dependencies | [prep-002](prep-002-offline-tests.md); [tool-007](tool-007-list-project-versions.md) supplies target-version ID discovery, but its pending acceptance does not block this filter implementation |
 | Related tasks | [tool-001](tool-001-list-issues-search.md) owns existing filters and defaults; [tool-007](tool-007-list-project-versions.md) owns version discovery |
-| Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Target-version filtering, exact-project scoping, target-version output, and public documentation are implemented. Static checks pass; acceptance verification is pending. |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
@@ -46,10 +46,10 @@ must be preserved.
 
 | Source URL or versioned source | Date verified | Version supported | Endpoint/behavior | Permission required | Evidence or limitation |
 |---|---|---|---|---|---|
-| [Redmine Issues REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-09-30 | General guide, checked against 6.0.5 source below | `GET /issues.json`, pagination, project/subproject behavior | Issues visible to the API account | Documents that `project_id=XXX&subproject_id=!*` excludes subprojects; the guide does not enumerate `fixed_version_id` among its abbreviated list filters. |
-| [Redmine 6.0.5 issue query](https://github.com/redmine/redmine/blob/6.0.5/app/models/issue_query.rb#L142-L209) | 2026-09-30 | 6.0.5 | `fixed_version_id` issue filter | `view_issues`; query is based on visible issues | Registers `fixed_version_id` as a list filter and shows it is available independently of the project-only category filter. |
-| [Redmine 6.0.5 issue API view](https://github.com/redmine/redmine/blob/6.0.5/app/views/issues/show.api.rsb#L1-L10) | 2026-09-30 | 6.0.5 | Issue list/detail serialization | Existing issue visibility | Emits `fixed_version` with ID and name when assigned and omits it when absent. |
-| [Redmine 6.0.5 issues controller](https://github.com/redmine/redmine/blob/6.0.5/app/controllers/issues_controller.rb#L40-L62) | 2026-09-30 | 6.0.5 | API index count and rows | Existing issue query authorization | Count and paged items come from the same visible issue query. |
+| [Redmine Issues REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-09-30 | General guide, checked against prior sample source below | `GET /issues.json`, pagination, project/subproject behavior | Issues visible to the API account | Documents that `project_id=XXX&subproject_id=!*` excludes subprojects; the guide does not enumerate `fixed_version_id` among its abbreviated list filters. |
+| Previously inspected Redmine issue query (prior source inspection; current release review pending) | 2026-09-30 | prior sample | `fixed_version_id` issue filter | `view_issues`; query is based on visible issues | Registers `fixed_version_id` as a list filter and shows it is available independently of the project-only category filter. |
+| Previously inspected Redmine issue API view (prior source inspection; current release review pending) | 2026-09-30 | prior sample | Issue list/detail serialization | Existing issue visibility | Emits `fixed_version` with ID and name when assigned and omits it when absent. |
+| Previously inspected Redmine issues controller (prior source inspection; current release review pending) | 2026-09-30 | prior sample | API index count and rows | Existing issue query authorization | Count and paged items come from the same visible issue query. |
 | `tools/seed/history.py` and `docs/test-data.md` | 2026-09-30 | Repository synthetic fixture | Shared sprint versions and issue assignments | Marked synthetic reader | History Alpha owns six versions shared with descendants, and every history issue has a `fixed_version_id`; IDs must be read from the manifest after resets. |
 
 Current public differences: the issue route cannot send `fixed_version_id` or exact-project
@@ -63,9 +63,9 @@ IDs; its description must mention Target version.
 | Client outcome / tool | Existing coverage | Read/write | Version support | Task ID | Dependencies | In scope/deferred |
 |---|---|---|---|---|---|---|
 | Resolve History Sprint 02 to an ID | `list_project_versions` | Read | General docs; pinned-runtime acceptance pending | tool-007 | prep-002 | Existing capability |
-| Filter Bug issues by project and target version | Partial `list_issues` coverage for project/tracker | Read | Redmine 6.0.5 source | tool-010 | prep-002, tool-007 discovery | In scope |
+| Filter Bug issues by project and target version | Partial `list_issues` coverage for project/tracker | Read | Previously inspected Redmine source | tool-010 | prep-002, tool-007 discovery | In scope |
 | Exclude History Alpha subprojects | No bounded public input | Read | REST guide plus pinned-runtime acceptance | tool-010 | prep-002 | In scope |
-| Show target version on list/detail issues | Upstream field currently dropped | Read | Redmine 6.0.5 source | tool-010 | prep-002 | In scope |
+| Show target version on list/detail issues | Upstream field currently dropped | Read | Previously inspected Redmine source | tool-010 | prep-002 | In scope |
 
 ### Questions and decisions
 
@@ -73,7 +73,7 @@ IDs; its description must mention Target version.
 |---|---|---|---|---|
 | DEC-001 | Add a new tool or extend `list_issues`? | Extend `list_issues`; project, tracker, status, ordering, and pagination already belong to this search operation. | No | 2026-09-30 |
 | DEC-002 | How should clients exclude subprojects? | Add `include_subprojects: bool = true`. When false, require `project_id` and forward `subproject_id=!*`; when true or omitted, forward no subproject filter and preserve current behavior. | No | 2026-09-30 |
-| DEC-003 | Must `fixed_version_id` require `project_id`? | No. Redmine 6.0.5 registers the version filter for global and project queries. Clients should normally combine it with `project_id` to avoid matching a shared version across descendants. | No | 2026-09-30 |
+| DEC-003 | Must `fixed_version_id` require `project_id`? | No. Previously inspected Redmine registers the version filter for global and project queries. Clients should normally combine it with `project_id` to avoid matching a shared version across descendants. | No | 2026-09-30 |
 | DEC-004 | How is an issue without a target version represented? | Return `fixed_version: null`, matching the existing category mapping convention and Redmine's omitted field. | No | 2026-09-30 |
 | DEC-005 | Does “all bugs” imply closed issues? | Preserve `status_id="open"`; callers must send `status_id="*"` and exhaust pagination to retrieve open and closed matches. | No | 2026-09-30 |
 | DEC-006 | What if exact History Alpha has no matching Bug in Sprint 02? | Return a successful empty page with `total: 0`; empty is a valid, meaningful result. | No | 2026-09-30 |
@@ -230,7 +230,7 @@ write gates, Docker configuration, or the MCP operation allowlist entry.
 | TARGETISSUE-003 | AC-004 | REST/MCP validation with upstream spy | Zero/malformed version; false without project; malformed boolean | 422 and no resource request (identity verification may run) where route validation applies | Offline, pending |
 | TARGETISSUE-004 | AC-001, AC-006 | REST/MCP behavior | Empty page, multiple pages, auth, 403/404, timeout, malformed page | Stable page/error envelopes and filtered total | Offline, pending |
 | TARGETISSUE-005 | AC-005 | Regression and MCP discovery | Omit new inputs; invoke list/detail and discover tools | Old upstream query/defaults remain; one `list_issues` operation exposes additive schema | Offline, pending |
-| TARGETISSUE-006 | AC-001, AC-002, AC-006 | Inspector against marked Redmine 6.0.5 | Resolve current History Alpha, Sprint 02, and Bug IDs; compare exact and descendant-inclusive queries | Membership, empty-result behavior if applicable, count, target-version field, and visibility are observed | Opt-in live, pending |
+| TARGETISSUE-006 | AC-001, AC-002, AC-006 | Inspector against marked Previously inspected Redmine | Resolve current History Alpha, Sprint 02, and Bug IDs; compare exact and descendant-inclusive queries | Membership, empty-result behavior if applicable, count, target-version field, and visibility are observed | Opt-in live, pending |
 
 Coverage selection:
 
@@ -293,7 +293,7 @@ issue operations expose nullable Target version references while preserving exis
 
 Missing prerequisite or remaining work: a separate testing assignment must add and run
 TARGETISSUE-001 through TARGETISSUE-005, then verify TARGETISSUE-006 through Inspector against
-the marked synthetic Redmine 6.0.5 environment.
+the marked synthetic Previously inspected Redmine environment.
 
 Next action: authorize a separate testing assignment for TARGETISSUE-001 through
 TARGETISSUE-006; do not treat static-check success as acceptance evidence.

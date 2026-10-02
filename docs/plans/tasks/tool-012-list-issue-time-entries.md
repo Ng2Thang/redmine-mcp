@@ -12,9 +12,9 @@
 | Status | blocked |
 | Dependencies | [prep-002](prep-002-offline-tests.md) provides offline verification; [tool-011](tool-011-expose-issue-schedule-and-spent-hours.md) provides the issue selection and direct-hours context. Tool-011 acceptance is pending. |
 | Related tasks | [tool-001](tool-001-list-issues-search.md) selects issues; [tool-010](tool-010-list-issues-by-target-version.md) supplies exact-project scoping. |
-| Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Pinned 6.0.5 field mapping confirmed; implementation finished; testing and synthetic acceptance pending. |
+| Progress summary | Historical field mapping recorded; 7.0.2 source review and synthetic acceptance pending. |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
@@ -40,11 +40,11 @@ English Markdown and prohibits automatic unit-test execution without user accept
 
 | Source URL or versioned source | Date verified | Version supported | Endpoint/behavior | Permission required | Evidence or limitation |
 |---|---|---|---|---|---|
-| [Redmine 6.0.5 timelog controller](https://raw.githubusercontent.com/redmine/redmine/6.0.5/app/controllers/timelog_controller.rb) | 2026-09-30 | 6.0.5 | `GET /time_entries.json` has API auth, `total_count`, `offset`, and `limit`; it loads visible entries and their users. | Query visibility applies. | Lines 27-28, 39-56, 279-285; a single issue's visibility still needs a separate issue read. |
-| [Redmine 6.0.5 time-entry query](https://raw.githubusercontent.com/redmine/redmine/6.0.5/app/models/time_entry_query.rb) and [base query](https://raw.githubusercontent.com/redmine/redmine/6.0.5/app/models/query.rb) | 2026-09-30 | 6.0.5 | `issue_id` is an available exact-match filter; a simple `issue_id=<positive ID>` becomes `=` and the query orders ties by entry ID. | `view_time_entries`; `TimeEntry.visible` limits rows. | `issue_id` supports other operators upstream, but this tool sends only a positive numeric exact match. |
-| [Redmine Time Entries REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_TimeEntries) and [REST pagination guide](https://www.redmine.org/projects/redmine/wiki/REST_Api) | 2026-09-30 | General guide, checked against 6.0.5 controller/query and API view | Time-entry listing and offset/limit page metadata. | Redmine account access. | The pinned API view establishes the required 6.0.5 JSON fields. |
+| Previously inspected Redmine timelog controller (prior source inspection; current release review pending) | 2026-09-30 | prior sample | `GET /time_entries.json` has API auth, `total_count`, `offset`, and `limit`; it loads visible entries and their users. | Query visibility applies. | Lines 27-28, 39-56, 279-285; a single issue's visibility still needs a separate issue read. |
+| Previously inspected Redmine time-entry query (prior source inspection; current release review pending) and base query (prior source inspection; current release review pending) | 2026-09-30 | prior sample | `issue_id` is an available exact-match filter; a simple `issue_id=<positive ID>` becomes `=` and the query orders ties by entry ID. | `view_time_entries`; `TimeEntry.visible` limits rows. | `issue_id` supports other operators upstream, but this tool sends only a positive numeric exact match. |
+| [Redmine Time Entries REST guide](https://www.redmine.org/projects/redmine/wiki/Rest_TimeEntries) and [REST pagination guide](https://www.redmine.org/projects/redmine/wiki/REST_Api) | 2026-09-30 | General guide, checked against prior sample controller/query and API view | Time-entry listing and offset/limit page metadata. | Redmine account access. | The pinned API view establishes the required prior sample JSON fields. |
 | [Redmine roles reference](https://www.redmine.org/projects/redmine/wiki/RedmineRoles) | 2026-09-30 | General guide | View spent time and role-level time-log visibility. | `view_time_entries`; a role may see all or only its own entries. | An empty list or numeric issue `spent_hours` does not prove access to all users' logs. |
-| [Redmine 6.0.5 time-entry API view](https://raw.githubusercontent.com/redmine/redmine/6.0.5/app/views/timelog/index.api.rsb) | 2026-09-30 | 6.0.5 | Emits `time_entries`, page metadata, `issue.id`, credited `user.id/name`, rounded numeric `hours`, and `spent_on`. | Same visible-entry scope. | `issue` and `user` are conditionally emitted, so missing required fields cause a sanitized 502. |
+| Previously inspected Redmine time-entry API view (prior source inspection; current release review pending) | 2026-09-30 | prior sample | Emits `time_entries`, page metadata, `issue.id`, credited `user.id/name`, rounded numeric `hours`, and `spent_on`. | Same visible-entry scope. | `issue` and `user` are conditionally emitted, so missing required fields cause a sanitized 502. |
 
 The upstream `TimeEntry` model distinguishes the user credited for time from the entry author.
 This tool returns the **credited user** from the time-entry API. It must not claim that this user
@@ -57,8 +57,8 @@ proposed API response does not establish the entry author.
 |---|---|---|---|---|---|---|
 | Select Bugs by project, tracker, and issue dates | Existing `list_issues` fields | Read | Current repository | tool-011 | tool-001, tool-010 | Existing capability |
 | Read issue direct spent hours | Existing `get_issue` and `list_issues` fields | Read | Current repository | tool-011 | prep-002 | Existing capability |
-| Identify credited users and hours behind one issue's visible time | No current tool | Read | 6.0.5 timelog controller/query | tool-012 | prep-002, tool-011 | In scope |
-| Identify who submitted an entry when different from its credited user | No established API field | Read | Not established for 6.0.5 | Unassigned | Separate evidence/product need | Deferred |
+| Identify credited users and hours behind one issue's visible time | No current tool | Read | prior sample timelog controller/query | tool-012 | prep-002, tool-011 | In scope |
+| Identify who submitted an entry when different from its credited user | No established API field | Read | Not established for prior sample | Unassigned | Separate evidence/product need | Deferred |
 
 ### Questions and decisions
 
@@ -69,7 +69,7 @@ proposed API response does not establish the entry author.
 | DEC-003 | Are only August time entries included? | No. August selected the issue schedule. This tool returns all currently visible direct time entries on each chosen issue, regardless of `spent_on`. | No | 2026-09-30 |
 | DEC-004 | Are child issue entries included? | No. Match `issue_id` exactly, consistent with tool-011's direct `spent_hours`. | No | 2026-09-30 |
 | DEC-005 | Does zero returned entries mean zero time exists? | Only zero entries visible to the shared account. Do not assert project-wide completeness without permission verification. | No | 2026-09-30 |
-| DEC-006 | Is the exact 6.0.5 JSON field shape confirmed? | Pinned `app/views/timelog/index.api.rsb` emits the required fields and page metadata. | No | 2026-09-30 |
+| DEC-006 | Is the exact prior sample JSON field shape confirmed? | Pinned `app/views/timelog/index.api.rsb` emits the required fields and page metadata. | No | 2026-09-30 |
 
 ## 3. Requirements
 
@@ -186,7 +186,7 @@ entry field mapping are decided. The serializer rounds hours to two decimal plac
 
 | Step | Concrete change | Files/components | Depends on | Verification |
 |---|---|---|---|---|
-| 1 | Inspect 6.0.5 time-entry API view; revise mapping if needed. | Pinned Redmine source, this task | N/A | Record field evidence; permission confirmation remains for synthetic acceptance. |
+| 1 | Inspect prior sample time-entry API view; revise mapping if needed. | Pinned Redmine source, this task | N/A | Record field evidence; permission confirmation remains for synthetic acceptance. |
 | 2 | Add validated time-entry model and reader Protocol. | `features/time_entries/models.py`, `ports.py` | 1 | Mapping scenarios. |
 | 3 | Add gateway with issue preflight, exact filter, pagination, and sanitized mapping. | `integrations/redmine/time_entries.py`, existing client/mapper as needed | 2 | Mocked upstream requests and failures. |
 | 4 | Add service and REST route with validated path/page inputs and personal-key authentication dependency. | `features/time_entries/service.py`, `router.py`, `api/dependencies.py` | 3 | ASGI scenarios. |
@@ -235,7 +235,7 @@ use fake settings, HTTPX MockTransport, ASGI lifespan, and MCP SDK checks withou
 | VIS-001 | AC-004 | ASGI/gateway | Time-entry query returns 403 or only reader-visible rows | Error or scoped subset; never claim all-user completeness. | Offline |
 | COMPAT-001 | AC-006 | REST regression | Existing issue list/detail calls | Unchanged contracts and authentication. | Offline |
 | MCP-001 | AC-006 | MCP SDK | Discover and invoke new and existing operations | New stable name present; old names unchanged; errors safe. | Offline |
-| LIVE-001 | AC-007 | Inspector on marked Redmine 6.0.5 | Read one synthetic issue and its time-entry page | Credited user IDs and hours match Redmine; record whether reader can see all entries. | Opt-in live |
+| LIVE-001 | AC-007 | Inspector on marked Previously inspected Redmine | Read one synthetic issue and its time-entry page | Credited user IDs and hours match Redmine; record whether reader can see all entries. | Opt-in live |
 
 - Defaults, filters, encoding, pagination, optional fields: PAGE-001, ENTRY-003.
 - Invalid inputs rejected before upstream access: AUTH-001 plus positive-ID/page validation.
@@ -253,12 +253,12 @@ use fake settings, HTTPX MockTransport, ASGI lifespan, and MCP SDK checks withou
 |---|---|---|---|---|---|---|
 | EVID-001 | `bash scripts/check.sh` in Git Bash after implementation | Static quality | Pass | Not run | Pending | N/A |
 | EVID-002 | `uv run --frozen pytest` in Git Bash after separate test authorization | Offline scenarios | Pass | Not run | Pending | N/A |
-| EVID-003 | Inspector on marked synthetic Redmine 6.0.5 after separate authorization | LIVE-001 | Match visible time entries | Not run | Pending | N/A |
+| EVID-003 | Inspector on marked synthetic Previously inspected Redmine after separate authorization | LIVE-001 | Match visible time entries | Not run | Pending | N/A |
 | EVID-004 | `uv run --frozen --no-sync ruff check .` in Git Bash | Static lint | Pass | All checks passed | Pass | 2026-09-30 |
 | EVID-005 | `uv run --frozen --no-sync ruff format --check .` in Git Bash | Static format | Pass | 90 files already formatted | Pass | 2026-09-30 |
 | EVID-006 | `uv run --frozen --no-sync mypy src` in Git Bash | Static types | Pass | Success: no issues found in 46 source files | Pass | 2026-09-30 |
 | EVID-007 | `git diff --check` in Git Bash | Diff whitespace | Pass | No output; exit 0 | Pass | 2026-09-30 |
-| EVID-008 | Authorized prep-004 read-only sample on marked 6.0.5: app REST time-entry page and Redmine REST under the same restricted reader key | LIVE-001 partial | Match visible entries | History issue 151 returned three visible entries; IDs and count matched. Inspector separately discovered/invoked this tool, but credited users/hours/dates were not compared for issue 151. | Partial | 2026-10-01 |
+| EVID-008 | Authorized prep-004 read-only sample on previously marked synthetic fixture: app REST time-entry page and Redmine REST under the same restricted reader key | LIVE-001 partial | Match visible entries | History issue 151 returned three visible entries; IDs and count matched. Inspector separately discovered/invoked this tool, but credited users/hours/dates were not compared for issue 151. | Partial | 2026-10-01 |
 | EVID-009 | `uv run --frozen pytest -q --tb=short` after prep-004 authorization | ENTRY-001 and ENTRY-004 partial | Mapping and wrong-issue rejection | One credited-user entry and exact upstream query passed; a cross-issue entry produced sanitized 502. Two-user, zero-hour, and malformed-field variants remain pending. | Partial | 2026-10-01 |
 
 Verification limitations and missing prerequisites: prep-004 verification was authorized and

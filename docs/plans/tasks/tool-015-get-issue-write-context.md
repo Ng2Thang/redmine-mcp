@@ -7,13 +7,13 @@
 | Task ID | tool-015-get-issue-write-context |
 | Assigned capability | Expose issue write and file context: Only expose fields Redmine returns. |
 | Type / access / destructive effects | Extend existing tool / read / None |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; verification deferred |
 | Dependencies | [tool-014-list-issues-associations](tool-014-list-issues-associations.md); prior task must have evidence and user acceptance |
-| Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
+| Target Redmine version | 7.0.2-bookworm; exact release source reviewed; runtime verification waived |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-014-list-issues-associations must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Progress summary | Added estimates, attachment URL, and journal edit metadata; existing include defaults preserved. |
+| Blocker / next action | Coding and static checks finished; verification remains deferred under the user's instructions. |
 
 ## 2. Discovery and evidence
 
@@ -31,14 +31,15 @@ separate restricted deployment and synthetic verification prerequisites.
 |---|---|---|---|
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-10-01 | General/current documentation | GET /issues/{issue_id}.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | 6.0.5-bookworm | Existing synthetic environment is not evidence of 7.0.2 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | Pinned target accepted with a runtime waiver. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz) | 2026-10-02 | 7.0.2 release source | `app/views/issues/show.api.rsb` emits both estimates and journal updated_on/updated_by. `app/helpers/attachments_helper.rb` emits content_url. No runtime call was made. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `get_issue` is the sole public owner | No |
-| Strict sequence | Wait for tool-014-list-issues-associations evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User directed continuation after tool-014 on 2026-10-02; unexecuted verification retained | No to coding |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Exact 7.0.2 release source reviewed; actual runtime verification waived | No to coding |
 
 ## 3. Requirements
 
@@ -80,6 +81,12 @@ fields: `{"id":1,"estimated_hours":null,"total_estimated_hours":null,"attachment
 ### Output and response mapping
 
 Existing IssueDetail plus nullable estimated_hours,total_estimated_hours, attachment content_url, journal updated_on/updated_by where returned. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
+Estimates accept finite nonnegative JSON numbers, using the existing hour validator.
+Absent estimates produce `not_returned` observations at `/estimated_hours` and
+`/total_estimated_hours`; explicit nulls produce no absence observation. Missing optional
+attachment and journal metadata map to null. Content URLs are returned as strings without
+fetching them. Values do not establish edit permissions. Shared attachment and journal models
+also expose these fields when used in list expansions; no new include defaults are introduced.
 Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -97,9 +104,8 @@ registered exactly once and must not change defaults of another operation.
 
 N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: predecessor continuation was accepted and exact release source
+supports all added fields. No writer permissions or editability guarantees are inferred.
 
 ## 5. Implementation plan
 
@@ -133,6 +139,8 @@ or state verification.
 
 Testing is planned only. The user must authorize it separately for this task;
 the repository instruction prohibits automatic unit-test verification.
+The user instructed continuation without actual runtime verification. No tests, startup,
+Inspector, or live calls were executed for this task.
 
 | Scenario | Layer and setup | Expected result | Mode |
 |---|---|---|---|
@@ -144,33 +152,40 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | Ruff lint/format, mypy, and `git diff --check` during coding | Static checks pass | Ruff check/format passed for the repository; mypy passed for 79 source files; whitespace check passed on 2026-10-02 | Passed |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
-| EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
+| EVID-003 | Inspector and marked synthetic 7.0.2 procedure | Required runtime cases pass | Not run under user runtime waiver | Waived, not passed |
 
 No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
-- Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-014-list-issues-associations must be accepted and exact 7.0.2 source/behavior rechecked.
+- Changes made: Extended IssueDetail estimates, Attachment.content_url, and Journal edit
+  metadata; added estimate visibility observations to the existing gateway mapping.
+- Plan deviations: no service, port, bootstrap, or catalog edits needed because the existing
+  typed get_issue route owns this response. Shared nested models also serve list expansions.
+- Quality: repository Ruff lint/format, mypy `src`, and `git diff --check` passed on
+  2026-10-02 using installed tools. Automated tests not run.
+- Startup/Inspector checks: not run under the user's runtime waiver.
+- Documentation: tool reference, changelog, this task, and dashboard updated.
+- Final code diff review: typed response additions and gateway observation changes reviewed;
+  dashboard synchronized. Existing request inputs and default expansions are preserved.
+- Remaining verification: TOOL-015-001 through TOOL-015-005 remain unexecuted. Future offline
+  work should cover absent/null/zero estimates, rejected numeric strings and invalid numbers,
+  populated/missing nested metadata, unchanged includes/defaults, errors, and MCP schemas.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed from source.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-014-list-issues-associations must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; static checks passed. Runtime and automated
+verification remain unexecuted and are not claimed as passing.
 
-Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum supported release. The original 6.0.5 fixture remains historical baseline evidence; the pinned isolated 7.0.2 target requires its own acceptance.
+Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

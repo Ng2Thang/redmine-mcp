@@ -12,7 +12,7 @@
 | Status | blocked |
 | Dependencies | Existing runtime and prep-001 static checks; later authorized testing stage |
 | Related tasks | Existing reader tasks; no new public operation |
-| Target Redmine version | Existing synthetic target: 6.0.5 |
+| Target Redmine version | Redmine 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Implementation accepted with testing pending; prep-004 expanded offline verification (356-case suite passes) and verified the authorized MCP readiness fix. Static/build checks pass; full live matrix remains pending. |
 | Next action | Review the authorized prep-004 offline evidence and complete the remaining synthetic identity/visibility/correlation matrix |
@@ -138,7 +138,7 @@ without `.env`, explicit ASGI lifespan, and MCP SDK sessions. Use only synthetic
 | EVID-006 | Temporary localhost Uvicorn on port 18080; health, missing-key request, then Ctrl+C | Application startup and shutdown complete; 200/401 responses have request IDs matching logs | 2026-10-01 |
 | EVID-007 | Final static checks after bounded HTTP and route-contract changes | Ruff/format, mypy, and architecture checks pass for 63 runtime modules | 2026-10-01 |
 | EVID-008 | Startup with stronger MCP exposure checks, health/missing-key requests, Ctrl+C | Initially exposed lazy-router compatibility issue; corrected adapter then completed startup/shutdown and 200/401 correlation smoke | 2026-10-01 |
-| EVID-009 | Authorized prep-004 Inspector 2.8.0 sample against marked Redmine 6.0.5, local app port 18080, restricted reader key | Eleven catalog operations discovered; ten sample calls succeeded. Category lookup returned 403 for reader, consistent with pinned `manage_categories` permission; admin sample succeeded. This partially covers FOUNDATION-007, but concurrent identities, full visibility matrix, and other foundation scenarios remain pending. | 2026-10-01 |
+| EVID-009 | Authorized prep-004 Inspector 2.8.0 sample against marked Previously inspected Redmine, local app port 18080, restricted reader key | Eleven catalog operations discovered; ten sample calls succeeded. Category lookup returned 403 for reader, consistent with pinned `manage_categories` permission; admin sample succeeded. This partially covers FOUNDATION-007, but concurrent identities, full visibility matrix, and other foundation scenarios remain pending. | 2026-10-01 |
 | EVID-010 | Authorized prep-004 offline continuation and user-approved MCP startup fix | Expanded full suite: 356 passes; static checks and source/wheel build pass. Foundation coverage, deterministic manager readiness, concurrent caller isolation, failed/cancelled startup, and open-session shutdown are recorded in the dated verification ledger. | 2026-10-02 |
 
 The earlier coding stage ran no unit tests, mock execution, authenticated tool calls, or

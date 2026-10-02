@@ -9,10 +9,10 @@
 | Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
 | Status | blocked - documentation only |
 | Dependencies | [prep-007-restricted-writer-foundation](prep-007-restricted-writer-foundation.md); predecessor acceptance required |
-| Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
+| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Prerequisite defined; no code, tests, migration, or live check performed. |
+| Progress summary | Prerequisite defined; no code, tests, or live check performed. |
 | Blocker / next action | Wait for prep-007 acceptance and separate authorization before creating or mutating fixtures. |
 
 ## 2. Discovery and evidence
@@ -22,12 +22,12 @@ Build a controlled fixture and state-inspection plan for write-tool acceptance. 
 | Source | Checked | Evidence and limitation |
 |---|---|---|
 | [Current roadmap](../index.md) | 2026-10-01 | Existing task status and architecture; no pending acceptance is treated as passed. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | Current synthetic Redmine is 6.0.5, so it cannot establish 7.0.2 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is pinned; runtime acceptance remains pending. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
 Decisions: this prerequisite owns no public MCP operation; prep-007-restricted-writer-foundation must be
 reviewed without rewriting prior evidence. Testing and any live rehearsal
-require separate user authorization. The isolated migration and versioned source review remain execution
+require separate user authorization. Target runtime verification and versioned source review remain execution
 blocker where 7.0.2 behavior is needed.
 
 ## 3. Requirements
@@ -112,7 +112,6 @@ Testing is planned, not authorized or run. For prep-008-synthetic-writer-verific
 
 Final status: blocked. Next action: Wait for prep-007 acceptance and separate authorization before creating or mutating fixtures.
 
-Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum
-supported release. The original 6.0.5 fixture remains historical baseline evidence;
-the pinned isolated 7.0.2 target requires its own acceptance. Document mutation
-fixtures and cases are outside this target.
+Target record (2026-10-02): Redmine 7.0.2 is the sole supported release.
+Prior runtime observations do not establish acceptance for the pinned target.
+Document mutation fixtures and cases are outside this target.

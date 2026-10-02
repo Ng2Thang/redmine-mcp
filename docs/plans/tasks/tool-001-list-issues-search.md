@@ -10,7 +10,7 @@
 | Status | complete; implementation and acceptance verified |
 | Last updated | 2026-09-30 |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
-| Target | Redmine 6.0.5-bookworm |
+| Target | Redmine 7.0.2; runtime acceptance pending |
 | Next action | None for this task. |
 
 ## 2. Discovery and evidence
@@ -20,7 +20,7 @@ defaults are open status, 25 results, offset 0, and upstream `id:asc`. Its resul
 The shared Redmine identity determines visibility and the meaning of `me`. The [Redmine Issues
 API](https://www.redmine.org/projects/redmine/wiki/rest_issues) documents tracker, parent,
 updated-time filtering and sorting (reviewed 2026-09-30). Read-only Inspector calls against the
-marked Redmine 6.0.5-bookworm container confirmed combined filtering and sorting for visible
+marked Previously inspected Redmine container confirmed combined filtering and sorting for visible
 synthetic issues. This does not establish permissions for other accounts or instances.
 
 ## 3. Requirements
@@ -80,7 +80,7 @@ After those checks, the user supplied a new instruction against automatic unit-t
 no further unit tests were run after that instruction. All automated results here predate it.
 
 Inspector CLI 2.8.0 on the already-running local MCP server discovered exactly `list_projects`,
-`list_issues`, and `get_issue`. The marked `redmine:6.0.5-bookworm` container was healthy and had
+`list_issues`, and `get_issue`. The previously observed Redmine container was healthy and had
 `REDMINE_TEST_MARKER=redmine-mcp-synthetic-v1`. A read-only all-status call reported 150 issues
 at verification time. Combined tracker, parent, and inclusive `updated_since` filters found the
 selected visible child; `updated_on:desc` and `id:desc` results were ordered as requested. A

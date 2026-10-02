@@ -20,7 +20,7 @@ Read repository instructions, contributor guidance, architecture, tool reference
 the task template, current code, the target pin in `deploy/compose.test.yaml`, and task
 dependencies. Preserve unrelated working-tree changes and retired task IDs. Record authoritative
 Redmine URLs, date checked, target-version evidence, and unresolved claims inside the task.
-Do not infer 6.0.5 support from a newer documentation page alone.
+Confirm behavior against the pinned 7.0.2 source and runtime evidence.
 
 Update the task's status, blocker, and next action together with the dashboard. `planned` means
 the public contract is decision-complete, even when implementation dependencies remain.

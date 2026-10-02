@@ -10,7 +10,7 @@
 | Status | blocked; implementation finished, testing pending |
 | Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
-| Target | Redmine 6.0.5-bookworm; reactions excluded because Redmine documents them since 7.1 |
+| Target | Redmine 7.0.2; reactions remain outside the scoped contract |
 | Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
@@ -42,7 +42,7 @@ Preserve caller order in the forwarded list. Map nonempty selection to Redmine
 
 Extend `Issue` with `children` (list of issue references), `relations` (ID, source/target issue
 IDs, relation type, optional delay), `watchers` (references), and `allowed_statuses` (ID, name,
-closed flag). Keep changesets as JSON object arrays until a target 6.0.5 serializer contract is
+closed flag). Keep changesets as JSON object arrays until the 7.0.2 serializer contract is
 confirmed; restrict values to JSON types. All four collections default to empty arrays for
 backward response compatibility. Document that an empty array for an unrequested expansion says
 nothing about upstream related data. Do not download attachment content.
@@ -75,8 +75,8 @@ allowed-status behavior. Run static, offline, and Inspector checks. All results 
 
 ## 8. Implementation and review record
 
-Implementation finished; testing pending. Redmine 6.0.5
-[`show.api.rsb`](https://github.com/redmine/redmine/blob/6.0.5/app/views/issues/show.api.rsb)
+Implementation finished; testing pending. Previously inspected Redmine
+`show.api.rsb` (prior source inspection; current release review pending)
 serializes changesets as JSON objects with revision, optional user, comments, and committed time.
 Its children serializer is recursive, so the model preserves nested children. Added include
 validation and passed selections through router, service, port, and gateway. Added related fields,

@@ -7,13 +7,13 @@
 | Task ID | tool-014-list-issues-associations |
 | Assigned capability | Extend issue lists with associations: Add include only; preserve all old filters, order, page defaults and tool name. |
 | Type / access / destructive effects | Extend existing tool / read / None |
-| Status | blocked - documentation draft; no code or verification performed |
-| Dependencies | [prep-005-upgrade-redmine-7-1](prep-005-upgrade-redmine-7-1.md); prior task must have evidence and user acceptance |
-| Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Status | complete - implementation accepted for continuation; verification waived |
+| Dependencies | [prep-005-redmine-7-0-2](prep-005-redmine-7-0-2.md); prior task must have evidence and user acceptance |
+| Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
+| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; actual runtime verification waived by user |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor prep-005-upgrade-redmine-7-1 must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Progress summary | Exact 7.0.2 source reviewed; list_issues include implementation and documentation updated. |
+| Blocker / next action | Continue to tool-015; unit and live behavior remain unverified. |
 
 ## 2. Discovery and evidence
 
@@ -31,14 +31,15 @@ separate restricted deployment and synthetic verification prerequisites.
 |---|---|---|---|
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-10-01 | General/current documentation | GET /issues.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | 6.0.5-bookworm | Existing synthetic environment is not evidence of 7.0.2 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The target is pinned; actual runtime verification was waived by the user. |
+| [Redmine 7.0.2 release](https://www.redmine.org/releases/redmine-7.0.2.tar.gz) | 2026-10-02 | Exact release source | `IssuesController#index` loads visible relations only when requested; `index.api.rsb` emits attachments and relations only for their `include` values. `Issue.load_visible_relations` filters the opposite issue by caller visibility. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `list_issues` is the sole public owner | No |
-| Strict sequence | Wait for prep-005-upgrade-redmine-7-1 evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | prep-005 accepted with runtime waiver on 2026-10-02 | No |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Pinned 7.0.2 digest and exact release source reviewed; live behavior unverified | No to coding; runtime evidence waived |
 
 ## 3. Requirements
 
@@ -74,12 +75,16 @@ fields: `{"items":[],"total":0,"limit":25,"offset":0,"visibility":{"scope":"requ
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Optional include CSV; absent leaves existing behavior; accepted values attachments,relations; reject duplicates and empty CSV segments | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /issues.json |
+| Tool arguments | Optional include CSV; absent leaves existing behavior; accepted values attachments,relations; reject duplicates, unknown values, and empty CSV segments | Existing filters and defaults are preserved. | `include` query parameter only when supplied |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-Existing Page[Issue] with selected association arrays and visibility. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
+Existing Page[Issue] with selected association arrays and page visibility. Typed data is scoped to
+the requesting Redmine user. Unrequested attachment and relation arrays stay empty with
+`not_requested` observations at `/items/{index}/attachments` and `/items/{index}/relations`.
+Requested arrays absent upstream have `not_returned` observations. A returned relation has a
+visible opposite issue according to Redmine's 7.0.2 source.
 Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -97,9 +102,9 @@ registered exactly once and must not change defaults of another operation.
 
 N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: the predecessor is accepted with a runtime waiver and the exact
+7.0.2 source establishes the include and relation visibility contract. Runtime behavior is
+unverified under the user's waiver.
 
 ## 5. Implementation plan
 
@@ -121,7 +126,7 @@ record any newly required package and update `uv.lock` together.
 
 | Criterion | Requirement | Observable result | Planned scenario | Evidence |
 |---|---|---|---|---|
-| AC-001 | REQ-001 | Extend issue lists with associations returns the expected mapped result. | TOOL-014-001 | Pending |
+| AC-001 | REQ-001 | Extend issue lists with associations returns the expected mapped result. | TOOL-014-001 | Code present; testing pending |
 | AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-014-002 | Pending |
 | AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-014-003/004 | Pending |
 | AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-014-005 | Pending |
@@ -131,8 +136,9 @@ or state verification.
 
 ## 7. Test plan and execution record
 
-Testing is planned only. The user must authorize it separately for this task;
-the repository instruction prohibits automatic unit-test verification.
+Testing is planned only. The user must authorize unit testing separately for this task;
+the repository instruction prohibits automatic unit-test verification. The user waived
+actual runtime verification on 2026-10-02; no live acceptance is claimed.
 
 | Scenario | Layer and setup | Expected result | Mode |
 |---|---|---|---|
@@ -144,33 +150,37 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | Ruff lint/format, mypy, and `git diff --check` during coding | Static checks pass | Scoped Ruff lint/format, mypy `src`, and diff whitespace check passed on 2026-10-02 | Passed for coding scope |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
-| EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
+| EVID-003 | Inspector and marked synthetic 7.0.2 procedure | Required runtime cases pass | Not run; user waived actual runtime verification | Waived, not passed |
 
 No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
-- Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor prep-005-upgrade-redmine-7-1 must be accepted and exact 7.0.2 source/behavior rechecked.
+- Changes made: Added optional `include` to `list_issues` through router, service, port,
+  and Redmine gateway. The page mapper reports requested and unrequested association fields.
+- Plan deviations: none recorded. Existing filters, defaults, operation ID, and page shape remain.
+- Quality: scoped Ruff lint and format checks, mypy `src`, and `git diff --check` passed
+  on 2026-10-02. Automated tests were not run.
+- Startup/Inspector checks: not run under the user's runtime waiver.
+- Documentation: tool reference, this task, and dashboard updated.
+- Final code diff review: completed for task-owned code and docs; no whitespace errors.
+- Remaining blocker: unit tests require separate user authorization. TOOL-014-001 through
+  TOOL-014-004 and MCP discovery/invocation in TOOL-014-005 remain unverified.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed from source.
+- [x] Final diff reviewed and dashboard synchronized.
+- [x] User directed continuation without actual verification on 2026-10-02.
 
-Final status: blocked. Next action: Predecessor prep-005-upgrade-redmine-7-1 must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation accepted for roadmap continuation on 2026-10-02 with
+verification waived. No unit, Inspector, or live result is claimed. Next action: tool-015.
 
-Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum supported release. The original 6.0.5 fixture remains historical baseline evidence; the pinned isolated 7.0.2 target requires its own acceptance.
+Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

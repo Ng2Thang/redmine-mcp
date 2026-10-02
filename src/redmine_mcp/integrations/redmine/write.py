@@ -96,6 +96,12 @@ class RedmineWriter:
                 )
                 status = response.status_code
                 try:
+                    if status == http_status.HTTP_422_UNPROCESSABLE_CONTENT:
+                        raise ApplicationError(
+                            codes_text.INVALID_PARAMETERS,
+                            redmine_text.WRITE_REJECTED,
+                            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                        )
                     raise_for_upstream_status(status)
                     if status not in accepted_statuses:
                         raise ApplicationError(

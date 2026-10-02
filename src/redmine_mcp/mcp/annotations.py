@@ -9,6 +9,6 @@ def annotate_read_tools(tools: list[Tool]) -> None:
         tool.annotations = ToolAnnotations(
             readOnlyHint=tool.name != "download_attachment" and tool.name not in WRITE_OPERATIONS,
             destructiveHint=False,
-            idempotentHint=tool.name != "download_attachment",
+            idempotentHint=tool.name != "download_attachment" and tool.name not in WRITE_OPERATIONS,
             openWorldHint=True,
         )

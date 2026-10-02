@@ -310,6 +310,17 @@ The decoded byte count must match Redmine's metadata size. A timeout or transfer
 after Redmine has incremented a Project or Version download counter. Do not retry solely to
 resolve an uncertain counter state.
 
+`upload_attachment` is available only on an explicitly configured restricted writer deployment.
+Pass a basename `filename` (at most 255 characters) and strict `content_base64` bytes; the
+decoded content must fit `REDMINE_MAX_BINARY_BYTES` (5 MiB by default). Redmine receives the raw
+bytes at `POST /uploads.json?filename=...` with `application/octet-stream`. A confirmed response
+returns a temporary, unattached `attachment_id` and opaque `token` for a later attach operation.
+The result separates `outcome` (`accepted` or `uncertain`), `upstream_accepted`, and read-back
+`verification` (`matched`, `mismatch`, or `unavailable`). A failed read-back does not undo a
+confirmed upload. An uncertain result may have created a temporary object; inspect task-owned
+state before any manual retry. The reader deployment does not discover this tool and rejects its
+REST route with 403.
+
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.

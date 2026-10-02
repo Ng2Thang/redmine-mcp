@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `upload_attachment` for bounded temporary uploads with an opaque token and
+  separate accepted/uncertain and read-back verification fields.
+
 - Added read-only `get_current_user` for the caller's basic profile and visible project
   memberships with roles; credentials and additional account metadata are excluded.
 

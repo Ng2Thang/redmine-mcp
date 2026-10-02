@@ -1,11 +1,29 @@
-from redmine_mcp.common import require_positive_id
-from redmine_mcp.features.attachments.models import AttachmentDetail, AttachmentDownload
-from redmine_mcp.features.attachments.ports import AttachmentReader
+from base64 import b64decode
+from binascii import Error as Base64Error
+
+from fastapi import status as http_status
+
+from redmine_mcp.common import ApplicationError, require_positive_id
+from redmine_mcp.constants import codes as codes_text
+from redmine_mcp.constants import redmine as redmine_text
+from redmine_mcp.features.attachments.models import (
+    AttachmentDetail,
+    AttachmentDownload,
+    UploadResult,
+)
+from redmine_mcp.features.attachments.ports import AttachmentReader, AttachmentWriter
 
 
 class AttachmentService:
-    def __init__(self, reader: AttachmentReader) -> None:
+    def __init__(
+        self,
+        reader: AttachmentReader,
+        writer: AttachmentWriter | None = None,
+        max_binary_bytes: int = 5 * 1024 * 1024,
+    ) -> None:
         self.reader = reader
+        self.writer = writer
+        self.max_binary_bytes = max_binary_bytes
 
     async def get_attachment(self, attachment_id: int) -> AttachmentDetail:
         require_positive_id(attachment_id, "attachment_id")
@@ -14,3 +32,41 @@ class AttachmentService:
     async def download_attachment(self, attachment_id: int) -> AttachmentDownload:
         require_positive_id(attachment_id, "attachment_id")
         return await self.reader.download_attachment(attachment_id)
+
+    async def upload_attachment(self, filename: str, content_base64: str) -> UploadResult:
+        if (
+            not filename
+            or len(filename) > 255
+            or filename in (".", "..")
+            or any(character in filename for character in ("/", "\\", "\x00"))
+            or any(ord(character) < 32 or ord(character) == 127 for character in filename)
+        ):
+            raise ApplicationError(
+                codes_text.INVALID_PARAMETERS,
+                redmine_text.INVALID_FILENAME,
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+        maximum_encoded = 4 * ((self.max_binary_bytes + 2) // 3)
+        if len(content_base64) > maximum_encoded:
+            raise ApplicationError(
+                codes_text.INVALID_PARAMETERS,
+                redmine_text.REQUEST_TOO_LARGE,
+                http_status.HTTP_413_CONTENT_TOO_LARGE,
+            )
+        try:
+            content = b64decode(content_base64, validate=True)
+        except (Base64Error, ValueError):
+            raise ApplicationError(
+                codes_text.INVALID_PARAMETERS,
+                redmine_text.INVALID_BASE64,
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+            ) from None
+        if len(content) > self.max_binary_bytes:
+            raise ApplicationError(
+                codes_text.INVALID_PARAMETERS,
+                redmine_text.REQUEST_TOO_LARGE,
+                http_status.HTTP_413_CONTENT_TOO_LARGE,
+            )
+        if self.writer is None:
+            raise RuntimeError("Attachment writer is not configured")
+        return await self.writer.upload_attachment(filename, content)

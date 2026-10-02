@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm; exact release source reviewed; runtime verification waived |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Added estimates, attachment URL, and journal edit metadata; existing include defaults preserved. |
-| Blocker / next action | Coding and static checks finished; verification remains deferred under the user's instructions. |
+| Blocker / next action | Coding and static checks finished; verification remains deferred under the user's instructions. The user directed continuation to tool-016 on 2026-10-02. |
 
 ## 2. Discovery and evidence
 
@@ -183,7 +183,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed from source.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User directed continuation to tool-016 on 2026-10-02 with verification deferred.
 
 Final status: implementation finished; static checks passed. Runtime and automated
 verification remain unexecuted and are not claimed as passing.

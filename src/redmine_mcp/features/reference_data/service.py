@@ -1,5 +1,10 @@
 from redmine_mcp.common import Collection
-from redmine_mcp.features.reference_data.models import IssuePriority, IssueStatus, Tracker
+from redmine_mcp.features.reference_data.models import (
+    DocumentCategory,
+    IssuePriority,
+    IssueStatus,
+    Tracker,
+)
 from redmine_mcp.features.reference_data.ports import ReferenceReader
 
 
@@ -15,3 +20,6 @@ class ReferenceService:
 
     async def list_issue_priorities(self) -> Collection[IssuePriority]:
         return await self.reader.list_issue_priorities()
+
+    async def list_document_categories(self) -> Collection[DocumentCategory]:
+        return await self.reader.list_document_categories()

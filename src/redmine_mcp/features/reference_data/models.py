@@ -21,3 +21,9 @@ class IssuePriority(BaseModel):
     id: int = Field(gt=0)
     name: str = Field(min_length=1)
     is_default: bool = Field(strict=True)
+
+
+class DocumentCategory(BaseModel):
+    id: int = Field(gt=0)
+    name: str = Field(min_length=1)
+    is_default: bool = Field(strict=True)

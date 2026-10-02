@@ -17,6 +17,7 @@ that a release has been published.
 - Added the read-only global `list_issue_statuses` catalog.
 - Added the read-only global `list_trackers` catalog.
 - Added the read-only global `list_issue_priorities` catalog.
+- Added the read-only global `list_document_categories` catalog.
 - Added `list_project_versions` with collection-completeness validation.
 - Added `list_project_issue_categories` with collection-completeness validation.
 - Issue requirement analysis, reviewed task backlog, and explicit testing/contract blockers.

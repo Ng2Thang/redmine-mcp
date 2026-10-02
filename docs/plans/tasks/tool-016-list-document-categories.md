@@ -7,13 +7,13 @@
 | Task ID | tool-016-list-document-categories |
 | Assigned capability | List document categories: Global enumeration lookup. |
 | Type / access / destructive effects | Add reader tool / read / None |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-015-get-issue-write-context](tool-015-get-issue-write-context.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
+| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; exact release source reviewed, runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-015-get-issue-write-context must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Progress summary | Read-only route, typed mapping, service/port, MCP registration, and documentation implemented. |
+| Blocker / next action | Execute TOOL-016-001 through TOOL-016-005 after separate testing authorization; runtime verification remains waived. |
 
 ## 2. Discovery and evidence
 
@@ -32,13 +32,14 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Enumerations) | 2026-10-01 | General/current documentation | GET /enumerations/document_categories.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Enumerations API includes document categories in 7.0.2; Documents REST itself is excluded | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz) | 2026-10-02 | 7.0.2 release source | `config/routes.rb` routes `enumerations/:type` to `index`; `EnumerationsController#index` accepts API authentication and returns the shared sorted subclass collection. `index.api.rsb` emits `id`, `name`, `is_default`, `active`, and visible custom values. Only the first three fields are exposed here. Runtime behavior remains unverified. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `list_document_categories` is the sole public owner | No |
-| Strict sequence | Wait for tool-015-get-issue-write-context evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User directed continuation after tool-015 on 2026-10-02; unexecuted verification retained | No to coding |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Pinned 7.0.2 release archive inspected locally; synthetic runtime verification waived | No to coding |
 
 ## 3. Requirements
 
@@ -74,13 +75,12 @@ fields: `{"items":[{"id":1,"name":"Uncategorized","is_default":true}],"visibilit
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | No arguments | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /enumerations/document_categories.json |
+| Tool arguments | No arguments | There are no path, query, or body inputs; unknown MCP arguments are rejected. | GET /enumerations/document_categories.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-items with positive id, nonempty name, is_default; visibility. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
-Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
+`Collection[DocumentCategory]` with `items` holding positive `id`, nonempty `name`, and strict boolean `is_default`, plus `visibility` scoped to the requesting Redmine user. Upstream `active` and custom values are intentionally excluded. This endpoint has no pagination or count contract; an empty list is valid.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
 
@@ -95,11 +95,11 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
+N/A - read-only global enumeration lookup; the endpoint does not download files.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: the exact 7.0.2 source confirms the route, API authentication,
+shared sorted enumeration, and response fields. The user directed continuation from tool-015.
+No project document permission is inferred from this global lookup.
 
 ## 5. Implementation plan
 
@@ -144,7 +144,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | Ruff lint/format, mypy, and `git diff --check` during coding | Static checks pass | Direct installed Ruff lint passed; Ruff format found 155 files formatted; mypy passed for 79 source files; `git diff --check` passed on 2026-10-02. `uv run --frozen --no-sync` could not initialize its cache under sandbox permissions. | Passed via installed executables |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -152,25 +152,35 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: added `DocumentCategory` model, reference-data port/service/gateway method,
+  REST route, explicit read-policy and MCP catalog entries, tool reference, and changelog.
+- Plan deviations: reused the existing reference-data wiring; no new bootstrap dependency was needed.
+- Quality: installed `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format
+  --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` passed on 2026-10-02.
+  The equivalent `uv run --frozen --no-sync` commands could not initialize the external uv
+  cache under sandbox permissions. Automated tests were not run.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-015-get-issue-write-context must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: this task, tool reference, changelog, and dashboard updated.
+- Final code diff review: only the reference-data flow, allowlists, and related English docs
+  changed. The route uses the existing `Collection` wrapper and read dependency; no prior
+  operation signatures or defaults changed.
+- Remaining verification: TOOL-016-001 through TOOL-016-005 remain unexecuted. Offline tests
+  should check exact upstream path, selected fields, empty/malformed collections, auth and
+  permission errors, timeout and oversized responses, and unchanged MCP catalog contracts.
+  Startup and Inspector calls on the marked 7.0.2 fixture remain waived by the user.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed from source.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-015-get-issue-write-context must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; testing pending. Next action: separately authorize and
+execute TOOL-016-001 through TOOL-016-005; do not claim passing runtime evidence from static checks.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

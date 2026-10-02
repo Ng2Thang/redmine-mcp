@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends
 from redmine_mcp.api import get_reference_data, require_read_access
 from redmine_mcp.common import Collection
 from redmine_mcp.features import ReferenceService
-from redmine_mcp.features.reference_data.models import IssuePriority, IssueStatus, Tracker
+from redmine_mcp.features.reference_data.models import (
+    DocumentCategory,
+    IssuePriority,
+    IssueStatus,
+    Tracker,
+)
 
 router = APIRouter(
     prefix="/api/v1", tags=["reference-data"], dependencies=[Depends(require_read_access)]
@@ -70,3 +75,20 @@ async def list_issue_priorities(
 ) -> Collection[IssuePriority]:
     """List issue priority IDs and the default in items with visibility metadata."""
     return await service.list_issue_priorities()
+
+
+@router.get(
+    "/document-categories",
+    operation_id="list_document_categories",
+    response_model=Collection[DocumentCategory],
+    description=(
+        "List global Redmine document category IDs, names, and default flags. "
+        "Returns items with visibility metadata and no pagination inputs. "
+        "This catalog does not establish access to documents in any project."
+    ),
+)
+async def list_document_categories(
+    service: Annotated[ReferenceService, Depends(get_reference_data)],
+) -> Collection[DocumentCategory]:
+    """List global document categories without claiming project document access."""
+    return await service.list_document_categories()

@@ -33,6 +33,7 @@ or guarantees that repeated reads return identical data. The external Redmine da
 | `list_issue_statuses` | `GET /api/v1/issue-statuses` | None |
 | `list_trackers` | `GET /api/v1/trackers` | None |
 | `list_issue_priorities` | `GET /api/v1/issue-priorities` | None |
+| `list_document_categories` | `GET /api/v1/document-categories` | None |
 
 | List parameter | Type and default | Accepted values |
 |---|---|---|
@@ -279,6 +280,11 @@ enabled for a particular project.
 
 `list_issue_priorities` returns only the global issue-priority enumeration, with positive `id`,
 nonempty `name`, and boolean `is_default` for each entry.
+
+`list_document_categories` returns the global document-category enumeration in `items`, with
+positive `id`, nonempty `name`, and boolean `is_default`. It has no pagination inputs. The
+catalog does not establish access to documents in any project. Redmine may return additional
+category fields; this tool exposes only these three fields.
 
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains

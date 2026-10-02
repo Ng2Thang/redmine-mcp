@@ -1,5 +1,10 @@
 from redmine_mcp.common import Collection
-from redmine_mcp.features.reference_data import IssuePriority, IssueStatus, Tracker
+from redmine_mcp.features.reference_data import (
+    DocumentCategory,
+    IssuePriority,
+    IssueStatus,
+    Tracker,
+)
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import wrapped_collection
 
@@ -19,3 +24,7 @@ class RedmineReferenceData:
     async def list_issue_priorities(self) -> Collection[IssuePriority]:
         data = await self.client.get("enumerations/issue_priorities.json", {})
         return wrapped_collection(IssuePriority, data, "issue_priorities")
+
+    async def list_document_categories(self) -> Collection[DocumentCategory]:
+        data = await self.client.get("enumerations/document_categories.json", {})
+        return wrapped_collection(DocumentCategory, data, "document_categories")

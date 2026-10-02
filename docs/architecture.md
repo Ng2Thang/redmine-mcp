@@ -28,8 +28,10 @@ forbidden in domain and service contracts.
 
 app.create_app reads settings (or accepts an explicit Settings instance) and registers routers.
 bootstrap wires dependencies.
-`lifecycle.py` owns both HTTP clients and MCP transport shutdown through an async exit stack.
+`lifecycle.py` owns both HTTP clients and MCP transport startup/shutdown through an async exit stack.
 Cleanup is registered before later acquisitions; one cleanup failure does not skip other cleanup.
+The MCP adapter waits for the SDK session manager's `run()` context to enter before application
+startup finishes. This avoids FastAPI-MCP 0.4's lazy-start race for simultaneous first connections.
 Each application instance owns one lifespan; construct a new instance for another runtime.
 Imports do not load credentials or call the network.
 

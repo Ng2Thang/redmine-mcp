@@ -10,7 +10,7 @@ from fastapi_mcp import FastApiMCP
 from redmine_mcp.config import Settings
 from redmine_mcp.constants import runtime as runtime_text
 from redmine_mcp.integrations.redmine import create_upstream_client
-from redmine_mcp.mcp import shutdown_mcp
+from redmine_mcp.mcp import shutdown_mcp, start_mcp
 
 
 class RuntimeLifecycle:
@@ -30,6 +30,7 @@ class RuntimeLifecycle:
             resources.push_async_callback(self.internal.aclose)
             upstream = await resources.enter_async_context(create_upstream_client(self.settings))
             resources.push_async_callback(shutdown_mcp, self.mcp)
+            await start_mcp(self.mcp)
             app.state.upstream = upstream
             try:
                 yield

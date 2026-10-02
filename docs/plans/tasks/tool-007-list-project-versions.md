@@ -8,10 +8,10 @@
 | Capability | Let clients discover versions available for a project. |
 | Type / access / destructive effects | Add tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm |
-| Next action | Add and run VERSION-001 through VERSION-004 in a separate testing assignment, including synthetic sharing and count behavior. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -37,7 +37,7 @@ versioned source inspection is required.
 Proposed operation `list_project_versions`, route `GET /api/v1/projects/{project_id}/versions`,
 positive integer project ID, and upstream `GET projects/{project_id}/versions.json`. Proposed
 `Version` item: positive ID, name, `project` reference, status (`open`, `locked`, or `closed`),
-nullable description and due date. Bearer auth and sanitized 403/404/502/504 errors apply;
+nullable description and due date. Personal `X-Redmine-API-Key` authentication and sanitized 403/404/502/504 errors apply;
 malformed items yield `upstream_response` 502. No write behavior.
 
 Return `list[Version]` without public pagination controls. Require a nonnegative integer
@@ -95,3 +95,18 @@ found only scoped source and documentation changes beyond the preserved baseline
 Final status: blocked; implementation finished, testing pending. Next action: add and run
 VERSION-001 through VERSION-004, then perform Inspector and synthetic sharing acceptance in a
 separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+VERSION-002/003 pass offline, including strict collection counts. The sampled base project's empty version set matches Redmine; populated shared/private visibility under contrasting ordinary roles remains pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

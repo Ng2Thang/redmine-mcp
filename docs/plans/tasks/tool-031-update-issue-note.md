@@ -10,10 +10,10 @@
 | Status | blocked - documentation draft; no code or verification performed |
 | Dependencies | [tool-030-update-issue](tool-030-update-issue.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.1 exact build pending prep-005; current pin 6.0.5-bookworm |
-| Last updated | 2026-10-01, Codex |
+| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-030-update-issue must be accepted and exact 7.1 source/behavior rechecked. |
+| Blocker / next action | Predecessor tool-030-update-issue must be accepted and exact 7.0.2 source/behavior rechecked. |
 
 ## 2. Discovery and evidence
 
@@ -30,15 +30,15 @@ separate restricted deployment and synthetic verification prerequisites.
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Journals) | 2026-10-01 | General/current documentation | PUT /journals/{journal_id}.json; target-build behavior must be checked in prep-005. |
-| [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents from 7.1 | JSON authentication, paging, upload headers, and resource availability. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | 6.0.5-bookworm | Existing synthetic environment is not evidence of 7.1 behavior. |
+| [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | 6.0.5-bookworm | Existing synthetic environment is not evidence of 7.0.2 behavior. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `update_issue_note` is the sole public owner | No |
 | Strict sequence | Wait for tool-030-update-issue evidence and explicit user acceptance | Yes to execution |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Pin exact 7.1 release/digest and verify source or synthetic behavior | Yes to acceptance |
+| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
@@ -102,14 +102,14 @@ registered exactly once and must not change defaults of another operation.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
 Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.1 behavior
+are pending. Do not start coding from this draft until the exact 7.0.2 behavior
 and its permission contract have been reviewed and the task is marked planned.
 
 ## 5. Implementation plan
 
 | Step | Concrete change | Owner/components | Dependency and review |
 |---|---|---|---|
-| 1 | Confirm exact 7.1 endpoint, permission, response, and side effects; freeze contract. | This task document | prep-005 evidence; specification review |
+| 1 | Confirm exact 7.0.2 endpoint, permission, response, and side effects; freeze contract. | This task document | prep-005 evidence; specification review |
 | 2 | Add or extend typed models and Protocol port; preserve public defaults. | Feature models/ports | Step 1; type review |
 | 3 | Map upstream request/response and sanitized errors using bounded async client. | Redmine gateway | Step 2; gateway review |
 | 4 | Implement service, REST validation, and dependency wiring. | Service/router/bootstrap | Step 3; architecture review |
@@ -144,15 +144,15 @@ the repository instruction prohibits automatic unit-test verification.
 | TOOL-031-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
 | TOOL-031-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
 | TOOL-031-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
-| TOOL-031-005 | Startup and Inspector invocation on marked 7.1 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
+| TOOL-031-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
 | EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
-| EVID-003 | Inspector and marked synthetic 7.1 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
+| EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
-No current 7.1 live or per-tool test evidence is claimed.
+No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
@@ -162,7 +162,7 @@ No current 7.1 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-030-update-issue must be accepted and exact 7.1 source/behavior rechecked.
+- Remaining blocker: Predecessor tool-030-update-issue must be accepted and exact 7.0.2 source/behavior rechecked.
 
 ## 9. Completion and handoff
 
@@ -175,4 +175,6 @@ No current 7.1 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-030-update-issue must be accepted and exact 7.1 source/behavior rechecked.
+Final status: blocked. Next action: Predecessor tool-030-update-issue must be accepted and exact 7.0.2 source/behavior rechecked.
+
+Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum supported release. The original 6.0.5 fixture remains historical baseline evidence; the pinned isolated 7.0.2 target requires its own acceptance.

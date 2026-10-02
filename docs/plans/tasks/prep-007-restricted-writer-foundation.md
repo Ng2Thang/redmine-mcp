@@ -10,10 +10,10 @@
 | Status | blocked - documentation only |
 | Dependencies | [tool-021-download-attachment](tool-021-download-attachment.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.1 exact build pending; repository currently pins 6.0.5-bookworm |
-| Last updated | 2026-10-01, Codex |
+| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Prerequisite defined; no code, tests, migration, or live check performed. |
-| Blocker / next action | Wait for tool-021 acceptance; review writer access contract and exact 7.1 behavior. |
+| Blocker / next action | Wait for tool-021 acceptance; review writer access contract and exact 7.0.2 behavior. |
 
 ## 2. Discovery and evidence
 
@@ -22,13 +22,13 @@ Establish an opt-in writer deployment before any write tool. Separate reader/wri
 | Source | Checked | Evidence and limitation |
 |---|---|---|
 | [Current roadmap](../index.md) | 2026-10-01 | Existing task status and architecture; no pending acceptance is treated as passed. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | Current synthetic Redmine is 6.0.5, so it cannot establish 7.1 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | Current synthetic Redmine is 6.0.5, so it cannot establish 7.0.2 behavior. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
 Decisions: this prerequisite owns no public MCP operation; tool-021-download-attachment must be
 reviewed without rewriting prior evidence. Testing and any live rehearsal
-require separate user authorization. The exact build remains an execution
-blocker where 7.1 behavior is needed.
+require separate user authorization. The isolated migration and versioned source review remain execution
+blocker where 7.0.2 behavior is needed.
 
 ## 3. Requirements
 
@@ -49,7 +49,7 @@ production credential, and claims based on unrun checks.
 | Inputs | Existing configuration, bounded client, and reviewed prior task contract |
 | Outputs | Reader never exposes writes; writer rejects missing/unauthorized keys; no-body success and post-dispatch uncertainty are represented truthfully; old readers still work. |
 | Access | Restricted writer configuration; preserve reader-only catalog |
-| Version support | 7.1 exact build pending; exact target evidence is required before completion. |
+| Version support | 7.0.2 exact build pending; exact target evidence is required before completion. |
 | Errors | Record failed prerequisite or recovery as blocked; never fabricate a successful result. |
 
 Write semantics: The foundation reports accepted writes and uncertain outcomes separately, does not retry after an unknown result, and never treats failed read-back as a failed write.
@@ -99,7 +99,7 @@ Testing is planned, not authorized or run. For prep-007-restricted-writer-founda
 - Static checks: not run for this task.
 - Automated tests: not run.
 - Startup, Inspector, and live state checks: not run.
-- Remaining blocker: Wait for tool-021 acceptance; review writer access contract and exact 7.1 behavior.
+- Remaining blocker: Wait for tool-021 acceptance; review writer access contract and exact 7.0.2 behavior.
 
 ## 9. Completion and handoff
 
@@ -110,4 +110,6 @@ Testing is planned, not authorized or run. For prep-007-restricted-writer-founda
 - [ ] Dashboard and documentation match actual evidence.
 - [ ] User accepts this task before the next task starts.
 
-Final status: blocked. Next action: Wait for tool-021 acceptance; review writer access contract and exact 7.1 behavior.
+Final status: blocked. Next action: Wait for tool-021 acceptance; review writer access contract and exact 7.0.2 behavior.
+
+Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum supported release. The original 6.0.5 fixture remains historical baseline evidence; the pinned isolated 7.0.2 target requires its own acceptance.

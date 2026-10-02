@@ -34,6 +34,14 @@ that a release has been published.
 
 ### Changed
 
+- Retargeted the future Redmine capability roadmap to 7.0.2. Added an isolated,
+  digest-pinned 7.0.2 Compose target, guarded copy/restore helpers and an independent
+  6.0.5 recovery project. Deferred Document REST operations that require Redmine 7.1.
+  The existing 6.0.5 synthetic baseline remains in place.
+
+- Start the MCP session manager before accepting requests and wait for SDK readiness, preventing
+  intermittent 500 responses when clients connect simultaneously. Add authorized offline runtime
+  and reader acceptance cases, including failed startup and shutdown with an open session.
 - Centralized runtime messages, stable error codes, and log templates in typed constants
   grouped by feature and responsibility, preserving existing text. Tool and parameter
   descriptions remain inline in feature routers; schema descriptions remain beside models.

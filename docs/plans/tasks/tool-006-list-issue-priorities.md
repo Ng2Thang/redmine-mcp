@@ -8,10 +8,10 @@
 | Capability | Let clients interpret priority IDs and the default priority. |
 | Type / access / destructive effects | Add tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm |
-| Next action | Add and run PRIORITY-001 through PRIORITY-003 in a separate testing assignment. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -32,7 +32,7 @@ Add no-input `list_issue_priorities` at `GET /api/v1/issue-priorities`, explicit
 for MCP. Return `list[IssuePriority]` with positive `id`, nonempty `name`, and boolean
 `is_default`. Map the `issue_priorities` array from `GET enumerations/issue_priorities.json`.
 Empty array is valid; absent/malformed array or item yields sanitized `upstream_response` 502.
-Use the shared bearer token and existing upstream 403/404/502/504 mapping. No pagination,
+Use the caller's personal `X-Redmine-API-Key` and existing upstream 403/404/502/504 mapping. No pagination,
 other enumeration exposure, or write behavior.
 
 ## 5. Implementation plan
@@ -72,3 +72,18 @@ found only scoped changes beyond the preserved baseline.
 
 Final status: blocked. Next action: add and run PRIORITY-001 through PRIORITY-003, including
 Inspector and synthetic default comparison, in a separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+PRIORITY-001/002 pass offline. Five registry priorities and default flags match Redmine; complete clean baseline acceptance remains pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

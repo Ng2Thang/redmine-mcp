@@ -10,32 +10,32 @@
 | Status | blocked - documentation only |
 | Dependencies | [prep-007-restricted-writer-foundation](prep-007-restricted-writer-foundation.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.1 isolated instance required; repository currently pins 6.0.5-bookworm |
-| Last updated | 2026-10-01, Codex |
+| Target Redmine version | 7.0.2-bookworm pinned in isolated Compose; original synthetic pin 6.0.5-bookworm |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Prerequisite defined; no code, tests, migration, or live check performed. |
 | Blocker / next action | Wait for prep-007 acceptance and separate authorization before creating or mutating fixtures. |
 
 ## 2. Discovery and evidence
 
-Build a controlled fixture and state-inspection plan for write-tool acceptance. Specify marker checks, restricted users and roles, task-owned project/issues/documents/files, mutation state comparisons, duplicate/timeout scenarios, and cleanup; do not run seeding or mutations in this planning stage.
+Build a controlled fixture and state-inspection plan for write-tool acceptance. Specify marker checks, restricted users and roles, task-owned project/issues/files, mutation state comparisons, duplicate/timeout scenarios, and cleanup; do not run seeding or mutations in this planning stage.
 
 | Source | Checked | Evidence and limitation |
 |---|---|---|
 | [Current roadmap](../index.md) | 2026-10-01 | Existing task status and architecture; no pending acceptance is treated as passed. |
-| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | Current synthetic Redmine is 6.0.5, so it cannot establish 7.1 behavior. |
+| [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-01 | Current synthetic Redmine is 6.0.5, so it cannot establish 7.0.2 behavior. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
 Decisions: this prerequisite owns no public MCP operation; prep-007-restricted-writer-foundation must be
 reviewed without rewriting prior evidence. Testing and any live rehearsal
-require separate user authorization. The exact build remains an execution
-blocker where 7.1 behavior is needed.
+require separate user authorization. The isolated migration and versioned source review remain execution
+blocker where 7.0.2 behavior is needed.
 
 ## 3. Requirements
 
 | Requirement | Observable behavior |
 |---|---|
 | REQ-001 | Build a controlled fixture and state-inspection plan for write-tool acceptance. |
-| REQ-002 | Specify marker checks, restricted users and roles, task-owned project/issues/documents/files, mutation state comparisons, duplicate/timeout scenarios, and cleanup; do not run seeding or mutations in this planning stage. |
+| REQ-002 | Specify marker checks, restricted users and roles, task-owned project/issues/files, mutation state comparisons, duplicate/timeout scenarios, and cleanup; do not run seeding or mutations in this planning stage. |
 | REQ-003 | Scope and existing capability compatibility are preserved; evidence is dated and redacted. |
 
 In scope: Synthetic fixture inventory and verification procedure; no public MCP operation. Out of scope: unrelated Redmine APIs, an administrator
@@ -46,10 +46,10 @@ production credential, and claims based on unrun checks.
 | Area | Contract |
 |---|---|
 | MCP name / operation ID / REST route | N/A - shared prerequisite |
-| Inputs | Marked isolated 7.1 environment and task-owned fixture namespace |
+| Inputs | Marked isolated 7.0.2 environment and task-owned fixture namespace |
 | Outputs | Every write tool can demonstrate allowed/denied behavior and resulting state on disposable data; cleanup changes only owned fixtures. |
 | Access | No new public permission |
-| Version support | 7.1 isolated instance required; exact target evidence is required before completion. |
+| Version support | 7.0.2 isolated instance required; exact target evidence is required before completion. |
 | Errors | Record failed prerequisite or recovery as blocked; never fabricate a successful result. |
 
 Write semantics: N/A - no Redmine mutation belongs to this planning task.
@@ -61,7 +61,7 @@ are assigned. Exact version and execution evidence remain pending.
 
 1. Inspect the predecessor's accepted evidence and current configuration.
 2. Review authoritative versioned source or repository contracts relevant to this prerequisite.
-3. Specify marker checks, restricted users and roles, task-owned project/issues/documents/files, mutation state comparisons, duplicate/timeout scenarios, and cleanup; do not run seeding or mutations in this planning stage.
+3. Specify marker checks, restricted users and roles, task-owned project/issues/files, mutation state comparisons, duplicate/timeout scenarios, and cleanup; do not run seeding or mutations in this planning stage.
 4. Update only the owned implementation or operations documentation; preserve unrelated edits.
 5. Run applicable static checks during a separately assigned coding stage.
 6. Hand off exact offline and synthetic scenarios; run them only with separate testing authorization.
@@ -111,3 +111,8 @@ Testing is planned, not authorized or run. For prep-008-synthetic-writer-verific
 - [ ] User accepts this task before the next task starts.
 
 Final status: blocked. Next action: Wait for prep-007 acceptance and separate authorization before creating or mutating fixtures.
+
+Retargeting record (2026-10-02): the user selected Redmine 7.0.2 as the maximum
+supported release. The original 6.0.5 fixture remains historical baseline evidence;
+the pinned isolated 7.0.2 target requires its own acceptance. Document mutation
+fixtures and cases are outside this target.

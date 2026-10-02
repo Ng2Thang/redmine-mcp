@@ -1,0 +1,62 @@
+name: redmine-mcp-recovery-6-0-5
+services:
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      REDMINE_URL: http://redmine:3000
+      REDMINE_WRITE_ENABLED: "false"
+    ports:
+      - "127.0.0.1:8002:8000"
+    depends_on:
+      redmine:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16.8-bookworm@sha256:301bcb60b8a3ee4ab7e147932723e3abd1cef53516ce5210b39fd9fe5e3602ae
+    environment:
+      POSTGRES_DB: redmine
+      POSTGRES_USER: redmine
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the isolated env file}
+    volumes:
+      - redmine_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redmine -d redmine"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redmine:
+    image: redmine:6.0.5-bookworm@sha256:3490ba81408371d8e2d17c96223ed028b3739e7fc2eb8116287b4e011f2797b3
+    environment:
+      REDMINE_DB_POSTGRES: postgres
+      REDMINE_DB_DATABASE: redmine
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDMINE_SECRET_KEY_BASE: ${REDMINE_SECRET_KEY_BASE:?Set REDMINE_SECRET_KEY_BASE in the isolated env file}
+      SECRET_KEY_BASE: ${REDMINE_SECRET_KEY_BASE}
+      REDMINE_TEST_MARKER: redmine-mcp-synthetic-v1
+      REDMINE_NO_DB_MIGRATE: "1"
+      RAILS_ENV: production
+    ports:
+      - "127.0.0.1:3002:3000"
+    volumes:
+      - redmine_files:/usr/src/redmine/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/login')).code == '200' ? 0 : 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+volumes:
+  redmine_db_data:
+    labels:
+      redmine-mcp.environment: synthetic-recovery-6-0-5
+  redmine_files:
+    labels:
+      redmine-mcp.environment: synthetic-recovery-6-0-5

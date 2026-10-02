@@ -9,6 +9,8 @@ MODULE_ATTRIBUTE_NOT_FOUND: Final[str] = "module {module!r} has no attribute {at
 
 LIFESPAN_ALREADY_STARTED: Final[str] = "Create a new application instance for each runtime lifespan"
 
+MCP_START_FAILED: Final[str] = "MCP session manager startup failed"
+
 INVALID_KEEPALIVE_LIMIT: Final[str] = "Keepalive connections cannot exceed maximum connections"
 
 URL_CONTAINS_CREDENTIALS: Final[str] = "Redmine URL must not contain credentials"
@@ -18,6 +20,7 @@ URL_CONTAINS_QUERY_OR_FRAGMENT: Final[str] = "Redmine URL must not contain a que
 __all__ = [
     "MODULE_ATTRIBUTE_NOT_FOUND",
     "LIFESPAN_ALREADY_STARTED",
+    "MCP_START_FAILED",
     "INVALID_KEEPALIVE_LIMIT",
     "URL_CONTAINS_CREDENTIALS",
     "URL_CONTAINS_QUERY_OR_FRAGMENT",

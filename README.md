@@ -4,6 +4,11 @@ Read-only Redmine tools using Python 3.13, FastAPI, and FastAPI-MCP. List visibl
 filter issues, and read issue details through REST or MCP as the requesting Redmine user.
 This is a development implementation; authentication tests and full restore validation are deferred.
 
+The project targets Redmine versions through **7.0.2**. The existing synthetic baseline runs
+6.0.5; an isolated 7.0.2 image is pinned for upgrade verification. Support for 7.0.2 is
+pending migration and compatibility acceptance. Document REST tools are outside this target
+because Redmine introduces that API in 7.1. See the [roadmap](docs/plans/index.md).
+
 ## Requirements
 
 - Windows Git Bash and Python 3.13 on PATH.

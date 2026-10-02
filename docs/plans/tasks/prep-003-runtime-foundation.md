@@ -13,9 +13,9 @@
 | Dependencies | Existing runtime and prep-001 static checks; later authorized testing stage |
 | Related tasks | Existing reader tasks; no new public operation |
 | Target Redmine version | Existing synthetic target: 6.0.5 |
-| Last updated | 2026-10-01, Codex |
-| Progress summary | Auth package, service query contracts, lifecycle ownership, MCP hints, and static architecture gate implemented; static/startup/shutdown/missing-key smoke pass |
-| Next action | Obtain a separate testing assignment for FOUNDATION-001 through FOUNDATION-012 and synthetic Inspector acceptance |
+| Last updated | 2026-10-02, Codex |
+| Progress summary | Implementation accepted with testing pending; prep-004 expanded offline verification (356-case suite passes) and verified the authorized MCP readiness fix. Static/build checks pass; full live matrix remains pending. |
+| Next action | Review the authorized prep-004 offline evidence and complete the remaining synthetic identity/visibility/correlation matrix |
 
 ## 2. Discovery and evidence
 
@@ -138,10 +138,13 @@ without `.env`, explicit ASGI lifespan, and MCP SDK sessions. Use only synthetic
 | EVID-006 | Temporary localhost Uvicorn on port 18080; health, missing-key request, then Ctrl+C | Application startup and shutdown complete; 200/401 responses have request IDs matching logs | 2026-10-01 |
 | EVID-007 | Final static checks after bounded HTTP and route-contract changes | Ruff/format, mypy, and architecture checks pass for 63 runtime modules | 2026-10-01 |
 | EVID-008 | Startup with stronger MCP exposure checks, health/missing-key requests, Ctrl+C | Initially exposed lazy-router compatibility issue; corrected adapter then completed startup/shutdown and 200/401 correlation smoke | 2026-10-01 |
+| EVID-009 | Authorized prep-004 Inspector 2.8.0 sample against marked Redmine 6.0.5, local app port 18080, restricted reader key | Eleven catalog operations discovered; ten sample calls succeeded. Category lookup returned 403 for reader, consistent with pinned `manage_categories` permission; admin sample succeeded. This partially covers FOUNDATION-007, but concurrent identities, full visibility matrix, and other foundation scenarios remain pending. | 2026-10-01 |
+| EVID-010 | Authorized prep-004 offline continuation and user-approved MCP startup fix | Expanded full suite: 356 passes; static checks and source/wheel build pass. Foundation coverage, deterministic manager readiness, concurrent caller isolation, failed/cancelled startup, and open-session shutdown are recorded in the dated verification ledger. | 2026-10-02 |
 
-No unit tests, mock execution, authenticated tool calls, or Inspector checks were run. The normal
-startup/shutdown smoke does not prove Redmine connectivity, MCP invocation, streaming failures,
-partial-startup cleanup, or shutdown behavior with active MCP sessions.
+The earlier coding stage ran no unit tests, mock execution, authenticated tool calls, or
+Inspector checks. EVID-009 records a later authorized partial Inspector check. The normal
+startup/shutdown smoke and that sample do not prove streaming failures, partial-startup cleanup,
+or shutdown behavior with active MCP sessions.
 
 ## 8. Implementation and review record
 
@@ -171,8 +174,10 @@ distributed tracing, automatic retries, and additional endpoints are outside thi
 - [ ] Separately authorized offline scenarios pass.
 - [ ] Synthetic Inspector acceptance passes.
 
-Final status: **blocked — implementation finished; testing pending**.
+Final status: **blocked - implementation accepted with testing pending; offline verification expanded, live matrix pending**.
 
-Next action: authorize the separate testing stage, execute FOUNDATION-001 through FOUNDATION-012,
-and synchronize this record and the dashboard. Existing reader-task acceptance statuses remain
-unchanged by this infrastructure refactor.
+On 2026-10-02 the user accepted the implementation with testing pending and requested prep-004.
+The user also authorized the runtime fix after testing exposed the MCP startup race.
+See [prep-004 verification](../prep-004-verification.md) for executed foundation cases and
+remaining variants. Full runtime acceptance, including a second ordinary synthetic identity
+and the live permission/correlation matrix, remains pending.

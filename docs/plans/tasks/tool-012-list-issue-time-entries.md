@@ -13,9 +13,9 @@
 | Dependencies | [prep-002](prep-002-offline-tests.md) provides offline verification; [tool-011](tool-011-expose-issue-schedule-and-spent-hours.md) provides the issue selection and direct-hours context. Tool-011 acceptance is pending. |
 | Related tasks | [tool-001](tool-001-list-issues-search.md) selects issues; [tool-010](tool-010-list-issues-by-target-version.md) supplies exact-project scoping. |
 | Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
-| Last updated | 2026-09-30, Codex |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Pinned 6.0.5 field mapping confirmed; implementation finished; testing and synthetic acceptance pending. |
-| Next action | In a separately authorized testing stage, implement planned offline scenarios and perform marked synthetic Inspector acceptance. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -89,9 +89,9 @@ proposed API response does not establish the entry author.
 
 | ID | User need and intended outcome | Required observable behavior | Prerequisites/constraints |
 |---|---|---|---|
-| REQ-001 | Identify whose hours contribute to a selected Bug. | Each returned entry has credited `user` ID/name and direct `hours`; entry and issue IDs allow audit and deduplication. | Only entries visible to the shared Redmine account. |
+| REQ-001 | Identify whose hours contribute to a selected Bug. | Each returned entry has credited `user` ID/name and direct `hours`; entry and issue IDs allow audit and deduplication. | Only entries visible to the requesting Redmine user. |
 | REQ-002 | Explain the total for several Bugs. | Complete pages per issue allow grouping by user ID and decimal summation of unique entry IDs. | Report a visible subtotal unless all-entry access is verified; do not sum issue `total_spent_hours`. |
-| REQ-003 | Preserve issue and time-log access boundaries. | Invisible issue fails safely; visible issue with no visible entries returns an empty page and shared-account visibility metadata. | No privilege escalation or database access. |
+| REQ-003 | Preserve issue and time-log access boundaries. | Invisible issue fails safely; visible issue with no visible entries returns an empty page and requesting-user visibility metadata. | No privilege escalation or database access. |
 | REQ-004 | Keep existing clients working. | New route/tool is additive; existing `list_issues` and `get_issue` behavior is unchanged. | Explicit MCP allowlist entry. |
 
 Illustrative client flow: read Bug IDs `181`, `229`, `277`, `325`, `373`, and `421` from the
@@ -107,9 +107,9 @@ claimed here. A zero-entry response for one issue means no entries visible to th
 |---|---|
 | Existing or new tool | New `list_issue_time_entries`, because entries are a separately paginated collection. |
 | Stable operation ID | `list_issue_time_entries` |
-| Purpose and tool description | “List time entries visible to the shared Redmine account that are logged directly on one issue. Each entry identifies the user credited with the hours; that user may differ from the person who submitted the entry. Page through all results before totaling hours.” |
+| Purpose and tool description | “List time entries visible to the requesting Redmine user that are logged directly on one issue. Each entry identifies the user credited with the hours; that user may differ from the person who submitted the entry. Page through all results before totaling hours.” |
 | REST method and route | `GET /api/v1/issues/{issue_id}/time-entries` |
-| Authentication and authorization | Existing MCP/REST bearer token; shared Redmine reader with issue visibility and time-entry permissions. |
+| Authentication and authorization | Caller personal `X-Redmine-API-Key`; Redmine enforces that user's issue and time-entry permissions. |
 | MCP exposure | Add `list_issue_time_entries` to the explicit allowlist as read-only. |
 
 ### Inputs
@@ -165,8 +165,8 @@ claimed here. A zero-entry response for one issue means no entries visible to th
 
 | Scenario | Detection layer | REST status and safe error | MCP result | Retry/reconciliation behavior |
 |---|---|---|---|---|
-| Invalid caller input | Router | Existing 422 validation | Tool error envelope | Correct input; no upstream call. |
-| Missing/invalid bearer token | Shared auth | Existing 401 | Tool error envelope | Supply a valid token. |
+| Invalid caller input | Router | Existing 422 validation | Tool error envelope | Correct input; no resource request (identity verification may run). |
+| Missing/invalid personal Redmine API key | Shared auth | Existing 401 | Tool error envelope | Supply a valid personal Redmine API key. |
 | Redmine credential rejected | Shared client | Existing 502 `upstream_authentication` | Tool error envelope | Repair server credential. |
 | Issue forbidden or invisible | Issue preflight/shared client | Existing 403 or 404 | Tool error envelope | Respect Redmine visibility. |
 | No time entries visible | Gateway | 200 with `items=[]`, `total=0` | Successful empty page | Do not infer project-wide zero. |
@@ -189,7 +189,7 @@ entry field mapping are decided. The serializer rounds hours to two decimal plac
 | 1 | Inspect 6.0.5 time-entry API view; revise mapping if needed. | Pinned Redmine source, this task | N/A | Record field evidence; permission confirmation remains for synthetic acceptance. |
 | 2 | Add validated time-entry model and reader Protocol. | `features/time_entries/models.py`, `ports.py` | 1 | Mapping scenarios. |
 | 3 | Add gateway with issue preflight, exact filter, pagination, and sanitized mapping. | `integrations/redmine/time_entries.py`, existing client/mapper as needed | 2 | Mocked upstream requests and failures. |
-| 4 | Add service and REST route with validated path/page inputs and shared bearer dependency. | `features/time_entries/service.py`, `router.py`, `api/dependencies.py` | 3 | ASGI scenarios. |
+| 4 | Add service and REST route with validated path/page inputs and personal-key authentication dependency. | `features/time_entries/service.py`, `router.py`, `api/dependencies.py` | 3 | ASGI scenarios. |
 | 5 | Wire service and register the stable MCP operation explicitly. | `bootstrap.py`, `app.py`, `mcp/registration.py` | 4 | MCP discovery/invocation. |
 | 6 | Update public guide and manual verification instructions. | `docs/tool-reference.md`, `docs/manual-verification.md`, `CHANGELOG.md` | 5 | Documentation review. |
 | 7 | Implement meaningful offline scenarios and separate opt-in synthetic acceptance. | Existing test suite and this task record | 1-6 | Scenario IDs below. |
@@ -203,8 +203,8 @@ token. The testing stage requires the user's separate authorization under reposi
 |---|---|---|---|
 | AC-001 | A visible issue has entries credited to two users | Client pages the new tool | Every visible entry has its own user, issue ID, date, and hours; per-user sums equal the visible entry total. |
 | AC-002 | An issue has more than 100 visible entries | Client requests successive pages | All entries are discoverable once by stable ID, with reported total/offset. |
-| AC-003 | An issue is invisible or the bearer token is invalid | Client calls the tool | Existing safe 403/404 or 401; no time-entry data leaks. |
-| AC-004 | Reader sees only some or no time entries | Client reads a visible issue | Result is explicitly shared-account scoped; an empty page is not labeled a global zero. |
+| AC-003 | An issue is invisible or the personal Redmine API key is invalid | Client calls the tool | Existing safe 403/404 or 401; no time-entry data leaks. |
+| AC-004 | Reader sees only some or no time entries | Client reads a visible issue | Result is explicitly requesting-user scoped; an empty page is not labeled a global zero. |
 | AC-005 | Redmine returns an invalid entry, page, or another issue's entry | Client calls the tool | Sanitized 502; no fabricated attribution or partial sum. |
 | AC-006 | Existing issue tools are called after addition | Client uses old inputs | Names, defaults, page shapes, and behavior remain stable. |
 | AC-007 | Pinned synthetic Redmine has issue entries | Inspector invokes tool after startup | Visible credited users and entry hours match the Redmine time-entry page for the same issue. |
@@ -227,11 +227,11 @@ use fake settings, HTTPX MockTransport, ASGI lifespan, and MCP SDK checks withou
 |---|---|---|---|---|---|
 | ENTRY-001 | AC-001 | Gateway/REST | One issue, entries for two users, distinct dates and decimal hours | Correct credited users and entry fields. | Offline |
 | ENTRY-002 | AC-001 | Gateway/REST | Valid zero-hour entry and a user different from issue assignee/author | Zero preserved; attribution comes only from entry `user`. | Offline |
-| ENTRY-003 | AC-004 | Gateway/REST | Visible issue, empty `time_entries` page | 200, `total=0`, shared-account scope. | Offline |
+| ENTRY-003 | AC-004 | Gateway/REST | Visible issue, empty `time_entries` page | 200, `total=0`, requesting-user scope. | Offline |
 | ENTRY-004 | AC-005 | Gateway/REST | Missing/malformed user, issue, hours, date, or cross-issue entry | Sanitized 502; no partial result. | Offline |
 | PAGE-001 | AC-002 | Gateway/REST | More than 100 entries, two offsets | Exact filter/limit/offset; total and entries consistent. | Offline |
 | AGG-001 | AC-001, AC-002 | Client workflow | Six issue pages with repeated credited users | Deduplicate entries by ID, group by user ID, sum with decimal arithmetic. | Offline |
-| AUTH-001 | AC-003 | ASGI/gateway | Missing bearer, rejected Redmine key, forbidden/invisible issue | Existing 401, 502, 403/404 semantics. | Offline |
+| AUTH-001 | AC-003 | ASGI/gateway | Missing personal Redmine API key, rejected Redmine key, forbidden/invisible issue | Existing 401 and 403/404 semantics. | Offline |
 | VIS-001 | AC-004 | ASGI/gateway | Time-entry query returns 403 or only reader-visible rows | Error or scoped subset; never claim all-user completeness. | Offline |
 | COMPAT-001 | AC-006 | REST regression | Existing issue list/detail calls | Unchanged contracts and authentication. | Offline |
 | MCP-001 | AC-006 | MCP SDK | Discover and invoke new and existing operations | New stable name present; old names unchanged; errors safe. | Offline |
@@ -258,9 +258,13 @@ use fake settings, HTTPX MockTransport, ASGI lifespan, and MCP SDK checks withou
 | EVID-005 | `uv run --frozen --no-sync ruff format --check .` in Git Bash | Static format | Pass | 90 files already formatted | Pass | 2026-09-30 |
 | EVID-006 | `uv run --frozen --no-sync mypy src` in Git Bash | Static types | Pass | Success: no issues found in 46 source files | Pass | 2026-09-30 |
 | EVID-007 | `git diff --check` in Git Bash | Diff whitespace | Pass | No output; exit 0 | Pass | 2026-09-30 |
+| EVID-008 | Authorized prep-004 read-only sample on marked 6.0.5: app REST time-entry page and Redmine REST under the same restricted reader key | LIVE-001 partial | Match visible entries | History issue 151 returned three visible entries; IDs and count matched. Inspector separately discovered/invoked this tool, but credited users/hours/dates were not compared for issue 151. | Partial | 2026-10-01 |
+| EVID-009 | `uv run --frozen pytest -q --tb=short` after prep-004 authorization | ENTRY-001 and ENTRY-004 partial | Mapping and wrong-issue rejection | One credited-user entry and exact upstream query passed; a cross-issue entry produced sanitized 502. Two-user, zero-hour, and malformed-field variants remain pending. | Partial | 2026-10-01 |
 
-Verification limitations and missing prerequisites: tests and live synthetic acceptance require
-a separate testing assignment. Runtime reader visibility remains unverified.
+Verification limitations and missing prerequisites: prep-004 verification was authorized and
+EVID-008 is a partial live sample. The planned offline cases and full LIVE-001 comparison remain
+pending; all-user visibility is not established. The current runtime uses per-user
+`X-Redmine-API-Key`; earlier bearer wording remains historical and needs contract reconciliation.
 
 ## 8. Implementation and review record
 
@@ -299,3 +303,18 @@ repository checks and marked synthetic Inspector acceptance; verify reader visib
 
 Next action: authorize a separate testing stage for ENTRY-001 through ENTRY-004, PAGE-001,
 AGG-001, AUTH-001, VIS-001, COMPAT-001, MCP-001, and LIVE-001.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+ENTRY, PAGE, AGG, AUTH, VIS, COMPAT, and MCP offline cases pass. Three live entries match Redmine by ID, issue, credited user, hours, date, and count. All-user completeness and the contrasting-role visibility matrix remain pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

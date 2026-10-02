@@ -1,5 +1,8 @@
 # Review of the Redmine 7.1 capability roadmap
 
+Historical review of the original 7.1 proposal. Superseded on 2026-10-02 by the [7.0.2 roadmap](redmine-7-1-capabilities.md). Its 7.1 findings explain the five deferred Document REST tasks; they are not current release blockers.
+
+
 Reviewed 2026-10-01 against the repository task workflow, current 11-tool
 catalog, `deploy/compose.test.yaml`, the 28 new task documents, and
 authoritative Redmine API and source references linked in the

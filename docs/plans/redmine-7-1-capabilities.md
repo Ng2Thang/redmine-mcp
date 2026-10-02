@@ -1,4 +1,9 @@
-# Redmine 7.1 documents, files, and issue capabilities
+# Redmine 7.0.2 files and issue capabilities
+
+Retargeted on 2026-10-02 at the user's request. The filename retains the
+original roadmap identifier so existing task links keep working. This plan
+supports Redmine through 7.0.2. Document REST operations are deferred. The
+document category enumeration remains available through the older API.
 
 Checked: 2026-10-01. This is the master plan for the requested MCP capability set.
 The [dashboard](index.md) is the execution ledger; child contracts live in
@@ -9,7 +14,8 @@ The [planning review](review.md) records findings and their current resolution.
 ## Outcome and boundaries
 
 Preserve the eleven existing operations. Extend `list_issues` and `get_issue`;
-add twenty operations: six readers and fourteen writers. The reader deployment
+plan fifteen additional operations: four readers and eleven writers within
+the 7.0.2 API surface. The reader deployment
 remains read-only. A separate, false-default writer deployment exposes only
 explicitly approved write operations to restricted caller identities. Both use
 the requesting user's personal Redmine API key; neither uses an administrator key
@@ -22,20 +28,25 @@ client-rendered schedule and cannot claim exact native Gantt parity.
 
 Issue deletion, administration, time logging, project/version management, generic
 CRUD forwarding, browser scraping, and a Redmine plugin are outside this plan.
-Attachment access follows its Project, Version, Document, or Issue container.
-No `manage_files` shortcut may authorize a Document or Issue attachment.
+Attachment access follows its Project, Version, or Issue container. Document
+attachments are excluded from this target. No `manage_files` shortcut may
+authorize an Issue attachment.
 
 ## Version evidence and prerequisite
 
-`deploy/compose.test.yaml` currently pins `redmine:6.0.5-bookworm`.
+`deploy/compose.test.yaml` pins the original `redmine:6.0.5-bookworm` baseline.
+The isolated [7.0.2 Compose target](../../deploy/compose.redmine-7-0-2.yaml)
+pins `redmine:7.0.2-bookworm` by immutable index digest. The image has not
+been started or accepted as a migrated environment.
 The [Redmine REST index](https://www.redmine.org/projects/redmine/wiki/Rest_api)
-lists Documents support from 7.1. As checked on 2026-10-01, the
-[download page](https://www.redmine.org/projects/redmine/wiki/Download) lists
-7.0.x as the stable line; a stable 7.1 artifact has not been established here.
-`prep-005-upgrade-redmine-7-1` must pin the eventual exact release and digest,
-read versioned source, rehearse backup/restore and migrations on an isolated copy,
-and verify REST/API-key behavior before dependent feature implementation.
-The approved outcome targets 7.1; 7.0.x does not meet the Documents contract.
+lists Documents support from 7.1, which exceeds the selected maximum version.
+Tasks `tool-017`, `tool-018` and `tool-026` through `tool-028` are deferred.
+`tool-016` remains in scope because
+[Enumerations REST](https://www.redmine.org/projects/redmine/wiki/Rest_Enumerations)
+documents the document category endpoint separately.
+`prep-005-upgrade-redmine-7-1` retains its stable task ID but now targets 7.0.2;
+it must review versioned source, rehearse backup/restore and migrations on an
+isolated copy, and verify supported REST/API-key behavior before dependent work.
 
 The following authoritative references are evidence, not permission to expand
 the catalog: [Documents](https://www.redmine.org/projects/redmine/wiki/Rest_Documents),
@@ -47,7 +58,7 @@ the catalog: [Documents](https://www.redmine.org/projects/redmine/wiki/Rest_Docu
 and [enumerations](https://www.redmine.org/projects/redmine/wiki/Rest_Enumerations).
 Copying through top-level `copy_from` is supported by the
 [Issues controller source](https://github.com/redmine/redmine/blob/master/app/controllers/issues_controller.rb)
-but is absent from the public Issues API reference; the exact 7.1 build must verify it.
+but is absent from the public Issues API reference; exact 7.0.2 source must verify it.
 
 ## Public tool ownership
 
@@ -59,8 +70,6 @@ but is absent from the public Issues API reference; the exact 7.1 build must ver
 | New reader | Owner | Upstream method and path |
 |---|---|---|
 | `list_document_categories` | tool-016 | GET /enumerations/document_categories.json |
-| `list_project_documents` | tool-017 | GET /projects/{project_id}/documents.json |
-| `get_document` | tool-018 | GET /documents/{document_id}.json |
 | `list_project_files` | tool-019 | GET /projects/{project_id}/files.json |
 | `get_attachment` | tool-020 | GET /attachments/{attachment_id}.json |
 | `download_attachment` | tool-021 | GET metadata, then validated content URL |
@@ -71,9 +80,6 @@ but is absent from the public Issues API reference; the exact 7.1 build must ver
 | `add_project_file` | tool-023 | POST /projects/{project_id}/files.json |
 | `update_attachment` | tool-024 | PATCH /attachments/{attachment_id}.json |
 | `delete_attachment` | tool-025 | DELETE /attachments/{attachment_id}.json |
-| `create_document` | tool-026 | POST /projects/{project_id}/documents.json |
-| `update_document` | tool-027 | PUT /documents/{document_id}.json |
-| `delete_document` | tool-028 | DELETE /documents/{document_id}.json |
 | `create_issue` | tool-029 | POST /issues.json; optional top-level copy_from |
 | `update_issue` | tool-030 | PUT /issues/{issue_id}.json |
 | `update_issue_note` | tool-031 | PUT /journals/{journal_id}.json |
@@ -82,8 +88,8 @@ but is absent from the public Issues API reference; the exact 7.1 build must ver
 | `add_issue_watcher` | tool-034 | POST /issues/{issue_id}/watchers.json |
 | `remove_issue_watcher` | tool-035 | DELETE /issues/{issue_id}/watchers/{user_id}.json |
 
-The document categories lookup is global enumeration access, not a fabricated
-`view_documents` check. `create_issue(copy_from=...)` requires source Copy issues
+The five deferred Document task IDs remain in the dashboard as historical drafts.
+`create_issue(copy_from=...)` requires source Copy issues
 and destination Add issues. `update_issue(notes=...)` allows notes-only updates
 without imposing Edit issues; field changes use Edit issues/Edit own issues.
 Journal editing checks the journal author. Parent changes require Manage subtasks.
@@ -103,11 +109,11 @@ cases inside consolidated tools, not separate tool names.
   the configured Redmine origin and base path, rejects redirects, and limits actual
   streamed bytes. Project/Version downloads may increment Redmine counters.
 - Attachment writes require a declared container type (`project`, `version`,
-  `document`, or `issue`) and positive container ID. Verify the attachment
+  or `issue`) and positive container ID. Verify the attachment
   belongs to that container before mutation by reading the containing Project/
-  Version file list, Document, or Issue and finding the attachment ID. The
+  Version file list or Issue and finding the attachment ID. The
   attachment metadata endpoint alone does not establish container identity.
-  Support only these four container types.
+  Support only these three container types.
 - Reader pages retain existing `items,total,limit,offset,visibility` semantics
   where the upstream endpoint provides pagination. Files and enumerations return
   `items,visibility`; do not invent a total for the unpaged Files API.
@@ -122,14 +128,14 @@ cases inside consolidated tools, not separate tool names.
   the requesting Redmine identity.
 
 The exact per-tool inputs, outputs, REST route, error mapping, and version evidence
-are owned by the child task. If exact 7.1 evidence contradicts a draft contract,
+are owned by the child task. If exact 7.0.2 evidence contradicts a draft contract,
 record a reviewed contract change before coding that tool; do not silently adapt it.
 
 ## Strict execution order and quality gates
 
-The dashboard rows form one chain: task N+1 depends on acceptance of task N.
+The active dashboard rows form one chain; deferred Document rows are excluded.
 `prep-004` reconciles pending acceptance of the existing implementation;
-`prep-005` establishes the pinned 7.1 environment; reader tasks follow;
+`prep-005` establishes the pinned 7.0.2 environment; reader tasks follow;
 `prep-007` introduces the writer boundary; `prep-008` prepares disposable
 writer verification; writer tools follow; `prep-009` owns final release review.
 No later independent work bypasses a blocked predecessor.

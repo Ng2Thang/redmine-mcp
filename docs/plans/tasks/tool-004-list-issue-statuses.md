@@ -8,10 +8,10 @@
 | Capability | Let clients interpret status IDs and open/closed meaning. |
 | Type / access / destructive effects | Add tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm |
-| Next action | Add and run STATUS-001 through STATUS-003 in a separate testing assignment. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -31,7 +31,7 @@ not the allowed transitions for a specific issue; `get_issue` owns `allowed_stat
 Add no-input `list_issue_statuses` at `GET /api/v1/issue-statuses` and explicitly allowlist that
 operation. Return `list[IssueStatus]` with required positive `id`, nonempty `name`, and boolean
 `is_closed`. Map `issue_statuses` from `GET issue_statuses.json`; an absent/non-array root or
-invalid item is sanitized `upstream_response` 502. Empty array is valid. Use shared bearer auth
+invalid item is sanitized `upstream_response` 502. Empty array is valid. Use personal `X-Redmine-API-Key` authentication
 and existing 403/404/502/504 mapping; no pagination is promised for this global endpoint.
 No local transition logic or mutation. MCP error shape belongs to the adapter.
 
@@ -73,3 +73,18 @@ found only scoped changes beyond the preserved baseline.
 
 Final status: blocked. Next action: add and run STATUS-001 through STATUS-003, including
 Inspector and synthetic catalog comparison, in a separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+STATUS-001/002 pass offline. Six live statuses and closed flags match Redmine; the sampled issue has an empty allowed-status set, so the nonempty workflow comparison remains pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

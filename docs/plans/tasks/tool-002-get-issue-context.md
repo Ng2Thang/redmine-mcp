@@ -8,10 +8,10 @@
 | Capability | Extend `get_issue` with selectable related context. |
 | Type / access / destructive effects | Extend existing tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm; reactions excluded because Redmine documents them since 7.1 |
-| Next action | Add and run DETAIL-001 through DETAIL-005 in a separate testing assignment, then verify Inspector and synthetic visibility. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -47,7 +47,7 @@ confirmed; restrict values to JSON types. All four collections default to empty 
 backward response compatibility. Document that an empty array for an unrequested expansion says
 nothing about upstream related data. Do not download attachment content.
 
-Existing bearer auth and sanitized upstream error mapping apply. Hidden issue is 404; forbidden
+Existing personal `X-Redmine-API-Key` authentication and sanitized upstream error mapping apply. Hidden issue is 404; forbidden
 data follows Redmine visibility. MCP error envelope is adapter-owned. Write semantics: N/A.
 
 ## 5. Implementation plan
@@ -94,3 +94,18 @@ found only task-scoped source and documentation changes beyond the preserved bas
 
 Final status: blocked. Next action: implement and run DETAIL-001 through DETAIL-005, then run
 required repository and synthetic acceptance checks in a separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+DETAIL-001 through DETAIL-004 pass offline. Same-reader journal IDs/private flags and empty allowed statuses match Redmine; contrasting ordinary-role visibility and nonempty transitions remain pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

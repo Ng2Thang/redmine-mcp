@@ -13,8 +13,11 @@ session checks. Run it from Git Bash without Docker or credentials:
 uv run --frozen pytest
 ```
 
-The suite covers the current three tools at the REST boundary and MCP discovery, invocation,
-authentication, validation, and error envelopes. Opt-in live synthetic checks remain separate;
+The suite covers all eleven current reader tools at the REST boundary and MCP discovery,
+invocation, authentication, validation, and error envelopes. Authorized prep-004 work also
+covers concurrent identities, bounded upstream reads, readiness, and resource cleanup.
+See [the dated acceptance evidence](plans/prep-004-verification.md) for actual results and
+remaining live fixture gaps. Opt-in live synthetic checks remain separate;
 coverage thresholds and testing CI remain separate decisions.
 
 Future write verification requires a separate restricted synthetic writer, disposable task-owned

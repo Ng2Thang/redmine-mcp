@@ -11,9 +11,9 @@
 | Dependencies | prep-002 offline baseline complete; prep-003 identity foundation implemented with runtime acceptance pending |
 | Related tasks | Existing issue assignee `me` behavior; no additional tool dependency |
 | Target Redmine version | 6.0.5-bookworm, pinned in deploy/compose.test.yaml |
-| Last updated | 2026-10-01, Codex |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Approved contract implemented; lint, formatting, types, architecture, and diff checks pass; automated and runtime acceptance not executed. |
-| Next action | Separately authorize USER-001 through USER-010 and foundation acceptance. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -181,3 +181,18 @@ Final status: blocked - implementation finished; testing pending.
 Next action: separately authorize automated scenarios USER-001
 through USER-009, catalog assertion updates, synthetic USER-010, and foundation acceptance.
 No planned test is represented as passing.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+USER-001 through USER-009 executed variants pass offline. The live ordinary profile's public fields, ten memberships, and roles match Redmine. USER-010 remains blocked by the missing second ordinary personal key and other account/role variants.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

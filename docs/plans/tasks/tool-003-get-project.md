@@ -8,10 +8,10 @@
 | Capability | Give a client details for a project found by `list_projects`. |
 | Type / access / destructive effects | Add tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm |
-| Next action | Add and run PROJECT-001 through PROJECT-004 in a separate testing assignment. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -34,7 +34,7 @@ allowlist operation ID `get_project`. Return `ProjectDetail`, extending current 
 with nullable `is_public`, `created_on`, and `updated_on` so absent optional Redmine fields do not
 invalidate a visible project. Do not request association includes; separate lookup tools own
 versions and categories. Map to `GET projects/{project_id}.json`, validate the `project` object,
-and return no fabricated defaults for optional metadata. Require bearer auth; preserve existing
+and return no fabricated defaults for optional metadata. Require personal `X-Redmine-API-Key` authentication; preserve existing
 403/404/502/504 sanitized errors and adapter MCP envelope. Write semantics: N/A.
 
 ## 5. Implementation plan
@@ -75,3 +75,18 @@ Diff review found only scoped changes beyond the preserved baseline.
 
 Final status: blocked. Next action: add and run PROJECT-001 through PROJECT-004, including
 synthetic visibility and Inspector acceptance, in a separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+PROJECT-001 through PROJECT-003 pass offline. Visible-project mapping and marked restricted-project rejection pass for the existing live fixture; complete baseline acceptance remains pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

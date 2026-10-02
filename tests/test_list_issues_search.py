@@ -91,7 +91,7 @@ async def test_invalid_inputs_rejected_before_upstream(
 ) -> None:
     response = await rest_client.get("/api/v1/issues", params={name: value})
     assert response.status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
-    assert upstream["requests"] == []
+    assert all(request.url.path == "/users/current.json" for request in upstream["requests"])
 
 
 @pytest.mark.asyncio

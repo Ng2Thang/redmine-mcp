@@ -13,9 +13,9 @@
 | Dependencies | [prep-002](prep-002-offline-tests.md) supplies offline verification; [tool-001](tool-001-list-issues-search.md) supplies project, tracker, status, and pagination; [tool-010](tool-010-list-issues-by-target-version.md) supplies `include_subprojects=false` for exact-project queries, with its acceptance still pending |
 | Related tasks | [tool-005](tool-005-list-trackers.md) resolves the Bug tracker ID; [tool-002](tool-002-get-issue-context.md) owns existing detail expansions |
 | Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
-| Last updated | 2026-09-30, Codex |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Implementation finished; static checks pass. Offline and synthetic acceptance remain pending under a separate testing assignment. |
-| Next action | Authorize and run DATE-001 through DATE-003, HOURS-001 through HOURS-003, AGG-001/002, COMPAT-001, MCP-001, and LIVE-001 in the separate verification stage. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -91,7 +91,7 @@ user's time logs.
   outcome and permission/response contract.
 - Compatibility constraints: preserve both operation IDs, routes, inputs, defaults, page shape,
   issue identity fields, expansions, errors, and existing authentication.
-- Permission/configuration prerequisites: the shared Redmine reader needs visible issues and
+- Permission/configuration prerequisites: the requesting Redmine user needs visible issues and
   `view_time_entries` with sufficient time-log visibility for a complete total.
 
 | ID | User need and intended outcome | Required observable behavior | Prerequisites/constraints |
@@ -117,7 +117,7 @@ has `spent_hours=null`, the client lists it and states that the total is unavail
 | Stable operation IDs | `list_issues`, `get_issue` |
 | Purpose and tool description | Add that results include issue start/due dates and permission-gated direct and descendant-inclusive spent hours; guide callers to page all results before summing direct hours. |
 | REST method and route | Existing `GET /api/v1/issues` and `GET /api/v1/issues/{issue_id}` |
-| Authentication and authorization | Existing MCP bearer token and shared Redmine reader; Redmine controls issue and time visibility. |
+| Authentication and authorization | Caller personal `X-Redmine-API-Key`; Redmine controls that user's issue and time visibility. |
 | MCP exposure | Existing explicit allowlist entries; refreshed OpenAPI/MCP response schema only. |
 
 ### Inputs
@@ -173,7 +173,7 @@ existing issue fields and the `items`/`total`/`limit`/`offset` page wrapper rema
 | Scenario | Detection layer | REST status and safe error | MCP result | Retry/reconciliation behavior |
 |---|---|---|---|---|
 | Invalid existing input | Router | Existing 422 validation response | Existing tool error envelope | Correct input. |
-| Missing/invalid MCP authentication | Shared dependency | Existing 401 | Existing tool error envelope | Supply valid bearer token. |
+| Missing/invalid MCP authentication | Shared dependency | Existing 401 | Existing tool error envelope | Supply valid personal Redmine API key. |
 | Redmine credential rejected | Shared client | Existing 502 `upstream_authentication` | Existing tool error envelope | Fix server credential. |
 | Forbidden or invisible issue | Shared client | Existing 403 or 404 | Existing tool error envelope | Respect reader visibility. |
 | Time permission absent but issue visible | Model mapping | 200 with nullable hour fields | Successful result containing `null` | Do not treat `null` as zero; obtain appropriate reader access outside this task. |
@@ -303,3 +303,18 @@ through HOURS-003, AGG-001/002, COMPAT-001, MCP-001, and LIVE-001 after a separa
 assignment; confirm tool-010 exact-project acceptance and reader time-entry visibility.
 
 Next action: hand off to the separate testing stage, then update acceptance evidence and status.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+DATE, HOURS, AGG, COMPAT, and MCP offline cases pass. Thirteen Operations Bugs have matching list date/hour fields and sampled detail fields. No issue qualifies for September 2026, so LIVE-001's nonempty hours aggregate remains pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

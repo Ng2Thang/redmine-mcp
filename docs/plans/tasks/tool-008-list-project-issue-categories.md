@@ -8,10 +8,10 @@
 | Capability | Let clients discover category IDs used by a project. |
 | Type / access / destructive effects | Add tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm |
-| Next action | Add and run CATEGORY-001 through CATEGORY-004 in a separate testing assignment, including synthetic visibility and count behavior. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -38,7 +38,7 @@ check.
 Proposed operation `list_project_issue_categories`, route
 `GET /api/v1/projects/{project_id}/issue-categories`, positive integer project ID, and upstream
 `GET projects/{project_id}/issue_categories.json`. Proposed `IssueCategory` item: positive ID,
-nonempty name, project reference, nullable assignee reference. Bearer auth and existing
+nonempty name, project reference, nullable assignee reference. Personal `X-Redmine-API-Key` authentication and existing
 sanitized 403/404/502/504 errors apply; malformed array/items yield `upstream_response` 502.
 No category creation/update/delete or write behavior.
 
@@ -48,7 +48,7 @@ Return `list[IssueCategory]` without public pagination controls. Require a nonne
 `upstream_response` 502, so a partial upstream collection is never presented as complete. This
 may reject a paginated response because the endpoint-specific guide does not confirm usable
 pagination controls; that is a documented limitation. Preserve Redmine's returned order. The
-gateway uses only the shared account's response and performs no local visibility expansion.
+gateway uses only the requesting user's response and performs no local visibility expansion.
 
 ## 5. Implementation plan
 
@@ -71,6 +71,19 @@ CATEGORY-001: documented count behavior and synthetic visibility evidence. CATEG
 malformed mapping. CATEGORY-003: invalid ID, auth, 403/404/timeout, MCP discovery/call.
 CATEGORY-004: opt-in synthetic private project boundary. Run static, offline, and Inspector
 checks after contract resolution. All results pending.
+
+2026-10-01 partial synthetic evidence under the authorized prep-004 stage: Inspector discovered
+the tool. The restricted reader received 403 on category lookup for 11 visible projects; an
+administrator's Inspector call succeeded for a sampled project. Read-only inspection of the
+running Redmine 6.0.5 source found `before_action :authorize` in
+`app/controllers/issue_categories_controller.rb`; `lib/redmine/preparation.rb` maps
+`:issue_categories => [:index, ...]` to `manage_categories`. This reader role lacks that
+permission, so the 403 preserves Redmine's boundary. CATEGORY-001 through CATEGORY-004 still
+need their complete planned offline cases and synthetic private-project check. New prep-004
+offline cases passed for populated, empty, and malformed category collections, but do not cover
+all CATEGORY-002 variants or the remaining scenario groups. The current runtime uses
+`X-Redmine-API-Key`; the earlier bearer wording in section 4 is historical and needs contract
+reconciliation before task acceptance.
 
 ## 8. Implementation and review record
 
@@ -97,3 +110,18 @@ found only scoped source and documentation changes beyond the preserved baseline
 Final status: blocked; implementation finished, testing pending. Next action: add and run
 CATEGORY-001 through CATEGORY-004, then perform Inspector and synthetic visibility acceptance
 in a separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+CATEGORY-002/003 pass offline, including strict collection counts. Inspector and Redmine return 403 for the reader; a permitted populated-category/private-project fixture remains missing for CATEGORY-001/004.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

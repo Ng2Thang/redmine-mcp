@@ -11,9 +11,9 @@
 | Dependencies | [prep-002](prep-002-offline-tests.md); [tool-008](tool-008-list-project-issue-categories.md) supplies category ID discovery, but its pending acceptance does not block this read filter's implementation |
 | Related tasks | [tool-001](tool-001-list-issues-search.md) owns existing filters and defaults; [tool-008](tool-008-list-project-issue-categories.md) owns category discovery |
 | Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
-| Last updated | 2026-09-30, Codex |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Filter, category output, and public documentation implemented. Ruff and mypy static checks pass; acceptance verification is pending. |
-| Next action | In a separate testing assignment, add and run CATISSUE-001 through CATISSUE-005, including marked synthetic Redmine and Inspector checks. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -65,7 +65,7 @@ because source inspection alone is not runtime verification.
 Extend the existing read tool so a client can ask for the issues in a known project category and
 see the category on each returned issue. Preserve all existing filters, defaults, pagination,
 sorting, auth, and visibility. The task does not add category creation, issue writes, category
-name search, or unscoped cross-project category filtering. The shared Redmine reader must have
+name search, or unscoped cross-project category filtering. The requesting Redmine user must have
 permission to view the target project and issues.
 
 | ID | User need and intended outcome | Required observable behavior | Prerequisites/constraints |
@@ -89,7 +89,7 @@ returns only visible Demo API issues whose category is BE. An empty matching set
 | Stable operation ID | `list_issues` |
 | Caller-facing description | List visible issues; optionally filter by category ID within a project. Use `status_id='*'` and pages for all statuses. |
 | REST method and route | `GET /api/v1/issues` |
-| Authentication and authorization | Existing bearer authentication; Redmine shared reader account controls issue visibility. |
+| Authentication and authorization | Caller personal `X-Redmine-API-Key`; the requesting Redmine user controls issue visibility. |
 | MCP exposure | Existing explicit `list_issues` allowlist entry; preserve read-only behavior. |
 
 ### Inputs
@@ -120,7 +120,7 @@ HTTP 200 and the MCP adapter's normal tool result. No write semantics or externa
 | Scenario | Detection layer | REST status and safe error | MCP result | Retry behavior |
 |---|---|---|---|---|
 | Invalid category ID or missing project | Route validation | 422 with a concise validation error | Existing MCP error envelope | Correct request |
-| Missing or invalid bearer token | Existing auth | Existing 401 behavior | Existing MCP error envelope | Supply valid token |
+| Missing or invalid personal Redmine API key | Existing auth | Existing 401 behavior | Existing MCP error envelope | Supply a valid personal Redmine API key |
 | Hidden project or issue / insufficient Redmine permission | Gateway | Existing sanitized 403/404 behavior | Existing MCP error envelope | Correct access; do not infer hidden data |
 | Upstream timeout or transport failure | Gateway | Existing sanitized 504/502 behavior | Existing MCP error envelope | Retry read when available |
 | Malformed upstream page or category | Mapping | `upstream_response` 502 | Existing MCP error envelope | Investigate upstream response |
@@ -155,7 +155,7 @@ Dependency or configuration changes: none expected. No new package, write gate, 
 |---|---|---|---|---|
 | CATISSUE-001 | AC-001, AC-004 | Offline gateway/REST with exact query capture for combined category, status, and prior filters | `category_id` and `project_id` forwarded; omission preserves old query | Offline, pending |
 | CATISSUE-002 | AC-002 | Offline list and detail mapping with populated, missing, and malformed category | Reference, `null`, and sanitized 502 respectively | Offline, pending |
-| CATISSUE-003 | AC-003 | REST/MCP invalid inputs with upstream spy | 422 and no upstream call | Offline, pending |
+| CATISSUE-003 | AC-003 | REST/MCP invalid inputs with upstream spy | 422 and no resource request (identity verification may run) | Offline, pending |
 | CATISSUE-004 | AC-001, AC-003, AC-004 | REST/MCP pagination, empty page, auth, 403/404, timeout, and discovery | Stable operation and envelopes; filtered total and page bounds | Offline, pending |
 | CATISSUE-005 | AC-001, AC-005 | Inspector on marked synthetic Redmine 6.0.5 with a category that has issues and restricted visibility fixture | Category membership, all-status page count, and permission boundary verified | Opt-in live, pending |
 
@@ -194,3 +194,18 @@ Final status: blocked; implementation finished, testing pending. Outcome: `list_
 project category ID and both issue operations expose nullable category references. Next action:
 authorize a separate testing assignment to implement and run CATISSUE-001 through CATISSUE-005,
 then complete marked synthetic Redmine and Inspector acceptance.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+CATISSUE-001 through CATISSUE-004 pass offline. CATISSUE-005 remains blocked: the fixture records no categories and the reader lacks category-list permission.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

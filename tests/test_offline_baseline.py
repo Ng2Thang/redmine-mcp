@@ -26,12 +26,12 @@ ISSUE = {
 
 @asynccontextmanager
 async def mcp_session(
-    app: FastAPI, token: str | None = "offline-mcp-token"
+    app: FastAPI, token: str | None = "offline-redmine-key"
 ) -> AsyncGenerator[ClientSession]:
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url="http://testserver",
-        headers={"Authorization": f"Bearer {token}"} if token is not None else {},
+        headers={"X-Redmine-API-Key": token} if token is not None else {},
     ) as client:
         async with streamable_http_client("http://testserver/mcp", http_client=client) as streams:
             async with ClientSession(streams[0], streams[1]) as session:
@@ -80,12 +80,10 @@ async def test_rest_auth_and_validation_before_upstream(
             await anonymous.get("/api/v1/projects")
         ).status_code == http_status.HTTP_401_UNAUTHORIZED
     assert (
-        await rest_client.get("/api/v1/projects", headers={"Authorization": ""})
+        await rest_client.get("/api/v1/projects", headers={"X-Redmine-API-Key": ""})
     ).status_code == http_status.HTTP_401_UNAUTHORIZED
     assert (
-        await rest_client.get(
-            "/api/v1/projects", headers={"Authorization": "Bearer incorrect-token"}
-        )
+        await rest_client.get("/api/v1/projects", headers={"X-Redmine-API-Key": "incorrect-token"})
     ).status_code == http_status.HTTP_401_UNAUTHORIZED
     assert (
         await rest_client.get("/api/v1/issues", params={"limit": 0})
@@ -93,7 +91,7 @@ async def test_rest_auth_and_validation_before_upstream(
     assert (
         await rest_client.get("/api/v1/issues/0")
     ).status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
-    assert upstream["requests"] == []
+    assert all(request.url.path == "/users/current.json" for request in upstream["requests"])
 
 
 @pytest.mark.asyncio
@@ -143,7 +141,7 @@ async def test_mcp_discovery_invocation_and_error(app: FastAPI, upstream: dict[s
     upstream["body"] = {"projects": [PROJECT], "total_count": 1}
     async with mcp_session(app) as session:
         tools = await session.list_tools()
-        assert {tool.name for tool in tools.tools} == {"list_projects", "list_issues", "get_issue"}
+        assert {tool.name for tool in tools.tools} >= {"list_projects", "list_issues", "get_issue"}
         result = await session.call_tool("list_projects", {"limit": 1, "offset": 0})
         assert not result.isError
         assert json.loads(result.content[0].text)["items"][0]["id"] == 7
@@ -158,7 +156,7 @@ async def test_mcp_discovery_invocation_and_error(app: FastAPI, upstream: dict[s
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("token", [None, "incorrect-token"])
-async def test_mcp_rejects_bad_bearer(app: FastAPI, token: str | None) -> None:
+async def test_mcp_rejects_bad_api_key(app: FastAPI, token: str | None) -> None:
     with pytest.raises(ExceptionGroup) as error:
         async with mcp_session(app, token):
             pass

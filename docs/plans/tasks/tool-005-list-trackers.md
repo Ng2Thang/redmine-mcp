@@ -8,10 +8,10 @@
 | Capability | Let clients understand tracker IDs and their supported standard fields. |
 | Type / access / destructive effects | Add tool / read / none |
 | Status | blocked; implementation finished, testing pending |
-| Last updated | 2026-09-30 |
+| Last updated | 2026-10-02, Codex |
 | Dependencies | [prep-002](prep-002-offline-tests.md) |
 | Target | Redmine 6.0.5-bookworm |
-| Next action | Add and run TRACKER-001 through TRACKER-003 in a separate testing assignment. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -34,7 +34,7 @@ Add no-input `list_trackers` at `GET /api/v1/trackers`, with explicit MCP allowl
 Return `list[Tracker]`: positive `id`, nonempty `name`, nullable `description`, nullable
 `default_status` reference, and `enabled_standard_fields: list[str]` defaulting to empty when
 upstream omits it. Map `trackers` from `GET trackers.json`. Empty array is valid; missing array,
-invalid nested data, or malformed JSON is sanitized `upstream_response` 502. Bearer auth and
+invalid nested data, or malformed JSON is sanitized `upstream_response` 502. Personal `X-Redmine-API-Key` authentication and
 existing upstream errors apply. No pagination or write behavior is introduced.
 
 ## 5. Implementation plan
@@ -75,3 +75,18 @@ found only scoped changes beyond the preserved baseline.
 
 Final status: blocked. Next action: add and run TRACKER-001 through TRACKER-003, including
 Inspector and synthetic project comparison, in a separate testing assignment.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+TRACKER-001/002 pass offline. Three registry tracker IDs/names match Redmine; full comparison against visible project tracker settings and a clean live rerun remain pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

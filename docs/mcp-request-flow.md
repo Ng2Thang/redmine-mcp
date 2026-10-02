@@ -16,9 +16,11 @@ definitions from OpenAPI, validates the generated tool names, adds read-only ann
 and mounts Streamable HTTP at `/mcp`. Descriptions and parameter schemas come from the
 feature routers. Only allowlisted operations are published as tools.
 
-`RuntimeLifecycle.lifespan()` then creates the shared Redmine HTTP client and places it in
-`app.state.upstream`. It registers cleanup for both clients and the MCP transport. The
-server can serve requests after the lifespan yields.
+`RuntimeLifecycle.lifespan()` then creates the shared Redmine HTTP client and registers cleanup
+for both clients and the MCP transport. It starts the MCP manager and waits until the SDK's
+`run()` context enters, then places the upstream client in `app.state.upstream`. The server
+can serve requests after the lifespan yields; simultaneous first connections cannot bypass
+manager readiness.
 
 ## 2. Connection and discovery
 

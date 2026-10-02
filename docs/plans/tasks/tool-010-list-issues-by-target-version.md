@@ -13,9 +13,9 @@
 | Dependencies | [prep-002](prep-002-offline-tests.md); [tool-007](tool-007-list-project-versions.md) supplies target-version ID discovery, but its pending acceptance does not block this filter implementation |
 | Related tasks | [tool-001](tool-001-list-issues-search.md) owns existing filters and defaults; [tool-007](tool-007-list-project-versions.md) owns version discovery |
 | Target Redmine version | `6.0.5-bookworm` in `deploy/compose.test.yaml` |
-| Last updated | 2026-09-30, Codex |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Target-version filtering, exact-project scoping, target-version output, and public documentation are implemented. Static checks pass; acceptance verification is pending. |
-| Next action | In a separate testing assignment, add and run TARGETISSUE-001 through TARGETISSUE-005, then complete marked synthetic Redmine and Inspector acceptance for TARGETISSUE-006. |
+| Next action | Review prep-004's dated offline/live evidence and complete the remaining task-specific acceptance fixtures and clean live rerun. |
 
 ## 2. Discovery and evidence
 
@@ -93,7 +93,7 @@ IDs; its description must mention Target version.
   version IDs, version status, or due-date filtering require a separate client outcome.
 - Compatibility constraints: preserve operation ID, REST route, page shape, auth, errors,
   existing inputs/defaults, and current inclusion of subprojects when the new boolean is omitted.
-- Permission/configuration prerequisites: the shared Redmine account must be able to view the
+- Permission/configuration prerequisites: the requesting Redmine user must be able to view the
   selected project and issues; target-version discovery uses `list_project_versions`.
 
 | ID | User need and intended outcome | Required observable behavior | Prerequisites/constraints |
@@ -133,7 +133,7 @@ to the shared sprint.
 | Stable operation ID | `list_issues` |
 | Purpose and tool description | Find visible issues, optionally by Target version ID, and optionally restrict a selected project to that project only. Use `status_id='*'` and pagination for all statuses. |
 | REST method and route | `GET /api/v1/issues` |
-| Authentication and authorization | Existing MCP bearer token; shared Redmine reader determines issue visibility. |
+| Authentication and authorization | Caller personal `X-Redmine-API-Key`; the requesting Redmine user determines issue visibility. |
 | MCP exposure | Existing explicit `list_issues` allowlist entry and read-only behavior; generated schema gains the two inputs and output field. |
 
 ### Inputs
@@ -168,8 +168,8 @@ upstream query, including Redmine's current descendant-project behavior.
 | Scenario | Detection layer | REST status and safe error | MCP result | Retry/reconciliation behavior |
 |---|---|---|---|---|
 | Non-positive/malformed Target version ID | Route validation | 422 validation detail | Existing MCP error envelope | Correct request |
-| `include_subprojects=false` without project | Route validation | 422 concise dependency error; no upstream call | Existing MCP error envelope | Supply `project_id` or use true |
-| Missing/invalid MCP bearer token | Existing auth | Existing 401 | Existing MCP error envelope | Supply valid token |
+| `include_subprojects=false` without project | Route validation | 422 concise dependency error; no resource request (identity verification may run) | Existing MCP error envelope | Supply `project_id` or use true |
+| Missing/invalid MCP personal Redmine API key | Existing auth | Existing 401 | Existing MCP error envelope | Supply a valid personal Redmine API key |
 | Hidden project/issue or insufficient Redmine permission | Gateway | Existing sanitized 403/404 | Existing MCP error envelope | Correct access; do not infer hidden data |
 | Unknown version or version not applicable to selected scope | Upstream query | Successful empty page when Redmine returns no matches; otherwise existing safe upstream mapping | Normal result or existing error envelope | Verify IDs and sharing |
 | Timeout or transport failure | Gateway | Existing sanitized 504/502 | Existing MCP error envelope | Read may be retried |
@@ -227,7 +227,7 @@ write gates, Docker configuration, or the MCP operation allowlist entry.
 |---|---|---|---|---|---|
 | TARGETISSUE-001 | AC-001, AC-002 | Gateway/REST exact-query capture | Combine project, tracker, all statuses, version, pagination, and each boolean value | Version ID is forwarded; false adds `subproject_id=!*`; true/omitted does not | Offline, pending |
 | TARGETISSUE-002 | AC-003 | Model/gateway list and detail mapping | Populated, omitted/null, and malformed `fixed_version` | Reference, `null`, and sanitized 502 respectively | Offline, pending |
-| TARGETISSUE-003 | AC-004 | REST/MCP validation with upstream spy | Zero/malformed version; false without project; malformed boolean | 422 and no upstream call where route validation applies | Offline, pending |
+| TARGETISSUE-003 | AC-004 | REST/MCP validation with upstream spy | Zero/malformed version; false without project; malformed boolean | 422 and no resource request (identity verification may run) where route validation applies | Offline, pending |
 | TARGETISSUE-004 | AC-001, AC-006 | REST/MCP behavior | Empty page, multiple pages, auth, 403/404, timeout, malformed page | Stable page/error envelopes and filtered total | Offline, pending |
 | TARGETISSUE-005 | AC-005 | Regression and MCP discovery | Omit new inputs; invoke list/detail and discover tools | Old upstream query/defaults remain; one `list_issues` operation exposes additive schema | Offline, pending |
 | TARGETISSUE-006 | AC-001, AC-002, AC-006 | Inspector against marked Redmine 6.0.5 | Resolve current History Alpha, Sprint 02, and Bug IDs; compare exact and descendant-inclusive queries | Membership, empty-result behavior if applicable, count, target-version field, and visibility are observed | Opt-in live, pending |
@@ -297,3 +297,18 @@ the marked synthetic Redmine 6.0.5 environment.
 
 Next action: authorize a separate testing assignment for TARGETISSUE-001 through
 TARGETISSUE-006; do not treat static-check success as acceptance evidence.
+
+## 10. Authorized prep-004 continuation: 2026-10-02
+
+The full credential-free suite passes 356 tests; Ruff, formatting, mypy, architecture,
+source/wheel build, and whitespace checks pass. The focused MCP startup race fix was
+separately approved by the user and verified with readiness, concurrency, and cleanup cases.
+
+TARGETISSUE-001 through TARGETISSUE-005 pass offline. Inspector and same-key Redmine return zero exact-project and seven descendant-inclusive History Alpha/Sprint 02 Bug matches with matching IDs/count/version membership. Full visibility acceptance and clean live rerun remain pending.
+
+See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+case mapping, and limitations. Current authentication is each caller's personal
+`X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
+Future contract wording was reconciled; historical discovery/execution notes were retained.
+Final current status remains **blocked** until outstanding acceptance is established; the
+earlier handoff above describes the previous implementation stage.

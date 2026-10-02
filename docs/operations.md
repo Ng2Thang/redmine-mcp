@@ -123,6 +123,13 @@ synthetic data can be discarded. Full restore, checksum, and failure-recovery va
 
 ## External Redmine
 
+For the pinned Redmine 7.0.2 target, use the
+[isolated Compose configuration](../deploy/compose.redmine-7-0-2.yaml) and
+[upgrade and recovery runbook](redmine-upgrade.md). The current backup/restore wrappers
+always select the original 6.0.5 synthetic project; the isolated migration remains pending.
+The runbook's candidate and recovery helpers create fresh project-scoped volumes and require
+a completed synthetic snapshot. Run them only during the separately authorized rehearsal.
+
 Prepare `.local/external.env` as described in [configuration](configuration.md). Stop any MCP
 process already occupying port 8000. With the Git Bash Docker exports above in effect:
 

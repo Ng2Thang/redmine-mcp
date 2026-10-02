@@ -1,5 +1,8 @@
 # tool-028-delete-document: Delete a document
 
+Deferred on 2026-10-02: Redmine 7.0.2 is the maximum supported target, and the Redmine REST index dates Documents REST to 7.1. The contract below is retained as a historical draft and must not be implemented in the 7.0.2 roadmap.
+
+
 ## 1. Task identity and status
 
 | Field | Value |
@@ -7,13 +10,13 @@
 | Task ID | tool-028-delete-document |
 | Assigned capability | Delete a document: Deletion also removes document attachments. |
 | Type / access / destructive effects | Add writer tool / write / Resource deletion or removal |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - deferred; Documents REST unavailable in Redmine 7.0.2 |
 | Dependencies | [tool-027-update-document](tool-027-update-document.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-1-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.1 exact build pending prep-005; current pin 6.0.5-bookworm |
-| Last updated | 2026-10-01, Codex |
+| Target Redmine version | Unsupported on the selected 7.0.2 target; historical 7.1 draft |
+| Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-027-update-document must be accepted and exact 7.1 source/behavior rechecked. |
+| Blocker / next action | Deferred: Documents REST requires Redmine 7.1, above the selected 7.0.2 maximum. |
 
 ## 2. Discovery and evidence
 
@@ -162,7 +165,7 @@ No current 7.1 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-027-update-document must be accepted and exact 7.1 source/behavior rechecked.
+- Remaining blocker: Documents REST is unavailable in the selected 7.0.2 target.
 
 ## 9. Completion and handoff
 
@@ -175,4 +178,4 @@ No current 7.1 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-027-update-document must be accepted and exact 7.1 source/behavior rechecked.
+Final status: blocked - deferred outside the 7.0.2 support scope. Next action: none under this target; revisit only if the supported Redmine version changes.

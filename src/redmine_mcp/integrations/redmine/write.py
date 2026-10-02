@@ -96,7 +96,10 @@ class RedmineWriter:
                 )
                 status = response.status_code
                 try:
-                    if status == http_status.HTTP_422_UNPROCESSABLE_CONTENT:
+                    if status in (
+                        http_status.HTTP_400_BAD_REQUEST,
+                        http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    ):
                         raise ApplicationError(
                             codes_text.INVALID_PARAMETERS,
                             redmine_text.WRITE_REJECTED,
@@ -104,11 +107,7 @@ class RedmineWriter:
                         )
                     raise_for_upstream_status(status)
                     if status not in accepted_statuses:
-                        raise ApplicationError(
-                            codes_text.UPSTREAM_RESPONSE,
-                            redmine_text.INVALID_RESPONSE,
-                            http_status.HTTP_502_BAD_GATEWAY,
-                        )
+                        return WriteReceipt("uncertain", status)
                     if status == 204:
                         return WriteReceipt("accepted", status)
                     data = bytearray()

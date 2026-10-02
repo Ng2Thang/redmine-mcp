@@ -18,6 +18,7 @@ from redmine_mcp.integrations.redmine import (
     RedmineClient,
     RedmineIdentity,
     RedmineIssues,
+    RedmineProjectFiles,
     RedmineProjects,
     RedmineReferenceData,
     RedmineTimeEntries,
@@ -57,13 +58,15 @@ def build_container(
     http: httpx.AsyncClient, api_key: str, settings: Settings | None = None
 ) -> Container:
     client = RedmineClient(http, api_key, read_policy(settings))
+    project_reader = RedmineProjects(client)
+    writer = RedmineWriter(http, api_key, client.policy)
     return Container(
         AttachmentService(
             RedmineAttachments(client),
-            RedmineUploads(RedmineWriter(http, api_key, read_policy(settings)), client),
+            RedmineUploads(writer, client),
             client.policy.max_binary_bytes,
         ),
-        ProjectService(RedmineProjects(client)),
+        ProjectService(project_reader, RedmineProjectFiles(writer, project_reader)),
         IssueService(RedmineIssues(client)),
         ReferenceService(RedmineReferenceData(client)),
         TimeEntryService(RedmineTimeEntries(client)),

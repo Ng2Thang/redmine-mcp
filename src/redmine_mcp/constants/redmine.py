@@ -26,6 +26,8 @@ REQUEST_TOO_LARGE: Final[str] = "Redmine request exceeds limit"
 INVALID_FILENAME: Final[str] = "Invalid attachment filename"
 INVALID_BASE64: Final[str] = "Invalid base64 attachment content"
 WRITE_REJECTED: Final[str] = "Redmine rejected the write request"
+INVALID_UPLOAD_TOKEN: Final[str] = "Invalid upload token"
+INVALID_PROJECT_VERSION: Final[str] = "Version does not belong to the project"
 
 INVALID_RESPONSE: Final[str] = "Invalid Redmine response"
 
@@ -55,6 +57,8 @@ __all__ = [
     "INVALID_FILENAME",
     "INVALID_BASE64",
     "WRITE_REJECTED",
+    "INVALID_UPLOAD_TOKEN",
+    "INVALID_PROJECT_VERSION",
     "INVALID_RESPONSE",
     "CONNECTION_POOL_BUSY",
     "UNREACHABLE",

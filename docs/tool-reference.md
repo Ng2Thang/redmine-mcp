@@ -321,6 +321,15 @@ confirmed upload. An uncertain result may have created a temporary object; inspe
 state before any manual retry. The reader deployment does not discover this tool and rejects its
 REST route with 403.
 
+`add_project_file` is writer-only. Pass a positive `project_id`, an upload `token`, a basename
+`filename`, and optional `description` and `version_id`. A version must belong to the selected
+project. Redmine attaches the temporary upload at `POST /projects/{project_id}/files.json` and
+returns an empty HTTP 204 response on success. The result reports the attachment ID derived
+from the token, `outcome`, `upstream_accepted`, and `verification` from a separate project-file
+list read-back. `observed_file` contains Redmine's file metadata when found. A failed read-back
+leaves an accepted write accepted; an uncertain response can still be reconciled through the
+file list. Do not automatically retry the token after an uncertain result.
+
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.

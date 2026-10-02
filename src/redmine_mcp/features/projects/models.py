@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from redmine_mcp.common import Visibility
 
@@ -54,3 +54,20 @@ class ProjectFile(BaseModel):
     version: Reference | None = None
     digest: str
     downloads: int = Field(ge=0)
+
+
+class AddProjectFileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    token: str = Field(min_length=3, max_length=200)
+    filename: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+    version_id: int | None = Field(default=None, strict=True, gt=0)
+
+
+class AddProjectFileResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
+    attachment_id: int = Field(gt=0)
+    observed_file: ProjectFile | None = None

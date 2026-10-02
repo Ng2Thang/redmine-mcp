@@ -7,13 +7,13 @@
 | Task ID | tool-021-add-project-file |
 | Assigned capability | Attach upload as project file: Use one uploaded token. |
 | Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-020-upload-attachment](tool-020-upload-attachment.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-020-upload-attachment must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Progress summary | Writer-only project-file operation implemented; static and runtime evidence pending. |
+| Blocker / next action | User approved coding on 2026-10-02; offline/synthetic checks remain separately authorized work. Continue to tool-022. |
 
 ## 2. Discovery and evidence
 
@@ -29,16 +29,17 @@ separate restricted deployment and synthetic verification prerequisites.
 
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
-| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Files) | 2026-10-01 | General/current documentation | POST /projects/{project_id}/files.json; target-build behavior must be checked in prep-005. |
+| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Files) | 2026-10-02 | General/current documentation | POST /projects/{project_id}/files.json accepts a `file` hash with token, optional version ID, filename, and description. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| `.local/upgrades/source/redmine-7.0.2.tar.gz`: `files_controller.rb`, `acts_as_attachable.rb` | 2026-10-02 | Exact 7.0.2 source | `file.token` is resolved to an unattached upload; optional version is looked up within the selected project's versions; success uses an empty API response. Runtime permission and state behavior remain unverified. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `add_project_file` is the sole public owner | No |
-| Strict sequence | Wait for tool-020-upload-attachment evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | Tool-020 code/static checks approved on 2026-10-02 and committed as `825bfad`; its tests remain pending under user instruction | No to coding; yes to acceptance |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Pinned 7.0.2 source checked; synthetic behavior remains unverified | Yes to acceptance |
 
 ## 3. Requirements
 
@@ -54,8 +55,8 @@ separate restricted deployment and synthetic verification prerequisites.
 | REQ-002 | Invalid inputs or unauthorized identity/permission do not alter protected state. |
 | REQ-003 | Upstream errors, timeout, malformed results, and compatibility are handled safely. |
 
-Illustrative synthetic input: `{"project_id":1,"token":"opaque-token","filename":"example.txt"}`. Illustrative selected output
-fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do not assert a live result.
+Illustrative synthetic input: `{"project_id":1,"token":"123.abcdef","filename":"example.txt"}`.
+Illustrative selected output fields: `{"outcome":"accepted","upstream_accepted":true,"verification":"matched","attachment_id":123}`. These examples do not assert a live result.
 
 ## 4. Public contract and technical specification
 
@@ -79,7 +80,9 @@ fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do
 
 ### Output and response mapping
 
-Write receipt; read-back via project file list where visible. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+Write receipt includes `outcome`, `upstream_accepted`, `verification`, `attachment_id` derived
+from the token, and `observed_file` when listed. Redmine's 204 has no body. Read-back via the
+project file list reports matched, mismatch, or unavailable separately from the write response.
 No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -101,9 +104,9 @@ registered exactly once and must not change defaults of another operation.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: exact 7.0.2 source behavior was checked before coding. Tool-020 coding
+was approved; its testing remains pending. This tool's runtime permission/state evidence remains
+pending under the user's separate testing instruction.
 
 ## 5. Implementation plan
 
@@ -156,13 +159,20 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: typed request/result, project service and writer port, Redmine gateway, REST
+  route, writer allowlist, tool reference, and changelog.
+- Plan deviations: upstream 400/422 validation maps to sanitized local 422. The returned
+  attachment ID comes from the upload token because HTTP 204 has no response body. A version
+  is prevalidated against versions owned by the selected project. No automatic retry occurs.
+- Quality checks (2026-10-02): `.venv/Scripts/ruff.exe check .`,
+  `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, and
+  `git diff --check` pass. Automated tests: not run.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-020-upload-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: this task, dashboard, tool reference, and changelog.
+- Final code diff review: code, contract, and documentation inspected; user approved continuation on 2026-10-02.
+- Remaining blocker: TOOL-021-001 through TOOL-021-005, runtime permissions, resulting state,
+  duplicate/uncertain outcomes, and cleanup remain unverified. User approved coding continuation
+  to tool-022.
 
 ## 9. Completion and handoff
 
@@ -175,6 +185,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-020-upload-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: blocked. Next action: Continue tool-022 coding as directed; separately authorize
+offline and marked synthetic checks before acceptance. Coding finished; testing remains pending.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

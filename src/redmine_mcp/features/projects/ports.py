@@ -2,6 +2,7 @@ from typing import Protocol
 
 from redmine_mcp.common import Collection, Page
 from redmine_mcp.features.projects.models import (
+    AddProjectFileResult,
     IssueCategory,
     Project,
     ProjectDetail,
@@ -20,3 +21,15 @@ class ProjectReader(Protocol):
     async def list_project_issue_categories(self, project_id: int) -> Collection[IssueCategory]: ...
 
     async def list_project_files(self, project_id: int) -> Collection[ProjectFile]: ...
+
+
+class ProjectWriter(Protocol):
+    async def add_project_file(
+        self,
+        project_id: int,
+        token: str,
+        filename: str,
+        description: str | None,
+        version_id: int | None,
+        attachment_id: int,
+    ) -> AddProjectFileResult: ...

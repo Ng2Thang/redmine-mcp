@@ -303,7 +303,8 @@ observations identify absent optional content type, description, or author field
 return 404 when the stored file is unreadable, even though this tool reads only metadata.
 
 `download_attachment` fetches metadata for one visible attachment, rejects a declared size over
-5 MiB, then streams at most 5 MiB of decoded bytes from a validated Redmine download URL. It
+the configured limit (5 MiB by default), then streams at most that many decoded bytes from a
+validated Redmine download URL. It
 returns `attachment_id`, `filename`, `content_type`, `content_base64`, `filesize`, and `visibility`.
 The decoded byte count must match Redmine's metadata size. A timeout or transfer error can occur
 after Redmine has incremented a Project or Version download counter. Do not retry solely to

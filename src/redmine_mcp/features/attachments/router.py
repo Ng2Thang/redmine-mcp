@@ -35,7 +35,8 @@ async def get_attachment(
     operation_id="download_attachment",
     response_model=AttachmentDownload,
     description=(
-        "Download at most 5 MiB of one visible attachment and return base64 content with "
+        "Download one visible attachment within the configured byte limit and return "
+        "base64 content with "
         "its filename, size, and content type. The tool fetches metadata first and rejects "
         "oversized files before and during streaming. Redmine may increment Project or "
         "Version download counters even when transfer later fails."

@@ -12,7 +12,7 @@
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; exact release source reviewed, runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Bounded metadata-first download, typed base64 response, REST route, policy/catalog entry, annotations, and docs implemented. |
+| Progress summary | Bounded metadata-first download, typed base64 response, REST route, policy/catalog entry, annotations, and docs implemented; configured transfer limit defaults to 5 MiB. |
 | Blocker / next action | User approved this implementation and directed continuation to prep-007 on 2026-10-02. TOOL-019-001 through TOOL-019-005 remain separately authorized testing work. |
 
 ## 2. Discovery and evidence
@@ -82,8 +82,9 @@ fields: `{"attachment_id":1,"filename":"example.txt","content_base64":"ZXhhbXBsZ
 
 `AttachmentDownload` contains positive `attachment_id`, nonempty `filename`, optional
 `content_type`, `content_base64`, nonnegative `filesize`, and requesting-user `visibility`.
-The gateway checks metadata size against 5 MiB before fetching content. Binary transport checks
-the header and streamed decoded bytes against the same bound. A returned byte count must match
+The gateway checks metadata size against the configured limit, 5 MiB by default, before fetching
+content. Binary transport checks the header and streamed decoded bytes against the same bound.
+A returned byte count must match
 metadata `filesize`; otherwise the tool returns sanitized 502. Missing `content_type` preserves
 the metadata visibility observation. No pagination or count applies.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
@@ -167,6 +168,9 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   Automated tests were not run under the repository instruction.
 - Startup/Inspector checks: not run.
 - Documentation: tool reference, changelog, task, and dashboard updated.
+- Contract correction after user review on 2026-10-02: the master roadmap requires a
+  configurable shared binary limit; Settings, Compose, and docs now use a 5 MiB default.
+  The user reviewed and approved this follow-up before writer foundation work.
 - Final code diff review: reviewed the attachment model/port/service/router/gateway additions,
   policy/catalog entry, counter-aware annotations, and docs. Existing tool signatures and
   defaults remain unchanged.

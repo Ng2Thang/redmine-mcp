@@ -41,6 +41,7 @@ def read_policy(settings: Settings | None) -> ReadPolicy:
     return ReadPolicy(
         deadline_seconds=settings.redmine_request_deadline_seconds,
         max_response_bytes=settings.redmine_max_response_bytes,
+        max_binary_bytes=settings.redmine_max_binary_bytes,
     )
 
 

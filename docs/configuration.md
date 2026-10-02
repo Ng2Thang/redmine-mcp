@@ -15,6 +15,7 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
 | `REDMINE_REQUEST_DEADLINE_SECONDS` | `60` | Positive finite deadline for each upstream HTTP read, including connection/pool waits and streamed body acquisition/closure. |
 | `REDMINE_MAX_RESPONSE_BYTES` | `10485760` | Positive limit on accumulated decoded JSON payload bytes per upstream read. |
+| `REDMINE_MAX_BINARY_BYTES` | `5242880` (5 MiB) | Positive decoded-byte limit shared by attachment uploads and downloads. Larger limits increase memory and MCP response size. |
 | `REDMINE_MAX_CONNECTIONS` | `100` | Positive maximum number of shared upstream connections. |
 | `REDMINE_MAX_KEEPALIVE_CONNECTIONS` | `20` | Nonnegative idle connection limit; must not exceed maximum connections. |
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`, case insensitive. |
@@ -41,7 +42,7 @@ deadline for an entire MCP invocation or stream. JSON parsing/model conversion o
 HTTP acquisition deadline. The payload limit bounds the accumulated decoded body, not total
 process memory or transient decompressor/parser allocations. Oversized results fail with
 `502 upstream_response_too_large`; request a smaller page or fewer issue expansions when possible.
-Attachment binary reads prepared for the download tool have a fixed 5 MiB decoded-byte limit.
+Attachment binary reads use the configured decoded-byte limit, which defaults to 5 MiB.
 Their URLs must match the configured Redmine origin, deployment base path, and attachment ID;
 redirects are rejected. The same per-read deadline applies, and the caller's personal key is
 sent only after URL validation.

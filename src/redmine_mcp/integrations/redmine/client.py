@@ -100,7 +100,7 @@ class RedmineClient:
             ) from None
 
     async def get_attachment_bytes(self, content_url: str, attachment_id: int) -> bytes:
-        """Read at most five MiB of decoded bytes without following redirects."""
+        """Read at most the configured decoded-byte limit without redirects."""
         url = self.attachment_url(content_url, attachment_id)
         started = perf_counter()
         status: int | None = None

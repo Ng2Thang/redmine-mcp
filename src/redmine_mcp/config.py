@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     redmine_pool_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
     redmine_request_deadline_seconds: float = Field(default=60, gt=0, allow_inf_nan=False)
     redmine_max_response_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
+    redmine_max_binary_bytes: int = Field(default=5 * 1024 * 1024, ge=1)
     redmine_max_connections: int = Field(default=100, ge=1)
     redmine_max_keepalive_connections: int = Field(default=20, ge=0)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

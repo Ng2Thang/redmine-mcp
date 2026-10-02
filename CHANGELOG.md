@@ -40,7 +40,7 @@ that a release has been published.
 ### Changed
 
 - Prepared bounded attachment binary transport with same-origin URL validation, redirect
-  rejection, and a 5 MiB decoded-byte limit for the future download tool.
+  rejection, and a configurable decoded-byte limit that defaults to 5 MiB.
 
 - Extended `get_issue` with estimates, attachment content URLs, and journal edit metadata;
   missing estimates are identified in visibility observations.

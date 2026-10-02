@@ -12,7 +12,7 @@
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Validated same-origin attachment URL and bounded binary streaming implemented in the Redmine client. |
+| Progress summary | Validated same-origin attachment URL and bounded binary streaming implemented in the Redmine client; the shared decoded-byte limit is configurable and defaults to 5 MiB. |
 | Blocker / next action | User approved this implementation and directed continuation to tool-019 on 2026-10-02. Offline URL/stream/error checks require separate authorization; live 7.0.2 behavior remains unverified. |
 
 ## 2. Discovery and evidence
@@ -49,7 +49,7 @@ production credential, and claims based on unrun checks.
 | Area | Contract |
 |---|---|
 | MCP name / operation ID / REST route | N/A - shared prerequisite |
-| Inputs | `content_url` from Redmine metadata, positive attachment ID, caller-bound client; fixed 5 MiB decoded limit and existing per-read deadline |
+| Inputs | `content_url` from Redmine metadata, positive attachment ID, caller-bound client; configurable decoded limit defaulting to 5 MiB and existing per-read deadline |
 | Outputs | Valid download returns exact bytes. The URL must have the configured scheme, host, port, base path, and `/attachments/download/{id}` prefix, without credentials, query, fragment, or traversal. Redirects, oversize, timeout, and malformed URLs fail with sanitized errors. Existing JSON reads remain unchanged. |
 | Access | No new public permission |
 | Version support | Exact 7.0.2 source reviewed; generated URL origin and runtime behavior remain unverified. |
@@ -99,8 +99,10 @@ Testing is planned, not authorized or run. For prep-006-bounded-binary-downloads
 
 ## 8. Implementation and review record
 
-- Changes made: added fixed 5 MiB binary limit to `ReadPolicy`, attachment URL validation and
-  bounded `get_attachment_bytes` to `RedmineClient`, plus configuration and changelog docs.
+- Changes made: added attachment URL validation and bounded `get_attachment_bytes` to
+  `RedmineClient`, plus configuration and changelog docs. Follow-up on 2026-10-02: wired
+  `REDMINE_MAX_BINARY_BYTES` through Settings and Compose so uploads and downloads can share
+  the configurable 5 MiB default required by the master roadmap.
 - Static checks: installed `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format
   --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` passed on 2026-10-02.
 - Automated tests: not run.

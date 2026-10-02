@@ -1,24 +1,24 @@
-# tool-020-get-attachment: Read attachment metadata
+# tool-025-update-issue: Update issue fields or add a note
 
 ## 1. Task identity and status
 
 | Field | Value |
 |---|---|
-| Task ID | tool-020-get-attachment |
-| Assigned capability | Read attachment metadata: Redmine controls visibility for Project/Version, Document, and Issue containers. |
-| Type / access / destructive effects | Add reader tool / read / None |
+| Task ID | tool-025-update-issue |
+| Assigned capability | Update issue fields or add a note: Do not require Edit issues for notes-only. |
+| Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
 | Status | blocked - documentation draft; no code or verification performed |
-| Dependencies | [tool-019-list-project-files](tool-019-list-project-files.md); prior task must have evidence and user acceptance |
+| Dependencies | [tool-024-create-issue](tool-024-create-issue.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-019-list-project-files must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Blocker / next action | Predecessor tool-024-create-issue must be accepted and exact 7.0.2 source/behavior rechecked. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **read attachment metadata**. Redmine controls visibility for Project/Version, Document, and Issue containers. This tool returns metadata only, not file content.
-Current catalog has no `get_attachment`; it owns this public behavior exactly once.
+The client outcome is **update issue fields or add a note**. Do not require Edit issues for notes-only. Evaluate permission for each supplied field, preserve omissions, reject unknown fields, and compare read-back to expose silently ignored values.
+Current catalog has no `update_issue`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
 [MCP catalog](../../../src/redmine_mcp/mcp/catalog.py), and the router → service →
@@ -29,58 +29,58 @@ separate restricted deployment and synthetic verification prerequisites.
 
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
-| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Attachments) | 2026-10-01 | General/current documentation | GET /attachments/{attachment_id}.json; target-build behavior must be checked in prep-005. |
+| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-10-01 | General/current documentation | PUT /issues/{issue_id}.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
-| Public ownership | `get_attachment` is the sole public owner | No |
-| Strict sequence | Wait for tool-019-list-project-files evidence and explicit user acceptance | Yes to execution |
+| Public ownership | `update_issue` is the sole public owner | No |
+| Strict sequence | Wait for tool-024-create-issue evidence and explicit user acceptance | Yes to execution |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Redmine controls visibility for Project/Version, Document, and Issue containers. This tool returns metadata only, not file content.
+- In scope: Do not require Edit issues for notes-only. Evaluate permission for each supplied field, preserve omissions, reject unknown fields, and compare read-back to expose silently ignored values.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: Container-specific view permission.
+- Permission/configuration prerequisite: Edit issues/Edit own issues for fields; Add notes for notes-only; Manage subtasks/privacy as applicable.
 
 | Requirement | Observable behavior |
 |---|---|
-| REQ-001 | Read attachment metadata produces the specified upstream mapping and typed result. |
+| REQ-001 | Update issue fields or add a note produces the specified upstream mapping and typed result. |
 | REQ-002 | Invalid inputs or unauthorized identity/permission do not alter protected state. |
 | REQ-003 | Upstream errors, timeout, malformed results, and compatibility are handled safely. |
 
-Illustrative synthetic input: `{"attachment_id":1}`. Illustrative selected output
-fields: `{"id":1,"filename":"example.txt","filesize":7,"content_url":"http://redmine.local/attachments/download/1/example.txt"}`. These examples do not assert a live result.
+Illustrative synthetic input: `{"issue_id":1,"notes":"Progress update"}`. Illustrative selected output
+fields: `{"resource_id":1,"upstream_accepted":true,"verification":"matched"}`. These examples do not assert a live result.
 
 ## 4. Public contract and technical specification
 
 | Area | Contract |
 |---|---|
-| MCP operation/name | get_attachment |
-| Stable operation ID | get_attachment |
-| Purpose | Read attachment metadata; Redmine controls visibility for Project/Version, Document, and Issue containers. |
-| Local REST route | GET /api/v1/attachments/{attachment_id} |
-| Upstream mapping | GET /attachments/{attachment_id}.json |
-| Authentication | Personal `X-Redmine-API-Key`; Container-specific view permission. |
-| MCP exposure | reader; writer may reuse read route; explicit allowlist entry. |
-| Annotations | readOnlyHint=true, destructiveHint=false, idempotentHint=true, openWorldHint=true. |
+| MCP operation/name | update_issue |
+| Stable operation ID | update_issue |
+| Purpose | Update issue fields or add a note; Do not require Edit issues for notes-only. |
+| Local REST route | PUT /api/v1/issues/{issue_id} |
+| Upstream mapping | PUT /issues/{issue_id}.json |
+| Authentication | Personal `X-Redmine-API-Key`; Edit issues/Edit own issues for fields; Add notes for notes-only; Manage subtasks/privacy as applicable. |
+| MCP exposure | writer only; explicit allowlist entry. |
+| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
 
 ### Inputs and validation
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive attachment_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /attachments/{attachment_id}.json |
+| Tool arguments | Positive issue_id; at least one permitted field, uploads, or nonempty notes; private_notes only with notes; explicit null for clearable fields | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | PUT /issues/{issue_id}.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-id,filename,filesize,content_type,description,content_url,author,created_on,visibility. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
-Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
+Write receipt with requested/observed fields. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
 
@@ -90,12 +90,16 @@ registered exactly once and must not change defaults of another operation.
 | Missing or invalid key | Existing sanitized 401; no upstream data leaked. |
 | Forbidden or absent upstream resource | Existing 403 or visibility-safe 404. |
 | Redmine validation failure | Sanitized 422; no raw upstream body in logs/results. |
-| Timeout, transport, oversized or malformed response | Existing 504/502-family sanitized errors; no fabricated data. |
+| Timeout, transport, oversized or malformed response | Existing 504/502-family sanitized errors; post-dispatch result remains uncertain. |
 | Other upstream status | Existing sanitized upstream error; no automatic retry. |
 
 ### Write semantics
 
-N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
+- Exact effect: Do not require Edit issues for notes-only. Evaluate permission for each supplied field, preserve omissions, reject unknown fields, and compare read-back to expose silently ignored values.
+- No automatic retries. A timeout after dispatch produces an unknown outcome requiring a separate read-back before any repeat.
+- Success and read-back are separate fields. A failed read-back cannot erase a preceding accepted write.
+- Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
+- Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
 Specification exit check: target-build evidence and predecessor acceptance
 are pending. Do not start coding from this draft until the exact 7.0.2 behavior
@@ -121,10 +125,10 @@ record any newly required package and update `uv.lock` together.
 
 | Criterion | Requirement | Observable result | Planned scenario | Evidence |
 |---|---|---|---|---|
-| AC-001 | REQ-001 | Read attachment metadata returns the expected mapped result. | TOOL-020-001 | Pending |
-| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-020-002 | Pending |
-| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-020-003/004 | Pending |
-| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-020-005 | Pending |
+| AC-001 | REQ-001 | Update issue fields or add a note returns the expected mapped result and resulting Redmine state. | TOOL-025-001 | Pending |
+| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-025-002 | Pending |
+| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-025-003/004 | Pending |
+| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-025-005 | Pending |
 
 No criterion is accepted from a mock alone when it requires actual permission
 or state verification.
@@ -136,11 +140,11 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Scenario | Layer and setup | Expected result | Mode |
 |---|---|---|---|
-| TOOL-020-001 | Gateway/REST with exact valid payload and response; check mapped fields | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
-| TOOL-020-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no data leak | Offline; permission variant synthetic |
-| TOOL-020-003 | Timeout, 429/5xx, malformed/oversized response | Sanitized failure and truthful outcome | Offline |
-| TOOL-020-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
-| TOOL-020-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions | Opt-in synthetic |
+| TOOL-025-001 | Gateway/REST with exact valid payload and response; inspect changed synthetic state | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
+| TOOL-025-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
+| TOOL-025-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
+| TOOL-025-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
+| TOOL-025-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
@@ -158,7 +162,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-019-list-project-files must be accepted and exact 7.0.2 source/behavior rechecked.
+- Remaining blocker: Predecessor tool-024-create-issue must be accepted and exact 7.0.2 source/behavior rechecked.
 
 ## 9. Completion and handoff
 
@@ -171,6 +175,6 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-019-list-project-files must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: blocked. Next action: Predecessor tool-024-create-issue must be accepted and exact 7.0.2 source/behavior rechecked.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

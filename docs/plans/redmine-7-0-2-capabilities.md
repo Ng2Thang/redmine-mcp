@@ -65,23 +65,23 @@ but is absent from the public Issues API reference; exact 7.0.2 source must veri
 | New reader | Owner | Upstream method and path |
 |---|---|---|
 | `list_document_categories` | tool-016 | GET /enumerations/document_categories.json |
-| `list_project_files` | tool-019 | GET /projects/{project_id}/files.json |
-| `get_attachment` | tool-020 | GET /attachments/{attachment_id}.json |
-| `download_attachment` | tool-021 | GET metadata, then validated content URL |
+| `list_project_files` | tool-017 | GET /projects/{project_id}/files.json |
+| `get_attachment` | tool-018 | GET /attachments/{attachment_id}.json |
+| `download_attachment` | tool-019 | GET metadata, then validated content URL |
 
 | New writer | Owner | Upstream method and path |
 |---|---|---|
-| `upload_attachment` | tool-022 | POST /uploads.json?filename=... |
-| `add_project_file` | tool-023 | POST /projects/{project_id}/files.json |
-| `update_attachment` | tool-024 | PATCH /attachments/{attachment_id}.json |
-| `delete_attachment` | tool-025 | DELETE /attachments/{attachment_id}.json |
-| `create_issue` | tool-029 | POST /issues.json; optional top-level copy_from |
-| `update_issue` | tool-030 | PUT /issues/{issue_id}.json |
-| `update_issue_note` | tool-031 | PUT /journals/{journal_id}.json |
-| `create_issue_relation` | tool-032 | POST /issues/{issue_id}/relations.json |
-| `delete_issue_relation` | tool-033 | DELETE /relations/{relation_id}.json |
-| `add_issue_watcher` | tool-034 | POST /issues/{issue_id}/watchers.json |
-| `remove_issue_watcher` | tool-035 | DELETE /issues/{issue_id}/watchers/{user_id}.json |
+| `upload_attachment` | tool-020 | POST /uploads.json?filename=... |
+| `add_project_file` | tool-021 | POST /projects/{project_id}/files.json |
+| `update_attachment` | tool-022 | PATCH /attachments/{attachment_id}.json |
+| `delete_attachment` | tool-023 | DELETE /attachments/{attachment_id}.json |
+| `create_issue` | tool-024 | POST /issues.json; optional top-level copy_from |
+| `update_issue` | tool-025 | PUT /issues/{issue_id}.json |
+| `update_issue_note` | tool-026 | PUT /journals/{journal_id}.json |
+| `create_issue_relation` | tool-027 | POST /issues/{issue_id}/relations.json |
+| `delete_issue_relation` | tool-028 | DELETE /relations/{relation_id}.json |
+| `add_issue_watcher` | tool-029 | POST /issues/{issue_id}/watchers.json |
+| `remove_issue_watcher` | tool-030 | DELETE /issues/{issue_id}/watchers/{user_id}.json |
 
 `create_issue(copy_from=...)` requires source Copy issues
 and destination Add issues. `update_issue(notes=...)` allows notes-only updates

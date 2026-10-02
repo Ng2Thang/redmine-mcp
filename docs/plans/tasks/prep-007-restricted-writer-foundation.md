@@ -8,12 +8,12 @@
 | Assigned capability | Establish an opt-in writer deployment before any write tool. |
 | Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
 | Status | blocked - documentation only |
-| Dependencies | [tool-021-download-attachment](tool-021-download-attachment.md); predecessor acceptance required |
+| Dependencies | [tool-019-download-attachment](tool-019-download-attachment.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Prerequisite defined; no code, tests, or live check performed. |
-| Blocker / next action | Wait for tool-021 acceptance; review writer access contract and exact 7.0.2 behavior. |
+| Blocker / next action | Wait for tool-019 acceptance; review writer access contract and exact 7.0.2 behavior. |
 
 ## 2. Discovery and evidence
 
@@ -25,7 +25,7 @@ Establish an opt-in writer deployment before any write tool. Separate reader/wri
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is pinned; runtime acceptance remains pending. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
-Decisions: this prerequisite owns no public MCP operation; tool-021-download-attachment must be
+Decisions: this prerequisite owns no public MCP operation; tool-019-download-attachment must be
 reviewed without rewriting prior evidence. Testing and any live rehearsal
 require separate user authorization. Target runtime verification and versioned source review remain execution
 blocker where 7.0.2 behavior is needed.
@@ -99,7 +99,7 @@ Testing is planned, not authorized or run. For prep-007-restricted-writer-founda
 - Static checks: not run for this task.
 - Automated tests: not run.
 - Startup, Inspector, and live state checks: not run.
-- Remaining blocker: Wait for tool-021 acceptance; review writer access contract and exact 7.0.2 behavior.
+- Remaining blocker: Wait for tool-019 acceptance; review writer access contract and exact 7.0.2 behavior.
 
 ## 9. Completion and handoff
 
@@ -110,6 +110,6 @@ Testing is planned, not authorized or run. For prep-007-restricted-writer-founda
 - [ ] Dashboard and documentation match actual evidence.
 - [ ] User accepts this task before the next task starts.
 
-Final status: blocked. Next action: Wait for tool-021 acceptance; review writer access contract and exact 7.0.2 behavior.
+Final status: blocked. Next action: Wait for tool-019 acceptance; review writer access contract and exact 7.0.2 behavior.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

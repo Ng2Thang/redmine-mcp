@@ -2,8 +2,12 @@
 
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
-update this table in the same change when that status, blocker, or next action changes. All IDs
-below are new. The deleted `issues-000` through `issues-008` IDs remain retired.
+update this table in the same change when that status, blocker, or next action changes.
+Active task IDs are continuous: `tool-001` through `tool-030` and `prep-001` through
+`prep-009`. On 2026-10-02, the user requested compact numbering after document tasks
+were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
+together; earlier IDs remain available in Git history. The deleted `issues-000` through
+`issues-008` IDs remain retired.
 
 The next strictly sequential capability roadmap is specified in
 [Redmine 7.0.2 files and issues](redmine-7-0-2-capabilities.md).
@@ -71,24 +75,24 @@ actual runtime verification on 2026-10-02; planned checks are not passing eviden
 | 3 | [tool-014-list-issues-associations](tasks/tool-014-list-issues-associations.md) | Extend issue lists with associations | prep-005-redmine-7-0-2 accepted | complete | User directed continuation without verification on 2026-10-02; static checks pass, but unit and live behavior remain unverified. |
 | 4 | [tool-015-get-issue-write-context](tasks/tool-015-get-issue-write-context.md) | Expose issue write and file context | tool-014-list-issues-associations accepted | blocked | Implementation and static checks finished; unit tests unexecuted and live verification waived under user instructions. |
 | 5 | [tool-016-list-document-categories](tasks/tool-016-list-document-categories.md) | List document categories | tool-015-get-issue-write-context accepted | blocked | Await tool-015-get-issue-write-context acceptance and exact 7.0.2 evidence. |
-| 6 | [tool-019-list-project-files](tasks/tool-019-list-project-files.md) | List project files | tool-016-list-document-categories accepted | blocked | Await tool-016-list-document-categories acceptance and exact 7.0.2 evidence. |
-| 7 | [tool-020-get-attachment](tasks/tool-020-get-attachment.md) | Read attachment metadata | tool-019-list-project-files accepted | blocked | Await tool-019-list-project-files acceptance and exact 7.0.2 evidence. |
-| 8 | [prep-006-bounded-binary-downloads](tasks/prep-006-bounded-binary-downloads.md) | Bound binary download transport | tool-020-get-attachment accepted | blocked | Await tool-020-get-attachment acceptance and exact 7.0.2 evidence. |
-| 9 | [tool-021-download-attachment](tasks/tool-021-download-attachment.md) | Download bounded attachment content | prep-006-bounded-binary-downloads accepted | blocked | Await prep-006-bounded-binary-downloads acceptance and exact 7.0.2 evidence. |
-| 10 | [prep-007-restricted-writer-foundation](tasks/prep-007-restricted-writer-foundation.md) | Establish restricted writer runtime | tool-021-download-attachment accepted | blocked | Await tool-021-download-attachment acceptance and exact 7.0.2 evidence. |
+| 6 | [tool-017-list-project-files](tasks/tool-017-list-project-files.md) | List project files | tool-016-list-document-categories accepted | blocked | Await tool-016-list-document-categories acceptance and exact 7.0.2 evidence. |
+| 7 | [tool-018-get-attachment](tasks/tool-018-get-attachment.md) | Read attachment metadata | tool-017-list-project-files accepted | blocked | Await tool-017-list-project-files acceptance and exact 7.0.2 evidence. |
+| 8 | [prep-006-bounded-binary-downloads](tasks/prep-006-bounded-binary-downloads.md) | Bound binary download transport | tool-018-get-attachment accepted | blocked | Await tool-018-get-attachment acceptance and exact 7.0.2 evidence. |
+| 9 | [tool-019-download-attachment](tasks/tool-019-download-attachment.md) | Download bounded attachment content | prep-006-bounded-binary-downloads accepted | blocked | Await prep-006-bounded-binary-downloads acceptance and exact 7.0.2 evidence. |
+| 10 | [prep-007-restricted-writer-foundation](tasks/prep-007-restricted-writer-foundation.md) | Establish restricted writer runtime | tool-019-download-attachment accepted | blocked | Await tool-019-download-attachment acceptance and exact 7.0.2 evidence. |
 | 11 | [prep-008-synthetic-writer-verification](tasks/prep-008-synthetic-writer-verification.md) | Prepare disposable writer verification | prep-007-restricted-writer-foundation accepted | blocked | Await prep-007-restricted-writer-foundation acceptance and exact 7.0.2 evidence. |
-| 12 | [tool-022-upload-attachment](tasks/tool-022-upload-attachment.md) | Upload bounded attachment bytes | prep-008-synthetic-writer-verification accepted | blocked | Await prep-008-synthetic-writer-verification acceptance and exact 7.0.2 evidence. |
-| 13 | [tool-023-add-project-file](tasks/tool-023-add-project-file.md) | Attach upload as project file | tool-022-upload-attachment accepted | blocked | Await tool-022-upload-attachment acceptance and exact 7.0.2 evidence. |
-| 14 | [tool-024-update-attachment](tasks/tool-024-update-attachment.md) | Edit attachment metadata | tool-023-add-project-file accepted | blocked | Await tool-023-add-project-file acceptance and exact 7.0.2 evidence. |
-| 15 | [tool-025-delete-attachment](tasks/tool-025-delete-attachment.md) | Delete one attachment | tool-024-update-attachment accepted | blocked | Await tool-024-update-attachment acceptance and exact 7.0.2 evidence. |
-| 16 | [tool-029-create-issue](tasks/tool-029-create-issue.md) | Create or natively copy an issue | tool-025-delete-attachment accepted | blocked | Await tool-025-delete-attachment acceptance and exact 7.0.2 evidence. |
-| 17 | [tool-030-update-issue](tasks/tool-030-update-issue.md) | Update issue fields or add a note | tool-029-create-issue accepted | blocked | Await tool-029-create-issue acceptance and exact 7.0.2 evidence. |
-| 18 | [tool-031-update-issue-note](tasks/tool-031-update-issue-note.md) | Edit a journal note | tool-030-update-issue accepted | blocked | Await tool-030-update-issue acceptance and exact 7.0.2 evidence. |
-| 19 | [tool-032-create-issue-relation](tasks/tool-032-create-issue-relation.md) | Create one issue relation | tool-031-update-issue-note accepted | blocked | Await tool-031-update-issue-note acceptance and exact 7.0.2 evidence. |
-| 20 | [tool-033-delete-issue-relation](tasks/tool-033-delete-issue-relation.md) | Delete one issue relation | tool-032-create-issue-relation accepted | blocked | Await tool-032-create-issue-relation acceptance and exact 7.0.2 evidence. |
-| 21 | [tool-034-add-issue-watcher](tasks/tool-034-add-issue-watcher.md) | Add one watcher | tool-033-delete-issue-relation accepted | blocked | Await tool-033-delete-issue-relation acceptance and exact 7.0.2 evidence. |
-| 22 | [tool-035-remove-issue-watcher](tasks/tool-035-remove-issue-watcher.md) | Remove one watcher | tool-034-add-issue-watcher accepted | blocked | Await tool-034-add-issue-watcher acceptance and exact 7.0.2 evidence. |
-| 23 | [prep-009-release-acceptance](tasks/prep-009-release-acceptance.md) | Review complete Redmine 7.0.2 release | tool-035-remove-issue-watcher accepted | blocked | Await tool-035-remove-issue-watcher acceptance and exact 7.0.2 evidence. |
+| 12 | [tool-020-upload-attachment](tasks/tool-020-upload-attachment.md) | Upload bounded attachment bytes | prep-008-synthetic-writer-verification accepted | blocked | Await prep-008-synthetic-writer-verification acceptance and exact 7.0.2 evidence. |
+| 13 | [tool-021-add-project-file](tasks/tool-021-add-project-file.md) | Attach upload as project file | tool-020-upload-attachment accepted | blocked | Await tool-020-upload-attachment acceptance and exact 7.0.2 evidence. |
+| 14 | [tool-022-update-attachment](tasks/tool-022-update-attachment.md) | Edit attachment metadata | tool-021-add-project-file accepted | blocked | Await tool-021-add-project-file acceptance and exact 7.0.2 evidence. |
+| 15 | [tool-023-delete-attachment](tasks/tool-023-delete-attachment.md) | Delete one attachment | tool-022-update-attachment accepted | blocked | Await tool-022-update-attachment acceptance and exact 7.0.2 evidence. |
+| 16 | [tool-024-create-issue](tasks/tool-024-create-issue.md) | Create or natively copy an issue | tool-023-delete-attachment accepted | blocked | Await tool-023-delete-attachment acceptance and exact 7.0.2 evidence. |
+| 17 | [tool-025-update-issue](tasks/tool-025-update-issue.md) | Update issue fields or add a note | tool-024-create-issue accepted | blocked | Await tool-024-create-issue acceptance and exact 7.0.2 evidence. |
+| 18 | [tool-026-update-issue-note](tasks/tool-026-update-issue-note.md) | Edit a journal note | tool-025-update-issue accepted | blocked | Await tool-025-update-issue acceptance and exact 7.0.2 evidence. |
+| 19 | [tool-027-create-issue-relation](tasks/tool-027-create-issue-relation.md) | Create one issue relation | tool-026-update-issue-note accepted | blocked | Await tool-026-update-issue-note acceptance and exact 7.0.2 evidence. |
+| 20 | [tool-028-delete-issue-relation](tasks/tool-028-delete-issue-relation.md) | Delete one issue relation | tool-027-create-issue-relation accepted | blocked | Await tool-027-create-issue-relation acceptance and exact 7.0.2 evidence. |
+| 21 | [tool-029-add-issue-watcher](tasks/tool-029-add-issue-watcher.md) | Add one watcher | tool-028-delete-issue-relation accepted | blocked | Await tool-028-delete-issue-relation acceptance and exact 7.0.2 evidence. |
+| 22 | [tool-030-remove-issue-watcher](tasks/tool-030-remove-issue-watcher.md) | Remove one watcher | tool-029-add-issue-watcher accepted | blocked | Await tool-029-add-issue-watcher acceptance and exact 7.0.2 evidence. |
+| 23 | [prep-009-release-acceptance](tasks/prep-009-release-acceptance.md) | Review complete Redmine 7.0.2 release | tool-030-remove-issue-watcher accepted | blocked | Await tool-030-remove-issue-watcher acceptance and exact 7.0.2 evidence. |
 
 ## Future ideas, not assigned tasks
 

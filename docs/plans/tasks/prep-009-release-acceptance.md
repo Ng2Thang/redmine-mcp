@@ -8,12 +8,12 @@
 | Assigned capability | Check the complete Redmine 7.0.2 catalog and release evidence. |
 | Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
 | Status | blocked - documentation only |
-| Dependencies | [tool-035-remove-issue-watcher](tool-035-remove-issue-watcher.md); predecessor acceptance required |
+| Dependencies | [tool-030-remove-issue-watcher](tool-030-remove-issue-watcher.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Prerequisite defined; no code, tests, or live check performed. |
-| Blocker / next action | Wait for tool-035 acceptance; consolidate evidence and request final release review. |
+| Blocker / next action | Wait for tool-030 acceptance; consolidate evidence and request final release review. |
 
 ## 2. Discovery and evidence
 
@@ -25,7 +25,7 @@ Check the complete Redmine 7.0.2 catalog and release evidence. Audit 11 preserve
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is pinned; runtime acceptance remains pending. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
-Decisions: this prerequisite owns no public MCP operation; tool-035-remove-issue-watcher must be
+Decisions: this prerequisite owns no public MCP operation; tool-030-remove-issue-watcher must be
 reviewed without rewriting prior evidence. Testing and any live rehearsal
 require separate user authorization. Target runtime verification and versioned source review remain execution
 blocker where 7.0.2 behavior is needed.
@@ -99,7 +99,7 @@ Testing is planned, not authorized or run. For prep-009-release-acceptance, veri
 - Static checks: not run for this task.
 - Automated tests: not run.
 - Startup, Inspector, and live state checks: not run.
-- Remaining blocker: Wait for tool-035 acceptance; consolidate evidence and request final release review.
+- Remaining blocker: Wait for tool-030 acceptance; consolidate evidence and request final release review.
 
 ## 9. Completion and handoff
 
@@ -110,6 +110,6 @@ Testing is planned, not authorized or run. For prep-009-release-acceptance, veri
 - [ ] Dashboard and documentation match actual evidence.
 - [ ] User accepts this task before the next task starts.
 
-Final status: blocked. Next action: Wait for tool-035 acceptance; consolidate evidence and request final release review.
+Final status: blocked. Next action: Wait for tool-030 acceptance; consolidate evidence and request final release review.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

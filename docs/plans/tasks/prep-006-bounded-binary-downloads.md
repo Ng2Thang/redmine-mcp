@@ -5,19 +5,19 @@
 | Field | Value |
 |---|---|
 | Task ID | prep-006-bounded-binary-downloads |
-| Assigned capability | Prepare shared attachment download transport for tool-021. |
+| Assigned capability | Prepare shared attachment download transport for tool-019. |
 | Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
 | Status | blocked - documentation only |
-| Dependencies | [tool-020-get-attachment](tool-020-get-attachment.md); predecessor acceptance required |
+| Dependencies | [tool-018-get-attachment](tool-018-get-attachment.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Prerequisite defined; no code, tests, or live check performed. |
-| Blocker / next action | Wait for tool-020 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2. |
+| Blocker / next action | Wait for tool-018 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2. |
 
 ## 2. Discovery and evidence
 
-Prepare shared attachment download transport for tool-021. Use the caller's key on validated Redmine-origin URLs; reject redirects and mismatched base paths; stream with deadline and 5 MiB decoded limit; avoid logging bytes or keys; preserve JSON transport behavior.
+Prepare shared attachment download transport for tool-019. Use the caller's key on validated Redmine-origin URLs; reject redirects and mismatched base paths; stream with deadline and 5 MiB decoded limit; avoid logging bytes or keys; preserve JSON transport behavior.
 
 | Source | Checked | Evidence and limitation |
 |---|---|---|
@@ -25,7 +25,7 @@ Prepare shared attachment download transport for tool-021. Use the caller's key 
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is pinned; runtime acceptance remains pending. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
 
-Decisions: this prerequisite owns no public MCP operation; tool-020-get-attachment must be
+Decisions: this prerequisite owns no public MCP operation; tool-018-get-attachment must be
 reviewed without rewriting prior evidence. Testing and any live rehearsal
 require separate user authorization. Target runtime verification and versioned source review remain execution
 blocker where 7.0.2 behavior is needed.
@@ -34,7 +34,7 @@ blocker where 7.0.2 behavior is needed.
 
 | Requirement | Observable behavior |
 |---|---|
-| REQ-001 | Prepare shared attachment download transport for tool-021. |
+| REQ-001 | Prepare shared attachment download transport for tool-019. |
 | REQ-002 | Use the caller's key on validated Redmine-origin URLs; reject redirects and mismatched base paths; stream with deadline and 5 MiB decoded limit; avoid logging bytes or keys; preserve JSON transport behavior. |
 | REQ-003 | Scope and existing capability compatibility are preserved; evidence is dated and redacted. |
 
@@ -71,7 +71,7 @@ are assigned. Exact version and execution evidence remain pending.
 
 | Criterion | Requirement | Observable result | Evidence |
 |---|---|---|---|
-| AC-001 | REQ-001 | Prepare shared attachment download transport for tool-021. | Pending |
+| AC-001 | REQ-001 | Prepare shared attachment download transport for tool-019. | Pending |
 | AC-002 | REQ-002 | Valid download returns exact bytes; redirects/oversize/timeout/malformed URL fail safely; existing JSON reads remain compatible. | Pending |
 | AC-003 | REQ-003 | Existing tools and unrelated state remain compatible; failures are reported. | Pending |
 
@@ -99,7 +99,7 @@ Testing is planned, not authorized or run. For prep-006-bounded-binary-downloads
 - Static checks: not run for this task.
 - Automated tests: not run.
 - Startup, Inspector, and live state checks: not run.
-- Remaining blocker: Wait for tool-020 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2.
+- Remaining blocker: Wait for tool-018 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2.
 
 ## 9. Completion and handoff
 
@@ -110,6 +110,6 @@ Testing is planned, not authorized or run. For prep-006-bounded-binary-downloads
 - [ ] Dashboard and documentation match actual evidence.
 - [ ] User accepts this task before the next task starts.
 
-Final status: blocked. Next action: Wait for tool-020 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2.
+Final status: blocked. Next action: Wait for tool-018 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

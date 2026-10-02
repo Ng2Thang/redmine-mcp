@@ -1,24 +1,24 @@
-# tool-034-add-issue-watcher: Add one watcher
+# tool-030-remove-issue-watcher: Remove one watcher
 
 ## 1. Task identity and status
 
 | Field | Value |
 |---|---|
-| Task ID | tool-034-add-issue-watcher |
-| Assigned capability | Add one watcher: Redmine may accept an ineligible user without adding them. |
-| Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
+| Task ID | tool-030-remove-issue-watcher |
+| Assigned capability | Remove one watcher: Check visible watcher expansion when allowed; 204 may be a no-op. |
+| Type / access / destructive effects | Add writer tool / write / Resource deletion or removal |
 | Status | blocked - documentation draft; no code or verification performed |
-| Dependencies | [tool-033-delete-issue-relation](tool-033-delete-issue-relation.md); prior task must have evidence and user acceptance |
+| Dependencies | [tool-029-add-issue-watcher](tool-029-add-issue-watcher.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-033-delete-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Blocker / next action | Predecessor tool-029-add-issue-watcher must be accepted and exact 7.0.2 source/behavior rechecked. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **add one watcher**. Redmine may accept an ineligible user without adding them. Check visible watcher expansion when allowed; do not equate 204 with successful membership.
-Current catalog has no `add_issue_watcher`; it owns this public behavior exactly once.
+The client outcome is **remove one watcher**. Check visible watcher expansion when allowed; 204 may be a no-op. Do not retry after uncertain outcome.
+Current catalog has no `remove_issue_watcher`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
 [MCP catalog](../../../src/redmine_mcp/mcp/catalog.py), and the router → service →
@@ -29,28 +29,28 @@ separate restricted deployment and synthetic verification prerequisites.
 
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
-| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-10-01 | General/current documentation | POST /issues/{issue_id}/watchers.json; target-build behavior must be checked in prep-005. |
+| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-10-01 | General/current documentation | DELETE /issues/{issue_id}/watchers/{user_id}.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
-| Public ownership | `add_issue_watcher` is the sole public owner | No |
-| Strict sequence | Wait for tool-033-delete-issue-relation evidence and explicit user acceptance | Yes to execution |
+| Public ownership | `remove_issue_watcher` is the sole public owner | No |
+| Strict sequence | Wait for tool-029-add-issue-watcher evidence and explicit user acceptance | Yes to execution |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Redmine may accept an ineligible user without adding them. Check visible watcher expansion when allowed; do not equate 204 with successful membership.
+- In scope: Check visible watcher expansion when allowed; 204 may be a no-op. Do not retry after uncertain outcome.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: Add watchers on issue.
+- Permission/configuration prerequisite: Delete watchers on issue.
 
 | Requirement | Observable behavior |
 |---|---|
-| REQ-001 | Add one watcher produces the specified upstream mapping and typed result. |
+| REQ-001 | Remove one watcher produces the specified upstream mapping and typed result. |
 | REQ-002 | Invalid inputs or unauthorized identity/permission do not alter protected state. |
 | REQ-003 | Upstream errors, timeout, malformed results, and compatibility are handled safely. |
 
@@ -61,12 +61,12 @@ fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do
 
 | Area | Contract |
 |---|---|
-| MCP operation/name | add_issue_watcher |
-| Stable operation ID | add_issue_watcher |
-| Purpose | Add one watcher; Redmine may accept an ineligible user without adding them. |
-| Local REST route | POST /api/v1/issues/{issue_id}/watchers |
-| Upstream mapping | POST /issues/{issue_id}/watchers.json |
-| Authentication | Personal `X-Redmine-API-Key`; Add watchers on issue. |
+| MCP operation/name | remove_issue_watcher |
+| Stable operation ID | remove_issue_watcher |
+| Purpose | Remove one watcher; Check visible watcher expansion when allowed; 204 may be a no-op. |
+| Local REST route | DELETE /api/v1/issues/{issue_id}/watchers/{user_id} |
+| Upstream mapping | DELETE /issues/{issue_id}/watchers/{user_id}.json |
+| Authentication | Personal `X-Redmine-API-Key`; Delete watchers on issue. |
 | MCP exposure | writer only; explicit allowlist entry. |
 | Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
 
@@ -74,7 +74,7 @@ fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive issue_id,user_id; one user per call | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | POST /issues/{issue_id}/watchers.json |
+| Tool arguments | Positive issue_id,user_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | DELETE /issues/{issue_id}/watchers/{user_id}.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
@@ -95,7 +95,7 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-- Exact effect: Redmine may accept an ineligible user without adding them. Check visible watcher expansion when allowed; do not equate 204 with successful membership.
+- Exact effect: Check visible watcher expansion when allowed; 204 may be a no-op. Do not retry after uncertain outcome.
 - No automatic retries. A timeout after dispatch produces an unknown outcome requiring a separate read-back before any repeat.
 - Success and read-back are separate fields. A failed read-back cannot erase a preceding accepted write.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
@@ -125,10 +125,10 @@ record any newly required package and update `uv.lock` together.
 
 | Criterion | Requirement | Observable result | Planned scenario | Evidence |
 |---|---|---|---|---|
-| AC-001 | REQ-001 | Add one watcher returns the expected mapped result and resulting Redmine state. | TOOL-034-001 | Pending |
-| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-034-002 | Pending |
-| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-034-003/004 | Pending |
-| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-034-005 | Pending |
+| AC-001 | REQ-001 | Remove one watcher returns the expected mapped result and resulting Redmine state. | TOOL-030-001 | Pending |
+| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-030-002 | Pending |
+| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-030-003/004 | Pending |
+| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-030-005 | Pending |
 
 No criterion is accepted from a mock alone when it requires actual permission
 or state verification.
@@ -140,11 +140,11 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Scenario | Layer and setup | Expected result | Mode |
 |---|---|---|---|
-| TOOL-034-001 | Gateway/REST with exact valid payload and response; inspect changed synthetic state | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
-| TOOL-034-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
-| TOOL-034-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
-| TOOL-034-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
-| TOOL-034-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
+| TOOL-030-001 | Gateway/REST with exact valid payload and response; inspect changed synthetic state | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
+| TOOL-030-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
+| TOOL-030-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
+| TOOL-030-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
+| TOOL-030-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
@@ -162,7 +162,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-033-delete-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+- Remaining blocker: Predecessor tool-029-add-issue-watcher must be accepted and exact 7.0.2 source/behavior rechecked.
 
 ## 9. Completion and handoff
 
@@ -175,6 +175,6 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-033-delete-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: blocked. Next action: Predecessor tool-029-add-issue-watcher must be accepted and exact 7.0.2 source/behavior rechecked.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

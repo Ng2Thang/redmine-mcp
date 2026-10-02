@@ -18,7 +18,9 @@ endpoint or parameter into a tool.
 
 Read repository instructions, contributor guidance, architecture, tool reference, configuration,
 the task template, current code, the target pin in `deploy/compose.test.yaml`, and task
-dependencies. Preserve unrelated working-tree changes and retired task IDs. Record authoritative
+dependencies. Preserve unrelated working-tree changes and retired task IDs unless the user
+explicitly requests renumbering. For renumbering, update filenames, task IDs, dependencies,
+links, and scenario IDs together and record the revision in the dashboard. Record authoritative
 Redmine URLs, date checked, target-version evidence, and unresolved claims inside the task.
 Confirm behavior against the pinned 7.0.2 source and runtime evidence.
 

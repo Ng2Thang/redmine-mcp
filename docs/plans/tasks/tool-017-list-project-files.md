@@ -1,24 +1,24 @@
-# tool-033-delete-issue-relation: Delete one issue relation
+# tool-017-list-project-files: List project files
 
 ## 1. Task identity and status
 
 | Field | Value |
 |---|---|
-| Task ID | tool-033-delete-issue-relation |
-| Assigned capability | Delete one issue relation: Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry. |
-| Type / access / destructive effects | Add writer tool / write / Resource deletion or removal |
+| Task ID | tool-017-list-project-files |
+| Assigned capability | List project files: Return project and version files from the documented unpaged endpoint. |
+| Type / access / destructive effects | Add reader tool / read / None |
 | Status | blocked - documentation draft; no code or verification performed |
-| Dependencies | [tool-032-create-issue-relation](tool-032-create-issue-relation.md); prior task must have evidence and user acceptance |
+| Dependencies | [tool-016-list-document-categories](tool-016-list-document-categories.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-032-create-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Blocker / next action | Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **delete one issue relation**. Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry.
-Current catalog has no `delete_issue_relation`; it owns this public behavior exactly once.
+The client outcome is **list project files**. Return project and version files from the documented unpaged endpoint. Do not silently truncate or manufacture counts.
+Current catalog has no `list_project_files`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
 [MCP catalog](../../../src/redmine_mcp/mcp/catalog.py), and the router → service →
@@ -29,58 +29,58 @@ separate restricted deployment and synthetic verification prerequisites.
 
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
-| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_IssueRelations) | 2026-10-01 | General/current documentation | DELETE /relations/{relation_id}.json; target-build behavior must be checked in prep-005. |
+| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Files) | 2026-10-01 | General/current documentation | GET /projects/{project_id}/files.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
-| Public ownership | `delete_issue_relation` is the sole public owner | No |
-| Strict sequence | Wait for tool-032-create-issue-relation evidence and explicit user acceptance | Yes to execution |
+| Public ownership | `list_project_files` is the sole public owner | No |
+| Strict sequence | Wait for tool-016-list-document-categories evidence and explicit user acceptance | Yes to execution |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry.
+- In scope: Return project and version files from the documented unpaged endpoint. Do not silently truncate or manufacture counts.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: Manage issue relations.
+- Permission/configuration prerequisite: View files on selected project.
 
 | Requirement | Observable behavior |
 |---|---|
-| REQ-001 | Delete one issue relation produces the specified upstream mapping and typed result. |
+| REQ-001 | List project files produces the specified upstream mapping and typed result. |
 | REQ-002 | Invalid inputs or unauthorized identity/permission do not alter protected state. |
 | REQ-003 | Upstream errors, timeout, malformed results, and compatibility are handled safely. |
 
-Illustrative synthetic input: `{"relation_id":3}`. Illustrative selected output
-fields: `{"resource_id":3,"upstream_accepted":true,"verification":"matched"}`. These examples do not assert a live result.
+Illustrative synthetic input: `{"project_id":1}`. Illustrative selected output
+fields: `{"items":[],"visibility":{"scope":"requesting_redmine_user","observations":[]}}`. These examples do not assert a live result.
 
 ## 4. Public contract and technical specification
 
 | Area | Contract |
 |---|---|
-| MCP operation/name | delete_issue_relation |
-| Stable operation ID | delete_issue_relation |
-| Purpose | Delete one issue relation; Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry. |
-| Local REST route | DELETE /api/v1/relations/{relation_id} |
-| Upstream mapping | DELETE /relations/{relation_id}.json |
-| Authentication | Personal `X-Redmine-API-Key`; Manage issue relations. |
-| MCP exposure | writer only; explicit allowlist entry. |
-| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
+| MCP operation/name | list_project_files |
+| Stable operation ID | list_project_files |
+| Purpose | List project files; Return project and version files from the documented unpaged endpoint. |
+| Local REST route | GET /api/v1/projects/{project_id}/files |
+| Upstream mapping | GET /projects/{project_id}/files.json |
+| Authentication | Personal `X-Redmine-API-Key`; View files on selected project. |
+| MCP exposure | reader; writer may reuse read route; explicit allowlist entry. |
+| Annotations | readOnlyHint=true, destructiveHint=false, idempotentHint=true, openWorldHint=true. |
 
 ### Inputs and validation
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive relation_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | DELETE /relations/{relation_id}.json |
+| Tool arguments | Positive project_id; no pagination or sorting inputs | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /projects/{project_id}/files.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-Write receipt with deletion observation. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
-No upstream pagination applies to this operation.
+items of file attachment metadata plus optional version; visibility; no total. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
+Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
 
@@ -90,16 +90,12 @@ registered exactly once and must not change defaults of another operation.
 | Missing or invalid key | Existing sanitized 401; no upstream data leaked. |
 | Forbidden or absent upstream resource | Existing 403 or visibility-safe 404. |
 | Redmine validation failure | Sanitized 422; no raw upstream body in logs/results. |
-| Timeout, transport, oversized or malformed response | Existing 504/502-family sanitized errors; post-dispatch result remains uncertain. |
+| Timeout, transport, oversized or malformed response | Existing 504/502-family sanitized errors; no fabricated data. |
 | Other upstream status | Existing sanitized upstream error; no automatic retry. |
 
 ### Write semantics
 
-- Exact effect: Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry.
-- No automatic retries. A timeout after dispatch produces an unknown outcome requiring a separate read-back before any repeat.
-- Success and read-back are separate fields. A failed read-back cannot erase a preceding accepted write.
-- Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
-- Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
+N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
 
 Specification exit check: target-build evidence and predecessor acceptance
 are pending. Do not start coding from this draft until the exact 7.0.2 behavior
@@ -125,10 +121,10 @@ record any newly required package and update `uv.lock` together.
 
 | Criterion | Requirement | Observable result | Planned scenario | Evidence |
 |---|---|---|---|---|
-| AC-001 | REQ-001 | Delete one issue relation returns the expected mapped result and resulting Redmine state. | TOOL-033-001 | Pending |
-| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-033-002 | Pending |
-| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-033-003/004 | Pending |
-| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-033-005 | Pending |
+| AC-001 | REQ-001 | List project files returns the expected mapped result. | TOOL-017-001 | Pending |
+| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-017-002 | Pending |
+| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-017-003/004 | Pending |
+| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-017-005 | Pending |
 
 No criterion is accepted from a mock alone when it requires actual permission
 or state verification.
@@ -140,11 +136,11 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Scenario | Layer and setup | Expected result | Mode |
 |---|---|---|---|
-| TOOL-033-001 | Gateway/REST with exact valid payload and response; inspect changed synthetic state | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
-| TOOL-033-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
-| TOOL-033-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
-| TOOL-033-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
-| TOOL-033-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
+| TOOL-017-001 | Gateway/REST with exact valid payload and response; check mapped fields | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
+| TOOL-017-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no data leak | Offline; permission variant synthetic |
+| TOOL-017-003 | Timeout, 429/5xx, malformed/oversized response | Sanitized failure and truthful outcome | Offline |
+| TOOL-017-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
+| TOOL-017-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions | Opt-in synthetic |
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
@@ -162,7 +158,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-032-create-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+- Remaining blocker: Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked.
 
 ## 9. Completion and handoff
 
@@ -175,6 +171,6 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-032-create-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: blocked. Next action: Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

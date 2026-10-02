@@ -1,24 +1,24 @@
-# tool-019-list-project-files: List project files
+# tool-019-download-attachment: Download bounded attachment content
 
 ## 1. Task identity and status
 
 | Field | Value |
 |---|---|
-| Task ID | tool-019-list-project-files |
-| Assigned capability | List project files: Return project and version files from the documented unpaged endpoint. |
-| Type / access / destructive effects | Add reader tool / read / None |
+| Task ID | tool-019-download-attachment |
+| Assigned capability | Download bounded attachment content: Use shared metadata and bounded binary transport; reject larger files before and during streaming. |
+| Type / access / destructive effects | Add reader tool / read with a Project/Version download-count effect / Counter may increase |
 | Status | blocked - documentation draft; no code or verification performed |
-| Dependencies | [tool-016-list-document-categories](tool-016-list-document-categories.md); prior task must have evidence and user acceptance |
+| Dependencies | [prep-006-bounded-binary-downloads](prep-006-bounded-binary-downloads.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Blocker / next action | Predecessor prep-006-bounded-binary-downloads must be accepted and exact 7.0.2 source/behavior rechecked. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **list project files**. Return project and version files from the documented unpaged endpoint. Do not silently truncate or manufacture counts.
-Current catalog has no `list_project_files`; it owns this public behavior exactly once.
+The client outcome is **download bounded attachment content**. Use shared metadata and bounded binary transport; reject larger files before and during streaming. Project/Version download counts can increase; disclose this effect.
+Current catalog has no `download_attachment`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
 [MCP catalog](../../../src/redmine_mcp/mcp/catalog.py), and the router → service →
@@ -29,57 +29,57 @@ separate restricted deployment and synthetic verification prerequisites.
 
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
-| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Files) | 2026-10-01 | General/current documentation | GET /projects/{project_id}/files.json; target-build behavior must be checked in prep-005. |
+| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Attachments) | 2026-10-01 | General/current documentation | GET /attachments/{attachment_id}.json then validated content_url; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
-| Public ownership | `list_project_files` is the sole public owner | No |
-| Strict sequence | Wait for tool-016-list-document-categories evidence and explicit user acceptance | Yes to execution |
+| Public ownership | `download_attachment` is the sole public owner | No |
+| Strict sequence | Wait for prep-006-bounded-binary-downloads evidence and explicit user acceptance | Yes to execution |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Return project and version files from the documented unpaged endpoint. Do not silently truncate or manufacture counts.
+- In scope: Use shared metadata and bounded binary transport; reject larger files before and during streaming. Project/Version download counts can increase; disclose this effect.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: View files on selected project.
+- Permission/configuration prerequisite: Container-specific view permission.
 
 | Requirement | Observable behavior |
 |---|---|
-| REQ-001 | List project files produces the specified upstream mapping and typed result. |
+| REQ-001 | Download bounded attachment content produces the specified upstream mapping and typed result. |
 | REQ-002 | Invalid inputs or unauthorized identity/permission do not alter protected state. |
 | REQ-003 | Upstream errors, timeout, malformed results, and compatibility are handled safely. |
 
-Illustrative synthetic input: `{"project_id":1}`. Illustrative selected output
-fields: `{"items":[],"visibility":{"scope":"requesting_redmine_user","observations":[]}}`. These examples do not assert a live result.
+Illustrative synthetic input: `{"attachment_id":1}`. Illustrative selected output
+fields: `{"attachment_id":1,"filename":"example.txt","content_base64":"ZXhhbXBsZQ==","filesize":7}`. These examples do not assert a live result.
 
 ## 4. Public contract and technical specification
 
 | Area | Contract |
 |---|---|
-| MCP operation/name | list_project_files |
-| Stable operation ID | list_project_files |
-| Purpose | List project files; Return project and version files from the documented unpaged endpoint. |
-| Local REST route | GET /api/v1/projects/{project_id}/files |
-| Upstream mapping | GET /projects/{project_id}/files.json |
-| Authentication | Personal `X-Redmine-API-Key`; View files on selected project. |
+| MCP operation/name | download_attachment |
+| Stable operation ID | download_attachment |
+| Purpose | Download bounded attachment content; Use shared metadata and bounded binary transport; reject larger files before and during streaming. |
+| Local REST route | GET /api/v1/attachments/{attachment_id}/content |
+| Upstream mapping | GET /attachments/{attachment_id}.json then validated content_url |
+| Authentication | Personal `X-Redmine-API-Key`; Container-specific view permission. |
 | MCP exposure | reader; writer may reuse read route; explicit allowlist entry. |
-| Annotations | readOnlyHint=true, destructiveHint=false, idempotentHint=true, openWorldHint=true. |
+| Annotations | readOnlyHint=false because Redmine may increment download counts; destructiveHint=false; openWorldHint=true. |
 
 ### Inputs and validation
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive project_id; no pagination or sorting inputs | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /projects/{project_id}/files.json |
+| Tool arguments | Positive attachment_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /attachments/{attachment_id}.json then validated content_url |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-items of file attachment metadata plus optional version; visibility; no total. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
+attachment_id,filename,content_type,content_base64,filesize,visibility. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
 Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -121,7 +121,7 @@ record any newly required package and update `uv.lock` together.
 
 | Criterion | Requirement | Observable result | Planned scenario | Evidence |
 |---|---|---|---|---|
-| AC-001 | REQ-001 | List project files returns the expected mapped result. | TOOL-019-001 | Pending |
+| AC-001 | REQ-001 | Download bounded attachment content returns the expected mapped result. | TOOL-019-001 | Pending |
 | AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-019-002 | Pending |
 | AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-019-003/004 | Pending |
 | AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-019-005 | Pending |
@@ -158,7 +158,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked.
+- Remaining blocker: Predecessor prep-006-bounded-binary-downloads must be accepted and exact 7.0.2 source/behavior rechecked.
 
 ## 9. Completion and handoff
 
@@ -171,6 +171,6 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: blocked. Next action: Predecessor prep-006-bounded-binary-downloads must be accepted and exact 7.0.2 source/behavior rechecked.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

@@ -1,27 +1,24 @@
-# tool-025-delete-attachment: Delete one attachment
+# tool-021-add-project-file: Attach upload as project file
 
 ## 1. Task identity and status
 
 | Field | Value |
 |---|---|
-| Task ID | tool-025-delete-attachment |
-| Assigned capability | Delete one attachment: Confirm attachment belongs to declared container; 204 can delete stored bytes. |
-| Type / access / destructive effects | Add writer tool / write / Resource deletion or removal |
+| Task ID | tool-021-add-project-file |
+| Assigned capability | Attach upload as project file: Use one uploaded token. |
+| Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
 | Status | blocked - documentation draft; no code or verification performed |
-| Dependencies | [tool-024-update-attachment](tool-024-update-attachment.md); prior task must have evidence and user acceptance |
+| Dependencies | [tool-020-upload-attachment](tool-020-upload-attachment.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
 | Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-024-update-attachment must be accepted and exact 7.0.2 source/behavior rechecked. |
-
-
-Document attachment containers are excluded from the 7.0.2 contract.
+| Blocker / next action | Predecessor tool-020-upload-attachment must be accepted and exact 7.0.2 source/behavior rechecked. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **delete one attachment**. Confirm attachment belongs to declared container by reading the containing Project/Version file list or Issue and comparing attachment IDs; the attachment metadata endpoint alone is insufficient. A 204 may mean stored bytes were removed. Do not delete when container identity is unverified; no rollback promise.
-Current catalog has no `delete_attachment`; it owns this public behavior exactly once.
+The client outcome is **attach upload as project file**. Use one uploaded token. Optional version_id must refer to target project. Verify resulting file metadata; upstream 204 has no response body. No separate version-file tool.
+Current catalog has no `add_project_file`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
 [MCP catalog](../../../src/redmine_mcp/mcp/catalog.py), and the router → service →
@@ -32,44 +29,44 @@ separate restricted deployment and synthetic verification prerequisites.
 
 | Source | Checked | Version claim | Relevant evidence and limitation |
 |---|---|---|---|
-| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Attachments) | 2026-10-01 | General/current documentation | DELETE /attachments/{attachment_id}.json; target-build behavior must be checked in prep-005. |
+| [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Files) | 2026-10-01 | General/current documentation | POST /projects/{project_id}/files.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
-| Public ownership | `delete_attachment` is the sole public owner | No |
-| Strict sequence | Wait for tool-024-update-attachment evidence and explicit user acceptance | Yes to execution |
+| Public ownership | `add_project_file` is the sole public owner | No |
+| Strict sequence | Wait for tool-020-upload-attachment evidence and explicit user acceptance | Yes to execution |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Confirm attachment belongs to declared container; 204 can delete stored bytes. Do not delete when container identity is unverified; no rollback promise.
+- In scope: Use one uploaded token. Optional version_id must refer to target project. Verify resulting file metadata; upstream 204 has no response body. No separate version-file tool.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: Container-specific attachment delete permission.
+- Permission/configuration prerequisite: Manage files on target Project/Version.
 
 | Requirement | Observable behavior |
 |---|---|
-| REQ-001 | Delete one attachment produces the specified upstream mapping and typed result. |
+| REQ-001 | Attach upload as project file produces the specified upstream mapping and typed result. |
 | REQ-002 | Invalid inputs or unauthorized identity/permission do not alter protected state. |
 | REQ-003 | Upstream errors, timeout, malformed results, and compatibility are handled safely. |
 
-Illustrative synthetic input: `{"attachment_id":1,"container_type":"project","container_id":1}`. Illustrative selected output
+Illustrative synthetic input: `{"project_id":1,"token":"opaque-token","filename":"example.txt"}`. Illustrative selected output
 fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do not assert a live result.
 
 ## 4. Public contract and technical specification
 
 | Area | Contract |
 |---|---|
-| MCP operation/name | delete_attachment |
-| Stable operation ID | delete_attachment |
-| Purpose | Delete one attachment; Confirm attachment belongs to declared container; 204 can delete stored bytes. |
-| Local REST route | DELETE /api/v1/attachments/{attachment_id} |
-| Upstream mapping | DELETE /attachments/{attachment_id}.json |
-| Authentication | Personal `X-Redmine-API-Key`; Container-specific attachment delete permission. |
+| MCP operation/name | add_project_file |
+| Stable operation ID | add_project_file |
+| Purpose | Attach upload as project file; Use one uploaded token. |
+| Local REST route | POST /api/v1/projects/{project_id}/files |
+| Upstream mapping | POST /projects/{project_id}/files.json |
+| Authentication | Personal `X-Redmine-API-Key`; Manage files on target Project/Version. |
 | MCP exposure | writer only; explicit allowlist entry. |
 | Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
 
@@ -77,12 +74,12 @@ fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive attachment_id; required container_type enum and positive container_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | DELETE /attachments/{attachment_id}.json |
+| Tool arguments | Positive project_id; opaque token; filename basename; optional description and positive version_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | POST /projects/{project_id}/files.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-Write receipt; verify resource absence if caller can read it. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+Write receipt; read-back via project file list where visible. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
 No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -98,7 +95,7 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-- Exact effect: Confirm attachment belongs to declared container; 204 can delete stored bytes. Do not delete when container identity is unverified; no rollback promise.
+- Exact effect: Use one uploaded token. Optional version_id must refer to target project. Verify resulting file metadata; upstream 204 has no response body. No separate version-file tool.
 - No automatic retries. A timeout after dispatch produces an unknown outcome requiring a separate read-back before any repeat.
 - Success and read-back are separate fields. A failed read-back cannot erase a preceding accepted write.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
@@ -128,10 +125,10 @@ record any newly required package and update `uv.lock` together.
 
 | Criterion | Requirement | Observable result | Planned scenario | Evidence |
 |---|---|---|---|---|
-| AC-001 | REQ-001 | Delete one attachment returns the expected mapped result and resulting Redmine state. | TOOL-025-001 | Pending |
-| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-025-002 | Pending |
-| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-025-003/004 | Pending |
-| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-025-005 | Pending |
+| AC-001 | REQ-001 | Attach upload as project file returns the expected mapped result and resulting Redmine state. | TOOL-021-001 | Pending |
+| AC-002 | REQ-002 | Invalid/unauthorized request is rejected without unintended mutation. | TOOL-021-002 | Pending |
+| AC-003 | REQ-003 | Errors and compatibility preserve safe, truthful behavior. | TOOL-021-003/004 | Pending |
+| AC-004 | REQ-001..003 | MCP discovery, invocation, and prior catalog remain correct. | TOOL-021-005 | Pending |
 
 No criterion is accepted from a mock alone when it requires actual permission
 or state verification.
@@ -143,11 +140,11 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Scenario | Layer and setup | Expected result | Mode |
 |---|---|---|---|
-| TOOL-025-001 | Gateway/REST with exact valid payload and response; inspect changed synthetic state | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
-| TOOL-025-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
-| TOOL-025-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
-| TOOL-025-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
-| TOOL-025-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
+| TOOL-021-001 | Gateway/REST with exact valid payload and response; inspect changed synthetic state | Exact upstream method/path/headers, typed result, visibility or receipt | Offline; later synthetic |
+| TOOL-021-002 | Missing/rejected key, wrong permission, invalid ID or body | Safe 401/403/404/422; no unintended write | Offline; permission variant synthetic |
+| TOOL-021-003 | Timeout, 429/5xx, malformed/oversized response, duplicate and uncertain call | Sanitized failure and truthful outcome | Offline |
+| TOOL-021-004 | Existing catalog/default/shape comparison | Prior tool behavior remains compatible | Offline MCP/REST |
+| TOOL-021-005 | Startup and Inspector invocation on marked 7.0.2 fixture | MCP schema/annotations, runtime permissions, resulting state and cleanup | Opt-in synthetic |
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
@@ -165,7 +162,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this draft and the master dashboard.
 - Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-024-update-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
+- Remaining blocker: Predecessor tool-020-upload-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
 
 ## 9. Completion and handoff
 
@@ -178,6 +175,6 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [ ] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-024-update-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: blocked. Next action: Predecessor tool-020-upload-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

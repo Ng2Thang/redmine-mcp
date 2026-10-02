@@ -1,7 +1,13 @@
 from typing import Protocol
 
 from redmine_mcp.common import Collection, Page
-from redmine_mcp.features.projects.models import IssueCategory, Project, ProjectDetail, Version
+from redmine_mcp.features.projects.models import (
+    IssueCategory,
+    Project,
+    ProjectDetail,
+    ProjectFile,
+    Version,
+)
 
 
 class ProjectReader(Protocol):
@@ -12,3 +18,5 @@ class ProjectReader(Protocol):
     async def list_project_versions(self, project_id: int) -> Collection[Version]: ...
 
     async def list_project_issue_categories(self, project_id: int) -> Collection[IssueCategory]: ...
+
+    async def list_project_files(self, project_id: int) -> Collection[ProjectFile]: ...

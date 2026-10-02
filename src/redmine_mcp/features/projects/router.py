@@ -5,7 +5,13 @@ from fastapi import APIRouter, Depends, Path, Query
 from redmine_mcp.api import get_projects, require_read_access
 from redmine_mcp.common import Collection, Page
 from redmine_mcp.features import ProjectService
-from redmine_mcp.features.projects.models import IssueCategory, Project, ProjectDetail, Version
+from redmine_mcp.features.projects.models import (
+    IssueCategory,
+    Project,
+    ProjectDetail,
+    ProjectFile,
+    Version,
+)
 
 router = APIRouter(
     prefix="/api/v1/projects", tags=["projects"], dependencies=[Depends(require_read_access)]
@@ -101,3 +107,22 @@ async def list_project_issue_categories(
 ) -> Collection[IssueCategory]:
     """List issue categories and optional default assignees in items with visibility metadata."""
     return await service.list_project_issue_categories(project_id)
+
+
+@router.get(
+    "/{project_id}/files",
+    operation_id="list_project_files",
+    response_model=Collection[ProjectFile],
+    description=(
+        "List files attached to a project and its versions using a project ID from "
+        "list_projects. Returns file metadata and optional version references in "
+        "items with visibility metadata. Redmine provides no pagination or total count "
+        "for this endpoint. Listing files does not download their content."
+    ),
+)
+async def list_project_files(
+    service: Annotated[ProjectService, Depends(get_projects)],
+    project_id: Annotated[int, Path(ge=1, description="ID of the project")],
+) -> Collection[ProjectFile]:
+    """List project and version file metadata without downloading content."""
+    return await service.list_project_files(project_id)

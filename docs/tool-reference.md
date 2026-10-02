@@ -27,6 +27,7 @@ or guarantees that repeated reads return identical data. The external Redmine da
 | `get_project` | `GET /api/v1/projects/{project_id}` | Required positive integer `project_id` |
 | `list_project_versions` | `GET /api/v1/projects/{project_id}/versions` | Required positive integer `project_id` |
 | `list_project_issue_categories` | `GET /api/v1/projects/{project_id}/issue-categories` | Required positive integer `project_id` |
+| `list_project_files` | `GET /api/v1/projects/{project_id}/files` | Required positive integer `project_id` |
 | `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
 | `list_issue_time_entries` | `GET /api/v1/issues/{issue_id}/time-entries` | Required positive integer `issue_id`; optional `limit`, `offset` |
@@ -285,6 +286,11 @@ nonempty `name`, and boolean `is_default` for each entry.
 positive `id`, nonempty `name`, and boolean `is_default`. It has no pagination inputs. The
 catalog does not establish access to documents in any project. Redmine may return additional
 category fields; this tool exposes only these three fields.
+
+`list_project_files` returns files attached to a selected project and its versions. Each item
+contains file metadata, a content URL, digest, download count, and an optional version reference.
+This endpoint has no pagination or total count. Listing files does not download their content;
+Redmine checks the caller's View files permission on the project.
 
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains

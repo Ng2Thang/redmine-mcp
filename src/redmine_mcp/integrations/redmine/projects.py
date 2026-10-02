@@ -1,5 +1,11 @@
 from redmine_mcp.common import Collection, Page
-from redmine_mcp.features.projects import IssueCategory, Project, ProjectDetail, Version
+from redmine_mcp.features.projects import (
+    IssueCategory,
+    Project,
+    ProjectDetail,
+    ProjectFile,
+    Version,
+)
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import page, visible_item, wrapped_collection
 from redmine_mcp.integrations.redmine.responses import resource_object
@@ -24,3 +30,7 @@ class RedmineProjects:
     async def list_project_issue_categories(self, project_id: int) -> Collection[IssueCategory]:
         data = await self.client.get(f"projects/{project_id}/issue_categories.json", {})
         return wrapped_collection(IssueCategory, data, "issue_categories", complete=True)
+
+    async def list_project_files(self, project_id: int) -> Collection[ProjectFile]:
+        data = await self.client.get(f"projects/{project_id}/files.json", {})
+        return wrapped_collection(ProjectFile, data, "files")

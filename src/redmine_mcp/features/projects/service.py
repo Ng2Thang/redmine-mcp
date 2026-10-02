@@ -1,5 +1,11 @@
 from redmine_mcp.common import Collection, Page, PageRequest, require_positive_id, validated_query
-from redmine_mcp.features.projects.models import IssueCategory, Project, ProjectDetail, Version
+from redmine_mcp.features.projects.models import (
+    IssueCategory,
+    Project,
+    ProjectDetail,
+    ProjectFile,
+    Version,
+)
 from redmine_mcp.features.projects.ports import ProjectReader
 
 
@@ -22,3 +28,7 @@ class ProjectService:
     async def list_project_issue_categories(self, project_id: int) -> Collection[IssueCategory]:
         require_positive_id(project_id, "project_id")
         return await self.reader.list_project_issue_categories(project_id)
+
+    async def list_project_files(self, project_id: int) -> Collection[ProjectFile]:
+        require_positive_id(project_id, "project_id")
+        return await self.reader.list_project_files(project_id)

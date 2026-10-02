@@ -40,3 +40,17 @@ class IssueCategory(BaseModel):
     name: str = Field(min_length=1)
     project: Reference
     assigned_to: Reference | None = None
+
+
+class ProjectFile(BaseModel):
+    id: int = Field(gt=0)
+    filename: str = Field(min_length=1)
+    filesize: int = Field(ge=0)
+    content_type: str | None = None
+    description: str | None = None
+    content_url: str
+    created_on: str
+    author: Reference | None = None
+    version: Reference | None = None
+    digest: str
+    downloads: int = Field(ge=0)

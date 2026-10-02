@@ -16,6 +16,7 @@ OPERATIONS = (
     "get_project",
     "list_project_versions",
     "list_project_issue_categories",
+    "list_project_files",
     "list_issues",
     "get_issue",
     "list_issue_time_entries",

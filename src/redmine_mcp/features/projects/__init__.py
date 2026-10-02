@@ -4,6 +4,7 @@ from redmine_mcp.features.projects.models import (
     IssueCategory,
     Project,
     ProjectDetail,
+    ProjectFile,
     Reference,
     Version,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "IssueCategory",
     "Project",
     "ProjectDetail",
+    "ProjectFile",
     "ProjectReader",
     "ProjectService",
     "Reference",

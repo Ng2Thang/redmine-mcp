@@ -7,13 +7,13 @@
 | Task ID | tool-017-list-project-files |
 | Assigned capability | List project files: Return project and version files from the documented unpaged endpoint. |
 | Type / access / destructive effects | Add reader tool / read / None |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-016-list-document-categories](tool-016-list-document-categories.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
+| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; exact release source reviewed, runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Progress summary | Project file model, service/port/gateway, REST route, read policy, MCP catalog, and docs implemented. |
+| Blocker / next action | User approved this implementation and directed continuation to tool-018 on 2026-10-02. TOOL-017-001 through TOOL-017-005 remain separately authorized testing work. |
 
 ## 2. Discovery and evidence
 
@@ -32,13 +32,14 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Files) | 2026-10-01 | General/current documentation | GET /projects/{project_id}/files.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz) | 2026-10-02 | 7.0.2 source | `FilesController#index` finds the project, authorizes access, and collects project and version attachments. `app/views/files/index.api.rsb` emits an unpaged `files` array, shared attachment attributes, optional version, digest, and downloads. Runtime behavior remains unverified. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `list_project_files` is the sole public owner | No |
-| Strict sequence | Wait for tool-016-list-document-categories evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User directed implementation of tool-017 through tool-022 after tool-016 on 2026-10-02, with review after each tool | No to coding |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Pinned 7.0.2 release source inspected locally; actual runtime verification remains pending | No to coding |
 
 ## 3. Requirements
 
@@ -74,13 +75,15 @@ fields: `{"items":[],"visibility":{"scope":"requesting_redmine_user","observatio
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive project_id; no pagination or sorting inputs | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /projects/{project_id}/files.json |
+| Tool arguments | Positive project_id; no pagination or sorting inputs | Local path validation requires project_id >= 1; service also requires a strict positive integer. | GET /projects/{project_id}/files.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-items of file attachment metadata plus optional version; visibility; no total. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
-Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
+`Collection[ProjectFile]` has `items` with positive `id`, nonempty `filename`, nonnegative
+`filesize` and `downloads`, `content_type`, `description`, `content_url`, `created_on`, optional
+`author` and `version`, and `digest`; `visibility` uses the existing requesting-user scope.
+The endpoint is unpaged and supplies no count; an empty `files` array maps to empty `items`.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
 
@@ -95,11 +98,10 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
+N/A - metadata read only. This tool does not follow `content_url` or increment download counts.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: exact 7.0.2 route, authorization, unpaged response, and fields
+were reviewed from the pinned release archive. User directed continuation from tool-016.
 
 ## 5. Implementation plan
 
@@ -144,7 +146,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | Ruff lint/format, mypy, and `git diff --check` during coding | Static checks pass | Installed Ruff lint passed; format found 155 files formatted; mypy passed for 79 source files; whitespace check passed on 2026-10-02. | Passed via installed executables |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -152,25 +154,35 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: added typed `ProjectFile`, project reader port/service/gateway method,
+  REST route, explicit read policy/MCP allowlist entries, and public documentation.
+- Plan deviations: existing project dependency wiring already constructs the service;
+  no bootstrap edit or dependency change was required.
+- Quality: installed `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format
+  --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` passed on 2026-10-02.
+  Automated tests were not run under the repository instruction.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: tool reference, changelog, task, and dashboard updated.
+- Final code diff review: reviewed the project model/port/service/router/gateway additions,
+  read-policy and MCP catalog entries, and related docs. Existing operation signatures and
+  defaults remain unchanged.
+- Remaining verification: TOOL-017-001 through TOOL-017-005 remain unexecuted. Offline checks
+  should cover project and version files, absent version/author, empty and malformed arrays,
+  metadata field validation, 401/403/404/422, timeout/oversize, and unchanged MCP catalog.
+  Startup and Inspector verification on the marked 7.0.2 fixture remain pending.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed from source.
+- [x] Final diff reviewed and dashboard synchronized.
+- [x] User approved this implementation and directed continuation to tool-018 on 2026-10-02.
 
-Final status: blocked. Next action: Predecessor tool-016-list-document-categories must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; user review approved; testing pending. Next action:
+execute TOOL-017-001 through TOOL-017-005 after separate testing authorization.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

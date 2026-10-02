@@ -1,5 +1,5 @@
 from redmine_mcp.common import require_positive_id
-from redmine_mcp.features.attachments.models import AttachmentDetail
+from redmine_mcp.features.attachments.models import AttachmentDetail, AttachmentDownload
 from redmine_mcp.features.attachments.ports import AttachmentReader
 
 
@@ -10,3 +10,7 @@ class AttachmentService:
     async def get_attachment(self, attachment_id: int) -> AttachmentDetail:
         require_positive_id(attachment_id, "attachment_id")
         return await self.reader.get_attachment(attachment_id)
+
+    async def download_attachment(self, attachment_id: int) -> AttachmentDownload:
+        require_positive_id(attachment_id, "attachment_id")
+        return await self.reader.download_attachment(attachment_id)

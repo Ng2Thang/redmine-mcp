@@ -14,3 +14,12 @@ class AttachmentDetail(BaseModel):
     author: Reference | None = None
     created_on: str = Field(min_length=1)
     visibility: Visibility = Field(default_factory=Visibility)
+
+
+class AttachmentDownload(BaseModel):
+    attachment_id: int = Field(gt=0)
+    filename: str = Field(min_length=1)
+    content_type: str | None = None
+    content_base64: str
+    filesize: int = Field(ge=0)
+    visibility: Visibility = Field(default_factory=Visibility)

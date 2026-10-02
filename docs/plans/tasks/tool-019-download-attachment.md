@@ -7,13 +7,13 @@
 | Task ID | tool-019-download-attachment |
 | Assigned capability | Download bounded attachment content: Use shared metadata and bounded binary transport; reject larger files before and during streaming. |
 | Type / access / destructive effects | Add reader tool / read with a Project/Version download-count effect / Counter may increase |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [prep-006-bounded-binary-downloads](prep-006-bounded-binary-downloads.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
-| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
+| Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; exact release source reviewed, runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor prep-006-bounded-binary-downloads must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Progress summary | Bounded metadata-first download, typed base64 response, REST route, policy/catalog entry, annotations, and docs implemented. |
+| Blocker / next action | User approved this implementation and directed continuation to prep-007 on 2026-10-02. TOOL-019-001 through TOOL-019-005 remain separately authorized testing work. |
 
 ## 2. Discovery and evidence
 
@@ -32,13 +32,14 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Attachments) | 2026-10-01 | General/current documentation | GET /attachments/{attachment_id}.json then validated content_url; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz) | 2026-10-02 | 7.0.2 source | Attachment metadata emits a named download URL. `AttachmentsController#download` accepts API auth, checks readability and visibility, increments Project/Version download counters before `send_file`, and may return a cache response. Runtime behavior remains unverified. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `download_attachment` is the sole public owner | No |
-| Strict sequence | Wait for prep-006-bounded-binary-downloads evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User approved prep-006 and directed continuation on 2026-10-02 | No to coding |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Pinned 7.0.2 release source inspected locally; runtime verification remains pending | No to coding |
 
 ## 3. Requirements
 
@@ -68,19 +69,23 @@ fields: `{"attachment_id":1,"filename":"example.txt","content_base64":"ZXhhbXBsZ
 | Upstream mapping | GET /attachments/{attachment_id}.json then validated content_url |
 | Authentication | Personal `X-Redmine-API-Key`; Container-specific view permission. |
 | MCP exposure | reader; writer may reuse read route; explicit allowlist entry. |
-| Annotations | readOnlyHint=false because Redmine may increment download counts; destructiveHint=false; openWorldHint=true. |
+| Annotations | readOnlyHint=false and idempotentHint=false because Redmine may increment download counts; destructiveHint=false; openWorldHint=true. |
 
 ### Inputs and validation
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive attachment_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | GET /attachments/{attachment_id}.json then validated content_url |
+| Tool arguments | Positive attachment_id | Local path validation requires attachment_id >= 1; service also requires a strict positive integer. | GET /attachments/{attachment_id}.json then validated content_url |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-attachment_id,filename,content_type,content_base64,filesize,visibility. Typed data scoped to requesting Redmine user. Reuse the repository's visibility observations; null and omitted are distinct.
-Use existing pagination bounds only where this endpoint documents paging. Never fabricate total-count metadata.
+`AttachmentDownload` contains positive `attachment_id`, nonempty `filename`, optional
+`content_type`, `content_base64`, nonnegative `filesize`, and requesting-user `visibility`.
+The gateway checks metadata size against 5 MiB before fetching content. Binary transport checks
+the header and streamed decoded bytes against the same bound. A returned byte count must match
+metadata `filesize`; otherwise the tool returns sanitized 502. Missing `content_type` preserves
+the metadata visibility observation. No pagination or count applies.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
 
@@ -95,11 +100,12 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-N/A - reader. For downloads, Redmine may increment Project/Version download counts; disclose this side effect.
+The binary GET can increment a Project or Version attachment's download count before transfer
+completes. A failed or timed-out response does not prove the counter stayed unchanged. The tool
+does not automatically retry; it does not create, edit, or delete attachment records.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: exact 7.0.2 metadata, download route, permission, and counter effect
+were reviewed from source. User approved the bounded binary transport prerequisite.
 
 ## 5. Implementation plan
 
@@ -144,7 +150,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | Ruff lint/format, mypy, and `git diff --check` during coding | Static checks pass | Installed Ruff lint passed; format found 161 files formatted; mypy passed for 85 source files; whitespace check passed on 2026-10-02. | Passed via installed executables |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -152,25 +158,36 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: added typed `AttachmentDownload`, attachment port/service/gateway method,
+  REST route, explicit reader policy/MCP catalog entry, counter-aware MCP annotations, and docs.
+- Plan deviations: the shared bounded transport was implemented and approved in prep-006;
+  no new dependency or bootstrap wiring was required.
+- Quality: installed `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format
+  --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` passed on 2026-10-02.
+  Automated tests were not run under the repository instruction.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor prep-006-bounded-binary-downloads must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: tool reference, changelog, task, and dashboard updated.
+- Final code diff review: reviewed the attachment model/port/service/router/gateway additions,
+  policy/catalog entry, counter-aware annotations, and docs. Existing tool signatures and
+  defaults remain unchanged.
+- Remaining verification: TOOL-019-001 through TOOL-019-005 remain unexecuted. Offline checks
+  should cover valid bytes/base64, zero bytes, metadata and stream size bounds, byte-count
+  mismatch, unsafe content URLs, redirects, timeout after dispatch, permission errors,
+  no retry, MCP annotations, and old catalog compatibility. Synthetic checks must compare
+  Project/Version download counts and disclose any uncertain counter outcome.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed from source.
+- [x] Final diff reviewed and dashboard synchronized.
+- [x] User approved this implementation and directed continuation to prep-007 on 2026-10-02.
 
-Final status: blocked. Next action: Predecessor prep-006-bounded-binary-downloads must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; user review approved; testing pending. Next action:
+execute TOOL-019-001 through TOOL-019-005 after separate testing authorization.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

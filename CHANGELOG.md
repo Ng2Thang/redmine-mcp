@@ -20,6 +20,8 @@ that a release has been published.
 - Added the read-only global `list_document_categories` catalog.
 - Added `list_project_files` for project and version file metadata.
 - Added read-only `get_attachment` for metadata scoped by Redmine container visibility.
+- Added `download_attachment` for bounded base64 content; Project or Version download counts
+  may increase, so its MCP read-only and idempotent hints are false.
 - Added `list_project_versions` with collection-completeness validation.
 - Added `list_project_issue_categories` with collection-completeness validation.
 - Issue requirement analysis, reviewed task backlog, and explicit testing/contract blockers.

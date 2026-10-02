@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path
 
 from redmine_mcp.api import get_attachments, require_read_access
-from redmine_mcp.features.attachments.models import AttachmentDetail
+from redmine_mcp.features.attachments.models import AttachmentDetail, AttachmentDownload
 from redmine_mcp.features.attachments.service import AttachmentService
 
 router = APIRouter(
@@ -28,3 +28,22 @@ async def get_attachment(
 ) -> AttachmentDetail:
     """Read attachment metadata without downloading its content."""
     return await service.get_attachment(attachment_id)
+
+
+@router.get(
+    "/{attachment_id}/content",
+    operation_id="download_attachment",
+    response_model=AttachmentDownload,
+    description=(
+        "Download at most 5 MiB of one visible attachment and return base64 content with "
+        "its filename, size, and content type. The tool fetches metadata first and rejects "
+        "oversized files before and during streaming. Redmine may increment Project or "
+        "Version download counters even when transfer later fails."
+    ),
+)
+async def download_attachment(
+    service: Annotated[AttachmentService, Depends(get_attachments)],
+    attachment_id: Annotated[int, Path(ge=1, description="ID of the attachment")],
+) -> AttachmentDownload:
+    """Return bounded attachment bytes encoded as base64."""
+    return await service.download_attachment(attachment_id)

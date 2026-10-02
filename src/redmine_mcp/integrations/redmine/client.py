@@ -3,6 +3,7 @@ import json
 import logging
 from time import perf_counter
 from typing import Any
+from urllib.parse import unquote
 
 import httpx
 from fastapi import status as http_status
@@ -64,6 +65,113 @@ class RedmineClient:
         self.http = http
         self.api_key = api_key
         self.policy = ReadPolicy() if policy is None else policy
+
+    def attachment_url(self, content_url: str, attachment_id: int) -> httpx.URL:
+        """Keep attachment bytes on the configured Redmine origin and download path."""
+        try:
+            url = httpx.URL(content_url)
+            base = self.http.base_url
+            root = base.raw_path.split(b"?", 1)[0]
+            expected = root + b"attachments/download/" + str(attachment_id).encode("ascii")
+            raw_path = url.raw_path.split(b"?", 1)[0]
+            decoded_path = unquote(url.path)
+            if (
+                type(attachment_id) is not int
+                or attachment_id < 1
+                or url.scheme != base.scheme
+                or url.host != base.host
+                or url.port != base.port
+                or url.username
+                or url.password
+                or url.query
+                or url.fragment
+                or not root.endswith(b"/")
+                or not (raw_path == expected or raw_path.startswith(expected + b"/"))
+                or "\\" in decoded_path
+                or any(segment in (".", "..") for segment in decoded_path.split("/"))
+            ):
+                raise ValueError
+            return url
+        except (httpx.InvalidURL, ValueError, UnicodeError):
+            raise ApplicationError(
+                codes_text.UPSTREAM_RESPONSE,
+                redmine_text.UNEXPECTED_DATA,
+                http_status.HTTP_502_BAD_GATEWAY,
+            ) from None
+
+    async def get_attachment_bytes(self, content_url: str, attachment_id: int) -> bytes:
+        """Read at most five MiB of decoded bytes without following redirects."""
+        url = self.attachment_url(content_url, attachment_id)
+        started = perf_counter()
+        status: int | None = None
+        try:
+            request = self.http.build_request(
+                "GET", url, headers={"X-Redmine-API-Key": self.api_key}
+            )
+            request.headers.pop("cookie", None)
+            request.headers.pop("authorization", None)
+            async with asyncio.timeout(self.policy.deadline_seconds):
+                response = await self.http.send(
+                    request, auth=None, follow_redirects=False, stream=True
+                )
+                status = response.status_code
+                try:
+                    raise_for_upstream_status(status)
+                    length = response.headers.get("content-length", "")
+                    significant_length = length.lstrip("0") or "0"
+                    binary_limit = str(self.policy.max_binary_bytes)
+                    if (
+                        length.isascii()
+                        and length.isdecimal()
+                        and (
+                            len(significant_length) > len(binary_limit)
+                            or (
+                                len(significant_length) == len(binary_limit)
+                                and significant_length > binary_limit
+                            )
+                        )
+                    ):
+                        raise ApplicationError(
+                            codes_text.UPSTREAM_RESPONSE_TOO_LARGE,
+                            redmine_text.RESPONSE_TOO_LARGE,
+                            http_status.HTTP_502_BAD_GATEWAY,
+                        )
+                    content = bytearray()
+                    async for chunk in response.aiter_bytes(chunk_size=64 * 1024):
+                        if len(content) + len(chunk) > self.policy.max_binary_bytes:
+                            raise ApplicationError(
+                                codes_text.UPSTREAM_RESPONSE_TOO_LARGE,
+                                redmine_text.RESPONSE_TOO_LARGE,
+                                http_status.HTTP_502_BAD_GATEWAY,
+                            )
+                        content.extend(chunk)
+                    return bytes(content)
+                finally:
+                    await response.aclose()
+        except httpx.PoolTimeout:
+            raise ApplicationError(
+                codes_text.UPSTREAM_BUSY,
+                redmine_text.CONNECTION_POOL_BUSY,
+                http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            ) from None
+        except (httpx.TimeoutException, TimeoutError):
+            raise ApplicationError(
+                codes_text.UPSTREAM_TIMEOUT,
+                redmine_text.TIMED_OUT,
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
+            ) from None
+        except httpx.RequestError:
+            raise ApplicationError(
+                codes_text.UPSTREAM_UNAVAILABLE,
+                redmine_text.UNREACHABLE,
+                http_status.HTTP_502_BAD_GATEWAY,
+            ) from None
+        finally:
+            logger.info(
+                logs_text.UPSTREAM_COMPLETED,
+                status,
+                (perf_counter() - started) * 1000,
+            )
 
     async def get(self, path: str, params: dict[str, str | int]) -> dict[str, Any]:
         if (

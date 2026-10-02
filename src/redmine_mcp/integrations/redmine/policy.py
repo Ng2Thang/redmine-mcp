@@ -7,3 +7,4 @@ from dataclasses import dataclass
 class ReadPolicy:
     deadline_seconds: float = 60
     max_response_bytes: int = 10 * 1024 * 1024
+    max_binary_bytes: int = 5 * 1024 * 1024

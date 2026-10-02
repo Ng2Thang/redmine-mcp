@@ -6,14 +6,14 @@
 |---|---|
 | Task ID | prep-006-bounded-binary-downloads |
 | Assigned capability | Prepare shared attachment download transport for tool-019. |
-| Type / access / destructive effects | Shared prerequisite / planning or infrastructure / None in this documentation task |
-| Status | blocked - documentation only |
+| Type / access / destructive effects | Shared prerequisite / infrastructure / no direct Redmine mutation; later downloads can increment counters |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-018-get-attachment](tool-018-get-attachment.md); predecessor acceptance required |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-02, Codex |
-| Progress summary | Prerequisite defined; no code, tests, or live check performed. |
-| Blocker / next action | Wait for tool-018 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2. |
+| Progress summary | Validated same-origin attachment URL and bounded binary streaming implemented in the Redmine client. |
+| Blocker / next action | User approved this implementation and directed continuation to tool-019 on 2026-10-02. Offline URL/stream/error checks require separate authorization; live 7.0.2 behavior remains unverified. |
 
 ## 2. Discovery and evidence
 
@@ -24,11 +24,14 @@ Prepare shared attachment download transport for tool-019. Use the caller's key 
 | [Current roadmap](../index.md) | 2026-10-01 | Existing task status and architecture; no pending acceptance is treated as passed. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | Redmine 7.0.2 is pinned; runtime acceptance remains pending. |
 | [Tool reference](../../tool-reference.md) | 2026-10-01 | Existing public catalog is the compatibility baseline. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz) | 2026-10-02 | `render_api_attachment_attributes` emits an absolute `download_named_attachment_url`; `AttachmentsController#download` increments Project/Version download counters before sending bytes. This source does not prove the deployment's generated URL origin matches `REDMINE_URL`. |
 
-Decisions: this prerequisite owns no public MCP operation; tool-018-get-attachment must be
-reviewed without rewriting prior evidence. Testing and any live rehearsal
-require separate user authorization. Target runtime verification and versioned source review remain execution
-blocker where 7.0.2 behavior is needed.
+Decisions: this prerequisite owns no public MCP operation. The user approved tool-018 and
+directed continuation on 2026-10-02. Download transport accepts only URLs with the configured
+Redmine origin, base path, and requested attachment ID. A deployment whose generated absolute
+content URL uses another origin must align its Redmine URL configuration before downloading;
+the transport will not send a personal key to an unconfigured origin. Testing and live rehearsal
+require separate user authorization.
 
 ## 3. Requirements
 
@@ -46,16 +49,17 @@ production credential, and claims based on unrun checks.
 | Area | Contract |
 |---|---|
 | MCP name / operation ID / REST route | N/A - shared prerequisite |
-| Inputs | Existing configuration, bounded client, and reviewed prior task contract |
-| Outputs | Valid download returns exact bytes; redirects/oversize/timeout/malformed URL fail safely; existing JSON reads remain compatible. |
+| Inputs | `content_url` from Redmine metadata, positive attachment ID, caller-bound client; fixed 5 MiB decoded limit and existing per-read deadline |
+| Outputs | Valid download returns exact bytes. The URL must have the configured scheme, host, port, base path, and `/attachments/download/{id}` prefix, without credentials, query, fragment, or traversal. Redirects, oversize, timeout, and malformed URLs fail with sanitized errors. Existing JSON reads remain unchanged. |
 | Access | No new public permission |
-| Version support | 7.0.2 exact build pending; exact target evidence is required before completion. |
+| Version support | Exact 7.0.2 source reviewed; generated URL origin and runtime behavior remain unverified. |
 | Errors | Record failed prerequisite or recovery as blocked; never fabricate a successful result. |
 
-Write semantics: N/A - no Redmine mutation belongs to this planning task.
+Write semantics: N/A for this unexposed transport prerequisite. When called by tool-019, Redmine
+may increment Project/Version download counters even if the eventual byte transfer fails.
 
-Specification exit check: the prerequisite's procedure and expected evidence
-are assigned. Exact version and execution evidence remain pending.
+Specification exit check: the exact version source supports the attachment URL shape and counter
+effect; runtime and offline acceptance remain pending.
 
 ## 5. Implementation plan
 
@@ -89,27 +93,34 @@ Testing is planned, not authorized or run. For prep-006-bounded-binary-downloads
 
 | Evidence ID | Procedure | Actual result | Status |
 |---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` in a future coding stage, when applicable | Not run | Pending |
+| EVID-001 | Ruff lint/format, mypy, and `git diff --check` during coding | Installed Ruff lint passed; format found 161 files formatted; mypy passed for 85 source files; whitespace check passed on 2026-10-02. | Passed via installed executables |
 | EVID-002 | `uv run --frozen pytest` only after explicit testing authorization, when applicable | Not run | Pending |
 | EVID-003 | Inspector and synthetic procedure only after explicit authorization | Not run | Pending |
 
 ## 8. Implementation and review record
 
-- Changes made: this task document only.
-- Static checks: not run for this task.
+- Changes made: added fixed 5 MiB binary limit to `ReadPolicy`, attachment URL validation and
+  bounded `get_attachment_bytes` to `RedmineClient`, plus configuration and changelog docs.
+- Static checks: installed `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format
+  --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` passed on 2026-10-02.
 - Automated tests: not run.
 - Startup, Inspector, and live state checks: not run.
-- Remaining blocker: Wait for tool-018 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2.
+- Final diff review: the new binary method and fixed policy bound are isolated from the
+  existing JSON `get` method; no public operation or read-policy setting changed.
+- Remaining verification: exact URL acceptance/rejection; mismatched origin/base path/ID;
+  redirect and upstream status mapping; `Content-Length` and streamed decoded-byte limits;
+  timeout, connection failure, guaranteed stream closure, and unchanged JSON behavior.
 
 ## 9. Completion and handoff
 
-- [ ] Required prerequisite implemented or performed.
+- [x] Required prerequisite implemented or performed.
 - [ ] Acceptance criteria have passing evidence.
-- [ ] Authorized verification and applicable static checks pass.
+- [x] Applicable static checks pass; offline and runtime verification remain pending.
 - [ ] Compatibility and recovery/state checks pass where relevant.
-- [ ] Dashboard and documentation match actual evidence.
-- [ ] User accepts this task before the next task starts.
+- [x] Dashboard and documentation match actual evidence.
+- [x] User approved this implementation and directed continuation to tool-019 on 2026-10-02.
 
-Final status: blocked. Next action: Wait for tool-018 acceptance, then confirm exact attachment URL behavior on pinned 7.0.2.
+Final status: implementation finished; user review approved; testing pending. Next action:
+execute the planned offline and synthetic checks after separate testing authorization.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

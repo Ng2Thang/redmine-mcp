@@ -41,6 +41,10 @@ deadline for an entire MCP invocation or stream. JSON parsing/model conversion o
 HTTP acquisition deadline. The payload limit bounds the accumulated decoded body, not total
 process memory or transient decompressor/parser allocations. Oversized results fail with
 `502 upstream_response_too_large`; request a smaller page or fewer issue expansions when possible.
+Attachment binary reads prepared for the download tool have a fixed 5 MiB decoded-byte limit.
+Their URLs must match the configured Redmine origin, deployment base path, and attachment ID;
+redirects are rejected. The same per-read deadline applies, and the caller's personal key is
+sent only after URL validation.
 Streams close on success and failure. Unsuccessful statuses are mapped without consuming their
 error bodies. Settings validation hides input values in exception strings.
 

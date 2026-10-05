@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from redmine_mcp.auth.capability_models import WriteIntent
+from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import ApplicationError, Page, require_positive_id, validated_query
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.features.issues.models import Issue, IssueDetail
@@ -43,6 +45,7 @@ class IssueService:
         relation_deleter: IssueRelationDeleter | None = None,
         watcher_adder: IssueWatcherAdder | None = None,
         watcher_remover: IssueWatcherRemover | None = None,
+        authorizer: WriteAuthorizer | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
@@ -52,12 +55,18 @@ class IssueService:
         self.relation_deleter = relation_deleter
         self.watcher_adder = watcher_adder
         self.watcher_remover = watcher_remover
+        self.authorizer = authorizer
+
+    async def _authorize(self, intent: WriteIntent) -> None:
+        if self.authorizer is not None:
+            await self.authorizer.authorize(intent)
 
     async def remove_issue_watcher(self, issue_id: int, user_id: int) -> IssueWatcherResult:
         require_positive_id(issue_id, "issue_id")
         require_positive_id(user_id, "user_id")
         if self.watcher_remover is None:
             raise RuntimeError("Issue watcher remover is not configured")
+        await self._authorize(WriteIntent("remove_issue_watcher", issue_id=issue_id))
         return await self.watcher_remover.remove_issue_watcher(issue_id, user_id)
 
     async def add_issue_watcher(self, issue_id: int, user_id: int) -> IssueWatcherResult:
@@ -65,12 +74,14 @@ class IssueService:
         require_positive_id(user_id, "user_id")
         if self.watcher_adder is None:
             raise RuntimeError("Issue watcher adder is not configured")
+        await self._authorize(WriteIntent("add_issue_watcher", issue_id=issue_id))
         return await self.watcher_adder.add_issue_watcher(issue_id, user_id)
 
     async def delete_issue_relation(self, relation_id: int) -> IssueRelationDeleteResult:
         require_positive_id(relation_id, "relation_id")
         if self.relation_deleter is None:
             raise RuntimeError("Issue relation deleter is not configured")
+        await self._authorize(WriteIntent("delete_issue_relation", relation_id=relation_id))
         return await self.relation_deleter.delete_issue_relation(relation_id)
 
     async def create_issue_relation(
@@ -84,18 +95,25 @@ class IssueService:
             )
         if self.relation_creator is None:
             raise RuntimeError("Issue relation creator is not configured")
+        await self._authorize(WriteIntent("create_issue_relation", issue_id=issue_id))
         return await self.relation_creator.create_issue_relation(issue_id, request)
 
     async def create_issue(self, request: IssueCreateRequest) -> IssueCreateResult:
         require_positive_id(request.project_id, "project_id")
         if self.creator is None:
             raise RuntimeError("Issue creator is not configured")
+        await self._authorize(
+            WriteIntent("create_issue", project_id=request.project_id, copy_from=request.copy_from)
+        )
         return await self.creator.create_issue(request)
 
     async def update_issue(self, issue_id: int, request: IssueUpdateRequest) -> IssueUpdateResult:
         require_positive_id(issue_id, "issue_id")
         if self.updater is None:
             raise RuntimeError("Issue updater is not configured")
+        await self._authorize(
+            WriteIntent("update_issue", issue_id=issue_id, project_id=request.project_id)
+        )
         return await self.updater.update_issue(issue_id, request)
 
     async def update_issue_note(
@@ -105,6 +123,9 @@ class IssueService:
         require_positive_id(journal_id, "journal_id")
         if self.note_updater is None:
             raise RuntimeError("Issue note updater is not configured")
+        await self._authorize(
+            WriteIntent("update_issue_note", issue_id=issue_id, journal_id=journal_id)
+        )
         return await self.note_updater.update_issue_note(issue_id, journal_id, request)
 
     async def list_issues(

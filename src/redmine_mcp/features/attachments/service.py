@@ -2,6 +2,8 @@ from base64 import b64decode
 from binascii import Error as Base64Error
 from http import HTTPStatus
 
+from redmine_mcp.auth.capability_models import WriteIntent
+from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import ApplicationError, require_positive_id
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
@@ -30,12 +32,14 @@ class AttachmentService:
         max_binary_bytes: int = 5 * 1024 * 1024,
         metadata_writer: AttachmentMetadataWriter | None = None,
         deleter: AttachmentDeleter | None = None,
+        authorizer: WriteAuthorizer | None = None,
     ) -> None:
         self.reader = reader
         self.writer = writer
         self.max_binary_bytes = max_binary_bytes
         self.metadata_writer = metadata_writer
         self.deleter = deleter
+        self.authorizer = authorizer
 
     async def get_attachment(self, attachment_id: int) -> AttachmentDetail:
         require_positive_id(attachment_id, "attachment_id")
@@ -51,6 +55,15 @@ class AttachmentService:
         require_positive_id(attachment_id, "attachment_id")
         if self.metadata_writer is None:
             raise RuntimeError("Attachment metadata writer is not configured")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(
+                WriteIntent(
+                    "update_attachment",
+                    attachment_id=attachment_id,
+                    container_type=request.container_type,
+                    container_id=request.container_id,
+                )
+            )
         return await self.metadata_writer.update_attachment(attachment_id, request)
 
     async def delete_attachment(
@@ -60,6 +73,15 @@ class AttachmentService:
         require_positive_id(request.container_id, "container_id")
         if self.deleter is None:
             raise RuntimeError("Attachment deleter is not configured")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(
+                WriteIntent(
+                    "delete_attachment",
+                    attachment_id=attachment_id,
+                    container_type=request.container_type,
+                    container_id=request.container_id,
+                )
+            )
         return await self.deleter.delete_attachment(attachment_id, request)
 
     async def upload_attachment(self, filename: str, content_base64: str) -> UploadResult:
@@ -98,4 +120,6 @@ class AttachmentService:
             )
         if self.writer is None:
             raise RuntimeError("Attachment writer is not configured")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(WriteIntent("upload_attachment"))
         return await self.writer.upload_attachment(filename, content)

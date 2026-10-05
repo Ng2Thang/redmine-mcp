@@ -2,6 +2,8 @@ import re
 
 from fastapi import status as http_status
 
+from redmine_mcp.auth.capability_models import WriteIntent
+from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import (
     ApplicationError,
     Collection,
@@ -25,9 +27,15 @@ from redmine_mcp.features.projects.ports import ProjectReader, ProjectWriter
 
 
 class ProjectService:
-    def __init__(self, reader: ProjectReader, writer: ProjectWriter | None = None) -> None:
+    def __init__(
+        self,
+        reader: ProjectReader,
+        writer: ProjectWriter | None = None,
+        authorizer: WriteAuthorizer | None = None,
+    ) -> None:
         self.reader = reader
         self.writer = writer
+        self.authorizer = authorizer
 
     async def list_projects(self, limit: int = 25, offset: int = 0) -> Page[Project]:
         query = validated_query(PageRequest, {"limit": limit, "offset": offset})
@@ -83,6 +91,8 @@ class ProjectService:
                 )
         if self.writer is None:
             raise RuntimeError("Project writer is not configured")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(WriteIntent("add_project_file", project_id=project_id))
         return await self.writer.add_project_file(
             project_id,
             request.token,

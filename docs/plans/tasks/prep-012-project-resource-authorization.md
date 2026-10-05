@@ -7,13 +7,13 @@
 | Task ID | prep-012-project-resource-authorization |
 | Assigned capability | Reject known forbidden calls in the correct project/resource context |
 | Type / access / destructive effects | Shared authorization prerequisite / existing read-write tools / Existing write effects preserved |
-| Status | planned |
+| Status | blocked |
 | Dependencies | [prep-010](prep-010-permission-session-contract.md) resolved matrix; [prep-011](prep-011-multi-user-writer-auth.md) personal-key auth |
 | Related tasks | [Roadmap](../multi-user-writer-authorization.md); [dashboard](../index.md); prep-013/014 |
 | Target Redmine version | 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
-| Progress summary | Exact necessary expressions, context resolvers and partial evidence rules resolved by prep-010 |
-| Blocker / next action | Implement after prep-011; use the dated prep-010 contract as the authoritative matrix |
+| Progress summary | Request-local capability models/service, same-key role/target gateway and all eleven service authorization calls implemented; static checks pass |
+| Blocker / next action | PERM scenarios remain assigned to prep-014; continue prep-013 under the full-range implementation assignment |
 
 ## 2. Discovery and evidence
 
@@ -168,20 +168,35 @@ ASGI lifespan and MCP SDK clients. Synthetic permission/state checks are opt-in 
 
 | Evidence | Procedure | Actual / status |
 |---|---|---|
-| EVID-001 | Reviewed permission matrix and `bash scripts/check.sh` during coding | Not performed / pending |
+| EVID-001 | prep-010 source matrix; installed Ruff lint/format, mypy src, AST architecture and git diff --check; 2026-10-05 | Source matrix reviewed; static checks pass / runtime evidence pending |
 | EVID-002 | Authorized selected PERM scenarios against credential-free baseline | Not run / pending |
 | EVID-003 | Authorized marked synthetic permission and resulting-state checks | Not run / pending |
 
 ## 8. Implementation and review record
 
-Planning only. No runtime or tests changed. Source gaps, downstream dependencies, and acceptance
-remain pending. Existing task evidence is not rewritten as successful multi-user verification.
+Implemented on 2026-10-05: immutable capability/profile/role/intent/expression models, typed
+reader and authorization ports, necessary permission evaluator, per-request role deduplication,
+aggregate deadline, bounded visible-project inventory for subsequent discovery, and same-key
+resource context gateway. All eleven write methods call the authorizer through feature services.
+Bootstrap wires the authorizer only for personal-key writers and passes the authenticated user
+ID to verify capability profile identity. Reader and pinned-key paths retain their behavior.
+Container and journal proof, own-resource alternatives, copy source/destination AND and either-end
+relation-delete OR match the reviewed source contract. Mixed update field handling remains upstream.
+Profile response key is discarded; roles retain their separate visibility attributes without
+cross-role synthetic visibility grants. Transport/malformed failures stop dispatch; optional
+role 403/404 remains unknown. Existing receipt/no-retry/read-back semantics are untouched.
+Ruff lint and formatting pass repository-wide (187 files); mypy src passes (104 modules);
+AST import boundaries/cycles and git diff --check pass. Formatting/import fixes affected only
+assigned files. Final diff reviewed against the eleven operation matrix and compatibility boundary.
+No tests/fixtures or live checks run in this coding stage. PERM-001 through PERM-009 remain
+assigned to the separately requested prep-014 verification stage; old acceptance is unchanged.
 
 ## 9. Completion and handoff
 
-- [ ] Exact permission/context matrix resolved and reviewed.
-- [ ] Typed capability evidence, adapters, and context checks implemented.
+- [x] Exact permission/context matrix resolved and reviewed.
+- [x] Typed capability evidence, adapters, and context checks implemented.
 - [ ] Static checks and separately authorized acceptance evidence pass.
 - [ ] Documentation, final diff, task status, and dashboard synchronized.
 
-Final status: planned. Next action: implement the resolved prep-010 contract after prep-011.
+Final status: blocked - implementation finished; testing pending. Next action: continue assigned
+prep-013 coding; execute the PERM scenarios separately in prep-014.

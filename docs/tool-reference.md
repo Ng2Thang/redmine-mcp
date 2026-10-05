@@ -5,6 +5,12 @@ mode for multiple callers. Each request supplies its own Redmine key. Personal-m
 restrict writes only; deployment operation gates and upstream resource permissions still apply.
 MCP sessions cannot be shared across users/keys. See [configuration](configuration.md).
 
+In personal-key mode, writes use caller memberships and role permissions for necessary checks
+in the real target project. Permission in another project does not authorize the target. Missing
+or partial metadata remains unknown; Redmine still checks every write using the caller key.
+Mixed issue updates can apply permitted fields/notes while ignoring others, as shown by read-back
+verification. Local checks preserve that behavior and do not promise unrestricted field access.
+
 The MCP endpoint is `http://localhost:8000/mcp` using Streamable HTTP. Supply
 `X-Redmine-API-Key: <your personal Redmine API key>` for MCP and REST tools. The server exposes only the
 tools below. Swagger at `/docs` and OpenAPI at `/openapi.json` describe REST schemas.

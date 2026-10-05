@@ -19,7 +19,9 @@ from redmine_mcp.features import (
 def get_container(
     request: Request, context: Annotated[AuthContext, Depends(get_auth_context)]
 ) -> Container:
-    return build_container(get_upstream(request), context.api_key, get_settings(request))
+    return build_container(
+        get_upstream(request), context.api_key, get_settings(request), context.principal
+    )
 
 
 def get_projects(container: Annotated[Container, Depends(get_container)]) -> ProjectService:

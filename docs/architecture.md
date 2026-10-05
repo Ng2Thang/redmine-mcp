@@ -81,6 +81,15 @@ multiple callers independently and applies an optional user list only at the wri
 The MCP dependency adapts the authenticated caller to the SDK session-owner identity without
 storing the raw key in its token object. SDK 1.30.0 owns stateful session binding and cleanup;
 credential changes cannot reuse an existing session. Read/write deployment gates remain in REST.
+
+Personal-key feature services invoke the typed `WriteAuthorizer` port after validated inputs.
+`auth/capabilities.py` combines necessary permission expressions with explicit denied, conditional
+and unknown evidence. `integrations/redmine/capabilities.py` reads the caller profile/roles and
+resolves real issue, journal, relation and attachment targets through same-key reads. Capability
+snapshots and deduplicated role reads live only in the request's container. The check has a bounded
+aggregate deadline. Visibility/ownership/field/tracker/workflow conditions still belong to Redmine;
+local permission presence never substitutes for upstream authorization. Existing write gateways
+retain container proof, accepted/uncertain outcomes, no automatic retries and independent read-back.
 Validation inspects normalized route contracts, including lazy included-router contexts in newer
 FastAPI versions. It rejects duplicate/hidden routes, non-GET routes, missing response schemas,
 and tools without the read-authorization dependency. Generated MCP tool names must exactly match

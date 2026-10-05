@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import httpx
 
 from redmine_mcp.auth import AuthenticationService
+from redmine_mcp.auth.capabilities import CapabilityService
+from redmine_mcp.auth.models import Principal
 from redmine_mcp.config import Settings
 from redmine_mcp.features import (
     AttachmentService,
@@ -33,6 +35,7 @@ from redmine_mcp.integrations.redmine import (
     RedmineUsers,
     RedmineWriter,
 )
+from redmine_mcp.integrations.redmine.capabilities import RedmineCapabilities
 
 
 @dataclass(frozen=True)
@@ -62,12 +65,20 @@ def build_authentication(
 
 
 def build_container(
-    http: httpx.AsyncClient, api_key: str, settings: Settings | None = None
+    http: httpx.AsyncClient,
+    api_key: str,
+    settings: Settings | None = None,
+    principal: Principal | None = None,
 ) -> Container:
     client = RedmineClient(http, api_key, read_policy(settings))
     project_reader = RedmineProjects(client)
     writer = RedmineWriter(http, api_key, client.policy)
     attachment_updates = RedmineAttachmentUpdates(client, writer)
+    authorizer = (
+        build_capabilities(http, api_key, settings, principal)
+        if settings is not None and settings.personal_writer
+        else None
+    )
     return Container(
         AttachmentService(
             RedmineAttachments(client),
@@ -75,8 +86,11 @@ def build_container(
             client.policy.max_binary_bytes,
             metadata_writer=attachment_updates,
             deleter=RedmineAttachmentDeletions(writer, attachment_updates),
+            authorizer=authorizer,
         ),
-        ProjectService(project_reader, RedmineProjectFiles(writer, project_reader)),
+        ProjectService(
+            project_reader, RedmineProjectFiles(writer, project_reader), authorizer=authorizer
+        ),
         IssueService(
             RedmineIssues(client),
             RedmineIssueCreations(client, writer),
@@ -86,8 +100,24 @@ def build_container(
             relation_deleter=RedmineIssueRelations(client, writer),
             watcher_adder=RedmineIssueWatchers(client, writer),
             watcher_remover=RedmineIssueWatchers(client, writer),
+            authorizer=authorizer,
         ),
         ReferenceService(RedmineReferenceData(client)),
         TimeEntryService(RedmineTimeEntries(client)),
         UserService(RedmineUsers(client)),
+    )
+
+
+def build_capabilities(
+    http: httpx.AsyncClient,
+    api_key: str,
+    settings: Settings | None = None,
+    principal: Principal | None = None,
+) -> CapabilityService:
+    client = RedmineClient(http, api_key, read_policy(settings))
+    containers = RedmineAttachmentUpdates(client, RedmineWriter(http, api_key, client.policy))
+    return CapabilityService(
+        RedmineCapabilities(client, containers),
+        principal.redmine_user_id if principal is not None else None,
+        client.policy.deadline_seconds,
     )

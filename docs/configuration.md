@@ -151,6 +151,15 @@ issuer and a private key fingerprint through MCP SDK 1.30.0. A different user/ke
 same 404 as an unknown session; key rotation requires a new session. Session binding is removed
 on termination, expiry and shutdown. Keys/fingerprints are never returned or logged.
 
+Personal-key writes also read the caller's project memberships and role permissions through
+`users/current.json?include=memberships` and `roles/{id}.json`. The internal capability snapshot
+is request-local and checks the actual project/resource context before dispatch. A known absent
+necessary permission is denied with 403. A present permission is conditional; tracker, workflow,
+field, ownership, visibility and project/module rules remain enforced by Redmine. Missing
+membership or inaccessible role metadata is unknown evidence and never proves denial or a grant.
+Malformed metadata, timeout or transport failure stops dispatch with a sanitized upstream error.
+No role-name mapping, administrator substitution or cross-request permission cache is used.
+
 The writer catalog contains only configured operation IDs from the code's explicit write allowlist.
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Each future write route must use `require_write_access`, which checks its operation ID

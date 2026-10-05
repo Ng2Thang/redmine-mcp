@@ -10,6 +10,7 @@ from redmine_mcp.features.issues.write_models import (
     IssueNoteUpdateResult,
     IssueRelationCreateRequest,
     IssueRelationCreateResult,
+    IssueRelationDeleteResult,
     IssueUpdateRequest,
     IssueUpdateResult,
 )
@@ -58,3 +59,7 @@ class IssueRelationCreator(Protocol):
     async def create_issue_relation(
         self, issue_id: int, request: IssueRelationCreateRequest
     ) -> IssueRelationCreateResult: ...
+
+
+class IssueRelationDeleter(Protocol):
+    async def delete_issue_relation(self, relation_id: int) -> IssueRelationDeleteResult: ...

@@ -8,6 +8,7 @@ from redmine_mcp.features.issues.ports import (
     IssueNoteUpdater,
     IssueReader,
     IssueRelationCreator,
+    IssueRelationDeleter,
     IssueUpdater,
 )
 from redmine_mcp.features.issues.queries import (
@@ -22,6 +23,7 @@ from redmine_mcp.features.issues.write_models import (
     IssueNoteUpdateResult,
     IssueRelationCreateRequest,
     IssueRelationCreateResult,
+    IssueRelationDeleteResult,
     IssueUpdateRequest,
     IssueUpdateResult,
 )
@@ -35,12 +37,20 @@ class IssueService:
         updater: IssueUpdater | None = None,
         note_updater: IssueNoteUpdater | None = None,
         relation_creator: IssueRelationCreator | None = None,
+        relation_deleter: IssueRelationDeleter | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
         self.updater = updater
         self.note_updater = note_updater
         self.relation_creator = relation_creator
+        self.relation_deleter = relation_deleter
+
+    async def delete_issue_relation(self, relation_id: int) -> IssueRelationDeleteResult:
+        require_positive_id(relation_id, "relation_id")
+        if self.relation_deleter is None:
+            raise RuntimeError("Issue relation deleter is not configured")
+        return await self.relation_deleter.delete_issue_relation(relation_id)
 
     async def create_issue_relation(
         self, issue_id: int, request: IssueRelationCreateRequest

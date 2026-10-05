@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `delete_issue_relation` with visible endpoint/context checks,
+  destructive hints, and independent absence observations from both issues.
+
 - Added writer-only `create_issue_relation` for a single visible destination, normalized
   relation direction, validated scheduling delay, and independent same-ID read-back.
 

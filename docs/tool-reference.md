@@ -477,6 +477,26 @@ dates. Relation verification does not verify these other effects. There are no a
 retries, rollback, or atomic concurrency guarantees; reconcile uncertain creates before
 repeating them. Reader discovery and existing tool contracts are unchanged.
 
+`delete_issue_relation` is writer-only at `DELETE /api/v1/relations/{relation_id}`.
+Supply a positive relation ID; the writer must explicitly allow this operation.
+The gateway resolves the visible relation and requires its ID in both visible endpoint issue
+contexts before one DELETE. Redmine requires Manage issue relations on either endpoint's
+project, without a local requirement to manage both projects or edit issues.
+
+Empty 204 is accepted. The receipt contains `outcome`, `upstream_accepted`, `resource_id`,
+the pre-write `resolved_relation`, `endpoint_observations` keyed by endpoint ID strings,
+aggregate `observed_present`, and `verification`. Each endpoint observation is true if present,
+false if absent, or null if unavailable. Presence in either is mismatch; absence from both is
+matched; otherwise verification is unavailable. Read-back failure preserves write acceptance.
+The pinned API omits an empty requested relations list, so omission on a successful same-ID
+issue response counts as empty visible context. A failed/404 issue response never proves absence.
+
+Matched verification reports visible absence, not proof of stored-row deletion. Redmine records
+removal journals on both issues. Deletion does not restore dates affected by a scheduling
+relation. No retry, rollback, or atomic visibility/state guarantee is provided. Reconcile
+uncertain results before retrying. The MCP operation publishes destructiveHint=true;
+reader discovery and existing contracts remain unchanged.
+
 ## Errors
 
 The following statuses and bodies describe REST behavior. MCP may wrap failures as tool errors;

@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Typed request/receipt, relation gateway, port/service/REST route, wiring, writer allowlist, and docs implemented; static checks pass. |
-| Blocker / next action | User review; TOOL-027-001 through TOOL-027-005 and marked writer verification require separate authorization. |
+| Blocker / next action | User approved coding commit `a7f89f8` and assigned tools 028-030; TOOL-027-001 through TOOL-027-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -222,7 +222,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   201 acceptance separated from uncertainty and read-back, strict returned positive ID,
   independent same-ID observation, no fabricated matches for absent fields, normalized
   expected direction/type/delay, no retry or payload logging, opt-in writer policy inspected.
-- Remaining blocker: user review and separately authorized TOOL-027-001 through TOOL-027-005.
+- Remaining blocker: separately authorized TOOL-027-001 through TOOL-027-005.
   Later offline scenarios must cover all nine types, inverse swaps, sorted relates, omitted,
   zero and negative scheduling delay, invalid/null/unknown/list/comma-separated/bool/float IDs,
   self-relations, invalid delay combinations, hidden endpoints and permission rejection before
@@ -243,12 +243,15 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User accepted this task before the next task starts.
 
-Final status: implementation finished; testing pending. Next action: user review of this coding
-commit. Separately authorize TOOL-027-001 through TOOL-027-005 and marked writer fixture
-verification before runtime acceptance. The requested implementation range ends at tool-027;
-tool-028 is not authorized by this assignment. Static checks do not prove relation state,
+User approval (2026-10-05): accepted coding commit `a7f89f8` and assigned tools 028-030,
+with review after each tool. The prior range ended at tool-027; this new instruction authorizes
+tool-028 coding. It does not establish runtime acceptance.
+
+Final status: implementation finished; testing pending. Next action: separately authorize
+TOOL-027-001 through TOOL-027-005 and marked writer fixture
+verification before runtime acceptance. Static checks do not prove relation state,
 permissions, journals, or date effects.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

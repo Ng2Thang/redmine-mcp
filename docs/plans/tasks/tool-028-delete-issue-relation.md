@@ -7,13 +7,13 @@
 | Task ID | tool-028-delete-issue-relation |
 | Assigned capability | Delete one issue relation: Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry. |
 | Type / access / destructive effects | Add writer tool / write / Resource deletion or removal |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-027-create-issue-relation](tool-027-create-issue-relation.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
-| Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-027-create-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Last updated | 2026-10-05, Codex |
+| Progress summary | Typed receipt, relation deletion gateway/port/service/REST route, wiring, writer policy/annotations, and docs implemented; static checks passed. |
+| Blocker / next action | User review before tool-029; TOOL-028-001 through TOOL-028-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -32,11 +32,12 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_IssueRelations) | 2026-10-01 | General/current documentation | DELETE /relations/{relation_id}.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| Local pinned 7.0.2 source archive: relation controller/model and issue controller/API view/model | 2026-10-05 | Exact 7.0.2 | Visible relation endpoints, Manage relations on either project, removal journals, and omitted empty visible relation lists confirmed in source; runtime evidence pending. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `delete_issue_relation` is the sole public owner | No |
-| Strict sequence | Wait for tool-027-create-issue-relation evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User approved tool-027 coding commit `a7f89f8` and assigned tools 028-030 | No; testing still pending |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
@@ -46,7 +47,8 @@ separate restricted deployment and synthetic verification prerequisites.
 - In scope: Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: Manage issue relations.
+- Permission/configuration prerequisite: Manage issue relations on either endpoint project,
+  visibility of both endpoints, and separately enabled restricted writer.
 
 | Requirement | Observable behavior |
 |---|---|
@@ -66,7 +68,7 @@ fields: `{"resource_id":3,"upstream_accepted":true,"verification":"matched"}`. T
 | Purpose | Delete one issue relation; Resolve relation's visible source/target before delete, verify absence from issue context, and record unknown outcomes without retry. |
 | Local REST route | DELETE /api/v1/relations/{relation_id} |
 | Upstream mapping | DELETE /relations/{relation_id}.json |
-| Authentication | Personal `X-Redmine-API-Key`; Manage issue relations. |
+| Authentication | Personal `X-Redmine-API-Key`; both endpoints visible; Manage issue relations on either endpoint project. |
 | MCP exposure | writer only; explicit allowlist entry. |
 | Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
 
@@ -74,12 +76,15 @@ fields: `{"resource_id":3,"upstream_accepted":true,"verification":"matched"}`. T
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive relation_id | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | DELETE /relations/{relation_id}.json |
+| Tool arguments | Positive relation_id path parameter | Positive path ID, checked as strict integer by service; no body or context arguments. | DELETE /relations/{relation_id}.json |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-Write receipt with deletion observation. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+Typed receipt with outcome, upstream acceptance, resource ID, resolved relation,
+per-endpoint observations, aggregate observed presence, and matched/mismatch/unavailable
+verification. Empty upstream 204 is accepted without JSON parsing. Public REST returns 200
+with the receipt. Verification describes visible absence in both successful issue contexts.
 No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -101,9 +106,39 @@ registered exactly once and must not change defaults of another operation.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+### Frozen coding contract and source evidence (2026-10-05)
+
+Working-tree baseline was clean. Exact 7.0.2 source was read from ignored archive
+`.local/upgrades/source/redmine-7.0.2.tar.gz`: `app/controllers/issue_relations_controller.rb`,
+`app/models/issue_relation.rb`, `app/controllers/issues_controller.rb`,
+`app/views/issues/show.api.rsb`, and `app/models/issue.rb`. No runtime checks were run.
+
+- Positive relation path ID, checked again by the service; no body or context parameters.
+- Resolve GET `/relations/{id}.json` into a strict typed visible relation, including both
+  endpoint IDs. Preflight both GET `/issues/{endpoint}.json?include=relations` and require
+  the relation ID in both contexts before dispatch. Invalid or hidden context stops the write.
+- Redmine `deletable?` requires both endpoints visible and Manage issue relations on either
+  endpoint's project. Do not impose permission on both projects or require Edit issues.
+- One bounded DELETE `/relations/{id}.json`; 204 is accepted without parsing a body.
+  Return a receipt with outcome, upstream acceptance, relation resource ID, resolved relation,
+  per-endpoint presence observations, aggregate observed presence, and verification.
+- Independently re-read both issue contexts. Presence in either is mismatch; absence from
+  both is matched; unresolved context with no observed presence is unavailable. Read-back
+  errors preserve write acceptance. A 404 on relation or endpoint is never treated as proof
+  of deletion. Unknown outcomes have no automatic retry or rollback.
+- Requested relations are filtered by other-issue visibility in the pinned controller.
+  The pinned issue API omits `relations` when this filtered list is empty; a successful
+  correctly identified issue response with that omission means empty visible context.
+  Supplied non-list/null entries, invalid or duplicate IDs, and inconsistent endpoint
+  membership are malformed. Verification describes visible absence, not stored-row proof.
+- Destroy callbacks journal relation removal on both issues. Deleting a scheduling relation
+  does not restore dates previously changed by creation. No journal/date state is verified
+  by this receipt. Concurrent permission/visibility/state changes have no atomic guarantee.
+- Writer-only explicit operation, destructiveHint=true, readOnlyHint=false,
+  idempotentHint=false, openWorldHint=true. Existing reader and create contracts preserved.
+
+This resolves the draft's generic update-field wording and permission ambiguity. Specification
+exit check passed for coding; testing prerequisites and runtime acceptance remain pending.
 
 ## 5. Implementation plan
 
@@ -148,7 +183,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, `git diff --check` from Git Bash | Static checks pass | Lint passed; 175 files formatted; no issues in 99 source files; whitespace passed on 2026-10-05 | Pass |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -156,25 +191,46 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: typed receipt, deleter Protocol/service, relation router registered before MCP,
+  visible relation/endpoint preflights, one bounded DELETE, independent context observations,
+  writer allowlist, destructive hints, bootstrap wiring, and docs. Tool-027 approval recorded.
+- Plan deviations: clarified exact permission on either project and explicit visible absence
+  semantics. Source-backed omitted-empty relation handling avoids needing Manage relations
+  on both projects for index endpoints. No dependencies, tests, or live data changed.
+- Quality: EVID-001 passed. Ruff fixed import ordering and formatted only changed files.
+  Tests were not written, modified, or run under this coding-only assignment.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-027-create-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: task, dashboard, tool reference, changelog, and predecessor approval updated.
+- Final code diff review: strict service/path IDs, typed same-ID resolution, both visible
+  issue contexts before dispatch, positive unique relation IDs and endpoint membership,
+  single bounded DELETE, empty 204, independent read-back of each issue, presence dominating
+  unavailable observations, no 404-as-deletion inference, no retries or payload logging,
+  source permission rule preserved, explicit writer-only route and destructive hints inspected.
+  No pre-existing failures were found; prior create/default reader contracts preserved.
+- Remaining blocker: user review before tool-029 and separately authorized testing. Exact later
+  TOOL-028-001 through TOOL-028-005 work: visible relation and both issue preflights; invalid IDs,
+  malformed/missing/duplicate relation entries, endpoint inconsistencies, self relation data,
+  hidden or absent contexts and membership stopping dispatch; 204, uncertain timeout/unexpected
+  status, either endpoint still present, both absent, omitted empty list, null/malformed list,
+  one/both read-back failures including 404, acceptance retained, no retries, reader denial,
+  destructive MCP hints, and prior-tool compatibility. Marked prep-008 fixtures must verify
+  permissions separately on either project, actual row removal, removal journals, retained
+  scheduling dates, visibility changes, Inspector/startup, and task-owned cleanup. No live
+  relation was deleted. Static checks alone do not establish acceptance criteria.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-027-create-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; testing pending. Next action: user review of this coding
+commit before tool-029. Separately authorize TOOL-028-001 through TOOL-028-005 and marked writer
+state/permission verification for runtime acceptance. Visible absence does not prove row deletion.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

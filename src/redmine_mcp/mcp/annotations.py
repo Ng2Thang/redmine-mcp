@@ -8,7 +8,8 @@ def annotate_read_tools(tools: list[Tool]) -> None:
     for tool in tools:
         tool.annotations = ToolAnnotations(
             readOnlyHint=tool.name != "download_attachment" and tool.name not in WRITE_OPERATIONS,
-            destructiveHint=tool.name in ("delete_attachment", "update_issue_note"),
+            destructiveHint=tool.name
+            in ("delete_attachment", "update_issue_note", "delete_issue_relation"),
             idempotentHint=tool.name != "download_attachment" and tool.name not in WRITE_OPERATIONS,
             openWorldHint=True,
         )

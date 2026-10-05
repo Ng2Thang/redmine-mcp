@@ -249,3 +249,13 @@ class IssueRelationCreateResult(BaseModel):
     verification: Verification = "unavailable"
     field_verification: dict[str, Verification] = Field(default_factory=dict)
     observed_relation: RelationObservation | None = None
+
+
+class IssueRelationDeleteResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    resource_id: PositiveIssueId
+    resolved_relation: RelationObservation
+    endpoint_observations: dict[str, bool | None] = Field(default_factory=dict)
+    observed_present: bool | None = None
+    verification: Verification = "unavailable"

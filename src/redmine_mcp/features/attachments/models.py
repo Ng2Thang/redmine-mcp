@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from redmine_mcp.common import Visibility
 from redmine_mcp.features.projects import Reference
@@ -42,3 +42,33 @@ class UploadResult(BaseModel):
     token: str | None = None
     observed_filename: str | None = None
     observed_filesize: int | None = Field(default=None, ge=0)
+
+
+class AttachmentUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    container_type: Literal["project", "version", "issue"]
+    container_id: int = Field(strict=True, gt=0)
+    filename: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+
+    @model_validator(mode="after")
+    def validate_changes(self) -> "AttachmentUpdateRequest":
+        supplied = self.model_fields_set.intersection({"filename", "description"})
+        if not supplied or any(getattr(self, field) is None for field in supplied):
+            raise ValueError("Supply filename or description as a string; null is not accepted")
+        if self.filename is not None and (
+            self.filename in (".", "..")
+            or any(character in self.filename for character in ("/", "\\"))
+            or any(ord(character) < 32 or ord(character) == 127 for character in self.filename)
+        ):
+            raise ValueError("Invalid attachment filename")
+        return self
+
+
+class AttachmentUpdateResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
+    attachment_id: int = Field(gt=0)
+    observed_attachment: AttachmentDetail | None = None

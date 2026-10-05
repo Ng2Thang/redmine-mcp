@@ -23,7 +23,7 @@ READ_OPERATIONS = (
     "list_trackers",
 )
 
-WRITE_OPERATIONS: tuple[str, ...] = ("upload_attachment", "add_project_file")
+WRITE_OPERATIONS: tuple[str, ...] = ("upload_attachment", "add_project_file", "update_attachment")
 
 
 class AuthorizationPolicy:

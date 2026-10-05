@@ -9,9 +9,15 @@ from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.features.attachments.models import (
     AttachmentDetail,
     AttachmentDownload,
+    AttachmentUpdateRequest,
+    AttachmentUpdateResult,
     UploadResult,
 )
-from redmine_mcp.features.attachments.ports import AttachmentReader, AttachmentWriter
+from redmine_mcp.features.attachments.ports import (
+    AttachmentMetadataWriter,
+    AttachmentReader,
+    AttachmentWriter,
+)
 
 
 class AttachmentService:
@@ -20,10 +26,12 @@ class AttachmentService:
         reader: AttachmentReader,
         writer: AttachmentWriter | None = None,
         max_binary_bytes: int = 5 * 1024 * 1024,
+        metadata_writer: AttachmentMetadataWriter | None = None,
     ) -> None:
         self.reader = reader
         self.writer = writer
         self.max_binary_bytes = max_binary_bytes
+        self.metadata_writer = metadata_writer
 
     async def get_attachment(self, attachment_id: int) -> AttachmentDetail:
         require_positive_id(attachment_id, "attachment_id")
@@ -32,6 +40,14 @@ class AttachmentService:
     async def download_attachment(self, attachment_id: int) -> AttachmentDownload:
         require_positive_id(attachment_id, "attachment_id")
         return await self.reader.download_attachment(attachment_id)
+
+    async def update_attachment(
+        self, attachment_id: int, request: AttachmentUpdateRequest
+    ) -> AttachmentUpdateResult:
+        require_positive_id(attachment_id, "attachment_id")
+        if self.metadata_writer is None:
+            raise RuntimeError("Attachment metadata writer is not configured")
+        return await self.metadata_writer.update_attachment(attachment_id, request)
 
     async def upload_attachment(self, filename: str, content_base64: str) -> UploadResult:
         if (

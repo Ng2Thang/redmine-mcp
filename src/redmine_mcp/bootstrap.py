@@ -15,6 +15,7 @@ from redmine_mcp.features import (
 from redmine_mcp.integrations.redmine import (
     ReadPolicy,
     RedmineAttachments,
+    RedmineAttachmentUpdates,
     RedmineClient,
     RedmineIdentity,
     RedmineIssues,
@@ -65,6 +66,7 @@ def build_container(
             RedmineAttachments(client),
             RedmineUploads(writer, client),
             client.policy.max_binary_bytes,
+            metadata_writer=RedmineAttachmentUpdates(client, writer),
         ),
         ProjectService(project_reader, RedmineProjectFiles(writer, project_reader)),
         IssueService(RedmineIssues(client)),

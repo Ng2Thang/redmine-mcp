@@ -10,6 +10,7 @@ from redmine_mcp.api import (
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.config import Settings
 from redmine_mcp.features.attachments.router import router as attachments_router
+from redmine_mcp.features.attachments.write_router import metadata_router
 from redmine_mcp.features.attachments.write_router import router as uploads_router
 from redmine_mcp.features.issues.router import router as issues_router
 from redmine_mcp.features.projects.router import router as projects_router
@@ -37,6 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(project_writes_router)
     app.include_router(attachments_router)
     app.include_router(uploads_router)
+    app.include_router(metadata_router)
     app.include_router(issues_router)
     app.include_router(time_entries_router)
     app.include_router(reference_data_router)

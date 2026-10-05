@@ -11,6 +11,8 @@ that a release has been published.
   separate accepted/uncertain and read-back verification fields.
 - Added writer-only `add_project_file` to attach one upload token to a project or its own version,
   with separate empty-success and file-list verification results.
+- Added writer-only `update_attachment` with declared-container membership checks, supplied-field
+  metadata patches, and separate write acceptance and read-back verification.
 
 - Added read-only `get_current_user` for the caller's basic profile and visible project
   memberships with roles; credentials and additional account metadata are excluded.

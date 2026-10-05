@@ -330,6 +330,18 @@ list read-back. `observed_file` contains Redmine's file metadata when found. A f
 leaves an accepted write accepted; an uncertain response can still be reconciled through the
 file list. Do not automatically retry the token after an uncertain result.
 
+`update_attachment` is writer-only. Supply `attachment_id`, `container_type` (`project`,
+`version`, or `issue`), `container_id`, and at least one of `filename` or `description`.
+Filename must be a basename of at most 255 characters. Description may be empty to clear it;
+explicit null and unknown fields are rejected. Omitted fields are excluded from the PATCH.
+The tool proves membership through the project file list (including the version reference)
+or the issue's attachments. A version's owning project is resolved through version metadata.
+An attachment absent from the declared container returns a visibility-safe 404 before mutation.
+After `PATCH /attachments/{attachment_id}.json`, the result reports `outcome`,
+`upstream_accepted`, and separate `verification` against supplied fields, with
+`observed_attachment` when available. A failed read-back preserves write acceptance. Membership
+checking and mutation are separate requests; there is no atomic concurrency guarantee.
+
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import httpx
 
-from redmine_mcp.auth import AuthenticationService
+from redmine_mcp.auth import WRITE_OPERATIONS, AuthenticationService
 from redmine_mcp.auth.capabilities import CapabilityService
 from redmine_mcp.auth.models import Principal
 from redmine_mcp.config import Settings
@@ -14,6 +14,7 @@ from redmine_mcp.features import (
     TimeEntryService,
     UserService,
 )
+from redmine_mcp.features.users.capability_service import ProjectCapabilityService
 from redmine_mcp.integrations.redmine import (
     ReadPolicy,
     RedmineAttachmentDeletions,
@@ -46,6 +47,7 @@ class Container:
     reference_data: ReferenceService
     time_entries: TimeEntryService
     users: UserService
+    project_capabilities: ProjectCapabilityService | None = None
 
 
 def read_policy(settings: Settings | None) -> ReadPolicy:
@@ -79,6 +81,16 @@ def build_container(
         if settings is not None and settings.personal_writer
         else None
     )
+    admitted = settings is not None and settings.redmine_write_enabled and principal is not None
+    if admitted and settings is not None and principal is not None:
+        admitted = not settings.writer_user_ids or (
+            principal.redmine_user_id in settings.writer_user_ids
+        )
+    operations = tuple(
+        operation
+        for operation in WRITE_OPERATIONS
+        if admitted and settings is not None and operation in settings.writer_operations
+    )
     return Container(
         AttachmentService(
             RedmineAttachments(client),
@@ -105,6 +117,11 @@ def build_container(
         ReferenceService(RedmineReferenceData(client)),
         TimeEntryService(RedmineTimeEntries(client)),
         UserService(RedmineUsers(client)),
+        ProjectCapabilityService(
+            project_reader,
+            build_capabilities(http, api_key, settings, principal),
+            operations,
+        ),
     )
 
 

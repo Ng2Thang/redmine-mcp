@@ -7,6 +7,20 @@ that a release has been published.
 
 ### Added
 
+- Read-only `list_my_project_capabilities` with paginated caller-visible projects, membership
+  roles deduplicated by ID, sorted unique project permissions merged across all readable roles,
+  explicit known/partial/unknown permission evidence, and conditional/unknown tool candidates.
+  Permissions are reported at project level instead of repeated under each role.
+  Global tools are separate;
+  deployment-disabled, account-restricted and denied writes are omitted.
+  Centralized read rules cover project details, issues, versions, categories, files, issue
+  time entries and attachment containers, including OR/AND permission requirements and
+  explicit administrator evidence. Resource visibility remains subject to Redmine.
+  Tool entries contain only `operation_id` and `state` by default; `include_reasons=true`
+  adds explanations for project and global tools.
+  Optional project and operation filters return scoped capabilities, with filtering before
+  pagination and conditional matches by default; `include_unknown=true` retains unknowns.
+
 - Added caller-specific personal-writer MCP tool discovery with an immutable deployment schema
   superset, bounded project inventory, known-denial filtering and conditional/unknown candidates.
   Direct and cached calls retain authoritative per-request REST permission checks.

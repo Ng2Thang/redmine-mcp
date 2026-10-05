@@ -23,6 +23,7 @@ WriteOperation = Literal[
 class MembershipRole:
     role_id: int
     inherited: bool = False
+    name: str | None = None
 
 
 @dataclass(frozen=True)

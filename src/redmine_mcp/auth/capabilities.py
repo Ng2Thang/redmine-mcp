@@ -95,14 +95,22 @@ class CapabilityService:
         incomplete = profile.admin is None or clause.project_id is None or not memberships
         for membership in memberships:
             for role in membership.roles:
-                if role.role_id not in self._roles:
-                    self._roles[role.role_id] = await self.reader.role(role.role_id)
-                permissions = self._roles[role.role_id]
+                permissions = await self.role(role.role_id)
                 if permissions is None:
                     incomplete = True
                 elif permissions.permissions & clause.alternatives:
                     return "conditional"
         return "unknown" if incomplete else "denied"
+
+    async def role(self, role_id: int) -> RolePermissions | None:
+        """Deduplicate role evidence only for the lifetime of this request."""
+        if role_id not in self._roles:
+            self._roles[role_id] = await self.reader.role(role_id)
+        return self._roles[role_id]
+
+    async def project_operation(self, operation: str, project_id: int | None) -> CapabilityState:
+        """Necessary permission evidence, shared by discovery and capability reports."""
+        return await self.clause(PermissionClause(project_id, OPERATION_PERMISSIONS[operation]))
 
     async def evaluate(self, expression: PermissionExpression) -> CapabilityState:
         branches: list[CapabilityState] = []
@@ -134,13 +142,12 @@ class CapabilityService:
                 inventory = await self.reader.visible_projects()
                 candidates: set[str] = set()
                 for operation in operations:
-                    permissions = OPERATION_PERMISSIONS[operation]
                     if operation == "upload_attachment":
-                        state = await self.clause(PermissionClause(None, permissions))
+                        state = await self.project_operation(operation, None)
                     else:
                         states = tuple(
                             [
-                                await self.clause(PermissionClause(project_id, permissions))
+                                await self.project_operation(operation, project_id)
                                 for project_id in inventory.project_ids
                             ]
                         )

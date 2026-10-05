@@ -1,5 +1,81 @@
 # Tool reference
 
+## Caller project capabilities
+
+`list_my_project_capabilities` reads the authenticated account's visible projects, membership
+roles, readable role permissions and candidate tools. REST:
+`GET /api/v1/users/current/project-capabilities?limit=25&offset=0`.
+`limit` accepts 1–100; `offset` is nonnegative. `include_reasons` defaults to `false`;
+set it to `true` only when tool state explanations are requested.
+No account or credential arguments are accepted.
+
+Use `project_id` to inspect one caller-visible project directly, including a project outside
+the current listing page. Hidden or missing projects retain normal upstream errors. Resolve
+a project name with `list_projects` before passing its numeric ID.
+Use `operation_id` to return only that project-scoped tool and matching projects. By default,
+only `conditional` matches are included; `include_unknown=true` also includes unknown
+candidates. The filters can be combined, for example:
+
+```json
+{"project_id": 3, "operation_id": "create_issue"}
+```
+
+Filtering precedes `limit`/`offset`; `total` counts matching projects. Scoped requests return
+an empty `global_tools` array. Global operations (including `upload_attachment`) and unknown
+operation names are rejected as operation filters. A deployment-disabled or account-restricted
+write has no matching projects. Without filters, the tool retains the paginated visible-project
+report, which does not mean every listed project supports every action. `include_unknown`
+affects only operation-filtered requests. Conditional evidence never guarantees a successful write.
+Operation filtering across projects inventories at most 10,000 visible projects under the
+report deadline; changing/malformed inventories fail, and an exceeded bound asks for `project_id`.
+
+The response contains `user_id`, paginated `items`, `total`, `limit`, `offset`, `visibility`,
+and `global_tools`. Each project has `id`, `name`, `roles`, `permissions`, `permissions_state`,
+`membership_state`, and `tools`. Roles contain `id`, nullable `name`, and `inherited`.
+Roles are unique by ID and sorted by ID; a role present both directly and through inheritance
+has `inherited=false`. Permissions appear once per project as the sorted unique union across
+all readable membership roles. Every role contributes its permissions; role IDs and names do
+not define a privilege ranking. Tool candidates use permission evidence from all roles.
+`permissions_state` is `known` when all membership roles are readable, `partial` when only
+some are readable, and `unknown` when none are readable or membership evidence is missing.
+Partial results retain the known union. Unknown permissions are null; a known empty array
+means the reported membership roles have no permissions (including a membership with no roles).
+Missing explicit memberships are marked unknown, including visible public projects.
+
+Project and global tool entries contain only `operation_id` and `state` by default.
+`reason` is omitted entirely, rather than returned as null. With `include_reasons=true`,
+each tool entry also contains its `reason`. Other response fields and nullable evidence
+retain their existing representation. Disabled, account-restricted and denied
+writes are omitted. `conditional` means necessary permission evidence exists; `unknown`
+means evidence is insufficient. Project read tools use the following centralized rules.
+Permissions may come from different readable roles, including partial permission results.
+
+| Read tool | Evidence for `conditional` | Remaining invocation checks |
+|---|---|---|
+| `get_project` | Project appears in the caller's visible-project page | Current project access and metadata visibility |
+| `get_issue`, `list_issues` | `view_issues` | Issue visibility, private issues and module availability |
+| `list_project_versions` | `view_issues` | Issue tracking availability and shared-version visibility |
+| `list_project_issue_categories` | `view_issues` OR `manage_categories` | Issue tracking availability and project access |
+| `list_project_files` | `view_files` | Files module and project/version file visibility |
+| `list_issue_time_entries` | `view_issues` AND `view_time_entries` | Issue preflight, time tracking module and role time-entry visibility |
+| `get_attachment`, `download_attachment` | Any of `view_issues`, `view_files`, `view_documents`, `view_news`, `view_messages`, `view_wiki_pages` | Actual container type and visibility, file availability, download byte limits |
+
+An explicitly reported Redmine administrator also provides positive project read evidence.
+Attachment evidence supports a possible container type, never every attachment in the project.
+Without positive evidence, mapped read tools remain unknown: admin or non-member access may
+exist outside the readable membership inventory. Global reads and future unmapped operations
+remain unknown. The rules describe the existing tools only and do not expose new features.
+These states do not guarantee invocation: target, tracker, workflow and native authorization
+still apply.
+For `delete_issue_relation`, missing permission on the listed project keeps the tool `unknown`:
+the other endpoint's project may authorize deletion. Both endpoints are checked on invocation.
+Account inspection, project listing, reference lists, this tool and enabled attachment upload
+are reported in `global_tools`; resource-dependent candidates are listed per project.
+
+The tool uses only the caller's key, caches role evidence within a request, and makes no writes
+or permission-probing tool calls. Role API 403/404 produces unknown permissions; other upstream
+failures use normal application errors. It is available on both reader and writer deployments.
+
 The separate writer supports default `pinned_key` authentication and explicit `personal_key`
 mode for multiple callers. Each request supplies its own Redmine key. Personal-mode user IDs
 restrict writes only; deployment operation gates and upstream resource permissions still apply.
@@ -44,6 +120,7 @@ data. The external Redmine data can change.
 | Tool | REST endpoint | Inputs |
 |---|---|---|
 | `get_current_user` | `GET /api/v1/users/current` | None; always includes visible project memberships and roles |
+| `list_my_project_capabilities` | `GET /api/v1/users/current/project-capabilities` | `limit=25` (1–100), `offset=0`, optional `project_id`/`operation_id`, `include_unknown=false`, `include_reasons=false` |
 | `list_projects` | `GET /api/v1/projects` | `limit`, `offset` |
 | `get_project` | `GET /api/v1/projects/{project_id}` | Required positive integer `project_id` |
 | `list_project_versions` | `GET /api/v1/projects/{project_id}/versions` | Required positive integer `project_id` |

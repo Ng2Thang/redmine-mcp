@@ -1,9 +1,21 @@
 # MCP tool roadmap
 
+The user-authorized [caller project capabilities](tasks/tool-031-list-my-project-capabilities.md) tool is
+implemented: `list_my_project_capabilities` returns paginated unique project roles, merged
+permissions and conditional/unknown candidate tools, with global tools separate. Centralized
+read rules cover projects, issues, versions, categories, files, time entries and attachment
+containers using the project permission union and visible-project/admin evidence.
+Tool entries default to `operation_id` and `state`; `include_reasons=true` adds explanations.
+Optional `project_id` and `operation_id` filters scope destination/action lookups; operation
+matches default to conditional evidence, with `include_unknown=true` retaining unknowns.
+The merged permission, read-rule and optional explanation follow-ups were inspected in source
+only; checks and runtime acceptance await
+separately authorized verification. Earlier static checks are recorded in its implementation record.
+
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
-Active task IDs are continuous: `tool-001` through `tool-030` and `prep-001` through
+Active task IDs are continuous: `tool-001` through `tool-031` and `prep-001` through
 `prep-014`. On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through
@@ -28,6 +40,7 @@ false-default write gate, but the currently deployed catalog remains read-only.
 | `list_issues` | Page through issues by project, status, and assignee. | Implemented; extension task below |
 | `get_issue` | Read one visible issue with journals and attachment metadata. | Implemented; extension task below |
 | `get_current_user` | Identify the caller and read visible project memberships with roles. | Implementation finished; acceptance pending in tool-013 |
+| `list_my_project_capabilities` | Read unique caller project roles, merged permissions and conditional/unknown tool candidates. | Aggregation implemented; follow-up checks and runtime acceptance pending separately authorized verification |
 
 ## Ordered task dashboard
 
@@ -110,7 +123,7 @@ implementation, unit tests, startup, Inspector, or synthetic mutations.
 | 2 | [prep-011-multi-user-writer-auth](tasks/prep-011-multi-user-writer-auth.md) | Authenticate personal keys and restrict writes independently of reads | prep-010 session contract; existing prep-007 implementation | blocked | Implementation and Ruff/mypy/diff checks pass. AUTH-001 through AUTH-008 and metadata packaging checks assigned to prep-014; continue prep-012 coding under the full-range assignment. |
 | 3 | [prep-012-project-resource-authorization](tasks/prep-012-project-resource-authorization.md) | Check caller capabilities in the actual target context | prep-010 resolved permission matrix; prep-011 implementation | blocked | All eleven service checks, typed evidence and same-key target/role gateway implemented; Ruff/mypy/AST/diff checks pass. PERM-001 through PERM-009 pending in prep-014; continue prep-013 coding. |
 | 4 | [prep-013-caller-tool-discovery](tasks/prep-013-caller-tool-discovery.md) | Discover tools relevant to the caller without changing shared registry | prep-010 adapter contract; prep-011/012 implementations | blocked | Raw SDK discovery handler and immutable schema superset implemented; Ruff/mypy/AST/diff checks pass. DISC-001 through DISC-007 and runtime acceptance assigned to prep-014. |
-| 5 | [prep-014-multi-user-writer-acceptance](tasks/prep-014-multi-user-writer-acceptance.md) | Verify caller isolation, permissions, discovery, and resulting write state | prep-011/012/013 implemented; prep-002 baseline; prep-008 fixture guidance; separate testing authorization | planned | Finish predecessor contracts/implementation; fixtures, tests, and live checks are a separate assignment. |
+| 5 | [prep-014-multi-user-writer-acceptance](tasks/prep-014-multi-user-writer-acceptance.md) | Verify caller isolation, permissions, discovery, and resulting write state | prep-011/012/013 implemented; prep-002 baseline; prep-008 fixture guidance; separate testing authorization | blocked | User clarified that the implementation request did not authorize tests. Agent-created tests/tooling removed and existing test edits restored. No further unit tests, Inspector, synthetic seeding or live verification without explicit separate approval. |
 
 The old prep-009 release acceptance remains scoped to its existing roadmap. prep-014 owns
 acceptance of the multi-user change; old waivers and passing checks are not new runtime evidence.
@@ -118,6 +131,12 @@ acceptance of the multi-user change; old waivers and passing checks are not new 
 Execution assignment (2026-10-05): the user requested implementation of prep-010 through prep-014,
 quality checks and one commit per prep named `feat: prep_0xx <context>`. Coding stages remain
 separate from prep-014's explicit verification scope. No production rollout is included.
+
+## Caller project capabilities
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [tool-031-list-my-project-capabilities](tasks/tool-031-list-my-project-capabilities.md) | Inspect caller roles, permissions and candidate tools per visible project | Existing project reader and prep-010/011/012/013 implementations | blocked | Implementation, review fix and static checks finished; runtime acceptance awaits separately authorized verification. |
 
 ## Future ideas, not assigned tasks
 

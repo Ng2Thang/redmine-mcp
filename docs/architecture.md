@@ -1,5 +1,16 @@
 # Architecture
 
+The read-only `list_my_project_capabilities` route is implemented in the users feature.
+Its service combines the project reader Protocol with the request-local capability service
+and caller-key Redmine adapters. Bootstrap supplies the deployment write ceiling and account
+admission. Discovery and the report share project-operation permission evaluation. Role reads
+are deduplicated per request, never across callers or requests. The report is advisory and does
+not execute tools; runtime write authorization remains independent of reported candidates.
+Project read evidence is evaluated through centralized rules in the users feature: OR between
+permission branches and AND within a branch. The merged role permission union supplies the
+evidence; project listing and explicit administrator status provide additional read evidence.
+Conditional candidates retain module, container and resource visibility checks on invocation.
+
 See [MCP request and response flow](mcp-request-flow.md) for the complete startup,
 authentication, tool dispatch, validation, response, error, and shutdown sequence.
 

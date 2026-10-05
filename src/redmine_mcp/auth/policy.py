@@ -7,6 +7,7 @@ from redmine_mcp.constants import codes as codes_text
 
 READ_OPERATIONS = (
     "get_current_user",
+    "list_my_project_capabilities",
     "list_projects",
     "get_project",
     "list_project_versions",

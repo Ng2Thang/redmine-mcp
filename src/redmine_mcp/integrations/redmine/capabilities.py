@@ -93,7 +93,10 @@ class RedmineCapabilities:
                 inherited = role.get("inherited", False)
                 if type(inherited) is not bool:
                     raise invalid_response()
-                roles.append(MembershipRole(positive_id(role.get("id")), inherited))
+                name = role.get("name")
+                if name is not None and (not isinstance(name, str) or not name.strip()):
+                    raise invalid_response()
+                roles.append(MembershipRole(positive_id(role.get("id")), inherited, name))
             memberships.append(ProjectMembership(project_id, tuple(roles)))
         return CapabilityProfile(user_id, admin, tuple(memberships))
 
@@ -203,9 +206,7 @@ class RedmineCapabilities:
             relation_id = target_id(intent.relation_id)
             data = await self.client.get(f"relations/{relation_id}.json", {})
             relation = resource_object(data.get("relation"), relation_id)
-            endpoints = [
-                positive_id(relation.get(field)) for field in ("issue_from_id", "issue_to_id")
-            ]
+            endpoints = [positive_id(relation.get(field)) for field in ("issue_id", "issue_to_id")]
             branches = []
             for endpoint in endpoints:
                 issue = await self._issue(endpoint)

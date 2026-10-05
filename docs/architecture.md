@@ -90,6 +90,13 @@ snapshots and deduplicated role reads live only in the request's container. The 
 aggregate deadline. Visibility/ownership/field/tracker/workflow conditions still belong to Redmine;
 local permission presence never substitutes for upstream authorization. Existing write gateways
 retain container proof, accepted/uncertain outcomes, no automatic retries and independent read-back.
+
+`mcp/discovery.py` installs a raw SDK ListToolsRequest handler for personal writers and reads the
+authenticated original request context. It returns request-local copies filtered by deployment
+admission and capability evidence. The complete generated catalog remains the immutable schema
+superset for invocation. The adapter seeds SDK 1.30.0's cache once instead of using its list-tools
+decorator, which mutates shared schema state. Missing context fails closed; unknown permission
+coverage remains a candidate and is resolved through the same REST boundary at invocation.
 Validation inspects normalized route contracts, including lazy included-router contexts in newer
 FastAPI versions. It rejects duplicate/hidden routes, non-GET routes, missing response schemas,
 and tools without the read-authorization dependency. Generated MCP tool names must exactly match

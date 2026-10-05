@@ -160,6 +160,19 @@ membership or inaccessible role metadata is unknown evidence and never proves de
 Malformed metadata, timeout or transport failure stops dispatch with a sanitized upstream error.
 No role-name mapping, administrator substitution or cross-request permission cache is used.
 
+Personal-key MCP discovery returns a caller-specific candidate list. It retains all read tools,
+applies the optional write admission list and configured operations, and hides only writes proved
+unavailable across the caller's completely inventoried visible projects. A project without
+membership or role metadata keeps evidence unknown, so potentially usable tools remain visible.
+Visible projects are inventoried in pages of 100, capped at 100 pages under the aggregate request
+deadline; partial/changing inventories cannot prove denial. Role definitions are deduplicated
+only within this discovery request. Default pinned-key discovery keeps its common catalog.
+
+Tool availability does not guarantee permission for a concrete target. Every direct or cached
+tool call still passes REST deployment and resource authorization. A fresh `tools/list` refreshes
+evidence; no proactive list-change notification is promised. The MCP adapter returns copied
+definitions and never mutates the shared superset schema cache for another caller.
+
 The writer catalog contains only configured operation IDs from the code's explicit write allowlist.
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Each future write route must use `require_write_access`, which checks its operation ID

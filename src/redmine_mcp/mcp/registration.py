@@ -15,6 +15,7 @@ from redmine_mcp.mcp.catalog import (
     validate_operation_catalog,
     writer_catalog,
 )
+from redmine_mcp.mcp.discovery import install_caller_discovery
 
 
 def register_mcp(
@@ -36,6 +37,8 @@ def register_mcp(
     )
     validate_generated_tools(mcp.tools, operations)
     annotate_read_tools(mcp.tools)
+    if settings is not None and settings.personal_writer:
+        install_caller_discovery(mcp)
     mcp.mount_http()
     return mcp
 

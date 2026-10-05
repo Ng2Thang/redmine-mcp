@@ -7,13 +7,13 @@
 | Task ID | prep-013-caller-tool-discovery |
 | Assigned capability | Discover relevant tools without exposing another caller's capability context |
 | Type / access / destructive effects | Shared MCP discovery prerequisite / discovery is read-only, invocation remains mixed / None from discovery |
-| Status | planned |
+| Status | blocked |
 | Dependencies | [prep-010](prep-010-permission-session-contract.md) adapter contract; [prep-011](prep-011-multi-user-writer-auth.md); [prep-012](prep-012-project-resource-authorization.md) |
 | Related tasks | [Roadmap](../multi-user-writer-authorization.md); [dashboard](../index.md); prep-014 |
 | Target version | Redmine 7.0.2; FastAPI-MCP 0.4.0; MCP SDK 1.30.0 |
 | Last updated | 2026-10-05, Codex |
-| Progress summary | Exact raw SDK handler, immutable schema cache, request context and session integration resolved by prep-010 |
-| Blocker / next action | Implement the dated prep-010 adapter contract after prep-011/012 |
+| Progress summary | Personal-writer raw discovery handler, copied caller results and immutable superset schema cache implemented; static checks pass |
+| Blocker / next action | Execute DISC-001 through DISC-007 in the assigned separate prep-014 verification stage |
 
 ## 2. Discovery and evidence
 
@@ -143,21 +143,34 @@ Plan only; use the existing credential-free MCP client/ASGI baseline when separa
 
 | Evidence | Procedure | Actual / status |
 |---|---|---|
-| EVID-001 | Source contract review and coding static checks | Not performed / pending |
+| EVID-001 | prep-010 handler/cache review; installed Ruff lint/format, mypy src, AST architecture and git diff --check; 2026-10-05 | Pass / runtime evidence pending |
 | EVID-002 | Authorized selected DISC scenarios against offline baseline | Not run / pending |
 | EVID-003 | Authorized two-user Inspector and marked synthetic permission/state checks | Not run / pending |
 
 ## 8. Implementation and review record
 
-Planning only. No runtime, dependencies, tools, tests, or installed packages changed. Remaining
-blocker is the named adapter integration contract; prior runtime waiver is not new evidence.
+Implemented on 2026-10-05: `mcp/discovery.py` validates the reviewed SDK cache shape, seeds the
+deployment schema superset once and installs a raw ListToolsRequest handler. The handler reads
+the authenticated original Request/AuthContext, applies personal writer admission, reuses the
+request-local capability resolver and returns deep copies in canonical order. Known denied
+writes are hidden; conditional/unknown candidates carry a target-permission description.
+The original invocation handler, REST forwarding and operation map remain intact, so hidden or
+cached calls retain authoritative checks. Missing context fails closed and upstream errors are
+sanitized. Reader and pinned-key registrations retain existing discovery. No installed package
+patched or dependency upgraded; the SDK was already pinned in prep-011.
+Ruff lint/format pass repository-wide (188 files); mypy src passes (105 modules); AST import
+boundaries/cycles and git diff --check pass. Formatting affected only the assigned new adapter.
+Final source/diff review confirms no per-caller mutation of the global tools or schema registry.
+No tests/fixtures, startup, Inspector or live checks run in this coding stage. DISC-001 through
+DISC-007, concurrency and revocation evidence remain assigned to prep-014.
 
 ## 9. Completion and handoff
 
-- [ ] Adapter/session integration contract reviewed.
-- [ ] Caller discovery and immutable registry implemented.
-- [ ] Direct-call authorization and credential isolation preserved.
+- [x] Adapter/session integration contract reviewed.
+- [x] Caller discovery and immutable registry implemented.
+- [x] Direct-call authorization and credential isolation preserved by source inspection; runtime evidence pending.
 - [ ] Static checks and separately authorized acceptance evidence pass.
 - [ ] Documentation, final diff, task and dashboard synchronized.
 
-Final status: planned. Next action: implement after prep-011/012 using the resolved adapter contract.
+Final status: blocked - implementation finished; testing pending. Next action: execute the
+separately assigned prep-014 verification stage, including direct-call and concurrent-session checks.

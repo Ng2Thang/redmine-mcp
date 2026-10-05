@@ -8,6 +8,13 @@ caller must retain its session. The detailed fixture/state matrix is in
 [prep-014](plans/tasks/prep-014-multi-user-writer-acceptance.md). Do not execute those writes merely
 to perform a reader smoke check.
 
+For personal-key discovery, compare two users with contrasting complete project memberships.
+Their write candidates should differ while reader names, schemas and annotations remain stable.
+Call a hidden or previously cached tool directly: its current permissions must still be checked.
+Repeat discovery after changing only an owned synthetic role; no other user's catalog may change.
+Public non-member or incomplete permission data is intentionally shown as a candidate rather
+than treated as definitive denial. Inspect target behavior separately from list visibility.
+
 This guide records operational smoke checks. It does not add an automated test suite or establish
 production readiness. Full permission, restore, and failure-recovery verification remains in the
 [testing roadmap](testing-roadmap.md).

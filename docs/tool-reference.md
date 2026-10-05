@@ -11,6 +11,12 @@ or partial metadata remains unknown; Redmine still checks every write using the 
 Mixed issue updates can apply permitted fields/notes while ignoring others, as shown by read-back
 verification. Local checks preserve that behavior and do not promise unrestricted field access.
 
+Personal-key `tools/list` returns read tools plus permitted write candidates within the writer's
+configured operation ceiling. Known denied writes are omitted; conditional/unknown candidates
+remain discoverable. A tool may be usable in one project and forbidden in another. Re-list tools
+to refresh role evidence after a permission change; each invocation rechecks access even if the
+client cached an older catalog. Pinned-key mode retains the common configured catalog.
+
 The MCP endpoint is `http://localhost:8000/mcp` using Streamable HTTP. Supply
 `X-Redmine-API-Key: <your personal Redmine API key>` for MCP and REST tools. The server exposes only the
 tools below. Swagger at `/docs` and OpenAPI at `/openapi.json` describe REST schemas.

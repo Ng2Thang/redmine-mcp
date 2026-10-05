@@ -7,6 +7,10 @@ that a release has been published.
 
 ### Added
 
+- Added caller-specific personal-writer MCP tool discovery with an immutable deployment schema
+  superset, bounded project inventory, known-denial filtering and conditional/unknown candidates.
+  Direct and cached calls retain authoritative per-request REST permission checks.
+
 - Added request-local personal-writer capability evidence and project/resource permission checks
   for all eleven write operations, with same-key role/target reads and authoritative upstream
   handling of tracker, workflow, field, ownership and partial metadata conditions.

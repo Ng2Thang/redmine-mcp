@@ -1,5 +1,13 @@
 # Manual verification
 
+For separately authorized multi-user verification on the marked synthetic writer, use distinct
+ordinary personal keys privately. In personal-key mode verify both users can read/connect and
+an excluded write-admission user receives 403 for writes. Reusing a session ID with a different
+user or rotated key must return 404 before dispatch, including GET and DELETE; the original
+caller must retain its session. The detailed fixture/state matrix is in
+[prep-014](plans/tasks/prep-014-multi-user-writer-acceptance.md). Do not execute those writes merely
+to perform a reader smoke check.
+
 This guide records operational smoke checks. It does not add an automated test suite or establish
 production readiness. Full permission, restore, and failure-recovery verification remains in the
 [testing roadmap](testing-roadmap.md).

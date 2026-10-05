@@ -10,9 +10,10 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 |---|---|---|
 | `REDMINE_URL` | Required | HTTP or HTTPS base URL reachable from MCP; no embedded credentials, query, or fragment. A deployment subpath is supported. |
 | `REDMINE_WRITE_ENABLED` | `false` | Enables the separate writer runtime. Base Compose forces this false on `mcp-server` and true on the opt-in `mcp-writer` profile. |
-| `REDMINE_WRITER_USER_IDS` | Empty | Comma-separated positive Redmine user IDs permitted on the writer runtime; required when enabled. |
+| `REDMINE_WRITER_AUTH_MODE` | `pinned_key` | `pinned_key` accepts one configured key; explicit `personal_key` authenticates each caller's own Redmine key. |
+| `REDMINE_WRITER_USER_IDS` | Empty | Positive user ID CSV. Required in enabled pinned-key mode; optional write-only admission list in personal-key mode. Empty personal-key list admits any authenticated caller to attempt enabled writes. |
 | `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs permitted on the writer runtime. Empty permits no mutations. Unknown IDs prevent startup. |
-| `REDMINE_WRITER_KEY_SHA256` | Empty | Lowercase SHA-256 hex digest of the one restricted personal key accepted by the writer runtime; required when enabled. Keep it private. |
+| `REDMINE_WRITER_KEY_SHA256` | Empty | Private lowercase SHA-256 digest required for enabled pinned-key mode. Must be empty in personal-key mode; conflicting settings prevent startup. |
 | `REDMINE_TIMEOUT_SECONDS` | `20` | Positive finite read/write timeout in seconds; an inactivity timeout, not an end-to-end deadline. |
 | `REDMINE_CONNECT_TIMEOUT_SECONDS` | `5` | Positive finite connection timeout in seconds. |
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
@@ -113,7 +114,8 @@ Do not share `docker compose config` output because interpolation can expose sec
 
 Base Compose always keeps `mcp-server` read-only. The opt-in `mcp-writer` profile binds to
 localhost port `8001` by default (`MCP_WRITER_HOST_PORT`). It needs a separate ignored env-file
-with `REDMINE_WRITER_USER_IDS` and `REDMINE_WRITER_KEY_SHA256`. Generate the digest locally in Git
+with explicit authentication mode. Default `pinned_key` requires `REDMINE_WRITER_USER_IDS` and
+`REDMINE_WRITER_KEY_SHA256`. Generate the digest locally in Git
 Bash without putting the personal key in a command argument or history:
 
 ```bash
@@ -128,6 +130,26 @@ writer listener and env-file. The writer compares the key digest before calling 
 checks the returned Redmine user ID. A different key receives 401, and a mismatched user receives
 403. Both REST and MCP requests use this boundary. The writer still exposes existing read tools
 to its restricted caller.
+
+For multiple callers, configure the separate ignored writer env-file with:
+
+```bash
+REDMINE_WRITER_AUTH_MODE=personal_key
+REDMINE_WRITER_KEY_SHA256=
+REDMINE_WRITER_USER_IDS=
+```
+
+Each caller supplies their own `X-Redmine-API-Key`; authentication resolves the caller through
+Redmine and every upstream call uses that key. An optional user ID list restricts writes only;
+valid excluded users still read and connect. Empty user IDs do not grant Redmine permissions.
+The configured operation list and upstream permissions remain required. No shared administrator
+key or impersonation is used. Roll back by selecting `pinned_key`, supplying its valid digest
+and user IDs, and reconnecting clients.
+
+All MCP HTTP requests reauthenticate. Stateful sessions bind to user ID, configured Redmine
+issuer and a private key fingerprint through MCP SDK 1.30.0. A different user/key receives the
+same 404 as an unknown session; key rotation requires a new session. Session binding is removed
+on termination, expiry and shutdown. Keys/fingerprints are never returned or logged.
 
 The writer catalog contains only configured operation IDs from the code's explicit write allowlist.
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent

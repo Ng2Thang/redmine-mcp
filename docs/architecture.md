@@ -75,6 +75,12 @@ authentication and internal REST authentication remain separate checks. Authoriz
 only the named read operations in `auth/policy.py` and `mcp:connect`; adding a read route requires
 an explicit permission entry. MCP exposure remains separately controlled by `mcp/catalog.py`.
 Catalog validation also rejects exposed tools missing an explicit read permission at startup.
+
+The writer defaults to pinned-key authentication. Explicit personal-key mode authenticates
+multiple callers independently and applies an optional user list only at the write boundary.
+The MCP dependency adapts the authenticated caller to the SDK session-owner identity without
+storing the raw key in its token object. SDK 1.30.0 owns stateful session binding and cleanup;
+credential changes cannot reuse an existing session. Read/write deployment gates remain in REST.
 Validation inspects normalized route contracts, including lazy included-router contexts in newer
 FastAPI versions. It rejects duplicate/hidden routes, non-GET routes, missing response schemas,
 and tools without the read-authorization dependency. Generated MCP tool names must exactly match

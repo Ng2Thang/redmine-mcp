@@ -1,5 +1,11 @@
 # Development
 
+The reader remains read-only. To develop the separate writer for multiple callers, use
+`REDMINE_WRITER_AUTH_MODE=personal_key`, clear `REDMINE_WRITER_KEY_SHA256`, and optionally restrict
+write admission with `REDMINE_WRITER_USER_IDS`. Each caller supplies a personal Redmine key.
+Default pinned-key mode retains the existing single-key configuration. See
+[configuration](configuration.md#separate-writer-deployment) for migration and session behavior.
+
 ## Environment
 
 Use Python 3.13, uv, and Git Bash on Windows. `.python-version` selects the Python minor version;

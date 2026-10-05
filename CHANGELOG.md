@@ -7,6 +7,10 @@ that a release has been published.
 
 ### Added
 
+- Added explicit personal-key writer authentication for multiple callers, optional write-only
+  user admission, legacy pinned-key compatibility, and credential-bound MCP sessions using the
+  now-pinned MCP SDK 1.30.0. Reader deployments remain read-only.
+
 - Added writer-only `remove_issue_watcher` for one direct principal membership, with visible
   issue preflight, destructive hints, and absence verification separate from acceptance.
 

@@ -7,13 +7,13 @@
 | Task ID | prep-011-multi-user-writer-auth |
 | Assigned capability | Users read and attempt enabled writes using their own Redmine keys |
 | Type / access / destructive effects | Shared authentication prerequisite / mixed read-write access / Existing writes only |
-| Status | planned |
+| Status | blocked |
 | Dependencies | [prep-010](prep-010-permission-session-contract.md) contract resolved; existing prep-007 implementation |
 | Related tasks | [Roadmap](../multi-user-writer-authorization.md); [dashboard](../index.md); [prep-014](prep-014-multi-user-writer-acceptance.md) |
 | Target Redmine version | 7.0.2; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
-| Progress summary | Phase 1 behavior specified; coding and verification not assigned |
-| Next action | Review after prep-010 session binding contract; then separately assign coding |
+| Progress summary | Personal/pinned modes, write-only admission, same-key forwarding and SDK session binding implemented; static checks pass |
+| Next action | Continue assigned prep-012 coding; execute AUTH scenarios separately in prep-014 |
 
 ## 2. Discovery and evidence
 
@@ -104,7 +104,8 @@ discovery is promised by this phase.
 | 5 | Architecture/config/tool-reference/manual guides and changelog: migration and rollback | AUTH-008 |
 | 6 | Coding assignment runs `bash scripts/check.sh`; testing fixtures/execution handed off to prep-014 | Static checks only during coding |
 
-No new runtime dependency planned. Any required lockfile change must be justified by prep-010.
+No new runtime package added. MCP SDK metadata is pinned to the already locked 1.30.0 because
+session security depends on its reviewed owner binding; uv.lock resolved offline without upgrades.
 Rollback selects pinned-key mode with its valid hash/user configuration and reconnects clients.
 
 ## 6. Acceptance criteria and traceability
@@ -137,22 +138,30 @@ No real credentials, Docker, or `.env` in offline scenarios.
 
 | Evidence | Procedure | Actual / status |
 |---|---|---|
-| EVID-001 | `bash scripts/check.sh` during coding | Not run / pending |
+| EVID-001 | Installed Ruff check/format, mypy src, and git diff --check; 2026-10-05 | Pass; unit/startup/live checks deferred |
 | EVID-002 | Separately authorized selected AUTH scenarios via existing pytest baseline | Not run / pending |
 | EVID-003 | Separately authorized synthetic startup/Inspector and account checks | Not run / pending |
 
 ## 8. Implementation and review record
 
-Planning only. No runtime, dependencies, fixtures, tests, or deployment changed. Contract review,
-static checks, session evidence, and target runtime acceptance remain pending.
+Implemented on 2026-10-05: explicit writer mode and validation, write-only optional personal-mode
+admission, legacy pinned behavior, per-request SDK session identity, Compose and environment
+examples, migration/rollback, architecture/manual/tool documentation and changelog.
+MCP metadata pinned to already installed 1.30.0; `uv lock --offline` changed only the root
+requirement, with no package upgrades. `scripts/doctor.sh` passed through Git Bash.
+Installed Ruff lint and formatting checks pass repository-wide; mypy src passes (100 files);
+git diff --check passes. Formatting applied only to changed security.py.
+No tests/fixtures written or run in this coding stage; AUTH-001 through AUTH-008 and packaging
+verification for the metadata change remain assigned to prep-014. SDK-native 404 session mismatch
+was resolved by prep-010. Final diff preserves all existing tool contracts and secret-safe key use.
 
 ## 9. Completion and handoff
 
-- [ ] Mode/configuration and multi-user authentication implemented.
-- [ ] Session binding and exact caller-key forwarding implemented.
-- [ ] Migration/rollback and deployment documentation updated.
+- [x] Mode/configuration and multi-user authentication implemented.
+- [x] Session binding and exact caller-key forwarding implemented.
+- [x] Migration/rollback and deployment documentation updated.
 - [ ] Static checks and separately authorized acceptance evidence pass.
 - [ ] Task/dashboard synchronized and final diff reviewed.
 
-Final status: planned. Next action: review after prep-010 resolves session integration, then assign
-coding separately. Coding completion must be recorded as implementation finished; testing pending.
+Final status: blocked - implementation finished; testing pending. Next action: continue the
+explicitly assigned prep-012 coding stage; AUTH verification and packaging belong to prep-014.

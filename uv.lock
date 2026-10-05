@@ -747,7 +747,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "fastapi-mcp", specifier = "==0.4.0" },
     { name = "httpx", specifier = ">=0.28,<0.29" },
-    { name = "mcp", specifier = ">=1.12,<2" },
+    { name = "mcp", specifier = "==1.30.0" },
     { name = "pydantic-settings", specifier = ">=2.8,<3" },
     { name = "uvicorn", specifier = ">=0.34,<1" },
 ]

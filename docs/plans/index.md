@@ -4,7 +4,7 @@ This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is i
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
 Active task IDs are continuous: `tool-001` through `tool-030` and `prep-001` through
-`prep-009`. On 2026-10-02, the user requested compact numbering after document tasks
+`prep-014`. On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through
 `issues-008` IDs remain retired.
@@ -93,6 +93,31 @@ actual runtime verification on 2026-10-02; planned checks are not passing eviden
 | 21 | [tool-029-add-issue-watcher](tasks/tool-029-add-issue-watcher.md) | Add one watcher | tool-028 coding approved; tests pending | blocked | User approved commit `b930d8c` on 2026-10-05 and directed tool-030; separately authorized TOOL-029-001 through TOOL-029-005/watcher eligibility, permissions, and membership verification pending. |
 | 22 | [tool-030-remove-issue-watcher](tasks/tool-030-remove-issue-watcher.md) | Remove one watcher | tool-029 coding approved; tests pending | blocked | Implementation and static checks finished on 2026-10-05; user review and separately authorized TOOL-030-001 through TOOL-030-005/removal permissions, no-op behavior, and membership verification pending. |
 | 23 | [prep-009-release-acceptance](tasks/prep-009-release-acceptance.md) | Review complete Redmine 7.0.2 release | tool-030-remove-issue-watcher accepted | blocked | Await tool-030-remove-issue-watcher acceptance and exact 7.0.2 evidence. |
+
+## Multi-user writer authorization roadmap
+
+The user requested this plan on 2026-10-05. The
+[multi-user writer design](multi-user-writer-authorization.md) extends the existing writer;
+it adds no new public operation and preserves all earlier task IDs and evidence.
+Phase 1 permits explicitly configured personal-key authentication with the existing common
+catalog. Phase 2 adds project/resource capability checks and caller-specific candidate discovery.
+Reader isolation and the deployment operation ceiling remain required. Planning authorizes no
+implementation, unit tests, startup, Inspector, or synthetic mutations.
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-010-permission-session-contract](tasks/prep-010-permission-session-contract.md) | Resolve permission evidence, resource context, and session integration | Existing prep-003/005/007 implementations; prior acceptance limitations retained | complete | [Dated contract review](prep-010-contract-review.md) resolves all eleven operations, partial evidence, raw discovery handler and SDK session binding. Implement prep-011 next. |
+| 2 | [prep-011-multi-user-writer-auth](tasks/prep-011-multi-user-writer-auth.md) | Authenticate personal keys and restrict writes independently of reads | prep-010 session contract; existing prep-007 implementation | planned | Review explicit pinned/personal modes and session binding, then separately assign coding. |
+| 3 | [prep-012-project-resource-authorization](tasks/prep-012-project-resource-authorization.md) | Check caller capabilities in the actual target context | prep-010 resolved permission matrix; prep-011 implementation | planned | Necessary permission expressions and completeness rules resolved by prep-010. Implement after prep-011. |
+| 4 | [prep-013-caller-tool-discovery](tasks/prep-013-caller-tool-discovery.md) | Discover tools relevant to the caller without changing shared registry | prep-010 adapter contract; prep-011/012 implementations | planned | Raw SDK handler, immutable schema cache and authenticated request context resolved by prep-010. Implement after prep-012. |
+| 5 | [prep-014-multi-user-writer-acceptance](tasks/prep-014-multi-user-writer-acceptance.md) | Verify caller isolation, permissions, discovery, and resulting write state | prep-011/012/013 implemented; prep-002 baseline; prep-008 fixture guidance; separate testing authorization | planned | Finish predecessor contracts/implementation; fixtures, tests, and live checks are a separate assignment. |
+
+The old prep-009 release acceptance remains scoped to its existing roadmap. prep-014 owns
+acceptance of the multi-user change; old waivers and passing checks are not new runtime evidence.
+
+Execution assignment (2026-10-05): the user requested implementation of prep-010 through prep-014,
+quality checks and one commit per prep named `feat: prep_0xx <context>`. Coding stages remain
+separate from prep-014's explicit verification scope. No production rollout is included.
 
 ## Future ideas, not assigned tasks
 

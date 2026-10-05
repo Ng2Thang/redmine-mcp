@@ -1,5 +1,6 @@
 """Public Redmine adapters used by dependency composition."""
 
+from redmine_mcp.integrations.redmine.attachment_deletions import RedmineAttachmentDeletions
 from redmine_mcp.integrations.redmine.attachment_updates import RedmineAttachmentUpdates
 from redmine_mcp.integrations.redmine.attachments import RedmineAttachments
 from redmine_mcp.integrations.redmine.client import RedmineClient
@@ -17,6 +18,7 @@ from redmine_mcp.integrations.redmine.write import RedmineWriter, WriteReceipt
 
 __all__ = [
     "ReadPolicy",
+    "RedmineAttachmentDeletions",
     "RedmineAttachments",
     "RedmineAttachmentUpdates",
     "RedmineClient",

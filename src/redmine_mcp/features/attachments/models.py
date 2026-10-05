@@ -44,11 +44,19 @@ class UploadResult(BaseModel):
     observed_filesize: int | None = Field(default=None, ge=0)
 
 
-class AttachmentUpdateRequest(BaseModel):
+class AttachmentContainerRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     container_type: Literal["project", "version", "issue"]
     container_id: int = Field(strict=True, gt=0)
+
+
+class AttachmentDeleteQuery(AttachmentContainerRequest):
+    # Query values arrive as strings; the resulting service ID remains an integer.
+    container_id: int = Field(gt=0)
+
+
+class AttachmentUpdateRequest(AttachmentContainerRequest):
     filename: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
 
@@ -72,3 +80,11 @@ class AttachmentUpdateResult(BaseModel):
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
     attachment_id: int = Field(gt=0)
     observed_attachment: AttachmentDetail | None = None
+
+
+class AttachmentDeleteResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
+    attachment_id: int = Field(gt=0)
+    observed_present: bool | None = None

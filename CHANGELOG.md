@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `delete_attachment` with declared-container membership checks,
+  destructive MCP annotations, and independent visible-absence verification.
+
 - Added writer-only `upload_attachment` for bounded temporary uploads with an opaque token and
   separate accepted/uncertain and read-back verification fields.
 - Added writer-only `add_project_file` to attach one upload token to a project or its own version,

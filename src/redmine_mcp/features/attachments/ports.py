@@ -1,6 +1,8 @@
 from typing import Protocol
 
 from redmine_mcp.features.attachments.models import (
+    AttachmentContainerRequest,
+    AttachmentDeleteResult,
     AttachmentDetail,
     AttachmentDownload,
     AttachmentUpdateRequest,
@@ -23,3 +25,9 @@ class AttachmentMetadataWriter(Protocol):
     async def update_attachment(
         self, attachment_id: int, request: AttachmentUpdateRequest
     ) -> AttachmentUpdateResult: ...
+
+
+class AttachmentDeleter(Protocol):
+    async def delete_attachment(
+        self, attachment_id: int, request: AttachmentContainerRequest
+    ) -> AttachmentDeleteResult: ...

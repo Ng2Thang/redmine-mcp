@@ -3,7 +3,11 @@
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
-from redmine_mcp.features.attachments.models import AttachmentUpdateRequest, AttachmentUpdateResult
+from redmine_mcp.features.attachments.models import (
+    AttachmentContainerRequest,
+    AttachmentUpdateRequest,
+    AttachmentUpdateResult,
+)
 from redmine_mcp.integrations.redmine.attachments import RedmineAttachments
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.projects import RedmineProjects
@@ -20,15 +24,19 @@ class RedmineAttachmentUpdates:
         self.client = client
         self.writer = writer
 
-    async def _require_container(
-        self, attachment_id: int, request: AttachmentUpdateRequest
-    ) -> None:
+    async def contains_attachment(
+        self, attachment_id: int, request: AttachmentContainerRequest
+    ) -> bool:
         if request.container_type == "issue":
             data = await self.client.get(
                 f"issues/{request.container_id}.json", {"include": "attachments"}
             )
             issue = resource_object(data.get("issue"), request.container_id)
             attachments = response_items(issue, "attachments")
+            if any(type(item.get("id")) is not int or item["id"] < 1 for item in attachments):
+                raise ApplicationError(
+                    codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
+                )
             matches = any(
                 type(item.get("id")) is int and item["id"] == attachment_id for item in attachments
             )
@@ -54,7 +62,12 @@ class RedmineAttachmentUpdates:
                 )
                 for file in files.items
             )
-        if not matches:
+        return matches
+
+    async def require_container(
+        self, attachment_id: int, request: AttachmentContainerRequest
+    ) -> None:
+        if not await self.contains_attachment(attachment_id, request):
             raise ApplicationError(
                 codes_text.RESOURCE_NOT_FOUND, redmine_text.RESOURCE_UNAVAILABLE, 404
             )
@@ -62,7 +75,7 @@ class RedmineAttachmentUpdates:
     async def update_attachment(
         self, attachment_id: int, request: AttachmentUpdateRequest
     ) -> AttachmentUpdateResult:
-        await self._require_container(attachment_id, request)
+        await self.require_container(attachment_id, request)
         changes = request.model_dump(include={"filename", "description"}, exclude_unset=True)
         receipt = await self.writer.write_json(
             "PATCH",

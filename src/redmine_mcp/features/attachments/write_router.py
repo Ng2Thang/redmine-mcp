@@ -1,9 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Query
 
 from redmine_mcp.api import get_attachments, require_write_access
 from redmine_mcp.features.attachments.models import (
+    AttachmentDeleteQuery,
+    AttachmentDeleteResult,
     AttachmentUpdateRequest,
     AttachmentUpdateResult,
     UploadRequest,
@@ -55,3 +57,23 @@ async def update_attachment(
     attachment_id: Annotated[int, Path(ge=1, description="ID of the attachment")],
 ) -> AttachmentUpdateResult:
     return await service.update_attachment(attachment_id, request)
+
+
+@metadata_router.delete(
+    "/{attachment_id}",
+    operation_id="delete_attachment",
+    response_model=AttachmentDeleteResult,
+    description=(
+        "Delete one attachment after proving it belongs to the declared project, version, "
+        "or issue. This can remove stored bytes and records Issue journal changes. Requires "
+        "the restricted writer and container delete permission. Reports acceptance separately "
+        "from visible absence in the container; read-back cannot prove stored-byte removal. "
+        "An uncertain result requires reconciliation before any manual retry."
+    ),
+)
+async def delete_attachment(
+    service: Annotated[AttachmentService, Depends(get_attachments)],
+    attachment_id: Annotated[int, Path(ge=1, description="ID of the attachment")],
+    container: Annotated[AttachmentDeleteQuery, Query()],
+) -> AttachmentDeleteResult:
+    return await service.delete_attachment(attachment_id, container)

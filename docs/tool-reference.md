@@ -342,6 +342,23 @@ After `PATCH /attachments/{attachment_id}.json`, the result reports `outcome`,
 `observed_attachment` when available. A failed read-back preserves write acceptance. Membership
 checking and mutation are separate requests; there is no atomic concurrency guarantee.
 
+`delete_attachment` is writer-only at `DELETE /api/v1/attachments/{attachment_id}`. Supply
+required query parameters `container_type` (`project`, `version`, or `issue`) and positive
+`container_id`; unknown query inputs are rejected and no request body is required. Membership
+is checked through the same visible container reads as `update_attachment` before deletion.
+The writer must explicitly allow this operation. Project/Version requires `manage_files`;
+Issue requires visibility and tracker-aware `edit_issues`, or `edit_own_issues` for its author.
+Redmine can remove stored bytes and records Issue journal changes; there is no rollback promise.
+
+The result contains `attachment_id`, `outcome`, `upstream_accepted`, `verification`, and
+`observed_present`. HTTP 204 confirms acceptance. A separate visible container read reports
+absence as `matched`, presence as `mismatch`, or a failed read as `unavailable` with null
+`observed_present`. Visible absence does not prove stored-byte removal or complete visibility.
+An uncertain dispatch remains uncertain even when absence is observed. Failed read-back leaves
+an accepted deletion accepted. There are no automatic retries. Reader deployments omit this
+tool from MCP discovery and deny its REST route. MCP hints are `readOnlyHint=false`,
+`destructiveHint=true`, `idempotentHint=false`, and `openWorldHint=true`.
+
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.

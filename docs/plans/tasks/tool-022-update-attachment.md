@@ -12,8 +12,8 @@
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
-| Progress summary | Writer-only attachment metadata update implemented; static checks pass, user review pending. |
-| Blocker / next action | Review the committed implementation; offline/synthetic verification requires separate authorization. |
+| Progress summary | Writer-only attachment metadata update implemented; static checks pass; user approved implementation on 2026-10-05. |
+| Blocker / next action | Implementation review approved. Offline/synthetic verification requires separate authorization; the requested tool-017 through tool-022 coding range ends here. |
 
 
 Document attachment containers are excluded from the 7.0.2 contract.
@@ -179,7 +179,8 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Startup/Inspector checks: not run.
 - Documentation: this task, dashboard, tool reference, and changelog.
 - Final code diff review: code, wiring, container checks, supplied-field mapping, and documentation
-  inspected; user review pending. Omitted read-back fields retain unavailable verification.
+  inspected; user approved commit `e248644` on 2026-10-05. Omitted read-back fields retain
+  unavailable verification. This approval does not authorize automated tests or live verification.
 - Remaining blocker: TOOL-022-001 through TOOL-022-005 and WRITER-001 through WRITER-006 remain
   unexecuted. Later verification must cover all three containers, wrong-container rejection,
   omitted/null/empty fields, 204, read-back failure/mismatch, timeout uncertainty, reader denial,
@@ -194,9 +195,11 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User approved the implementation on 2026-10-05; runtime acceptance remains pending.
 
-Final status: blocked. Next action: Review this coding diff; separately authorize offline and
-marked synthetic checks before runtime acceptance. Implementation finished; testing pending.
+Final status: implementation finished; user review approved; testing pending. Task status remains
+blocked for outstanding runtime acceptance. The requested tool-017 through tool-022 coding range
+is finished. Next action: separately authorize offline and marked synthetic checks before runtime
+acceptance. No tool beyond tool-022 is assigned by this approval.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

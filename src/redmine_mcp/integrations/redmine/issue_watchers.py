@@ -14,6 +14,26 @@ class RedmineIssueWatchers:
         self.client = client
         self.writer = writer
 
+    async def remove_issue_watcher(self, issue_id: int, user_id: int) -> IssueWatcherResult:
+        data = await self.client.get(f"issues/{issue_id}.json", {})
+        resource_object(data.get("issue"), issue_id)
+        receipt = await self.writer.write_json(
+            "DELETE", f"issues/{issue_id}/watchers/{user_id}.json", accepted_statuses=(204,)
+        )
+        result = IssueWatcherResult(
+            outcome=receipt.outcome,
+            upstream_accepted=True if receipt.status == 204 else None,
+            issue_id=issue_id,
+            user_id=user_id,
+        )
+        try:
+            result.observed_present = await self._watcher_present(issue_id, user_id)
+        except ApplicationError:
+            return result
+        if result.observed_present is not None:
+            result.verification = "mismatch" if result.observed_present else "matched"
+        return result
+
     async def _watcher_present(self, issue_id: int, user_id: int) -> bool | None:
         data = await self.client.get(f"issues/{issue_id}.json", {"include": "watchers"})
         issue = resource_object(data.get("issue"), issue_id)

@@ -68,3 +68,7 @@ class IssueRelationDeleter(Protocol):
 
 class IssueWatcherAdder(Protocol):
     async def add_issue_watcher(self, issue_id: int, user_id: int) -> IssueWatcherResult: ...
+
+
+class IssueWatcherRemover(Protocol):
+    async def remove_issue_watcher(self, issue_id: int, user_id: int) -> IssueWatcherResult: ...

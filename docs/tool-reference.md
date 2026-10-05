@@ -518,6 +518,28 @@ membership is observed. Matching does not prove this call added a previously abs
 No automatic retries or atomic concurrency guarantees are promised. Watcher membership can
 affect future notifications; notification delivery is not verified. Reader contracts unchanged.
 
+`remove_issue_watcher` is writer-only at
+`DELETE /api/v1/issues/{issue_id}/watchers/{user_id}`. Supply two positive path IDs; no body
+or batch inputs. The writer must explicitly allow this operation. Redmine requires Delete
+issue watchers and issue visibility. Add watchers, Edit issues, and View watchers are not
+additional local prerequisites. `user_id` identifies one principal, including native groups.
+
+After a visible same-ID issue preflight, the gateway sends one DELETE without a body. A missing
+upstream principal yields sanitized 404. Empty 204 may mean an existing direct watcher entry
+was removed or an already absent entry produced a no-op. The receipt reuses `outcome`,
+`upstream_accepted`, `issue_id`, `user_id`, `observed_present`, and `verification`.
+
+Independent same-ID `include=watchers` read-back reports matched only when an explicit valid
+watcher list excludes the principal; presence is mismatch. View issue watchers is required
+for the expansion. Omitted/malformed/null lists, invalid/duplicate IDs, or failed read-back
+leave presence null and verification unavailable; read-back 404 never proves removal.
+Acceptance survives verification failure, and an uncertain write outcome remains uncertain
+even if absence is observed. Matching proves observed direct absence, not that this call
+removed a previously present entry or stopped all effective watching/notifications: users can
+still watch through groups or receive other notifications. No retry, rollback, or atomic
+concurrency guarantees are promised. MCP destructiveHint=true; add-watcher and reader contracts
+remain unchanged.
+
 ## Errors
 
 The following statuses and bodies describe REST behavior. MCP may wrap failures as tool errors;

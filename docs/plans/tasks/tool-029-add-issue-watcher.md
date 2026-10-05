@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Strict watcher request/receipt, gateway, port/service/route, wiring, writer allowlist, and docs implemented; static checks passed. |
-| Blocker / next action | User review before tool-030; TOOL-029-001 through TOOL-029-005 and marked writer verification require separate authorization. |
+| Blocker / next action | User approved coding commit `b930d8c` and directed tool-030; TOOL-029-001 through TOOL-029-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -208,7 +208,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   positive ID validation before matching, omitted/failed expansion unavailable, no eligibility
   lookup requiring administrator access, no retries or payload logging, explicit writer-only
   operation inspected. Prior operations/default reader remain unchanged; no static failures.
-- Remaining blocker: user review before tool-030 and separately authorized verification.
+- Remaining blocker: separately authorized verification.
   Later TOOL-029-001 through TOOL-029-005 must cover exact payload/preflight/read-back, active
   users and eligible groups, already-watching and ineligible/missing/inactive principals, invalid
   IDs/body and hidden issue stopping dispatch, Add watchers without View watchers or Edit issues,
@@ -228,10 +228,13 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User accepted this task before the next task starts.
 
-Final status: implementation finished; testing pending. Next action: user review of this coding
-commit before tool-030. Separately authorize TOOL-029-001 through TOOL-029-005 and marked writer
+User approval (2026-10-05): approved coding commit `b930d8c` and requested tool-030.
+Runtime acceptance remains pending.
+
+Final status: implementation finished; testing pending. Next action: separately authorize
+TOOL-029-001 through TOOL-029-005 and marked writer
 membership/permission verification before runtime acceptance. Static checks and upstream 204
 do not prove watcher membership.
 

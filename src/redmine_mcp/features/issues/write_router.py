@@ -123,3 +123,23 @@ async def add_issue_watcher(
     issue_id: Annotated[int, Path(ge=1, description="ID of the issue")],
 ) -> IssueWatcherResult:
     return await service.add_issue_watcher(issue_id, request.user_id)
+
+
+@router.delete(
+    "/{issue_id}/watchers/{user_id}",
+    operation_id="remove_issue_watcher",
+    response_model=IssueWatcherResult,
+    description=(
+        "Remove one principal's direct watcher entry from a visible issue. Requires the "
+        "restricted writer and Delete issue watchers; View issue watchers is needed only for "
+        "membership verification. Empty success may be a no-op. Reports acceptance separately "
+        "from absence in an explicit watcher list; hidden or failed read-back is unavailable. "
+        "Users may still watch through groups. Reconcile uncertain writes before retrying."
+    ),
+)
+async def remove_issue_watcher(
+    service: Annotated[IssueService, Depends(get_issues)],
+    issue_id: Annotated[int, Path(ge=1, description="ID of the issue")],
+    user_id: Annotated[int, Path(ge=1, description="ID of the watcher principal to remove")],
+) -> IssueWatcherResult:
+    return await service.remove_issue_watcher(issue_id, user_id)

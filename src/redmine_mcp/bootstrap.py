@@ -85,6 +85,7 @@ def build_container(
             relation_creator=RedmineIssueRelations(client, writer),
             relation_deleter=RedmineIssueRelations(client, writer),
             watcher_adder=RedmineIssueWatchers(client, writer),
+            watcher_remover=RedmineIssueWatchers(client, writer),
         ),
         ReferenceService(RedmineReferenceData(client)),
         TimeEntryService(RedmineTimeEntries(client)),

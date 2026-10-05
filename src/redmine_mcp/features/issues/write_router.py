@@ -9,6 +9,8 @@ from redmine_mcp.features.issues.write_models import (
     IssueCreateResult,
     IssueNoteUpdateRequest,
     IssueNoteUpdateResult,
+    IssueRelationCreateRequest,
+    IssueRelationCreateResult,
     IssueUpdateRequest,
     IssueUpdateResult,
 )
@@ -78,3 +80,24 @@ async def update_issue_note(
     journal_id: Annotated[int, Path(ge=1, description="ID of the journal to edit")],
 ) -> IssueNoteUpdateResult:
     return await service.update_issue_note(issue_id, journal_id, request)
+
+
+@router.post(
+    "/{issue_id}/relations",
+    operation_id="create_issue_relation",
+    response_model=IssueRelationCreateResult,
+    description=(
+        "Create exactly one relation between two visible issues. Defaults to relates; delay "
+        "is allowed only for precedes/follows. Redmine normalizes inverse directions and can "
+        "reschedule successor dates for scheduling relations; both issues can gain journals. "
+        "Requires the restricted writer and Manage issue relations on the source project. "
+        "Reports acceptance separately from normalized same-ID relation read-back, which does "
+        "not verify date or journal effects. Reconcile uncertain creates before retrying."
+    ),
+)
+async def create_issue_relation(
+    request: IssueRelationCreateRequest,
+    service: Annotated[IssueService, Depends(get_issues)],
+    issue_id: Annotated[int, Path(ge=1, description="ID of the source issue")],
+) -> IssueRelationCreateResult:
+    return await service.create_issue_relation(issue_id, request)

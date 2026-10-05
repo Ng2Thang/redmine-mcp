@@ -7,17 +7,18 @@
 | Task ID | tool-027-create-issue-relation |
 | Assigned capability | Create one issue relation: Create exactly one relation. |
 | Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-026-update-issue-note](tool-026-update-issue-note.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
-| Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-026-update-issue-note must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Last updated | 2026-10-05, Codex |
+| Progress summary | Typed request/receipt, relation gateway, port/service/REST route, wiring, writer allowlist, and docs implemented; static checks pass. |
+| Blocker / next action | User review; TOOL-027-001 through TOOL-027-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **create one issue relation**. Create exactly one relation. Reject duplicate destination lists and invalid delay/type combinations before upstream call; verify direction and target.
+The client outcome is **create one issue relation**. Reject all destination lists and invalid
+delay/type combinations before upstream calls; verify normalized direction and target.
 Current catalog has no `create_issue_relation`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
@@ -32,21 +33,24 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_IssueRelations) | 2026-10-01 | General/current documentation | POST /issues/{issue_id}/relations.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| Local pinned source archive: controller/model/API view and `lib/redmine/preparation.rb` | 2026-10-05 | Exact 7.0.2 | Single integer target, source Manage relations permission, visible destination, 201 relation ID, inverse normalization, scheduling delay/date effects and journals confirmed in source; runtime evidence pending. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `create_issue_relation` is the sole public owner | No |
-| Strict sequence | Wait for tool-026-update-issue-note evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User accepted tool-026 implementation `6aef9de` on 2026-10-05 | No; testing still pending |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Create exactly one relation. Reject duplicate destination lists and invalid delay/type combinations before upstream call; verify direction and target.
+- In scope: Create exactly one relation; reject destination lists and invalid delay/type
+  combinations before upstream access; verify normalized direction and target.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
-- Permission/configuration prerequisite: Manage issue relations; both issues visible.
+- Permission/configuration prerequisite: Manage issue relations on the source project;
+  both issues visible; separately enabled restricted writer.
 
 | Requirement | Observable behavior |
 |---|---|
@@ -66,20 +70,24 @@ fields: `{"resource_id":3,"upstream_accepted":true,"verification":"matched"}`. T
 | Purpose | Create one issue relation; Create exactly one relation. |
 | Local REST route | POST /api/v1/issues/{issue_id}/relations |
 | Upstream mapping | POST /issues/{issue_id}/relations.json |
-| Authentication | Personal `X-Redmine-API-Key`; Manage issue relations; both issues visible. |
+| Authentication | Personal `X-Redmine-API-Key`; Manage issue relations on source project; both issues visible. |
 | MCP exposure | writer only; explicit allowlist entry. |
-| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
+| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true, destructiveHint=false. |
 
 ### Inputs and validation
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive source issue_id and issue_to_id; documented relation_type default relates; delay only for precedes/follows | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | POST /issues/{issue_id}/relations.json |
+| Tool arguments | Positive source issue_id and scalar issue_to_id; relation_type defaults to relates; delay only for precedes/follows | Strict positive body ID, signed integer delay; reject nulls, unknown fields, lists, strings, and self-relations. | POST /issues/{issue_id}/relations.json with one relation object |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-Write receipt with new relation ID and read-back. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+Write receipt with new relation ID and independent read-back. Verification is matched, mismatch,
+or unavailable. The receipt includes `upstream_accepted`, `verification`, `field_verification`,
+optional `resource_id`, and optional `observed_relation`. Upstream success is 201 with a relation
+object; empty or malformed success preserves acceptance but leaves outcome uncertain without
+a trustworthy positive ID. Public REST returns the typed receipt with status 200.
 No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -95,15 +103,55 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-- Exact effect: Create exactly one relation. Reject duplicate destination lists and invalid delay/type combinations before upstream call; verify direction and target.
+- Exact effect: Create exactly one relation; native journals and scheduling cascades can occur.
+  Reject destination lists and invalid delay/type combinations before upstream access; verify
+  normalized direction and target separately from those additional effects.
 - No automatic retries. A timeout after dispatch produces an unknown outcome requiring a separate read-back before any repeat.
 - Success and read-back are separate fields. A failed read-back cannot erase a preceding accepted write.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+### Frozen contract and source review (2026-10-05)
+
+The working tree was clean. User approved predecessor commit `6aef9de` and explicitly
+assigned tool-027. Exact source was read from the ignored pinned archive
+`.local/upgrades/source/redmine-7.0.2.tar.gz`: `app/controllers/issue_relations_controller.rb`,
+`app/models/issue_relation.rb`, `app/models/issue.rb`,
+`app/views/issue_relations/show.api.rsb`, and `lib/redmine/preparation.rb`.
+These establish the following coding contract; runtime acceptance remains pending.
+
+- Input: strict positive scalar `issue_to_id`; source path ID positive and checked by the
+  service; default `relation_type=relates`. Allowed types: `relates`, `duplicates`,
+  `duplicated`, `blocks`, `blocked`, `precedes`, `follows`, `copied_to`, `copied_from`.
+  Reject nulls, unknown fields, destination arrays/comma-separated strings, and self-relations.
+  Optional `delay` is a strict signed integer in days, only for precedes/follows; supplied
+  null or a delay for other types is rejected. Negative delays are permitted by target source.
+- Preflight both visible issue IDs with the caller's key. The create action requires Manage
+  issue relations on the source project; no additional destination Manage relations or Edit
+  issues permission is imposed locally. Cross-project settings, duplicate pairs, ancestors,
+  and circular dependencies remain Redmine validation rules (sanitized 422).
+- Send exactly one POST with `{"relation": {"issue_to_id": ..., "relation_type": ...}}`,
+  adding delay only if supplied. The upstream controller supports batch input but this tool
+  deliberately rejects it. Success is 201 with a relation object, not empty 204.
+- Result: accepted/uncertain outcome, `upstream_accepted`, optional positive `resource_id`,
+  aggregate and per-field verification, and optional typed `observed_relation` with visibility.
+  A 201 with malformed/missing relation ID is uncertain with upstream acceptance preserved;
+  no ID is guessed from an existing pair. With a valid returned ID, independently GET
+  `/relations/{id}.json` and compare stored issue_id, issue_to_id, relation_type, and delay.
+  Read-back failure or missing fields leaves verification unavailable; a differing field
+  is mismatch. Status 201 alone never proves the requested direction or target.
+- Normalize expected inverse types: duplicated -> duplicates, blocked -> blocks,
+  follows -> precedes, copied_from -> copied_to, each swapping endpoints. Relates sorts
+  endpoints by ID. Scheduling types default delay to zero; all other stored delays are null.
+- One relation is created, but native callbacks also journal both issues. Scheduling relations
+  can reschedule the successor and downstream dates. This receipt verifies the relation only,
+  not those additional effects. No retry, rollback, or concurrency guarantee is promised.
+- Writer-only allowlist and restricted opt-in deployment; readOnlyHint=false,
+  idempotentHint=false, destructiveHint=false, openWorldHint=true. Other catalogs unchanged.
+
+This section supersedes generic draft wording about destination lists, update omissions,
+204 success, and deletion hints. Specification exit check passed for coding; required
+offline and marked synthetic evidence remains pending.
 
 ## 5. Implementation plan
 
@@ -148,7 +196,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, `git diff --check` from Git Bash | Static checks pass | Lint passed; 174 files formatted; no type issues in 98 source files; whitespace passed on 2026-10-05 | Pass |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -156,25 +204,51 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: strict scalar destination/type/delay models and observation receipt, relation
+  creator Protocol, self-relation service validation, single-create gateway, authorized POST
+  route, dependency wiring, explicit writer operation, and public docs. Predecessor approval
+  recorded. Reader catalog and prior contracts remain unchanged.
+- Plan deviations: replaced generic draft batch/204/deletion wording with exact 201 scalar
+  create behavior. Expected read-back accounts for inverse and symmetric normalization and
+  default delay; signed delays retained because target source permits them. Disclosed native
+  journals and scheduling cascades. No dependencies, tests, or live data changed.
+- Quality: EVID-001 passed. Initial mypy caught missing explicit query arguments; corrected
+  both GET calls and reran all static checks successfully. Formatting only changed files.
+  Automated tests were not written, modified, or run under this coding assignment.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-026-update-issue-note must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: task, dashboard, tool reference, changelog, and tool-026 approval updated.
+- Final code diff review: router -> service -> port -> gateway, positive IDs, validation before
+  upstream access, both visibility preflights, single bounded POST, sanitized Redmine errors,
+  201 acceptance separated from uncertainty and read-back, strict returned positive ID,
+  independent same-ID observation, no fabricated matches for absent fields, normalized
+  expected direction/type/delay, no retry or payload logging, opt-in writer policy inspected.
+- Remaining blocker: user review and separately authorized TOOL-027-001 through TOOL-027-005.
+  Later offline scenarios must cover all nine types, inverse swaps, sorted relates, omitted,
+  zero and negative scheduling delay, invalid/null/unknown/list/comma-separated/bool/float IDs,
+  self-relations, invalid delay combinations, hidden endpoints and permission rejection before
+  mutation, duplicates/circular/ancestor/cross-project 422, 201 malformed/missing/invalid IDs,
+  unexpected/empty status, timeout, malformed or mismatched read-back, missing delay, rejected
+  read-back, catalog schema/hints, reader denial, and existing-tool compatibility. Marked
+  prep-008 writer fixtures must verify source-only Manage relations permission, destination
+  visibility, actual normalized relation state, journal records, successor/downstream date
+  changes, and task-owned cleanup. Cleanup must account for dates/journals; deleting a relation
+  does not promise rollback. No live relation was created.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-026-update-issue-note must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; testing pending. Next action: user review of this coding
+commit. Separately authorize TOOL-027-001 through TOOL-027-005 and marked writer fixture
+verification before runtime acceptance. The requested implementation range ends at tool-027;
+tool-028 is not authorized by this assignment. Static checks do not prove relation state,
+permissions, journals, or date effects.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

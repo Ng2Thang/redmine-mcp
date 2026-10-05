@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `create_issue_relation` for a single visible destination, normalized
+  relation direction, validated scheduling delay, and independent same-ID read-back.
+
 - Added writer-only `update_issue_note` with visible issue/journal membership checks,
   supplied text/privacy updates, and independent same-journal read-back.
 

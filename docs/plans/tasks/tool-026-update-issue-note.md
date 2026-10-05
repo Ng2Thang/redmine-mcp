@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Typed note request/receipt, scoped journal gateway, port/service/REST route, wiring, writer policy/annotations, and docs implemented; static checks pass. |
-| Blocker / next action | User review before tool-027; TOOL-026-001 through TOOL-026-005 and marked writer verification require separate authorization. |
+| Blocker / next action | User approved coding commit `6aef9de` and directed tool-027; TOOL-026-001 through TOOL-026-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -202,7 +202,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   upstream permissions, independent same-ID read-back, missing/absent/malformed fields, no
   note logging, no retries, and writer-only catalog inspected. No dependency, test, or live data
   changes were made. Existing creation/update/default reader contracts remain unchanged.
-- Remaining blocker: user review before tool-027. TOOL-026-001 through TOOL-026-005 later offline
+- Remaining blocker: separately authorized testing. TOOL-026-001 through TOOL-026-005 later offline
   work must cover text/privacy/both, empty and whitespace notes, null/unknown/empty body, invalid
   IDs, wrong/hidden issue-journal membership, duplicate/malformed journal IDs, malformed target,
   Edit notes/Edit own notes/Set notes private distinctions, 204, ignored privacy/mismatched text,
@@ -220,10 +220,13 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User accepted this task before the next task starts.
 
-Final status: implementation finished; testing pending. Next action: user review of this coding
-commit before tool-027. Separately authorize TOOL-026-001 through TOOL-026-005 and marked writer
+User approval (2026-10-05): accepted implementation commit `6aef9de` and requested tool-027.
+This approves coding progression; runtime acceptance remains pending.
+
+Final status: implementation finished; testing pending. Next action: separately authorize
+TOOL-026-001 through TOOL-026-005 and marked writer
 fixture verification before runtime acceptance. Static checks do not prove journal state or
 permission behavior; filtered visible history does not prove row deletion.
 

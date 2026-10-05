@@ -203,3 +203,49 @@ class IssueNoteUpdateResult(BaseModel):
     field_verification: dict[str, Verification] = Field(default_factory=dict)
     observed_present: bool | None = None
     observed_journal: JournalObservation | None = None
+
+
+RelationType = Literal[
+    "relates",
+    "duplicates",
+    "duplicated",
+    "blocks",
+    "blocked",
+    "precedes",
+    "follows",
+    "copied_to",
+    "copied_from",
+]
+
+
+class IssueRelationCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    issue_to_id: PositiveIssueId
+    relation_type: RelationType = "relates"
+    delay: int | None = Field(default=None, strict=True)
+
+    @model_validator(mode="after")
+    def validate_delay(self) -> "IssueRelationCreateRequest":
+        if "delay" in self.model_fields_set:
+            if self.delay is None or self.relation_type not in ("precedes", "follows"):
+                raise ValueError("Delay must be an integer and requires precedes or follows")
+        return self
+
+
+class RelationObservation(BaseModel):
+    id: PositiveIssueId
+    issue_id: PositiveIssueId
+    issue_to_id: PositiveIssueId
+    relation_type: RelationType
+    delay: int | None = Field(default=None, strict=True)
+    visibility: Visibility = Field(default_factory=Visibility)
+
+
+class IssueRelationCreateResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    resource_id: PositiveIssueId | None = None
+    verification: Verification = "unavailable"
+    field_verification: dict[str, Verification] = Field(default_factory=dict)
+    observed_relation: RelationObservation | None = None

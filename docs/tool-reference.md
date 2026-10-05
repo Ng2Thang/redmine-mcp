@@ -444,6 +444,39 @@ Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment met
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.
 Named references use `id` and `name`; an issue's optional `parent` is an integer-valued mapping.
 
+`create_issue_relation` is writer-only at `POST /api/v1/issues/{issue_id}/relations`.
+The writer must explicitly allow this operation. It requires Manage issue relations on the
+source project and visibility of both issues; Redmine enforces cross-project settings,
+duplicate pairs, circular dependencies, and ancestor restrictions.
+
+Supply one strict positive integer `issue_to_id`. `relation_type` defaults to `relates` and
+accepts `relates`, `duplicates`, `duplicated`, `blocks`, `blocked`, `precedes`, `follows`,
+`copied_to`, or `copied_from`. Optional `delay` is a signed integer in days, only for
+`precedes`/`follows`. Nulls, unknown fields, destination lists/strings, self-relations, and
+invalid delay/type combinations are rejected before upstream access.
+
+```json
+{"issue_to_id": 2, "relation_type": "blocks"}
+```
+
+Both issue IDs are checked for visibility before a single POST. Redmine returns 201 with
+a new relation ID. The receipt reports `outcome`, `upstream_accepted`, optional `resource_id`,
+`verification`, `field_verification`, and optional `observed_relation` with visibility.
+A malformed 201 preserves upstream acceptance but is uncertain without a trustworthy ID.
+Independent GET `/relations/{id}.json` verifies the same relation's stored endpoints, type,
+and delay. Missing fields or a failed read-back cannot erase acceptance and leave verification
+unavailable. Differing fields yield mismatch. No existing pair is assumed to be this create.
+
+Stored inverse types swap endpoints: `duplicated` becomes `duplicates`, `blocked` becomes
+`blocks`, `follows` becomes `precedes`, and `copied_from` becomes `copied_to`. `relates` sorts
+endpoints by ID. Scheduling delay defaults to zero; other stored delays are null. Verification
+compares this normalized form, so a correctly reversed relation is a match.
+
+Native creation journals both issues. Scheduling relations can change successor and downstream
+dates. Relation verification does not verify these other effects. There are no automatic
+retries, rollback, or atomic concurrency guarantees; reconcile uncertain creates before
+repeating them. Reader discovery and existing tool contracts are unchanged.
+
 ## Errors
 
 The following statuses and bodies describe REST behavior. MCP may wrap failures as tool errors;

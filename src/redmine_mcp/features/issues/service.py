@@ -1,11 +1,13 @@
 from datetime import datetime
 
-from redmine_mcp.common import Page, require_positive_id, validated_query
+from redmine_mcp.common import ApplicationError, Page, require_positive_id, validated_query
+from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.features.issues.models import Issue, IssueDetail
 from redmine_mcp.features.issues.ports import (
     IssueCreator,
     IssueNoteUpdater,
     IssueReader,
+    IssueRelationCreator,
     IssueUpdater,
 )
 from redmine_mcp.features.issues.queries import (
@@ -18,6 +20,8 @@ from redmine_mcp.features.issues.write_models import (
     IssueCreateResult,
     IssueNoteUpdateRequest,
     IssueNoteUpdateResult,
+    IssueRelationCreateRequest,
+    IssueRelationCreateResult,
     IssueUpdateRequest,
     IssueUpdateResult,
 )
@@ -30,11 +34,26 @@ class IssueService:
         creator: IssueCreator | None = None,
         updater: IssueUpdater | None = None,
         note_updater: IssueNoteUpdater | None = None,
+        relation_creator: IssueRelationCreator | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
         self.updater = updater
         self.note_updater = note_updater
+        self.relation_creator = relation_creator
+
+    async def create_issue_relation(
+        self, issue_id: int, request: IssueRelationCreateRequest
+    ) -> IssueRelationCreateResult:
+        require_positive_id(issue_id, "issue_id")
+        require_positive_id(request.issue_to_id, "issue_to_id")
+        if issue_id == request.issue_to_id:
+            raise ApplicationError(
+                codes_text.INVALID_PARAMETERS, "An issue cannot be related to itself", 422
+            )
+        if self.relation_creator is None:
+            raise RuntimeError("Issue relation creator is not configured")
+        return await self.relation_creator.create_issue_relation(issue_id, request)
 
     async def create_issue(self, request: IssueCreateRequest) -> IssueCreateResult:
         require_positive_id(request.project_id, "project_id")

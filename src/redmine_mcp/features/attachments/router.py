@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path
 
 from redmine_mcp.api import get_attachments, require_read_access
+from redmine_mcp.common import ApplicationError
 from redmine_mcp.features.attachments.models import AttachmentDetail, AttachmentDownload
 from redmine_mcp.features.attachments.service import AttachmentService
 
@@ -33,18 +34,15 @@ async def get_attachment(
 @router.get(
     "/{attachment_id}/content",
     operation_id="download_attachment",
+    include_in_schema=False,
     response_model=AttachmentDownload,
-    description=(
-        "Download one visible attachment within the configured byte limit and return "
-        "base64 content with "
-        "its filename, size, and content type. The tool fetches metadata first and rejects "
-        "oversized files before and during streaming. Redmine may increment Project or "
-        "Version download counters even when transfer later fails."
-    ),
+    description="Disabled: use get_attachment for a Redmine browser download link.",
 )
 async def download_attachment(
     service: Annotated[AttachmentService, Depends(get_attachments)],
     attachment_id: Annotated[int, Path(ge=1, description="ID of the attachment")],
 ) -> AttachmentDownload:
-    """Return bounded attachment bytes encoded as base64."""
-    return await service.download_attachment(attachment_id)
+    """Retired content route, also rejected by middleware before authentication."""
+    raise ApplicationError(
+        "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
+    )

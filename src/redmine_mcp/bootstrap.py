@@ -5,6 +5,7 @@ import httpx
 from redmine_mcp.auth import WRITE_OPERATIONS, AuthenticationService
 from redmine_mcp.auth.capabilities import CapabilityService
 from redmine_mcp.auth.models import Principal
+from redmine_mcp.common.read_budget import ReadBudgetPolicy
 from redmine_mcp.config import Settings
 from redmine_mcp.features import (
     AttachmentService,
@@ -57,6 +58,16 @@ def read_policy(settings: Settings | None) -> ReadPolicy:
         deadline_seconds=settings.redmine_request_deadline_seconds,
         max_response_bytes=settings.redmine_max_response_bytes,
         max_binary_bytes=settings.redmine_max_binary_bytes,
+        max_query_pages=settings.redmine_max_query_pages,
+        public_url=str(settings.redmine_public_url) if settings.redmine_public_url else None,
+    )
+
+
+def read_budget_policy(settings: Settings) -> ReadBudgetPolicy:
+    return ReadBudgetPolicy(
+        max_requests=settings.redmine_read_operation_max_requests,
+        max_bytes=settings.redmine_read_operation_max_bytes,
+        deadline_seconds=settings.redmine_read_operation_deadline_seconds,
     )
 
 
@@ -121,6 +132,7 @@ def build_container(
             project_reader,
             build_capabilities(http, api_key, settings, principal),
             operations,
+            max_query_pages=client.policy.max_query_pages,
         ),
     )
 

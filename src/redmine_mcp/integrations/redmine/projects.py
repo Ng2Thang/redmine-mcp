@@ -16,8 +16,15 @@ class RedmineProjects:
         self.client = client
 
     async def list_projects(self, limit: int, offset: int) -> Page[Project]:
-        data = await self.client.get("projects.json", {"limit": limit, "offset": offset})
-        return page(Project, data, "projects", limit, offset)
+        data = await self.client.get_page(
+            "projects.json",
+            "projects",
+            {"limit": limit, "offset": offset},
+            "Use get_project with a known project ID; this project list requires too many pages",
+        )
+        result = page(Project, data, "projects", limit, offset)
+        result.pagination_policy = self.client.pagination.describe(result.total, limit)
+        return result
 
     async def get_project(self, project_id: int) -> ProjectDetail:
         data = await self.client.get(f"projects/{project_id}.json", {})

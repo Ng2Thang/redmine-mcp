@@ -34,7 +34,7 @@ router = APIRouter(
 )
 async def list_projects(
     service: Annotated[ProjectService, Depends(get_projects)],
-    limit: Annotated[int, Query(ge=1, le=100, description=("Projects per page"))] = 25,
+    limit: Annotated[int, Query(ge=1, le=100, description=("Projects per discovery page"))] = 25,
     offset: Annotated[int, Query(ge=0, description=("Offset for pagination"))] = 0,
 ) -> Page[Project]:
     """List projects visible to the requesting Redmine user with visibility metadata."""

@@ -19,9 +19,16 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
 | `REDMINE_REQUEST_DEADLINE_SECONDS` | `60` | Positive finite deadline for each upstream HTTP read, including connection/pool waits and streamed body acquisition/closure. |
 | `REDMINE_MAX_RESPONSE_BYTES` | `10485760` | Positive limit on accumulated decoded JSON payload bytes per upstream read. |
-| `REDMINE_MAX_BINARY_BYTES` | `5242880` (5 MiB) | Positive decoded-byte limit shared by attachment uploads and downloads. Larger limits increase memory and MCP response size. |
+| `REDMINE_MAX_BINARY_BYTES` | `5242880` (5 MiB) | Positive decoded-byte limit for writer attachment uploads. Direct attachment downloads are disabled. |
 | `REDMINE_MAX_CONNECTIONS` | `100` | Positive maximum number of shared upstream connections. |
 | `REDMINE_MAX_KEEPALIVE_CONNECTIONS` | `20` | Nonnegative idle connection limit; must not exceed maximum connections. |
+| `REDMINE_MAX_CONCURRENT_REQUESTS` | `50` | Positive shared outgoing-request semaphore limit per server process, including authentication, discovery, and writes. |
+| `REDMINE_ADMISSION_TIMEOUT_SECONDS` | `30` | Positive finite maximum wait for an upstream permit; exhaustion returns `503 upstream_busy` before dispatch. |
+| `REDMINE_MAX_QUERY_PAGES` | `10` | Positive stateless ceiling for matching pages and continuation depth. First pages remain discovery previews. |
+| `REDMINE_READ_OPERATION_MAX_REQUESTS` | `30` | Positive aggregate upstream-attempt ceiling for a reader, including nested auth and metadata probes. |
+| `REDMINE_READ_OPERATION_DEADLINE_SECONDS` | `90` | Positive finite deadline for a logical read operation, including admission, acquisition and conversion. |
+| `REDMINE_READ_OPERATION_MAX_BYTES` | `10485760` | Positive aggregate decoded-response byte ceiling for a logical reader. |
+| `REDMINE_PUBLIC_URL` | Unset | Optional browser-reachable Redmine base URL, including a subpath, for validated attachment links. Empty means use the upstream origin. Credentials, query and fragment are rejected. |
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`, case insensitive. |
 
 Values in `.env.example` are placeholders and must be replaced for external use. Invalid
@@ -46,10 +53,50 @@ deadline for an entire MCP invocation or stream. JSON parsing/model conversion o
 HTTP acquisition deadline. The payload limit bounds the accumulated decoded body, not total
 process memory or transient decompressor/parser allocations. Oversized results fail with
 `502 upstream_response_too_large`; request a smaller page or fewer issue expansions when possible.
-Attachment binary reads use the configured decoded-byte limit, which defaults to 5 MiB.
-Their URLs must match the configured Redmine origin, deployment base path, and attachment ID;
-redirects are rejected. The same per-read deadline applies, and the caller's personal key is
-sent only after URL validation.
+
+These per-upstream limits coexist with the aggregate read-operation limits above. REST GET
+readers start the aggregate budget before authentication; internal MCP-to-REST dispatch shares
+the MCP read tool's budget. MCP transport authentication and logical discovery have independent
+budgets; stream/session lifetimes are not aggregate operations. Writers do not receive an
+aggregate mutation deadline. Read request/byte exhaustion produces `422 scan_budget_exceeded`;
+aggregate deadline exhaustion produces `504 read_operation_timeout`.
+
+The default aggregate deadline is 90 seconds and includes every admission wait (up to 30 seconds
+per attempt), authentication and feature processing. It does not reserve a separate processing
+window after admission; individual upstream timeouts remain unchanged. Explicit environment
+values, including those in an existing local `.env`, override these defaults.
+
+If synchronous response conversion exhausts that deadline before REST headers are sent, the
+pending response is discarded and replaced with the sanitized 504 error. Once headers have
+actually been sent, failures terminate the response rather than replacing it.
+
+Upstream connections retain HTTPX environment proxy routing (`HTTP_PROXY`, `HTTPS_PROXY`,
+`ALL_PROXY` and `NO_PROXY`, including HTTPX's platform proxy discovery). Direct and proxy
+transport pools share the same semaphore. Set proxy variables in the server process environment;
+the application settings file does not load arbitrary proxy variables into that environment.
+For Docker, explicitly forward the required variables through deployment configuration.
+Do not put proxy credentials in logs or verification evidence.
+
+The semaphore owns permits through response closure, including streamed responses. It bounds
+simultaneous physical requests, not request rate or user fairness. No per-user quotas, query
+tokens, result cache, or persistent query state are kept. Independent workers and the separate
+reader/writer deployments each own their limit. Their combined upstream load can exceed one
+process's configured limit.
+
+Paginated readers report `pagination_policy` using `ceil(total / requested_limit)`. At offset
+zero, a query larger than the page ceiling returns a preview marked `requires_narrowing=true`.
+Positive offsets first enforce `offset + limit <= max_query_pages * limit`, then probe the same
+filtered collection at offset zero / limit one before fetching the requested page. Oversized
+or growing queries return `422 scope_required`. Counts remain upstream queries and may be
+expensive even with limit one. Repeated previews and different small queries remain possible.
+
+Attachment content delivery is disabled. The retired content route returns
+`403 attachment_download_disabled` before authentication/upstream work, and cached MCP download
+calls are rejected. Metadata tools return browser links only; no export files are generated.
+For the synthetic Docker deployment, configure `REDMINE_PUBLIC_URL=http://localhost:3000` when
+the browser runs on the same Windows host. Use the actual public origin/subpath externally.
+Browser login and Redmine container permissions still apply. The binary byte setting remains
+relevant to writer uploads.
 Streams close on success and failure. Unsuccessful statuses are mapped without consuming their
 error bodies. Settings validation hides input values in exception strings.
 
@@ -164,8 +211,9 @@ Personal-key MCP discovery returns a caller-specific candidate list. It retains 
 applies the optional write admission list and configured operations, and hides only writes proved
 unavailable across the caller's completely inventoried visible projects. A project without
 membership or role metadata keeps evidence unknown, so potentially usable tools remain visible.
-Visible projects are inventoried in pages of 100, capped at 100 pages under the aggregate request
-deadline; partial/changing inventories cannot prove denial. Role definitions are deduplicated
+Visible projects are inventoried in pages of 100, capped by `REDMINE_MAX_QUERY_PAGES` and the
+aggregate read budget. Oversized inventories remain incomplete; partial/changing evidence
+cannot prove denial. Role definitions are deduplicated
 only within this discovery request. Default pinned-key discovery keeps its common catalog.
 
 Tool availability does not guarantee permission for a concrete target. Every direct or cached

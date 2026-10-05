@@ -28,7 +28,7 @@ ATTACHMENT_READ = ReadCapabilityRule(
         )
     ),
     "Permission evidence covers a possible container type; the attachment's actual container, "
-    "visibility and file availability are checked on invocation. Downloads also apply byte limits.",
+    "visibility are checked on invocation; file retrieval returns a browser download link.",
 )
 
 PROJECT_READ_RULES: dict[str, ReadCapabilityRule] = {
@@ -57,5 +57,4 @@ PROJECT_READ_RULES: dict[str, ReadCapabilityRule] = {
         "role restrictions on visible time entries are checked on invocation.",
     ),
     "get_attachment": ATTACHMENT_READ,
-    "download_attachment": ATTACHMENT_READ,
 }

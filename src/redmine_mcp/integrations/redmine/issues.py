@@ -56,9 +56,15 @@ class RedmineIssues:
             params["updated_on"] = f">={utc_timestamp}"
         if include is not None:
             params["include"] = ",".join(include)
-        data = await self.client.get("issues.json", params)
+        data = await self.client.get_page(
+            "issues.json",
+            "issues",
+            params,
+            "Narrow issue filters: project, status, assignee, tracker, version, category, "
+            "parent or updated_since; this query requires too many pages",
+        )
         selected = include or ()
-        return page(
+        result = page(
             Issue,
             data,
             "issues",
@@ -68,6 +74,8 @@ class RedmineIssues:
             requested_fields=selected,
             unrequested_fields=sorted(ISSUE_LIST_INCLUDES.difference(selected)),
         )
+        result.pagination_policy = self.client.pagination.describe(result.total, limit)
+        return result
 
     async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> IssueDetail:
         selected = ("journals", "attachments") if include is None else include

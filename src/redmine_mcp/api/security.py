@@ -17,8 +17,9 @@ from redmine_mcp.auth import (
     AuthorizationPolicy,
     normalize_api_key,
 )
-from redmine_mcp.bootstrap import build_authentication
+from redmine_mcp.bootstrap import build_authentication, read_budget_policy
 from redmine_mcp.common import ApplicationError
+from redmine_mcp.common.read_budget import read_operation
 from redmine_mcp.constants import auth as auth_text
 
 policy = AuthorizationPolicy(READ_OPERATIONS, WRITE_OPERATIONS)
@@ -40,7 +41,10 @@ async def get_auth_context(
         ):
             raise HTTPException(http_status.HTTP_401_UNAUTHORIZED, auth_text.INVALID_API_KEY)
         service = build_authentication(get_upstream(request), settings)
-        context = await service.authenticate(api_key)
+        async with read_operation(
+            read_budget_policy(settings), fresh=not request.url.path.startswith("/api/v1/")
+        ):
+            context = await service.authenticate(api_key)
         if pinned_writer and (context.principal.redmine_user_id not in settings.writer_user_ids):
             raise HTTPException(http_status.HTTP_403_FORBIDDEN, auth_text.PERMISSION_DENIED)
         return context

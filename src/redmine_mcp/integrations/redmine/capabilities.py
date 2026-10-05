@@ -125,9 +125,15 @@ class RedmineCapabilities:
         ids: dict[int, None] = {}
         offset = 0
         total: int | None = None
-        for _ in range(100):
+        probe = await self.client.get("projects.json", {"limit": 1, "offset": 0})
+        metadata = response_page(probe, "projects", 1, 0, require_metadata=True)
+        if self.client.pagination.describe(metadata.total, 100).requires_narrowing:
+            return ProjectInventory((), False)
+        for _ in range(self.client.policy.max_query_pages):
             data = await self.client.get("projects.json", {"limit": 100, "offset": offset})
             page = response_page(data, "projects", 100, offset, require_metadata=True)
+            if self.client.pagination.describe(page.total, 100).requires_narrowing:
+                return ProjectInventory(tuple(ids), False)
             if total is not None and page.total != total:
                 return ProjectInventory(tuple(ids), False)
             total = page.total

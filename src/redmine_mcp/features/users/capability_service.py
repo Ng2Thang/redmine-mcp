@@ -5,7 +5,14 @@ from typing import Literal
 
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS
 from redmine_mcp.auth.capabilities import CapabilityService
-from redmine_mcp.common import ApplicationError, Page, PageRequest, require_positive_id, validated_query
+from redmine_mcp.common import (
+    ApplicationError,
+    Page,
+    PageRequest,
+    require_positive_id,
+    validated_query,
+)
+from redmine_mcp.common.pagination import PaginationGuard
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.features.projects.models import Project
@@ -72,10 +79,13 @@ class ProjectCapabilityService:
         projects: ProjectReader,
         capabilities: CapabilityService,
         write_operations: tuple[str, ...],
+        *,
+        max_query_pages: int = 10,
     ) -> None:
         self.projects = projects
         self.capabilities = capabilities
         self.write_operations = write_operations
+        self.pagination = PaginationGuard(max_query_pages)
 
     async def _write_tool(self, operation: str, project_id: int | None) -> ToolCapability | None:
         state = await self.capabilities.project_operation(operation, project_id)
@@ -113,11 +123,12 @@ class ProjectCapabilityService:
         include_unknown: bool = False,
     ) -> MyProjectCapabilities:
         query = validated_query(PageRequest, {"limit": limit, "offset": offset})
+        self.pagination.check_depth(query.limit, query.offset, "Supply project_id to narrow scope")
         if project_id is not None:
             require_positive_id(project_id, "project_id")
-        project_operations = (
-            set(READ_OPERATIONS) - GLOBAL_READ_OPERATIONS
-        ) | (set(WRITE_OPERATIONS) - {"upload_attachment"})
+        project_operations = (set(READ_OPERATIONS) - GLOBAL_READ_OPERATIONS) | (
+            set(WRITE_OPERATIONS) - {"upload_attachment"}
+        )
         if operation_id is not None and operation_id not in project_operations:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS, "operation_id must name a project-scoped tool", 422
@@ -147,8 +158,11 @@ class ProjectCapabilityService:
         projects: list[Project] = []
         seen: set[int] = set()
         expected_total: int | None = None
-        for _ in range(100):
+        probe = await self.projects.list_projects(limit=1, offset=0)
+        self.pagination.require_scope(probe.total, 100, "Supply project_id to narrow scope")
+        for _ in range(self.pagination.max_pages):
             page = await self.projects.list_projects(limit=100, offset=len(projects))
+            self.pagination.require_scope(page.total, 100, "Supply project_id to narrow scope")
             ids = [project.id for project in page.items]
             if (
                 (expected_total is not None and page.total != expected_total)
@@ -168,9 +182,9 @@ class ProjectCapabilityService:
                     items=projects, total=expected_total, limit=query.limit, offset=query.offset
                 )
         raise ApplicationError(
-            codes_text.SERVICE_UNAVAILABLE,
+            "scope_required",
             "Project inventory exceeds the capability filter limit; supply project_id",
-            503,
+            422,
         )
 
     async def _list_capabilities(
@@ -226,9 +240,7 @@ class ProjectCapabilityService:
                     if tool is not None:
                         tools.append(tool)
             if operation_id is not None:
-                tools = [
-                    tool for tool in tools if include_unknown or tool.state == "conditional"
-                ]
+                tools = [tool for tool in tools if include_unknown or tool.state == "conditional"]
                 if not tools:
                     continue
             items.append(
@@ -245,9 +257,7 @@ class ProjectCapabilityService:
         global_tools = [
             read_tool(operation)
             for operation in READ_OPERATIONS
-            if operation in GLOBAL_READ_OPERATIONS
-            and operation_id is None
-            and project_id is None
+            if operation in GLOBAL_READ_OPERATIONS and operation_id is None and project_id is None
         ]
         if (
             project_id is None
@@ -267,6 +277,8 @@ class ProjectCapabilityService:
                     tool.reason = None
             for tool in global_tools:
                 tool.reason = None
+        if query.offset:
+            self.pagination.require_scope(total, query.limit, "Supply project_id to narrow scope")
         return MyProjectCapabilities(
             user_id=profile.user_id,
             items=items,
@@ -275,4 +287,5 @@ class ProjectCapabilityService:
             offset=page.offset,
             visibility=page.visibility,
             global_tools=global_tools,
+            pagination_policy=self.pagination.describe(total, query.limit),
         )

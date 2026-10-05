@@ -47,7 +47,9 @@ class AttachmentService:
 
     async def download_attachment(self, attachment_id: int) -> AttachmentDownload:
         require_positive_id(attachment_id, "attachment_id")
-        return await self.reader.download_attachment(attachment_id)
+        raise ApplicationError(
+            "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
+        )
 
     async def update_attachment(
         self, attachment_id: int, request: AttachmentUpdateRequest

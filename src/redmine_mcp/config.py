@@ -10,6 +10,13 @@ from redmine_mcp.constants import runtime as runtime_text
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
     redmine_url: HttpUrl
+    redmine_public_url: HttpUrl | None = None
+    redmine_max_concurrent_requests: int = Field(default=50, ge=1)
+    redmine_admission_timeout_seconds: float = Field(default=30, gt=0, allow_inf_nan=False)
+    redmine_max_query_pages: int = Field(default=10, ge=1)
+    redmine_read_operation_max_requests: int = Field(default=30, ge=1)
+    redmine_read_operation_deadline_seconds: float = Field(default=90, gt=0, allow_inf_nan=False)
+    redmine_read_operation_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
     redmine_write_enabled: bool = False
     redmine_writer_auth_mode: Literal["pinned_key", "personal_key"] = "pinned_key"
     redmine_writer_user_ids: str = ""
@@ -25,6 +32,11 @@ class Settings(BaseSettings):
     redmine_max_keepalive_connections: int = Field(default=20, ge=0)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
+    @field_validator("redmine_public_url", mode="before")
+    @classmethod
+    def empty_public_url(cls, value: object) -> object:
+        return None if value == "" else value
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> object:
@@ -38,6 +50,14 @@ class Settings(BaseSettings):
             raise ValueError(runtime_text.URL_CONTAINS_CREDENTIALS)
         if self.redmine_url.query is not None or self.redmine_url.fragment is not None:
             raise ValueError(runtime_text.URL_CONTAINS_QUERY_OR_FRAGMENT)
+        if self.redmine_public_url is not None:
+            if self.redmine_public_url.username or self.redmine_public_url.password:
+                raise ValueError(runtime_text.URL_CONTAINS_CREDENTIALS)
+            if (
+                self.redmine_public_url.query is not None
+                or self.redmine_public_url.fragment is not None
+            ):
+                raise ValueError(runtime_text.URL_CONTAINS_QUERY_OR_FRAGMENT)
         if self.redmine_write_enabled:
             user_ids = [part.strip() for part in self.redmine_writer_user_ids.split(",")]
             operations = [part.strip() for part in self.redmine_writer_operations.split(",")]

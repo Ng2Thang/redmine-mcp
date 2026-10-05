@@ -6,6 +6,8 @@ from fastapi_mcp import AuthConfig, FastApiMCP
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
 from redmine_mcp.api import require_mcp_access
+from redmine_mcp.bootstrap import read_budget_policy
+from redmine_mcp.common.read_budget import ReadBudgetPolicy
 from redmine_mcp.config import Settings
 from redmine_mcp.constants import runtime as runtime_text
 from redmine_mcp.mcp.annotations import annotate_read_tools
@@ -16,6 +18,7 @@ from redmine_mcp.mcp.catalog import (
     writer_catalog,
 )
 from redmine_mcp.mcp.discovery import install_caller_discovery
+from redmine_mcp.mcp.read_limits import install_read_limits
 
 
 def register_mcp(
@@ -36,9 +39,23 @@ def register_mcp(
         auth_config=AuthConfig(dependencies=[Depends(require_mcp_access)]),
     )
     validate_generated_tools(mcp.tools, operations)
+    for tool in mcp.tools:
+        if tool.name in {
+            "list_projects",
+            "list_issues",
+            "list_issue_time_entries",
+            "list_my_project_capabilities",
+        }:
+            tool.description = (tool.description or "") + (
+                " The first page may be a discovery preview. Check pagination_policy: "
+                "when requires_narrowing is true, narrow scope before requesting another "
+                "page. The server limits total matching pages and read work; do not "
+                "continue on scope_required or scan_budget_exceeded."
+            )
     annotate_read_tools(mcp.tools)
     if settings is not None and settings.personal_writer:
         install_caller_discovery(mcp)
+    install_read_limits(mcp, read_budget_policy(settings) if settings else ReadBudgetPolicy())
     mcp.mount_http()
     return mcp
 

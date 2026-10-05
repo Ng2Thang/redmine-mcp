@@ -5,7 +5,33 @@ that a release has been published.
 
 ## Unreleased
 
+### Changed
+
+- Raise default upstream concurrency to 50 and admission wait to 30 seconds. Logical reads now
+  allow 30 upstream attempts within a 90-second aggregate deadline. Code defaults, `.env.example`
+  and both Compose services use the same values; query pages remain 10 and read bytes remain
+  10 MiB. Existing explicit environment values still override these defaults.
+
+### Fixed
+
+- Correct the public Redmine URL classmethod validator signature, which prevented Pydantic
+  from constructing settings during application import.
+- Align time-entry tool descriptions and aggregation examples with pagination policy. Blocked
+  or incomplete collections require partial/unavailable totals. Concurrency acceptance now
+  follows the configured semaphore limit, including the default of 50.
+- Preserve sanitized aggregate read timeouts when synchronous response conversion expires before
+  REST headers are sent. Preserve environment proxy and `NO_PROXY` routing with the admitted
+  upstream transport; direct and proxy connections share the same semaphore.
+
 ### Added
+
+- Shared upstream request semaphore, bounded admission, aggregate logical-read request/byte/time
+  budgets, and stateless pagination policy. Large collections return a first-page preview but
+  require narrower scope before continuation; capability inventory scans are bounded.
+- Optional `REDMINE_PUBLIC_URL` mapping for validated attachment browser links. Attachment
+  retrieval is metadata/link-only: `download_attachment` is removed from MCP discovery and cached
+  invocations plus the retired REST content route are rejected. No generated exports or query
+  state are introduced. Runtime acceptance for prep-015 remains pending separately authorized testing.
 
 - Read-only `list_my_project_capabilities` with paginated caller-visible projects, membership
   roles deduplicated by ID, sorted unique project permissions merged across all readable roles,

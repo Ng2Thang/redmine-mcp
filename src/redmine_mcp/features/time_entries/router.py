@@ -19,8 +19,13 @@ router = APIRouter(
     description=(
         "List time entries visible to the requesting Redmine user that are logged "
         "directly on one issue. Each entry identifies the user credited with the "
-        "hours; that user may differ from the person who submitted the entry. Page "
-        "through all results before totaling hours. Use this tool to inspect who "
+        "hours; that user may differ from the person who submitted the entry. Check "
+        "pagination_policy before continuing: requires_narrowing=true means the first "
+        "page is a preview. Stop on scope_required or scan_budget_exceeded, and report "
+        "totals as partial or unavailable when collection is incomplete. Only total "
+        "all visible entries after completing permitted pagination. This tool has no "
+        "date filters; a large issue's full entry breakdown may be unavailable. "
+        "Use this tool to inspect who "
         "was credited with time, how many hours, and on which dates. Use "
         "list_issues to discover an issue ID and get_issue for aggregate "
         "spent_hours and total_spent_hours. Entries on descendant issues are "
@@ -35,6 +40,8 @@ async def list_issue_time_entries(
         int,
         Query(ge=1, le=100, description=("Entries per page")),
     ] = 25,
-    offset: Annotated[int, Query(ge=0, description=("Offset for pagination"))] = 0,
+    offset: Annotated[
+        int, Query(ge=0, description="Continuation requires a query within the page ceiling")
+    ] = 0,
 ) -> Page[IssueTimeEntry]:
     return await service.list_issue_time_entries(issue_id, limit, offset)

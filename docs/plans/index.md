@@ -16,7 +16,7 @@ This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is i
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
 Active task IDs are continuous: `tool-001` through `tool-031` and `prep-001` through
-`prep-014`. On 2026-10-02, the user requested compact numbering after document tasks
+`prep-015`. On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through
 `issues-008` IDs remain retired.
@@ -137,6 +137,16 @@ separate from prep-014's explicit verification scope. No production rollout is i
 | Order | Task | Client outcome | Depends on | Status | Blocker / next action |
 |---|---|---|---|---|---|
 | 1 | [tool-031-list-my-project-capabilities](tasks/tool-031-list-my-project-capabilities.md) | Inspect caller roles, permissions and candidate tools per visible project | Existing project reader and prep-010/011/012/013 implementations | blocked | Implementation, review fix and static checks finished; runtime acceptance awaits separately authorized verification. |
+
+## Bounded Redmine reads
+
+The user authorized prep-015 coding on 2026-10-05. No user quotas, query state, count/statistics
+tool or generated export is included. The physical-request semaphore is shared per process;
+large query previews require narrowing before continuation, and attachments return links only.
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-015-bounded-redmine-reads](tasks/prep-015-bounded-redmine-reads.md) | Bound pagination scans, upstream concurrency and logical read work; retrieve browser attachment links | Existing prep-003/005/010-013 and tool-031 implementations; prep-002 for testing | blocked | Implementation finished; timeout-boundary, shared proxy-admission and pagination-guidance review fixes applied; user-approved defaults are concurrency 50, admission 30s, read attempts 30 and aggregate deadline 90s. Ruff lint/format, mypy and diff whitespace checks pass. TEST-001 through TEST-006, updated old paging/download expectations and synthetic acceptance require separate verification authorization. |
 
 ## Future ideas, not assigned tasks
 

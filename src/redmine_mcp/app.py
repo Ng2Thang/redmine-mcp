@@ -7,6 +7,8 @@ from redmine_mcp.api import (
     health_router,
     unexpected_error,
 )
+from redmine_mcp.api.read_limits import ReadLimitsMiddleware
+from redmine_mcp.bootstrap import read_budget_policy
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.config import Settings
 from redmine_mcp.features.attachments.router import router as attachments_router
@@ -22,6 +24,7 @@ from redmine_mcp.features.time_entries.router import router as time_entries_rout
 from redmine_mcp.features.users.router import router as users_router
 from redmine_mcp.lifecycle import RuntimeLifecycle
 from redmine_mcp.mcp import register_mcp
+from redmine_mcp.mcp.read_limits import MCPRestClient
 from redmine_mcp.observability import configure_logging
 
 
@@ -32,6 +35,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="Redmine MCP", version="0.1.0")
     app.state.settings = settings
     app.state.upstream = None
+    app.add_middleware(ReadLimitsMiddleware, policy=read_budget_policy(settings))
     app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(ApplicationError, application_error)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, unexpected_error)
@@ -47,7 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(time_entries_router)
     app.include_router(reference_data_router)
     app.include_router(users_router)
-    internal = httpx.AsyncClient(
+    internal = MCPRestClient(
         transport=httpx.ASGITransport(app=app, raise_app_exceptions=False),
         base_url="http://apiserver",
         timeout=settings.redmine_timeout_seconds + 5,

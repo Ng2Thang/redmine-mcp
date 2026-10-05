@@ -1,5 +1,37 @@
 # Manual verification
 
+## Bounded reads and attachment links (separately authorized)
+
+The [prep-015 task](plans/tasks/prep-015-bounded-redmine-reads.md) owns pending acceptance.
+Do not execute these scenarios without a separate verification assignment. Use offline fake
+million-record totals rather than generating a million live synthetic issues.
+
+- Compare a broad first-page preview with a continuation: the preview reports matching pages
+  and `requires_narrowing`; continuation returns `scope_required` without fetching that page.
+- Repeat with narrower existing filters and threshold/deep/nonaligned offsets. Observe the
+  same-filter metadata probe and bounded capability inventory behavior.
+- Inspect REST/MCP safe budget errors and semaphore permit release under concurrency,
+  cancellation, transport failure and stream closure using offline transports.
+  Attempt more than the configured concurrency limit (at least 51 for default 50) and verify
+  active upstream responses never exceed that limit; include a smaller configured limit.
+- Inspect generated time-entry tool descriptions and aggregation guidance: continuation must
+  check pagination policy, stop on scope/budget errors, and label incomplete totals partial or
+  unavailable. A large issue's time-entry breakdown must not imply unsupported date filters.
+- Include synchronous response conversion that crosses the aggregate deadline before headers:
+  REST must return `504 read_operation_timeout`, and MCP must retain the recognizable safe code.
+- Cover process environment `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and `NO_PROXY` routing,
+  including wildcard bypass. Direct and proxy requests must share the configured semaphore;
+  cancellation and response closure must release permits on both routes. Use fake proxy values
+  and never record real proxy credentials.
+- Verify `download_attachment` is absent from discovery; a cached call returns a tool error.
+  The retired REST content route returns 403 without metadata or content acquisition.
+- Read project/issue attachment metadata and open the returned public Redmine link in an
+  authenticated browser. MCP must not fetch the link or return base64 content. Verify a public
+  subpath mapping and malformed/off-origin metadata links separately.
+
+Existing download-tool tests and old paging expectations need a later authorized update; this
+coding assignment does not modify tests or execute the historical procedures below.
+
 For separately authorized multi-user verification on the marked synthetic writer, use distinct
 ordinary personal keys privately. In personal-key mode verify both users can read/connect and
 an excluded write-admission user receives 403 for writes. Reusing a session ID with a different

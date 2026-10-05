@@ -134,7 +134,7 @@ class RedmineWriter:
                 http_status.HTTP_503_SERVICE_UNAVAILABLE,
             ) from None
         except (httpx.TimeoutException, TimeoutError, httpx.RequestError):
-            if dispatched:
+            if request.extensions.get("redmine_dispatched", dispatched):
                 return WriteReceipt("uncertain", status)
             raise ApplicationError(
                 codes_text.UPSTREAM_UNAVAILABLE,

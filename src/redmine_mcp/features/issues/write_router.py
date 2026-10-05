@@ -13,6 +13,8 @@ from redmine_mcp.features.issues.write_models import (
     IssueRelationCreateResult,
     IssueUpdateRequest,
     IssueUpdateResult,
+    IssueWatcherAddRequest,
+    IssueWatcherResult,
 )
 
 router = APIRouter(
@@ -101,3 +103,23 @@ async def create_issue_relation(
     issue_id: Annotated[int, Path(ge=1, description="ID of the source issue")],
 ) -> IssueRelationCreateResult:
     return await service.create_issue_relation(issue_id, request)
+
+
+@router.post(
+    "/{issue_id}/watchers",
+    operation_id="add_issue_watcher",
+    response_model=IssueWatcherResult,
+    description=(
+        "Add one watcher principal to a visible issue. Requires the restricted writer and Add "
+        "issue watchers. Redmine can accept ineligible users without adding them; empty success "
+        "does not prove membership. Independently checks the visible watcher expansion when "
+        "View issue watchers permits it. Hidden or failed read-back leaves verification "
+        "unavailable. Membership may already exist; reconcile uncertain writes before retrying."
+    ),
+)
+async def add_issue_watcher(
+    request: IssueWatcherAddRequest,
+    service: Annotated[IssueService, Depends(get_issues)],
+    issue_id: Annotated[int, Path(ge=1, description="ID of the issue")],
+) -> IssueWatcherResult:
+    return await service.add_issue_watcher(issue_id, request.user_id)

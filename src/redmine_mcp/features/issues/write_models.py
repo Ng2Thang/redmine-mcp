@@ -259,3 +259,18 @@ class IssueRelationDeleteResult(BaseModel):
     endpoint_observations: dict[str, bool | None] = Field(default_factory=dict)
     observed_present: bool | None = None
     verification: Verification = "unavailable"
+
+
+class IssueWatcherAddRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: PositiveIssueId
+
+
+class IssueWatcherResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    issue_id: PositiveIssueId
+    user_id: PositiveIssueId
+    observed_present: bool | None = None
+    verification: Verification = "unavailable"

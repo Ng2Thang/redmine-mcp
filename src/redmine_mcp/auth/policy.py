@@ -33,6 +33,7 @@ WRITE_OPERATIONS: tuple[str, ...] = (
     "update_issue_note",
     "create_issue_relation",
     "delete_issue_relation",
+    "add_issue_watcher",
 )
 
 

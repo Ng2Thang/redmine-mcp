@@ -7,13 +7,13 @@
 | Task ID | tool-029-add-issue-watcher |
 | Assigned capability | Add one watcher: Redmine may accept an ineligible user without adding them. |
 | Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-028-delete-issue-relation](tool-028-delete-issue-relation.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
-| Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-028-delete-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Last updated | 2026-10-05, Codex |
+| Progress summary | Strict watcher request/receipt, gateway, port/service/route, wiring, writer allowlist, and docs implemented; static checks passed. |
+| Blocker / next action | User review before tool-030; TOOL-029-001 through TOOL-029-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -32,11 +32,12 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Issues) | 2026-10-01 | General/current documentation | POST /issues/{issue_id}/watchers.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| Local pinned archive: watcher controller, issue API view, principal/watchable models, and permissions | 2026-10-05 | Exact 7.0.2 | Single watcher body, 204 no-op for ineligible principals, Add watchers separate from View watchers, explicit empty/omitted expansion semantics confirmed in source; runtime evidence pending. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `add_issue_watcher` is the sole public owner | No |
-| Strict sequence | Wait for tool-028-delete-issue-relation evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User approved coding commit `f21140d` and directed continuation | No; tests still pending |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
 | Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
 
@@ -68,18 +69,21 @@ fields: `{"upstream_accepted":true,"verification":"matched"}`. These examples do
 | Upstream mapping | POST /issues/{issue_id}/watchers.json |
 | Authentication | Personal `X-Redmine-API-Key`; Add watchers on issue. |
 | MCP exposure | writer only; explicit allowlist entry. |
-| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
+| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true, destructiveHint=false. |
 
 ### Inputs and validation
 
 | Field group | Required/default | Validation and omitted behavior | Upstream mapping |
 |---|---|---|---|
-| Tool arguments | Positive issue_id,user_id; one user per call | Positive IDs are strict integers; unknown inputs rejected; omitted update fields never change existing state. Follow specific wording in this row. | POST /issues/{issue_id}/watchers.json |
+| Tool arguments | Positive issue_id path and strict positive user_id body; one principal per call | Reject null, bool, string/fractional IDs, arrays, batch fields, and unknown body fields. | POST /issues/{issue_id}/watchers.json with watcher.user_id |
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
 
-Write receipt with matched/mismatch/unavailable watcher read-back. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+Typed receipt with outcome, upstream_accepted, issue_id, user_id, observed_present, and
+matched/mismatch/unavailable verification. Empty upstream 204 is accepted without JSON parsing;
+no new resource ID is fabricated. Public REST returns 200 with the receipt. Only explicit valid
+watcher lists prove observed membership or absence; omitted expansion is unavailable.
 No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -101,9 +105,42 @@ registered exactly once and must not change defaults of another operation.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+### Frozen coding contract and exact source evidence (2026-10-05)
+
+Working-tree baseline was clean. Exact source was read from the ignored archive
+`.local/upgrades/source/redmine-7.0.2.tar.gz`: `app/controllers/watchers_controller.rb`,
+`app/views/issues/show.api.rsb`, `app/models/principal.rb`,
+`lib/plugins/acts_as_watchable/lib/acts_as_watchable.rb`, and `lib/redmine/preparation.rb`.
+No tests or live calls were executed.
+
+- Required body `user_id`: one strict positive integer. Reject unknown fields, null,
+  bool, fractional/string IDs, arrays, and batch fields. Source issue path is positive,
+  checked again in the service. The upstream user_id names a principal; target Redmine
+  permits eligible User or Group principals. Do not add an administrative user-lookup gate.
+- Preflight GET `/issues/{issue_id}.json` for caller visibility and exact issue ID.
+  Send one POST `/issues/{issue_id}/watchers.json` with `{"watcher":{"user_id":id}}`.
+  Require restricted opt-in writer and Add issue watchers permission; do not locally require
+  Edit issues or View issue watchers. Redmine decides principal eligibility and issue visibility.
+- Exact controller filters active visible assignable principals and valid watchers, then
+  responds 204 even when no matching eligible principal was added. Existing memberships can
+  also produce accepted no-ops. Never equate acceptance with a new membership or mutation.
+- Return typed receipt: outcome, upstream_accepted, issue_id, user_id, observed_present
+  (bool or null), and verification. No new resource ID is invented for empty success.
+- Independently GET the same issue with `include=watchers`. An explicit valid watcher list
+  containing the ID is matched; an explicit valid list without it is mismatch. An omitted
+  watcher list, null/malformed list, invalid/duplicate IDs, wrong issue ID, or read failure
+  leaves observation null and verification unavailable. Validate the whole list before matching.
+- The API view requires View issue watchers to expose this expansion, including empty lists.
+  Omission never means no membership. Read-back failures preserve the preceding 204 acceptance.
+  Unknown write outcomes remain uncertain even if later membership is observed.
+- No automatic retry, rollback, or atomic concurrency guarantee. Membership may already exist
+  or change concurrently; matched verification does not prove this call created it. Native
+  watcher membership can affect future notifications; no notification delivery is verified.
+- Writer-only explicit operation; readOnlyHint=false, idempotentHint=false,
+  destructiveHint=false, openWorldHint=true. Existing read/write contracts unchanged.
+
+This supersedes draft generic update/deletion wording. Specification exit check passed for
+coding; acceptance evidence and marked synthetic verification remain pending.
 
 ## 5. Implementation plan
 
@@ -148,7 +185,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, `git diff --check` from Git Bash | Static checks pass | Lint passed; 176 files formatted; no type issues in 100 source files; whitespace passed on 2026-10-05 | Pass |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -156,25 +193,46 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: strict single-principal body and receipt, watcher adder Protocol/service,
+  gateway with issue preflight and independent watcher observation, authorized POST route,
+  wiring, writer allowlist, and docs. Predecessor approval recorded.
+- Plan deviations: replaced generic draft update/deletion hints with scalar watcher creation
+  and non-destructive annotations; clarified native eligible User/Group principal behavior,
+  separate view permission, and no-op acceptance. No dependency, test, or live data changes.
+- Quality: EVID-001 passed. Formatting applied only to changed files. Automated tests were
+  not written, modified, or run under this coding-only/user assignment.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-028-delete-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: task, dashboard, tool reference, changelog, and predecessor approval updated.
+- Final code diff review: router -> service -> port -> gateway, strict IDs and body, exact
+  visible issue preflight, bounded single POST, empty 204, same-ID read-back, full-list unique
+  positive ID validation before matching, omitted/failed expansion unavailable, no eligibility
+  lookup requiring administrator access, no retries or payload logging, explicit writer-only
+  operation inspected. Prior operations/default reader remain unchanged; no static failures.
+- Remaining blocker: user review before tool-030 and separately authorized verification.
+  Later TOOL-029-001 through TOOL-029-005 must cover exact payload/preflight/read-back, active
+  users and eligible groups, already-watching and ineligible/missing/inactive principals, invalid
+  IDs/body and hidden issue stopping dispatch, Add watchers without View watchers or Edit issues,
+  missing Add permission, 204 with present/absent/empty/omitted watcher lists, malformed/null
+  lists and invalid/duplicate IDs including a malformed entry after the target, wrong issue ID,
+  timeout/unexpected status/read-back failure retaining acceptance, no retries, reader denial,
+  MCP schema/hints and previous tools. Marked prep-008 fixtures must verify actual membership,
+  eligibility and permission variants, no-op behavior, startup/Inspector and task-owned cleanup
+  preserving pre-existing watchers. Notification delivery is outside receipt verification.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-028-delete-issue-relation must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; testing pending. Next action: user review of this coding
+commit before tool-030. Separately authorize TOOL-029-001 through TOOL-029-005 and marked writer
+membership/permission verification before runtime acceptance. Static checks and upstream 204
+do not prove watcher membership.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

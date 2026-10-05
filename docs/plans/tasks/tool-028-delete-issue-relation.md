@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Typed receipt, relation deletion gateway/port/service/REST route, wiring, writer policy/annotations, and docs implemented; static checks passed. |
-| Blocker / next action | User review before tool-029; TOOL-028-001 through TOOL-028-005 and marked writer verification require separate authorization. |
+| Blocker / next action | User approved coding commit `f21140d` and directed continuation; TOOL-028-001 through TOOL-028-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -207,7 +207,7 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   unavailable observations, no 404-as-deletion inference, no retries or payload logging,
   source permission rule preserved, explicit writer-only route and destructive hints inspected.
   No pre-existing failures were found; prior create/default reader contracts preserved.
-- Remaining blocker: user review before tool-029 and separately authorized testing. Exact later
+- Remaining blocker: separately authorized testing. Exact later
   TOOL-028-001 through TOOL-028-005 work: visible relation and both issue preflights; invalid IDs,
   malformed/missing/duplicate relation entries, endpoint inconsistencies, self relation data,
   hidden or absent contexts and membership stopping dispatch; 204, uncertain timeout/unexpected
@@ -227,10 +227,13 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User accepted this task before the next task starts.
 
-Final status: implementation finished; testing pending. Next action: user review of this coding
-commit before tool-029. Separately authorize TOOL-028-001 through TOOL-028-005 and marked writer
+User approval (2026-10-05): accepted coding commit `f21140d` and requested continuation
+through tool-030, retaining review after each tool. Runtime acceptance remains pending.
+
+Final status: implementation finished; testing pending. Next action: separately authorize
+TOOL-028-001 through TOOL-028-005 and marked writer
 state/permission verification for runtime acceptance. Visible absence does not prove row deletion.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

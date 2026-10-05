@@ -9,6 +9,7 @@ from redmine_mcp.integrations.redmine.issue_creations import RedmineIssueCreatio
 from redmine_mcp.integrations.redmine.issue_notes import RedmineIssueNotes
 from redmine_mcp.integrations.redmine.issue_relations import RedmineIssueRelations
 from redmine_mcp.integrations.redmine.issue_updates import RedmineIssueUpdates
+from redmine_mcp.integrations.redmine.issue_watchers import RedmineIssueWatchers
 from redmine_mcp.integrations.redmine.issues import RedmineIssues
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
 from redmine_mcp.integrations.redmine.project_files import RedmineProjectFiles
@@ -31,6 +32,7 @@ __all__ = [
     "RedmineIssueNotes",
     "RedmineIssueRelations",
     "RedmineIssueUpdates",
+    "RedmineIssueWatchers",
     "RedmineIssues",
     "RedmineProjects",
     "RedmineProjectFiles",

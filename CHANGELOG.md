@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `add_issue_watcher` with a single strict principal ID, visible issue
+  preflight, and membership verification separate from empty upstream acceptance.
+
 - Added writer-only `delete_issue_relation` with visible endpoint/context checks,
   destructive hints, and independent absence observations from both issues.
 

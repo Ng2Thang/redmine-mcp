@@ -10,6 +10,7 @@ from redmine_mcp.features.issues.ports import (
     IssueRelationCreator,
     IssueRelationDeleter,
     IssueUpdater,
+    IssueWatcherAdder,
 )
 from redmine_mcp.features.issues.queries import (
     IssueSearch,
@@ -26,6 +27,7 @@ from redmine_mcp.features.issues.write_models import (
     IssueRelationDeleteResult,
     IssueUpdateRequest,
     IssueUpdateResult,
+    IssueWatcherResult,
 )
 
 
@@ -38,6 +40,7 @@ class IssueService:
         note_updater: IssueNoteUpdater | None = None,
         relation_creator: IssueRelationCreator | None = None,
         relation_deleter: IssueRelationDeleter | None = None,
+        watcher_adder: IssueWatcherAdder | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
@@ -45,6 +48,14 @@ class IssueService:
         self.note_updater = note_updater
         self.relation_creator = relation_creator
         self.relation_deleter = relation_deleter
+        self.watcher_adder = watcher_adder
+
+    async def add_issue_watcher(self, issue_id: int, user_id: int) -> IssueWatcherResult:
+        require_positive_id(issue_id, "issue_id")
+        require_positive_id(user_id, "user_id")
+        if self.watcher_adder is None:
+            raise RuntimeError("Issue watcher adder is not configured")
+        return await self.watcher_adder.add_issue_watcher(issue_id, user_id)
 
     async def delete_issue_relation(self, relation_id: int) -> IssueRelationDeleteResult:
         require_positive_id(relation_id, "relation_id")

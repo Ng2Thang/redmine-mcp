@@ -497,6 +497,27 @@ relation. No retry, rollback, or atomic visibility/state guarantee is provided. 
 uncertain results before retrying. The MCP operation publishes destructiveHint=true;
 reader discovery and existing contracts remain unchanged.
 
+`add_issue_watcher` is writer-only at `POST /api/v1/issues/{issue_id}/watchers`.
+Supply `{"user_id": 2}` with one strict positive integer; null, bool, fractional/string IDs,
+arrays, batch fields, and unknown body fields are rejected. The writer must explicitly allow
+this operation. Redmine requires Add issue watchers and issue visibility; Edit issues and
+View issue watchers are not additional local prerequisites. The upstream user ID identifies
+a principal; Redmine permits eligible User and Group principals.
+
+After a visible same-ID issue preflight, the gateway sends one POST with
+`{"watcher":{"user_id":2}}`. Redmine returns empty 204 even if the principal is ineligible
+or no membership was added. The receipt reports `outcome`, `upstream_accepted`, `issue_id`,
+`user_id`, `observed_present`, and `verification`; no new resource ID is invented.
+
+Independent `include=watchers` read-back requires View issue watchers for expansion visibility.
+A valid explicit watcher list containing the ID is matched; a valid list without it is
+mismatch. Missing, null, malformed, duplicate/invalid-ID lists and read failures leave
+observed presence null and verification unavailable. Hidden expansion never means no watcher.
+Read-back failure preserves acceptance; uncertain write outcomes stay uncertain even if
+membership is observed. Matching does not prove this call added a previously absent membership.
+No automatic retries or atomic concurrency guarantees are promised. Watcher membership can
+affect future notifications; notification delivery is not verified. Reader contracts unchanged.
+
 ## Errors
 
 The following statuses and bodies describe REST behavior. MCP may wrap failures as tool errors;

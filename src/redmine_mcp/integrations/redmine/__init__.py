@@ -5,6 +5,7 @@ from redmine_mcp.integrations.redmine.attachment_updates import RedmineAttachmen
 from redmine_mcp.integrations.redmine.attachments import RedmineAttachments
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.identity import RedmineIdentity
+from redmine_mcp.integrations.redmine.issue_creations import RedmineIssueCreations
 from redmine_mcp.integrations.redmine.issues import RedmineIssues
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
 from redmine_mcp.integrations.redmine.project_files import RedmineProjectFiles
@@ -23,6 +24,7 @@ __all__ = [
     "RedmineAttachmentUpdates",
     "RedmineClient",
     "RedmineIdentity",
+    "RedmineIssueCreations",
     "RedmineIssues",
     "RedmineProjects",
     "RedmineProjectFiles",

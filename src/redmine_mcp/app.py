@@ -13,6 +13,7 @@ from redmine_mcp.features.attachments.router import router as attachments_router
 from redmine_mcp.features.attachments.write_router import metadata_router
 from redmine_mcp.features.attachments.write_router import router as uploads_router
 from redmine_mcp.features.issues.router import router as issues_router
+from redmine_mcp.features.issues.write_router import router as issue_writes_router
 from redmine_mcp.features.projects.router import router as projects_router
 from redmine_mcp.features.projects.write_router import router as project_writes_router
 from redmine_mcp.features.reference_data.router import router as reference_data_router
@@ -40,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(uploads_router)
     app.include_router(metadata_router)
     app.include_router(issues_router)
+    app.include_router(issue_writes_router)
     app.include_router(time_entries_router)
     app.include_router(reference_data_router)
     app.include_router(users_router)

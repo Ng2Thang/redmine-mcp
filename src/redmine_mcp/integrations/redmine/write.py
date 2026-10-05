@@ -39,6 +39,7 @@ class RedmineWriter:
         payload: dict[str, Any] | None = None,
         *,
         accepted_statuses: tuple[int, ...] = (201, 204),
+        params: dict[str, str] | None = None,
     ) -> WriteReceipt:
         body = None if payload is None else json.dumps(payload, separators=(",", ":")).encode()
         if body is not None and len(body) > self.policy.max_response_bytes:
@@ -47,7 +48,9 @@ class RedmineWriter:
                 redmine_text.REQUEST_TOO_LARGE,
                 http_status.HTTP_413_CONTENT_TOO_LARGE,
             )
-        return await self._write(method, path, body, "application/json", accepted_statuses)
+        return await self._write(
+            method, path, body, "application/json", accepted_statuses, params=params
+        )
 
     async def write_binary(self, path: str, content: bytes, *, filename: str) -> WriteReceipt:
         if len(content) > self.policy.max_binary_bytes:

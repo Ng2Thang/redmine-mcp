@@ -359,6 +359,38 @@ an accepted deletion accepted. There are no automatic retries. Reader deployment
 tool from MCP discovery and deny its REST route. MCP hints are `readOnlyHint=false`,
 `destructiveHint=true`, `idempotentHint=false`, and `openWorldHint=true`.
 
+`create_issue` is writer-only at `POST /api/v1/issues`. Required `project_id` selects the
+destination project; supply a nonblank `subject` (up to 255 characters) unless copying a
+visible source with positive `copy_from`. Redmine performs native copying and its configured
+attachment/link effects; watcher copying depends on destination permissions. Subtree copying
+and client-side cloning are excluded. The writer must allow `create_issue`; Redmine requires
+destination `add_issues`, source `copy_issues` for a copy, and applicable field permissions.
+
+Optional inputs are `tracker_id`, `status_id`, `priority_id`, `category_id`, `fixed_version_id`,
+`assigned_to_id` (positive ID or `me`), `parent_issue_id`, `description`, `start_date`, `due_date`,
+`done_ratio`, `estimated_hours`, `is_private`, `custom_fields`, `uploads`, and `watcher_user_ids`.
+IDs are strict positive integers; done_ratio is a strict integer from 0 to 100; hours are finite
+nonnegative numbers; dates use YYYY-MM-DD. Unknown inputs, blank subjects, duplicate array IDs,
+and inverted supplied date ranges are rejected. Omitted values preserve native defaults/copied
+values. Explicit null can clear description, assignee, category, version, parent, dates, or
+hours; the other optional fields reject explicit null. Tracker and workflow rules still apply.
+
+Custom fields use `[{"id":1,"value":"text"}]`; values may also be string arrays or null.
+Uploads use `[{"token":"1.digest","filename":"example.txt"}]` with a real `upload_attachment`
+token, basename filename, and optional description/content_type. Upload descriptions are
+stripped by Redmine. Watchers use a list of unique positive user IDs. Redmine may ignore fields
+that are not editable or visible; read-back reports such differences when observable.
+
+Redmine receives destination project_id as a top-level query and in the issue payload,
+and copy_from only as a query. A 201 response confirms upstream acceptance; the receipt includes
+`outcome`, `upstream_accepted`, `resource_id`, `verification`, `field_verification`, and
+`observed_issue`. It compares supplied fields and destination project through an independent
+read. Upload tokens are not echoed in the receipt. Missing/hidden fields are unavailable;
+optional references omitted by 7.0.2 represent unset values. Mismatches take precedence over
+unavailable comparisons. An unreadable/malformed success body or timeout may leave no issue ID
+to reconcile; never retry automatically or infer failure from failed read-back. Native copy
+side effects and actual permission/state behavior still require separately authorized checks.
+
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.

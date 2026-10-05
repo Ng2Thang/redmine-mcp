@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `create_issue` with validated issue fields, native `copy_from`, destination
+  project selection, upload/custom-field/watcher inputs, and independent per-field read-back.
+
 - Added writer-only `delete_attachment` with declared-container membership checks,
   destructive MCP annotations, and independent visible-absence verification.
 

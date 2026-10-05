@@ -7,13 +7,13 @@
 | Task ID | tool-024-create-issue |
 | Assigned capability | Create or natively copy an issue: Use native copy_from, not a client-side clone. |
 | Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-023-delete-attachment](tool-023-delete-attachment.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
-| Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-023-delete-attachment must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Last updated | 2026-10-05, Codex |
+| Progress summary | Writer-only issue creation/native copy, complete typed inputs, receipt/read-back, REST route, wiring, policy, and docs implemented; static checks pass. |
+| Blocker / next action | User review before tool-025; TOOL-024-001 through TOOL-024-005 and writer fixture verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -32,13 +32,14 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://github.com/redmine/redmine/blob/master/app/controllers/issues_controller.rb) | 2026-10-01 | General/current documentation | POST /issues.json; optional copy_from query; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz), inspected locally | 2026-10-05 | Exact 7.0.2 | `IssuesController#create` returns 201 with an issue; `build_new_issue_from_params` uses visible `copy_from`, source `copy_issues`, destination `add_issues`, and native attachment/link/watcher policies. `ApplicationController#find_optional_project` reads top-level project_id. `Issue#safe_attributes` applies workflow/field permissions; fields may be ignored. Runtime effects remain pending. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `create_issue` is the sole public owner | No |
-| Strict sequence | Wait for tool-023-delete-attachment evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User approved tool-023 commit `c6ef155` and directed continuation on 2026-10-05 | No to coding |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Exact 7.0.2 native creation/copy source reviewed; synthetic acceptance pending | Yes to runtime acceptance |
 
 ## 3. Requirements
 
@@ -68,7 +69,7 @@ fields: `{"resource_id":1,"upstream_accepted":true,"verification":"matched"}`. T
 | Upstream mapping | POST /issues.json; optional copy_from query |
 | Authentication | Personal `X-Redmine-API-Key`; Add issues; Copy issues on source when copy_from; additional field permissions. |
 | MCP exposure | writer only; explicit allowlist entry. |
-| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
+| Annotations | readOnlyHint=false, destructiveHint=false, idempotentHint=false, openWorldHint=true. |
 
 ### Inputs and validation
 
@@ -79,7 +80,40 @@ fields: `{"resource_id":1,"upstream_accepted":true,"verification":"matched"}`. T
 
 ### Output and response mapping
 
-Write receipt with new issue ID and read-back. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
+Contract frozen on 2026-10-05: body model rejects unknown fields. `project_id` and all non-null
+IDs are strict positive integers. `subject` is nonblank and at most 255 characters, required
+without `copy_from`. Optional tracker/status/priority IDs, `is_private`, `done_ratio`, and
+array fields reject explicit null. Nullable assignee/category/version/parent IDs, description,
+dates, and hours accept null to clear inherited values on a copy. `assigned_to_id` also accepts
+`me`. Dates use ISO YYYY-MM-DD; hours are finite nonnegative JSON numbers; done_ratio is a
+strict integer from 0 through 100. Custom fields contain unique positive IDs and string,
+string-list, or null values. Watcher IDs and upload tokens are unique; upload filenames are
+basenames up to 255 characters. Tokens follow Redmine's ID.digest form. Uploads accept optional
+description and content_type. Duplicate IDs/tokens and inverted supplied date ranges fail locally.
+
+Always send destination `project_id` as a top-level query parameter and in `issue.project_id`;
+send `copy_from` only as a top-level query parameter. Preflight source visibility using a read,
+then delegate copying to Redmine without client cloning, copy flags, or `copy_subtasks`.
+Omitted fields are omitted from the JSON body. Native link and attachment settings apply;
+watcher copying depends on destination permission. Do not promise source status preservation.
+
+Result: `outcome` accepted/uncertain, `upstream_accepted` true for confirmed 201 or null,
+nullable `resource_id`, `verification` matched/mismatch/unavailable, per-field
+`field_verification`, and optional `observed_issue`. A malformed/missing positive ID leaves
+outcome uncertain and cannot trigger an ID-based read-back; a confirmed 201 remains accepted
+by upstream even if its body is malformed. With a valid ID, GET the created issue with
+attachments/watchers only when requested, compare project and supplied fields, and preserve
+write acceptance if read-back fails. Missing/hidden fields are unavailable, never assumed
+matches from model defaults. Exact 7.0.2 omits unset optional references; their absence is
+compared as null. Any observed mismatch wins; otherwise unavailable fields keep
+overall verification unavailable. Upload tokens are not echoed; compare upload IDs and supplied
+metadata (description is stripped by native attachment handling). Supplied watcher IDs are
+compared as an unordered set; omitted watcher IDs leave native copying policies in control.
+No implicit retry or lookup
+by subject after an uncertain create; creation can already have succeeded.
+
+Creation expects HTTP 201 with an issue ID; HTTP 204 is not the creation success contract.
+Write acceptance and supplied-field read-back remain separate. No source subtree is copied.
 No upstream pagination applies to this operation.
 Existing REST/MCP error envelopes remain compatible. A new operation must be
 registered exactly once and must not change defaults of another operation.
@@ -101,9 +135,8 @@ registered exactly once and must not change defaults of another operation.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: exact 7.0.2 destination selection, native copy, permissions, 201
+response, and side effects reviewed; tool-023 coding approved. Runtime acceptance pending.
 
 ## 5. Implementation plan
 
@@ -148,7 +181,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` | Static checks pass | Passed on 2026-10-05; 171 formatted files and 95 source files checked. Tests/startup/live calls not run. | Passed |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -156,25 +189,44 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: typed full creation inputs and receipt, issue creator Protocol/service,
+  native-copy gateway, authorized REST POST route, dependency wiring, explicit writer allowlist,
+  bounded writer query support, tool reference, changelog, and dashboard. Tool-023 approval recorded.
+- Plan deviations: upstream creation uses 201 JSON, not 204. Destination project_id is sent both
+  as query and nested body to select permissions before native copy. No copy flags or subtree
+  copy are forwarded. Workflow may ignore fields; per-field verification makes observed
+  mismatches/unavailable fields explicit instead of claiming acceptance means every field applied.
+- Quality: installed Ruff lint/format, mypy, and whitespace passed (EVID-001). Formatting applied
+  only to new task files. Automated tests not run under the coding-only/user instructions.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-023-delete-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: task, dashboard, tool reference, changelog, and predecessor approval updated.
+- Final code diff review: router -> service -> creator port -> Redmine gateway; source preflight,
+  destination query, omit/clear mapping, bounded single dispatch, 201 receipt, malformed ID,
+  independently verified scalar/reference/custom/upload/watcher fields, no token echo or logging,
+  explicit writer-only exposure, and existing reader/write defaults inspected. No dependencies,
+  test files, live data, or unrelated source changed.
+- Remaining blocker: user review before tool-025. TOOL-024-001 through TOOL-024-005 require
+  later offline checks for normal creation/copy, all inputs and null/omission cases, wrong/hidden
+  source, destination and field permissions, exact query/body/headers, duplicate input arrays,
+  201 and invalid success bodies, timeout uncertainty, read-back mismatches/hidden/failed fields,
+  upload IDs and normalized descriptions, watcher/custom-field comparisons, reader denial,
+  MCP schema/annotations, and existing upload/write transport compatibility. Opt-in prep-008
+  fixtures on marked 7.0.2 must verify native copy attachment/link/watcher settings, no subtree,
+  actual issue state, permissions, and task-owned cleanup. Nothing was created in live Redmine.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-023-delete-attachment must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; testing pending. Next action: user review of this coding
+commit before tool-025. Separately authorize TOOL-024-001 through TOOL-024-005 and marked writer
+fixture verification before runtime acceptance. Static checks do not prove native copy effects.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

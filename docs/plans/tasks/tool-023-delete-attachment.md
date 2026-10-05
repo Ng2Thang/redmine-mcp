@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Writer-only deletion, shared container proof, REST route, wiring, MCP policy/annotations, and documentation implemented; static checks pass. |
-| Blocker / next action | User review of this implementation before tool-024; TOOL-023-001 through TOOL-023-005 require separately authorized verification. |
+| Blocker / next action | User approved commit `c6ef155` on 2026-10-05 and directed continuation to tool-024. TOOL-023-001 through TOOL-023-005 require separately authorized verification. |
 
 
 Document attachment containers are excluded from the 7.0.2 contract.
@@ -184,7 +184,8 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - Final code diff review: router -> service -> port -> gateway, explicit writer-only exposure,
   no retry/download, single DELETE, empty 204 handling, independent read-back, and preserved
   tool-022 inputs/results inspected. No dependency changes or unrelated edits.
-- Remaining blocker: user review before tool-024 and TOOL-023-001 through TOOL-023-005 runtime
+- User review: commit `c6ef155` approved on 2026-10-05; user directed continuation to tool-024.
+- Remaining blocker: TOOL-023-001 through TOOL-023-005 runtime
   acceptance. Later offline checks must cover all three containers, wrong containers, malformed
   proof, query validation/unknown fields, 204, timeouts, read-back absence/presence/failure,
   reader denial, destructive discovery hints, and tool-022 compatibility. Opt-in marked 7.0.2
@@ -200,10 +201,10 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User approved the implementation on 2026-10-05 and directed continuation to tool-024.
 
-Final status: implementation finished; testing pending. Next action: user review of the committed
-tool-023 coding change before tool-024. Separately authorize TOOL-023-001 through TOOL-023-005
+Final status: implementation finished; user review approved; testing pending. User approved
+commit `c6ef155` on 2026-10-05 and directed continuation to tool-024. Separately authorize TOOL-023-001 through TOOL-023-005
 verification before runtime acceptance; static checks do not establish deletion/state evidence.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

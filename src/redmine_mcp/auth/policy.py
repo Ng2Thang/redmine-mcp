@@ -28,6 +28,7 @@ WRITE_OPERATIONS: tuple[str, ...] = (
     "add_project_file",
     "update_attachment",
     "delete_attachment",
+    "create_issue",
 )
 
 

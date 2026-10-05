@@ -34,7 +34,7 @@ class RedmineWriter:
 
     async def write_json(
         self,
-        method: Literal["POST", "PATCH", "DELETE"],
+        method: Literal["POST", "PUT", "PATCH", "DELETE"],
         path: str,
         payload: dict[str, Any] | None = None,
         *,
@@ -65,7 +65,7 @@ class RedmineWriter:
 
     async def _write(
         self,
-        method: Literal["POST", "PATCH", "DELETE"],
+        method: Literal["POST", "PUT", "PATCH", "DELETE"],
         path: str,
         content: bytes | None,
         content_type: str,

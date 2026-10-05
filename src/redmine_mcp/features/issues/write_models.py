@@ -105,3 +105,70 @@ class IssueCreateResult(BaseModel):
     verification: Verification = "unavailable"
     field_verification: dict[str, Verification] = Field(default_factory=dict)
     observed_issue: IssueDetail | None = None
+
+
+class IssueUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: PositiveIssueId | None = None
+    subject: str | None = Field(default=None, min_length=1, max_length=255)
+    tracker_id: PositiveIssueId | None = None
+    status_id: PositiveIssueId | None = None
+    priority_id: PositiveIssueId | None = None
+    category_id: PositiveIssueId | None = None
+    fixed_version_id: PositiveIssueId | None = None
+    assigned_to_id: PositiveIssueId | Literal["me"] | None = None
+    parent_issue_id: PositiveIssueId | None = None
+    description: str | None = None
+    start_date: IssueDate | None = None
+    due_date: IssueDate | None = None
+    done_ratio: int | None = Field(default=None, strict=True, ge=0, le=100)
+    estimated_hours: IssueHours | None = None
+    is_private: bool | None = Field(default=None, strict=True)
+    custom_fields: list[IssueCustomFieldInput] | None = None
+    uploads: list[IssueUploadInput] | None = Field(default=None, repr=False)
+    notes: str | None = Field(default=None, min_length=1, repr=False)
+    private_notes: bool | None = Field(default=None, strict=True)
+
+    @model_validator(mode="after")
+    def validate_update(self) -> "IssueUpdateRequest":
+        nonnullable = {
+            "project_id",
+            "subject",
+            "tracker_id",
+            "status_id",
+            "priority_id",
+            "done_ratio",
+            "is_private",
+            "custom_fields",
+            "uploads",
+            "notes",
+            "private_notes",
+        }
+        if any(getattr(self, field) is None for field in self.model_fields_set & nonnullable):
+            raise ValueError("A supplied non-clearable update field must not be null")
+        effective_fields = self.model_fields_set.difference({"private_notes"})
+        if not self.custom_fields:
+            effective_fields.discard("custom_fields")
+        if not self.uploads:
+            effective_fields.discard("uploads")
+        if not effective_fields:
+            raise ValueError("Supply at least one issue field, upload, custom field, or note")
+        if self.private_notes is not None and self.notes is None:
+            raise ValueError("private_notes requires notes")
+        if any(value is not None and not value.strip() for value in (self.subject, self.notes)):
+            raise ValueError("Subject and notes must not be blank")
+        if self.start_date is not None and self.due_date is not None:
+            if self.due_date < self.start_date:
+                raise ValueError("Due date must not precede start date")
+        custom_ids = [field.id for field in self.custom_fields or []]
+        upload_ids = [upload.token.split(".", 1)[0] for upload in self.uploads or []]
+        for values in (custom_ids, upload_ids):
+            if len(values) != len(set(values)):
+                raise ValueError("Duplicate custom fields or uploads are not accepted")
+        return self
+
+
+class IssueUpdateResult(IssueCreateResult):
+    resource_id: PositiveIssueId
+    journal_id: PositiveIssueId | None = None

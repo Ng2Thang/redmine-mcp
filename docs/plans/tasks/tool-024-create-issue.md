@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Writer-only issue creation/native copy, complete typed inputs, receipt/read-back, REST route, wiring, policy, and docs implemented; static checks pass. |
-| Blocker / next action | User review before tool-025; TOOL-024-001 through TOOL-024-005 and writer fixture verification require separate authorization. |
+| Blocker / next action | User approved commit `d600fda` on 2026-10-05 and directed tool-025 continuation. TOOL-024-001 through TOOL-024-005 and writer fixture verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -205,7 +205,8 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   independently verified scalar/reference/custom/upload/watcher fields, no token echo or logging,
   explicit writer-only exposure, and existing reader/write defaults inspected. No dependencies,
   test files, live data, or unrelated source changed.
-- Remaining blocker: user review before tool-025. TOOL-024-001 through TOOL-024-005 require
+- User review: commit `d600fda` approved on 2026-10-05; continuation to tool-025 directed.
+- Remaining blocker: TOOL-024-001 through TOOL-024-005 require
   later offline checks for normal creation/copy, all inputs and null/omission cases, wrong/hidden
   source, destination and field permissions, exact query/body/headers, duplicate input arrays,
   201 and invalid success bodies, timeout uncertainty, read-back mismatches/hidden/failed fields,
@@ -223,10 +224,10 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User approved implementation on 2026-10-05 and directed continuation to tool-025.
 
-Final status: implementation finished; testing pending. Next action: user review of this coding
-commit before tool-025. Separately authorize TOOL-024-001 through TOOL-024-005 and marked writer
+Final status: implementation finished; user review approved; testing pending. User approved
+commit `d600fda` and directed tool-025 on 2026-10-05. Separately authorize TOOL-024-001 through TOOL-024-005 and marked writer
 fixture verification before runtime acceptance. Static checks do not prove native copy effects.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

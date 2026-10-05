@@ -2,25 +2,42 @@ from datetime import datetime
 
 from redmine_mcp.common import Page, require_positive_id, validated_query
 from redmine_mcp.features.issues.models import Issue, IssueDetail
-from redmine_mcp.features.issues.ports import IssueCreator, IssueReader
+from redmine_mcp.features.issues.ports import IssueCreator, IssueReader, IssueUpdater
 from redmine_mcp.features.issues.queries import (
     IssueSearch,
     validate_issue_includes,
     validate_issue_list_includes,
 )
-from redmine_mcp.features.issues.write_models import IssueCreateRequest, IssueCreateResult
+from redmine_mcp.features.issues.write_models import (
+    IssueCreateRequest,
+    IssueCreateResult,
+    IssueUpdateRequest,
+    IssueUpdateResult,
+)
 
 
 class IssueService:
-    def __init__(self, reader: IssueReader, creator: IssueCreator | None = None) -> None:
+    def __init__(
+        self,
+        reader: IssueReader,
+        creator: IssueCreator | None = None,
+        updater: IssueUpdater | None = None,
+    ) -> None:
         self.reader = reader
         self.creator = creator
+        self.updater = updater
 
     async def create_issue(self, request: IssueCreateRequest) -> IssueCreateResult:
         require_positive_id(request.project_id, "project_id")
         if self.creator is None:
             raise RuntimeError("Issue creator is not configured")
         return await self.creator.create_issue(request)
+
+    async def update_issue(self, issue_id: int, request: IssueUpdateRequest) -> IssueUpdateResult:
+        require_positive_id(issue_id, "issue_id")
+        if self.updater is None:
+            raise RuntimeError("Issue updater is not configured")
+        return await self.updater.update_issue(issue_id, request)
 
     async def list_issues(
         self,

@@ -3,7 +3,12 @@ from typing import Protocol
 
 from redmine_mcp.common import Page
 from redmine_mcp.features.issues.models import Issue, IssueDetail
-from redmine_mcp.features.issues.write_models import IssueCreateRequest, IssueCreateResult
+from redmine_mcp.features.issues.write_models import (
+    IssueCreateRequest,
+    IssueCreateResult,
+    IssueUpdateRequest,
+    IssueUpdateResult,
+)
 
 
 class IssueReader(Protocol):
@@ -31,3 +36,9 @@ class IssueReader(Protocol):
 
 class IssueCreator(Protocol):
     async def create_issue(self, request: IssueCreateRequest) -> IssueCreateResult: ...
+
+
+class IssueUpdater(Protocol):
+    async def update_issue(
+        self, issue_id: int, request: IssueUpdateRequest
+    ) -> IssueUpdateResult: ...

@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `update_issue` for supplied fields, uploads, and notes-only updates,
+  with independent per-field verification and new-journal observations.
+
 - Added writer-only `create_issue` with validated issue fields, native `copy_from`, destination
   project selection, upload/custom-field/watcher inputs, and independent per-field read-back.
 

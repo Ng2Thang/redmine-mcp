@@ -76,6 +76,7 @@ def validate_operation_catalog(app: FastAPI, operations: tuple[str, ...] = OPERA
         elif name in WRITE_OPERATIONS:
             if not route.path.startswith("/api/v1/") or route.methods not in (
                 {"POST"},
+                {"PUT"},
                 {"PATCH"},
                 {"DELETE"},
             ):

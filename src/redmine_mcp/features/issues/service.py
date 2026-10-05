@@ -2,7 +2,12 @@ from datetime import datetime
 
 from redmine_mcp.common import Page, require_positive_id, validated_query
 from redmine_mcp.features.issues.models import Issue, IssueDetail
-from redmine_mcp.features.issues.ports import IssueCreator, IssueReader, IssueUpdater
+from redmine_mcp.features.issues.ports import (
+    IssueCreator,
+    IssueNoteUpdater,
+    IssueReader,
+    IssueUpdater,
+)
 from redmine_mcp.features.issues.queries import (
     IssueSearch,
     validate_issue_includes,
@@ -11,6 +16,8 @@ from redmine_mcp.features.issues.queries import (
 from redmine_mcp.features.issues.write_models import (
     IssueCreateRequest,
     IssueCreateResult,
+    IssueNoteUpdateRequest,
+    IssueNoteUpdateResult,
     IssueUpdateRequest,
     IssueUpdateResult,
 )
@@ -22,10 +29,12 @@ class IssueService:
         reader: IssueReader,
         creator: IssueCreator | None = None,
         updater: IssueUpdater | None = None,
+        note_updater: IssueNoteUpdater | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
         self.updater = updater
+        self.note_updater = note_updater
 
     async def create_issue(self, request: IssueCreateRequest) -> IssueCreateResult:
         require_positive_id(request.project_id, "project_id")
@@ -38,6 +47,15 @@ class IssueService:
         if self.updater is None:
             raise RuntimeError("Issue updater is not configured")
         return await self.updater.update_issue(issue_id, request)
+
+    async def update_issue_note(
+        self, issue_id: int, journal_id: int, request: IssueNoteUpdateRequest
+    ) -> IssueNoteUpdateResult:
+        require_positive_id(issue_id, "issue_id")
+        require_positive_id(journal_id, "journal_id")
+        if self.note_updater is None:
+            raise RuntimeError("Issue note updater is not configured")
+        return await self.note_updater.update_issue_note(issue_id, journal_id, request)
 
     async def list_issues(
         self,

@@ -7,6 +7,8 @@ from redmine_mcp.features.issues.service import IssueService
 from redmine_mcp.features.issues.write_models import (
     IssueCreateRequest,
     IssueCreateResult,
+    IssueNoteUpdateRequest,
+    IssueNoteUpdateResult,
     IssueUpdateRequest,
     IssueUpdateResult,
 )
@@ -54,3 +56,25 @@ async def update_issue(
     issue_id: Annotated[int, Path(ge=1, description="ID of the issue")],
 ) -> IssueUpdateResult:
     return await service.update_issue(issue_id, request)
+
+
+@router.put(
+    "/{issue_id}/notes/{journal_id}",
+    operation_id="update_issue_note",
+    response_model=IssueNoteUpdateResult,
+    description=(
+        "Edit supplied notes or privacy on one visible journal belonging to the declared issue. "
+        "Empty notes clear text and may hide an entry with no visible details; this does not "
+        "delete its stored journal row. Requires the restricted writer and Edit notes or Edit "
+        "own notes, plus Set notes private for privacy changes. Reports write acceptance "
+        "separately from same-journal read-back. Visible absence is not proof of clearing or "
+        "deletion. Reconcile uncertain writes before retrying."
+    ),
+)
+async def update_issue_note(
+    request: IssueNoteUpdateRequest,
+    service: Annotated[IssueService, Depends(get_issues)],
+    issue_id: Annotated[int, Path(ge=1, description="ID of the issue containing the note")],
+    journal_id: Annotated[int, Path(ge=1, description="ID of the journal to edit")],
+) -> IssueNoteUpdateResult:
+    return await service.update_issue_note(issue_id, journal_id, request)

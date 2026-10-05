@@ -30,6 +30,7 @@ WRITE_OPERATIONS: tuple[str, ...] = (
     "delete_attachment",
     "create_issue",
     "update_issue",
+    "update_issue_note",
 )
 
 

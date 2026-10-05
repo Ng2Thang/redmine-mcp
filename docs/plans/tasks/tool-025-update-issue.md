@@ -13,7 +13,7 @@
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
 | Last updated | 2026-10-05, Codex |
 | Progress summary | Typed field/notes updates, preflight/read-back, writer PUT transport/catalog support, REST route, wiring, and docs implemented; static checks pass. |
-| Blocker / next action | User review before tool-026; TOOL-025-001 through TOOL-025-005 and writer fixture verification require separate authorization. |
+| Blocker / next action | User approved commit `27cae75` on 2026-10-05 and directed tool-026 continuation. TOOL-025-001 through TOOL-025-005 and writer fixture verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
@@ -203,7 +203,8 @@ No current 7.0.2 live or per-tool test evidence is claimed.
   mapping, notes-only access, bounded single PUT, empty 204, independent read-back, no automatic
   retries, author/new-journal checks, no token/note logging, explicit writer-only discovery, and
   retained existing tool defaults inspected. No dependency, test, or live-state changes.
-- Remaining blocker: user review before tool-026. Later TOOL-025-001 through TOOL-025-005
+- User review: commit `27cae75` approved on 2026-10-05; continuation to tool-026 directed.
+- Remaining blocker: later TOOL-025-001 through TOOL-025-005
   offline work must cover every field, clear/omit validation, notes-only Add notes without Edit
   issues, privacy/parent/workflow distinctions, uploads and ignored fields, 204/invalid success,
   malformed preflight journals, repeated old note text, multiple/new/hidden journals, private
@@ -221,10 +222,10 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 - [x] Documentation reflects implemented behavior.
 - [x] Exact target version and contract reviewed.
 - [x] Final diff reviewed and dashboard synchronized.
-- [ ] User accepted this task before the next task starts.
+- [x] User approved implementation on 2026-10-05 and directed continuation to tool-026.
 
-Final status: implementation finished; testing pending. Next action: user review of this coding
-commit before tool-026. Separately authorize TOOL-025-001 through TOOL-025-005 and marked writer
+Final status: implementation finished; user review approved; testing pending. User approved
+commit `27cae75` and directed tool-026 on 2026-10-05. Separately authorize TOOL-025-001 through TOOL-025-005 and marked writer
 fixture verification before runtime acceptance. Static checks do not establish permission/state
 acceptance, and a matched observation is not an atomic concurrency guarantee.
 

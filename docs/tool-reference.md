@@ -416,6 +416,29 @@ on the same new journal. These observations cannot provide atomic attribution un
 calls. A failed read-back preserves accepted/uncertain write state. Do not retry automatically:
 an uncertain update can already have added a note or attached uploads.
 
+`update_issue_note` is writer-only at `PUT /api/v1/issues/{issue_id}/notes/{journal_id}`.
+Supply `notes` (a string, including empty/whitespace) or `private_notes` (a strict boolean),
+or both. Unknown fields, explicit null, and an empty body are rejected; omitted fields are
+preserved. The journal must appear in the declared issue's visible journals before PUT.
+Missing/hidden/wrong-issue membership returns a safe 404; malformed proof fails before writing.
+Redmine requires Edit notes or Edit own notes for the author, plus Set notes private for
+privacy changes. The writer must explicitly allow `update_issue_note`.
+
+Redmine receives only supplied fields under `journal` at `PUT /journals/{journal_id}.json`;
+it sets updated_by itself and returns 204. The receipt reports `outcome`, `upstream_accepted`,
+`issue_id`, `resource_id` (journal ID), `verification`, `field_verification`, `observed_present`,
+and optional `observed_journal` with visibility metadata. A separate issue-journals read compares
+the same journal ID and supplied fields. Hidden/omitted values, failed reads, or an absent
+journal leave field verification unavailable; observed differences mismatch.
+
+Clearing notes overwrites existing text. In pinned 7.0.2 it retains the stored journal row,
+but an entry without notes or visible details may disappear from visible history. Privacy
+changes can also hide an entry. `observed_present=false` does not prove deletion or clearing.
+Read-back failure never erases write acceptance; concurrent changes have no atomic guarantee.
+Do not retry automatically after uncertainty. MCP hints are `readOnlyHint=false`,
+`destructiveHint=true`, `idempotentHint=false`, and `openWorldHint=true` because this tool
+can overwrite or clear existing note text.
+
 Journal entries contain `id`, `user`, `notes`, `created_on`, `private_notes`, and `details`.
 Each detail has `property`, `name`, `old_value`, and `new_value`. Attachment metadata contains
 `id`, `filename`, `filesize`, `content_type`, `description`, `created_on`, and `author`.

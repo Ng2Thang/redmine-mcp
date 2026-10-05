@@ -7,6 +7,9 @@ that a release has been published.
 
 ### Added
 
+- Added writer-only `update_issue_note` with visible issue/journal membership checks,
+  supplied text/privacy updates, and independent same-journal read-back.
+
 - Added writer-only `update_issue` for supplied fields, uploads, and notes-only updates,
   with independent per-field verification and new-journal observations.
 

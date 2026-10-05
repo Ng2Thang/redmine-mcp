@@ -7,17 +7,19 @@
 | Task ID | tool-026-update-issue-note |
 | Assigned capability | Edit a journal note: Verify journal belongs to issue and caller can view it before update. |
 | Type / access / destructive effects | Add writer tool / write / Redmine state mutation |
-| Status | blocked - documentation draft; no code or verification performed |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | [tool-025-update-issue](tool-025-update-issue.md); prior task must have evidence and user acceptance |
 | Related tasks | [Master plan](../redmine-7-0-2-capabilities.md); [dashboard](../index.md) |
 | Target Redmine version | 7.0.2-bookworm pinned in synthetic Compose; runtime acceptance pending |
-| Last updated | 2026-10-02, Codex |
-| Progress summary | Tool outcome and draft contract assigned; implementation and testing not started. |
-| Blocker / next action | Predecessor tool-025-update-issue must be accepted and exact 7.0.2 source/behavior rechecked. |
+| Last updated | 2026-10-05, Codex |
+| Progress summary | Typed note request/receipt, scoped journal gateway, port/service/REST route, wiring, writer policy/annotations, and docs implemented; static checks pass. |
+| Blocker / next action | User review before tool-027; TOOL-026-001 through TOOL-026-005 and marked writer verification require separate authorization. |
 
 ## 2. Discovery and evidence
 
-The client outcome is **edit a journal note**. Verify journal belongs to issue and caller can view it before update. Empty notes can remove a journal without details; disclose side effect and verify through get_issue journals.
+The client outcome is **edit a journal note**. Verify journal belongs to issue and caller can
+view it before update. Empty notes can remove an entry from visible issue history without
+deleting its journal row; disclose this effect and verify through get_issue journals.
 Current catalog has no `update_issue_note`; it owns this public behavior exactly once.
 
 The baseline is [tool-reference.md](../../tool-reference.md), the explicit
@@ -32,18 +34,20 @@ separate restricted deployment and synthetic verification prerequisites.
 | [Redmine reference](https://www.redmine.org/projects/redmine/wiki/Rest_Journals) | 2026-10-01 | General/current documentation | PUT /journals/{journal_id}.json; target-build behavior must be checked in prep-005. |
 | [Redmine API availability](https://www.redmine.org/projects/redmine/wiki/Rest_api) | 2026-10-01 | Documents REST excluded from 7.0.2 | JSON authentication, paging, upload headers, and resource availability. |
 | [Repository pin](../../../deploy/compose.test.yaml) | 2026-10-02 | 7.0.2-bookworm | The pinned configuration requires runtime acceptance. |
+| [Exact release archive](https://www.redmine.org/releases/redmine-7.0.2.tar.gz), inspected locally | 2026-10-05 | Exact 7.0.2 | `JournalsController` finds a visible journal, checks `editable_by?`, applies journal safe attributes, and returns 204. `Journal#save` does not delete an existing blank journal; `Issue#visible_journals_with_index` filters entries with neither notes nor visible details. Pinned functional test source explicitly asserts empty notes do not delete the journal; read only, not executed. |
 
 | Decision | Resolution | Blocking? |
 |---|---|---|
 | Public ownership | `update_issue_note` is the sole public owner | No |
-| Strict sequence | Wait for tool-025-update-issue evidence and explicit user acceptance | Yes to execution |
+| Strict sequence | User approved tool-025 commit `27cae75` and directed tool-026 on 2026-10-05 | No to coding |
 | Testing authorization | User approves testing separately for this task | Yes to verification |
-| Target version | Use pinned 7.0.2 digest and verify versioned source or synthetic behavior | Yes to acceptance |
+| Target version | Exact PUT/204, permission and visibility source reviewed; synthetic acceptance pending | Yes to runtime acceptance |
 
 ## 3. Requirements
 
 - Intended user: authenticated MCP client using the requesting Redmine identity.
-- In scope: Verify journal belongs to issue and caller can view it before update. Empty notes can remove a journal without details; disclose side effect and verify through get_issue journals.
+- In scope: Verify visible journal membership before updating supplied notes/privacy. Empty
+  notes may hide an entry with no visible details; do not claim this deletes its stored row.
 - Out of scope: unrelated Redmine resources, generic forwarding, administrative
   credentials, and implicit retries. Preserve existing operation contracts.
 - Permission/configuration prerequisite: Edit notes or Edit own notes; Set notes private when requested.
@@ -68,7 +72,7 @@ fields: `{"resource_id":2,"upstream_accepted":true,"verification":"matched"}`. T
 | Upstream mapping | PUT /journals/{journal_id}.json |
 | Authentication | Personal `X-Redmine-API-Key`; Edit notes or Edit own notes; Set notes private when requested. |
 | MCP exposure | writer only; explicit allowlist entry. |
-| Annotations | readOnlyHint=false, idempotentHint=false, openWorldHint=true; destructiveHint=true for deletion. |
+| Annotations | readOnlyHint=false, destructiveHint=true, idempotentHint=false, openWorldHint=true; supplied notes can overwrite or clear existing text. |
 
 ### Inputs and validation
 
@@ -78,6 +82,29 @@ fields: `{"resource_id":2,"upstream_accepted":true,"verification":"matched"}`. T
 | Authentication | Required for public tools | Missing/rejected key uses existing 401 handling; no admin impersonation or key in URL. | `X-Redmine-API-Key` |
 
 ### Output and response mapping
+
+Contract frozen on 2026-10-05: positive issue/journal path IDs validated before upstream
+access. Body contains optional string `notes` (including empty/whitespace strings) and optional
+strict boolean `private_notes`; at least one must be supplied. Explicit null and unknown body
+fields are rejected. Omitted fields are excluded. Privacy-only changes are valid for this
+operation; it edits an existing note rather than adding one. Redmine requires `edit_issue_notes`
+or `edit_own_issue_notes` for the author, with `set_notes_private` for supplied privacy changes.
+No application Edit issues requirement is added; the restricted writer must allow this tool.
+
+Preflight GET /issues/{issue_id}.json?include=journals must expose the requested positive,
+unique journal ID. Missing journal membership is a safe 404 before PUT; malformed membership
+or journal data is a safe 502. PUT /journals/{journal_id}.json sends only supplied fields under
+`journal`; Redmine sets updated_by itself. HTTP 204 confirms acceptance. Read the same issue's
+journals independently afterward and match the same journal ID, not note text from another row.
+
+Receipt: `outcome`, `upstream_accepted`, `issue_id`, `resource_id` (journal ID), `verification`,
+`field_verification`, nullable `observed_present`, and optional `observed_journal` with caller
+visibility metadata. For a returned journal, compare supplied fields only; missing fields are
+unavailable and observed differences mismatch. For visible absence, observed_present is false
+and field verification remains unavailable, even after clearing text. Absence can reflect
+filtering/privacy/concurrency and does not prove deletion or successful clearing. Failed
+read-back leaves presence unknown and preserves write acceptance/uncertainty. No retries,
+locking, database reads, hidden-journal bypass, or rollback promise are introduced.
 
 Write receipt with journal identity/read-back. Accepted-write receipt; verification matched, mismatch, or unavailable. The writer receipt includes `upstream_accepted`, `verification`, returned resource ID where available, and observed-field details; empty upstream 204 is accepted without JSON parsing.
 No upstream pagination applies to this operation.
@@ -95,15 +122,16 @@ registered exactly once and must not change defaults of another operation.
 
 ### Write semantics
 
-- Exact effect: Verify journal belongs to issue and caller can view it before update. Empty notes can remove a journal without details; disclose side effect and verify through get_issue journals.
+- Exact effect: overwrite/clear supplied note text or change its privacy after proving visible
+  issue membership. Blank notes without visible details can disappear from issue history;
+  existing journal rows are retained by the pinned source. Redmine records updated_by.
 - No automatic retries. A timeout after dispatch produces an unknown outcome requiring a separate read-back before any repeat.
 - Success and read-back are separate fields. A failed read-back cannot erase a preceding accepted write.
 - Concurrent updates have no promised compare-and-swap guarantee. Do not infer atomicity from timestamps.
 - Synthetic verification requires `prep-008`, an isolated marker, task-owned fixtures, and cleanup of only those fixtures.
 
-Specification exit check: target-build evidence and predecessor acceptance
-are pending. Do not start coding from this draft until the exact 7.0.2 behavior
-and its permission contract have been reviewed and the task is marked planned.
+Specification exit check: exact 7.0.2 update/permission/empty-note source reviewed and draft
+deletion claim corrected; predecessor coding approved. Runtime acceptance remains pending.
 
 ## 5. Implementation plan
 
@@ -148,7 +176,7 @@ the repository instruction prohibits automatic unit-test verification.
 
 | Evidence ID | Procedure | Expected | Actual | Status |
 |---|---|---|---|---|
-| EVID-001 | `bash scripts/check.sh` and `git diff --check` during coding | Static checks pass | Not run for this task | Pending |
+| EVID-001 | `.venv/Scripts/ruff.exe check .`, `.venv/Scripts/ruff.exe format --check .`, `.venv/Scripts/mypy.exe src`, and `git diff --check` | Static checks pass | Passed on 2026-10-05; 173 formatted files and 97 source files checked. Tests/startup/live calls not run. | Passed |
 | EVID-002 | `uv run --frozen pytest` after user authorizes testing | Relevant offline scenarios pass | Not run | Pending |
 | EVID-003 | Inspector and marked synthetic 7.0.2 procedure after separate authorization | Required runtime cases pass | Not run | Pending |
 
@@ -156,25 +184,47 @@ No current 7.0.2 live or per-tool test evidence is claimed.
 
 ## 8. Implementation and review record
 
-- Changes made: none; documentation assignment only.
-- Plan deviations: none recorded.
-- Quality and automated tests: not run.
+- Changes made: typed note edit request/receipt and journal observation, note-updater Protocol,
+  service validation, scoped journal gateway, authorized PUT route, dependency wiring, explicit
+  writer policy, destructive text-edit hints, tool reference, changelog, and dashboard. Tool-025
+  approval recorded alongside this implementation.
+- Plan deviations: corrected the draft's deletion claim against exact source and existing
+  functional test source (read only). Blank notes retain the journal row but may hide it from
+  issue history. Visible absence never proves clearing/deletion; field verification remains
+  unavailable. Omitted fields are preserved and privacy-only changes are allowed.
+- Quality: installed Ruff lint/format, mypy, and whitespace passed (EVID-001). Formatting was
+  applied only to changed files. Automated tests not run under coding-only/user instructions.
 - Startup/Inspector checks: not run.
-- Documentation: this draft and the master dashboard.
-- Final code diff review: pending implementation.
-- Remaining blocker: Predecessor tool-025-update-issue must be accepted and exact 7.0.2 source/behavior rechecked.
+- Documentation: task, dashboard, tool reference, changelog, and predecessor approval updated.
+- Final code diff review: router -> service -> note-updater port -> gateway; strict service IDs,
+  body validation, visible issue membership, positive unique journal IDs, targeted journal
+  validation before dispatch, single bounded PUT, empty 204, supplied-only payload, unchanged
+  upstream permissions, independent same-ID read-back, missing/absent/malformed fields, no
+  note logging, no retries, and writer-only catalog inspected. No dependency, test, or live data
+  changes were made. Existing creation/update/default reader contracts remain unchanged.
+- Remaining blocker: user review before tool-027. TOOL-026-001 through TOOL-026-005 later offline
+  work must cover text/privacy/both, empty and whitespace notes, null/unknown/empty body, invalid
+  IDs, wrong/hidden issue-journal membership, duplicate/malformed journal IDs, malformed target,
+  Edit notes/Edit own notes/Set notes private distinctions, 204, ignored privacy/mismatched text,
+  missing fields, returned/filtered journals, timeout and read-back failure, reader denial,
+  destructive MCP hints, and existing tool compatibility. Marked 7.0.2 prep-008 fixtures must
+  verify actual permissions, author/updated_by state, private visibility, retained journal rows
+  after blanking, visible details, and task-owned cleanup. No live journal was edited.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass after authorization.
 - [ ] Required synthetic verification and cleanup completed.
-- [ ] Documentation reflects implemented behavior.
-- [ ] Exact target version and contract reviewed.
-- [ ] Final diff reviewed and dashboard synchronized.
+- [x] Documentation reflects implemented behavior.
+- [x] Exact target version and contract reviewed.
+- [x] Final diff reviewed and dashboard synchronized.
 - [ ] User accepted this task before the next task starts.
 
-Final status: blocked. Next action: Predecessor tool-025-update-issue must be accepted and exact 7.0.2 source/behavior rechecked.
+Final status: implementation finished; testing pending. Next action: user review of this coding
+commit before tool-027. Separately authorize TOOL-026-001 through TOOL-026-005 and marked writer
+fixture verification before runtime acceptance. Static checks do not prove journal state or
+permission behavior; filtered visible history does not prove row deletion.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.

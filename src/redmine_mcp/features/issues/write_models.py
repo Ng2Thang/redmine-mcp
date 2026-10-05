@@ -5,7 +5,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from redmine_mcp.features.issues.models import IssueDate, IssueDetail, IssueHours
+from redmine_mcp.common import Visibility
+from redmine_mcp.features.issues.models import IssueDate, IssueDetail, IssueHours, Journal
 
 PositiveIssueId = Annotated[int, Field(strict=True, gt=0)]
 Verification = Literal["matched", "mismatch", "unavailable"]
@@ -172,3 +173,33 @@ class IssueUpdateRequest(BaseModel):
 class IssueUpdateResult(IssueCreateResult):
     resource_id: PositiveIssueId
     journal_id: PositiveIssueId | None = None
+
+
+class IssueNoteUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    notes: str | None = Field(default=None, repr=False)
+    private_notes: bool | None = Field(default=None, strict=True)
+
+    @model_validator(mode="after")
+    def validate_note_update(self) -> "IssueNoteUpdateRequest":
+        if not self.model_fields_set:
+            raise ValueError("Supply notes or private_notes")
+        if any(getattr(self, field) is None for field in self.model_fields_set):
+            raise ValueError("Supplied note fields must not be null")
+        return self
+
+
+class JournalObservation(Journal):
+    visibility: Visibility = Field(default_factory=Visibility)
+
+
+class IssueNoteUpdateResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: bool | None
+    issue_id: PositiveIssueId
+    resource_id: PositiveIssueId
+    verification: Verification = "unavailable"
+    field_verification: dict[str, Verification] = Field(default_factory=dict)
+    observed_present: bool | None = None
+    observed_journal: JournalObservation | None = None

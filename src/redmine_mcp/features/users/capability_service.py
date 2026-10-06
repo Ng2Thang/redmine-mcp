@@ -118,6 +118,14 @@ class ProjectCapabilityService:
                 )
                 if state == "conditional"
                 else "Permission evidence is incomplete; Redmine decides on invocation."
+            )
+            + (
+                " Manage members is necessary; managed-role authority is not exposed by "
+                "the role API. Membership project, user type and inheritance are rechecked; "
+                "Redmine preserves protected roles and enforces deletion restrictions."
+                if operation
+                in {"add_project_members", "update_project_members", "delete_project_members"}
+                else ""
             ),
         )
 

@@ -7,7 +7,7 @@ import httpx
 from httpx._utils import get_environment_proxies
 
 from redmine_mcp.common import ApplicationError
-from redmine_mcp.common.read_budget import charge_request
+from redmine_mcp.common.read_budget import charge_request, check_read_deadline
 from redmine_mcp.config import Settings
 
 
@@ -65,6 +65,9 @@ class AdmittedTransport(httpx.AsyncBaseTransport):
                 "upstream_busy", "Redmine request capacity is busy; retry later", 503
             ) from None
         try:
+            # Admission waiting may have consumed the remaining operation deadline.
+            # Fail before dispatch; the exception path releases the acquired permit.
+            check_read_deadline()
             request.extensions["redmine_dispatched"] = True
             response = await self.inner.handle_async_request(request)
             if not isinstance(response.stream, httpx.AsyncByteStream):

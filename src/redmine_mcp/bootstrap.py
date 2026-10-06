@@ -15,6 +15,7 @@ from redmine_mcp.features import (
     TimeEntryService,
     UserService,
 )
+from redmine_mcp.features.projects.membership_service import ProjectMembershipService
 from redmine_mcp.features.users.capability_service import ProjectCapabilityService
 from redmine_mcp.integrations.redmine import (
     ReadPolicy,
@@ -39,6 +40,7 @@ from redmine_mcp.integrations.redmine import (
     RedmineWriter,
 )
 from redmine_mcp.integrations.redmine.capabilities import RedmineCapabilities
+from redmine_mcp.integrations.redmine.project_memberships import RedmineProjectMemberships
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,7 @@ class Container:
     time_entries: TimeEntryService
     users: UserService
     project_capabilities: ProjectCapabilityService | None = None
+    project_members: ProjectMembershipService | None = None
 
 
 def read_policy(settings: Settings | None) -> ReadPolicy:
@@ -137,6 +140,11 @@ def build_container(
             build_capabilities(http, api_key, settings, principal),
             operations,
             max_query_pages=client.policy.max_query_pages,
+        ),
+        ProjectMembershipService(
+            RedmineProjectMemberships(client, writer),
+            build_capabilities(http, api_key, settings, principal),
+            budget_policy=read_budget_policy(settings) if settings else ReadBudgetPolicy(),
         ),
     )
 

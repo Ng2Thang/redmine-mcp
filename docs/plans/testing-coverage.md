@@ -8,12 +8,23 @@ not every possible workflow, role combination, Redmine version or infrastructure
 ## Current tools
 
 Follow-up on 2026-10-06: [tool-032](tasks/tool-032-create-project-version.md) adds 80 feature cases
-plus four existing writer-matrix cases. The full offline suite now passes 581 cases. Its live
+plus four existing writer-matrix cases. That assignment passed 581 offline cases. Its live
 acceptance remains pending; earlier prep-018 evidence does not cover this operation.
+
+The tool-033 follow-up adds 155 cases (86 unit/service/gateway and 69 REST/MCP integration),
+updates the existing reader catalog checks and extends the stateful offline fixture. The full
+offline suite passes **736 cases** with one existing Pydantic deprecation warning. Execution
+results are recorded in [tool-033](tasks/tool-033-project-members-management.md). Live
+TOOL-033-011 remains pending; synthetic role filtering and inheritance do not establish
+Redmine 7.0.2 runtime acceptance. The shared container observed during planning was 6.0.5.
 
 | Added operation | Unit coverage | Offline integration coverage | Live coverage |
 |---|---|---|---|
 | `create_project_version` | `tests/unit/test_project_versions.py`: invalid/optional fields, exact dates, invalid project IDs, permission denial and manage_versions evidence | `tests/integration/test_project_versions.py`: REST/MCP payloads and nullable schema regression, stateful duplicates, lookup failures, sanitized upstream errors, uncertainty, read-back, deployment/caller gates, discovery and capabilities; generic writer matrix in `test_current_tools.py` | TOOL-032-008 pending separately authorized isolated 7.0.2 state/permission verification |
+| `list_project_members` | `tests/unit/test_project_members.py`: strict project scopes, principal/role mapping, normalization and local/shared errors | `tests/integration/test_project_members.py`: reader REST/MCP pagination, groups, inheritance, empty pages and malformed upstream data; existing reader catalog invocation | TOOL-033-011 pending owned 7.0.2 public visibility and inherited membership verification |
+| `add_project_members` | Membership unit/service tests: strict IDs, batch bounds, permissions, preflight, cancellation; `test_project_members_gateway.py`: accepted response normalization and malformed receipts | Membership integration tests: exact POST payload, existing/concurrent duplicates, complete inventory fallback, budgets, writer gates, schemas, discovery and capabilities | TOOL-033-011 pending real native role restrictions and resulting state |
+| `update_project_members` | Membership unit/service/gateway tests: unique targets/roles, managed permission evidence, queued deadline and interrupted dispatch | Membership integration tests: exact PUT payload, empty 200/204, protected/inherited retention, project mismatch, refreshed grants, partial execution, uncertainty and accepted read-back failures | TOOL-033-011 pending real managed roles, descendant effects and assignments |
+| `delete_project_members` | Membership unit/service tests: strict targets, batch boundaries and shared dispatch controls | Membership integration tests: MCP DELETE body forwarding, exact bodyless native DELETE, group/inherited blocking, complete absence proof, retained/access-lost/incomplete inventory, allowlists and caller restrictions | TOOL-033-011 pending native inheritance/deletion restrictions, side effects and cleanup |
 
 | Operation | Unit scenario | Offline integration scenario | Live scenario | Baseline classification |
 |---|---|---|---|---|

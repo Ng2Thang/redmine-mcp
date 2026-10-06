@@ -84,6 +84,7 @@ WRITES = [
     ),
 ]
 READ_ARGUMENTS = {
+    "list_project_members": {"project_ids": [7]},
     "get_project": {"project_id": 7},
     "list_project_versions": {"project_id": 7},
     "list_project_issue_categories": {"project_id": 7},

@@ -14,6 +14,8 @@ def annotate_read_tools(tools: list[Tool]) -> None:
                 "update_issue_note",
                 "delete_issue_relation",
                 "remove_issue_watcher",
+                "update_project_members",
+                "delete_project_members",
             ),
             idempotentHint=tool.name != "download_attachment" and tool.name not in WRITE_OPERATIONS,
             openWorldHint=True,

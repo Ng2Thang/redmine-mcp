@@ -14,6 +14,7 @@ from redmine_mcp.auth import WRITE_OPERATIONS
 from redmine_mcp.auth.capabilities import OPERATION_PERMISSIONS
 from redmine_mcp.config import Settings
 from tests.helpers import ISSUE, PROJECT
+from tests.membership_helpers import membership
 
 
 class SyntheticRedmine:
@@ -78,6 +79,8 @@ class SyntheticRedmine:
         self.versions = {}
         self.readback_failure = False
         self.writes = 0
+        self.members = {20: membership(), 21: membership(21, user_id=11)}
+        self.protected_roles: set[int] = set()
 
     async def respond(self, request: Any) -> Any:
         self.requests.append(request)
@@ -116,6 +119,25 @@ class SyntheticRedmine:
                     }
                 },
             )
+        if path == "/roles.json":
+            return httpx.Response(
+                200, json={"roles": [{"id": n, "name": f"Role {n}"} for n in (4, 5, 6)]}
+            )
+        if path.startswith("/users/") and path != "/users/current.json":
+            user_id = int(path.split("/")[2].split(".")[0])
+            return httpx.Response(
+                200,
+                json={
+                    "user": {
+                        "id": user_id,
+                        "memberships": [
+                            {k: copy.deepcopy(m[k]) for k in ("id", "project", "roles")}
+                            for m in self.members.values()
+                            if m.get("user", {}).get("id") == user_id
+                        ],
+                    }
+                },
+            )
         if request.method != "GET":
             self.writes += 1
             if self.write_failure is not None:
@@ -127,6 +149,33 @@ class SyntheticRedmine:
                 if request.content and request.headers.get("content-type") == "application/json"
                 else {}
             )
+            if path == "/projects/7/memberships.json":
+                values = payload["membership"]
+                if any(
+                    m.get("user", {}).get("id") == values["user_id"] for m in self.members.values()
+                ):
+                    return httpx.Response(422, json={"errors": ["must-not-leak"]})
+                member_id = max(self.members, default=19) + 1
+                member = membership(member_id, user_id=values["user_id"])
+                member["roles"] = [{"id": n, "name": f"Role {n}"} for n in values["role_ids"]]
+                self.members[member_id] = member
+                return httpx.Response(201, json={"membership": copy.deepcopy(member)})
+            if path.startswith("/memberships/"):
+                member_id = int(path.split("/")[2].split(".")[0])
+                if request.method == "DELETE":
+                    self.members.pop(member_id, None)
+                else:
+                    member = self.members[member_id]
+                    roles = set(payload["membership"]["role_ids"]) | {
+                        r["id"]
+                        for r in member["roles"]
+                        if r.get("inherited") or r["id"] in self.protected_roles
+                    }
+                    old_roles = {r["id"]: r for r in member["roles"]}
+                    member["roles"] = [
+                        old_roles.get(n, {"id": n, "name": f"Role {n}"}) for n in sorted(roles)
+                    ]
+                return httpx.Response(204)
             if path == "/uploads.json":
                 return httpx.Response(201, json={"upload": {"id": 9, "token": "9.abc"}})
             if path == "/projects/7/files.json":
@@ -199,6 +248,26 @@ class SyntheticRedmine:
             return httpx.Response(404, json={})
         if self.readback_failure and self.writes:
             return httpx.Response(403, json={})
+        if path == "/projects/7/memberships.json":
+            limit = int(request.url.params.get("limit", 25))
+            offset = int(request.url.params.get("offset", 0))
+            members = list(self.members.values())
+            return httpx.Response(
+                200,
+                json={
+                    "memberships": members[offset : offset + limit],
+                    "total_count": len(members),
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
+        if path.startswith("/memberships/"):
+            member_id = int(path.split("/")[2].split(".")[0])
+            return (
+                httpx.Response(200, json={"membership": copy.deepcopy(self.members[member_id])})
+                if member_id in self.members
+                else httpx.Response(404)
+            )
         if path == "/projects.json":
             return httpx.Response(
                 200,

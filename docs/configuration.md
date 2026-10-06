@@ -12,7 +12,7 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_WRITE_ENABLED` | `false` | Enables the separate writer runtime. Base Compose forces this false on `mcp-server` and true on the opt-in `mcp-writer` profile. |
 | `REDMINE_WRITER_AUTH_MODE` | `pinned_key` | `pinned_key` accepts one configured key; explicit `personal_key` authenticates each caller's own Redmine key. |
 | `REDMINE_WRITER_USER_IDS` | Empty | Positive user ID CSV. Required in enabled pinned-key mode; optional write-only admission list in personal-key mode. Empty personal-key list admits any authenticated caller to attempt enabled writes. |
-| `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs permitted on the writer runtime. Empty permits no mutations. Unknown IDs prevent startup. |
+| `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs, or standalone `allowed_all` to permit every registered write operation. Empty permits no mutations. Unknown IDs and mixed `allowed_all` lists prevent startup. |
 | `REDMINE_WRITER_KEY_SHA256` | Empty | Private lowercase SHA-256 digest required for enabled pinned-key mode. Must be empty in personal-key mode; conflicting settings prevent startup. |
 | `REDMINE_TIMEOUT_SECONDS` | `20` | Positive finite read/write timeout in seconds; an inactivity timeout, not an end-to-end deadline. |
 | `REDMINE_CONNECT_TIMEOUT_SECONDS` | `5` | Positive finite connection timeout in seconds. |
@@ -60,6 +60,16 @@ the MCP read tool's budget. MCP transport authentication and logical discovery h
 budgets; stream/session lifetimes are not aggregate operations. Writers do not receive an
 aggregate mutation deadline. Read request/byte exhaustion produces `422 scan_budget_exceeded`;
 aggregate deadline exhaustion produces `504 read_operation_timeout`.
+
+Membership write batches also use one shared read budget for preflight, permission/target
+rechecks and read-back. The budget starts at batch service entry after authentication; it does
+not install an outer cancellation timer over mutations. Deadline exhaustion is checked by
+bounded reads and before dispatch, preserving already accepted receipts. Each mutation retains
+its single-attempt upstream timeout. Smaller batches may be needed to fit the read budget.
+The shared upstream transport also rechecks the active operation deadline after acquiring an
+admission permit, before forwarding the request. Expired queued requests fail without dispatch,
+leave `redmine_dispatched` false and release the permit. This applies to both direct and proxy
+transports and preserves previously accepted membership receipts.
 
 The default aggregate deadline is 90 seconds and includes every admission wait (up to 30 seconds
 per attempt), authentication and feature processing. It does not reserve a separate processing
@@ -223,6 +233,34 @@ definitions and never mutates the shared superset schema cache for another calle
 
 The writer catalog contains only configured operation IDs from the code's explicit write allowlist.
 
+To permit every registered write operation without listing individual names, use:
+
+```bash
+REDMINE_WRITER_OPERATIONS=allowed_all
+```
+
+The lowercase `allowed_all` value must be used alone; surrounding whitespace is ignored.
+It expands to the code's complete `WRITE_OPERATIONS` catalog for MCP discovery, REST admission
+and project capability reporting, including membership writes. New registered write operations
+are also permitted after upgrading the server. Use an explicit CSV list to keep a fixed scope.
+This option still requires `REDMINE_WRITE_ENABLED=true` on the separate writer deployment;
+writer identity restrictions, caller permissions and native Redmine authorization still apply.
+Restart the writer after changing its environment and refresh the MCP connection's tool list.
+
+To permit project membership writes, explicitly configure only the needed operations in the
+separate ignored writer env-file, for example:
+
+```bash
+REDMINE_WRITER_OPERATIONS=add_project_members,update_project_members,delete_project_members
+```
+
+Retain `REDMINE_WRITE_ENABLED`, pinned/personal-key authentication and user restrictions.
+Grant an ordinary caller `manage_members` in each destination project. Role-management limits
+remain native Redmine constraints; this permission does not authorize every role change.
+Membership listing requires no writer setting. Redmine 7.0.2 public `view_members` still checks
+project access. These examples do not modify deployed configuration or enable mutations.
+See [membership contracts](tool-reference.md#project-membership-management).
+
 To permit Target version creation, explicitly include `create_project_version` in the separate
 ignored writer env-file's operation list. A writer limited to that mutation uses:
 
@@ -237,11 +275,16 @@ This example does not change deployed configuration or enable writes on the read
 
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Each future write route must use `require_write_access`, which checks its operation ID
-against the configured list. Reader REST write attempts return 403. No public write operation is
-part of this prerequisite.
+against the expanded configured list. Reader REST write attempts return 403. No public write
+operation is part of this prerequisite.
 
 The write transport sends each mutation once, bounds JSON and binary requests and JSON responses,
 accepts 201 with a JSON object or 204 without a body, and returns an `uncertain` receipt when a
 request may have reached Redmine but a reliable response could not be obtained. Callers must
 inspect uncertain results before trying again. Logs record method, status, and timing without
 the request body, key, or response content. Live behavior still needs separate verification.
+
+Membership update/delete additionally accept native 200 or 204, including empty success bodies.
+Membership writes classify server errors after dispatch as uncertain because a mutation may
+already have occurred. There are no automatic retries. Acceptance and actual read-back state
+are reported independently; interrupted response delivery requires manual reconciliation.

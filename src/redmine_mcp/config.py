@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import Field, HttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from redmine_mcp.auth.policy import WRITE_OPERATIONS
 from redmine_mcp.constants import runtime as runtime_text
 
 
@@ -65,8 +66,10 @@ class Settings(BaseSettings):
                 self.redmine_writer_auth_mode == "pinned_key" or self.redmine_writer_user_ids
             ) and any(not re.fullmatch(r"[1-9][0-9]*", part) for part in user_ids):
                 raise ValueError(runtime_text.WRITER_USER_IDS_REQUIRED)
-            if any(not re.fullmatch(r"[a-z][a-z0-9_]*", part) for part in operations if part) or (
-                self.redmine_writer_operations and any(not part for part in operations)
+            if (
+                any(not re.fullmatch(r"[a-z][a-z0-9_]*", part) for part in operations if part)
+                or (self.redmine_writer_operations and any(not part for part in operations))
+                or ("allowed_all" in operations and operations != ["allowed_all"])
             ):
                 raise ValueError(runtime_text.WRITER_OPERATIONS_REQUIRED)
             if self.redmine_writer_auth_mode == "pinned_key" and not re.fullmatch(
@@ -89,6 +92,8 @@ class Settings(BaseSettings):
 
     @property
     def writer_operations(self) -> frozenset[str]:
+        if self.redmine_writer_operations.strip() == "allowed_all":
+            return frozenset(WRITE_OPERATIONS)
         return frozenset(
             part.strip() for part in self.redmine_writer_operations.split(",") if part.strip()
         )

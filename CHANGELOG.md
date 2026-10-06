@@ -14,6 +14,11 @@ that a release has been published.
 
 ### Fixed
 
+- Normalize repeated native project membership role IDs while retaining any inherited source;
+  keep other selected projects readable after a project-specific pagination scope error.
+- Recheck active operation deadlines after upstream admission and release expired requests'
+  permits before dispatch, preventing queued membership writes after the batch deadline.
+
 - Preserve nullable description and due-date MCP input schemas for `create_project_version`;
   explicit null now follows the same omission contract as REST. Offline regression tests cover it.
 - Correct the public Redmine URL classmethod validator signature, which prevented Pydantic
@@ -26,6 +31,20 @@ that a release has been published.
   upstream transport; direct and proxy connections share the same semaphore.
 
 ### Added
+
+- Support standalone `REDMINE_WRITER_OPERATIONS=allowed_all` to permit all registered write
+  operations through the existing writer catalog and authorization gates. Explicit operation
+  lists and the empty default retain their behavior; mixed `allowed_all` lists are rejected.
+
+- Add offline unit/service/gateway and REST/MCP tests for all four project membership tools,
+  including whole-batch preflight, writer gates, duplicates, protected roles, bounded absence
+  proofs, partial execution, uncertainty, cancellation and queued deadline regressions.
+
+- Added `list_project_members` and writer-only `add_project_members`, `update_project_members`
+  and `delete_project_members`, with up to ten selected projects/items, whole-batch preflight,
+  user-only writes, project permission checks and separate acceptance/read-back outcomes.
+  Preserves native inherited/protected-role behavior and supports MCP DELETE batch bodies.
+  Ruff/mypy validation and documentation are included; offline and 7.0.2 acceptance remain pending.
 
 - Writer-only `create_project_version` creates open, unshared Target versions with optional
   description and due date. Readable same-project duplicates return their existing data with

@@ -102,6 +102,10 @@ READ_ROUTES = [
 
 def reader_responses() -> dict[str, Any]:
     return {
+        "/projects/7/memberships.json": (
+            200,
+            {"memberships": [], "total_count": 0, "limit": 25, "offset": 0},
+        ),
         "/projects/7/files.json": (200, {"files": [], "total_count": 0}),
         "/enumerations/document_categories.json": (200, {"document_categories": []}),
         "/attachments/9.json": (
@@ -650,6 +654,7 @@ async def test_user_005_009_all_reader_mcp_invocation_and_sanitized_errors(
         },
     )
     arguments = {
+        "list_project_members": {"project_ids": [7]},
         "list_project_files": {"project_id": 7},
         "get_attachment": {"attachment_id": 9},
         "get_project": {"project_id": 7},
@@ -693,7 +698,13 @@ async def test_user_005_009_all_reader_mcp_invocation_and_sanitized_errors(
                     upstream["responses"] = {}
                     upstream.update(status=403, body={"secret": "error-content-secret"})
                 result = await session.call_tool(name, arguments.get(name, {}))
-                assert result.isError and "access_denied" in str(result.content)
+                if name == "list_project_members":
+                    # Selected-project failures are reported as individual read outcomes.
+                    assert not result.isError
+                    assert json.loads(result.content[0].text)["results"][0]["outcome"] == "rejected"
+                else:
+                    assert result.isError
+                assert "access_denied" in str(result.content)
                 assert "error-content-secret" not in str(result.content)
     assert "hidden-profile-secret" not in caplog.text
     assert "error-content-secret" not in caplog.text

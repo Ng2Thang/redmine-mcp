@@ -18,6 +18,7 @@ OPERATIONS = (
     "list_project_versions",
     "list_project_issue_categories",
     "list_project_files",
+    "list_project_members",
     "list_issues",
     "get_issue",
     "get_attachment",

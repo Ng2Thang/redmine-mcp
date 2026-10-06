@@ -19,6 +19,7 @@ from redmine_mcp.mcp.catalog import (
     writer_catalog,
 )
 from redmine_mcp.mcp.discovery import install_caller_discovery
+from redmine_mcp.mcp.membership_transport import install_membership_transport
 from redmine_mcp.mcp.read_limits import install_read_limits
 
 
@@ -39,8 +40,11 @@ def register_mcp(
         headers=["x-redmine-api-key"],
         auth_config=AuthConfig(dependencies=[Depends(require_mcp_access)]),
     )
+    install_membership_transport(mcp)
     validate_generated_tools(mcp.tools, operations)
     for tool in mcp.tools:
+        if tool.name in {"add_project_members", "update_project_members", "delete_project_members"}:
+            tool.inputSchema["additionalProperties"] = False
         if tool.name == "create_project_version":
             # FastAPI-MCP 0.4 collapses nullable body fields to one JSON type.
             # Preserve this tool's explicit-null contract before SDK schema caching.
@@ -52,6 +56,7 @@ def register_mcp(
             "list_issues",
             "list_issue_time_entries",
             "list_my_project_capabilities",
+            "list_project_members",
         }:
             tool.description = (tool.description or "") + (
                 " The first page may be a discovery preview. Check pagination_policy: "

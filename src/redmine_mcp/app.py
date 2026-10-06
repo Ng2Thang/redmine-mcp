@@ -17,6 +17,7 @@ from redmine_mcp.features.attachments.write_router import router as uploads_rout
 from redmine_mcp.features.issues.relation_write_router import router as relation_writes_router
 from redmine_mcp.features.issues.router import router as issues_router
 from redmine_mcp.features.issues.write_router import router as issue_writes_router
+from redmine_mcp.features.projects.membership_router import router as memberships_router
 from redmine_mcp.features.projects.router import router as projects_router
 from redmine_mcp.features.projects.write_router import router as project_writes_router
 from redmine_mcp.features.reference_data.router import router as reference_data_router
@@ -40,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_exception_handler(ApplicationError, application_error)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, unexpected_error)
     app.include_router(health_router)
+    app.include_router(memberships_router)
     app.include_router(projects_router)
     app.include_router(project_writes_router)
     app.include_router(attachments_router)

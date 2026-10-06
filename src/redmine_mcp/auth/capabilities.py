@@ -39,6 +39,9 @@ OPERATION_PERMISSIONS: dict[str, frozenset[str]] = {
     "upload_attachment": UPLOAD_PERMISSIONS,
     "add_project_file": frozenset({"manage_files"}),
     "create_project_version": frozenset({"manage_versions"}),
+    "add_project_members": frozenset({"manage_members"}),
+    "update_project_members": frozenset({"manage_members"}),
+    "delete_project_members": frozenset({"manage_members"}),
     "update_attachment": ISSUE_EDIT_PERMISSIONS | {"manage_files"},
     "delete_attachment": ISSUE_EDIT_PERMISSIONS | {"manage_files"},
     "create_issue": frozenset({"add_issues"}),
@@ -70,6 +73,11 @@ class CapabilityService:
         self.deadline_seconds = deadline_seconds
         self._profile: CapabilityProfile | None = None
         self._roles: dict[int, RolePermissions | None] = {}
+
+    def refresh(self) -> None:
+        """Discard evidence that an earlier batch write may have invalidated."""
+        self._profile = None
+        self._roles.clear()
 
     async def profile(self) -> CapabilityProfile:
         if self._profile is None:

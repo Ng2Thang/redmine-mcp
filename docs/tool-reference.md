@@ -1,5 +1,113 @@
 # Tool reference
 
+## Project membership management
+
+The four tools manage memberships in selected projects. Listing is available on the reader;
+all mutations require the separate enabled writer, its operation allowlist and project-level
+`manage_members`. Pinned-key and personal-key restrictions apply, including to administrators.
+
+| Tool | REST endpoint | Inputs |
+|---|---|---|
+| `list_project_members` | `GET /api/v1/projects/memberships` | Unique `project_ids` array, 1–10 positive numeric IDs; `limit=25` (1–100), `offset=0` |
+| `add_project_members` | `POST /api/v1/projects/memberships/batch` | `items`: 1–10 objects with `project_id`, `user_id`, `role_ids` |
+| `update_project_members` | `PUT /api/v1/projects/memberships/batch` | `items`: 1–10 objects with `project_id`, `membership_id`, `role_ids` |
+| `delete_project_members` | `DELETE /api/v1/projects/memberships/batch` | JSON body `items`: 1–10 objects with `project_id`, `membership_id` |
+
+Every ID must be a positive integer. Booleans, nulls, unknown body fields, duplicate projects
+or batch targets, and empty or duplicate role lists are rejected. Add targets are unique by
+project/user pair; update/delete targets are unique by membership ID. Writes support users
+only, including when a numeric group ID is supplied as a user ID.
+
+MCP list example:
+
+```json
+{"project_ids":[5,9],"limit":25,"offset":0}
+```
+
+REST encodes the array as repeated query parameters:
+`/api/v1/projects/memberships?project_ids=5&project_ids=9&limit=25&offset=0`.
+The result is `{"results":[...]}` in input order. Each project has `project_id`, an outcome
+(`read`, `rejected`, `not_executed`), nullable `page`, and nullable `error`.
+Each page has `items`, its own `total`, `limit`, `offset`, `visibility` and `pagination_policy`.
+Memberships contain `id`, `project:{id,name}`, exactly one `user:{id,name}` or `group:{id,name}`,
+and `roles:[{id,name,inherited}]`. Native omitted inheritance flags become false. Repeated
+native role IDs from multiple inheritance sources are merged in first-seen order;
+`inherited` is true if any source is inherited, including a direct/inherited combination.
+This retains deletion restrictions without exposing individual inheritance sources. Conflicting
+names for the same role ID remain an upstream error. Requested write role IDs must stay unique.
+Missing collections or malformed references fail safely rather than becoming empty inventories.
+Page offsets apply independently to each project; select only the projects needing another
+page. Observe page limits and narrowing errors rather than assuming one complete inventory.
+One project's `scope_required` result does not skip other selected projects. Shared read-budget,
+credential or transport failures can stop the remaining projects.
+
+Redmine 7.0.2 declares `view_members` public for membership list/show. Project access and
+state still constrain reads; missing role permission metadata does not establish a list denial.
+`list_my_project_capabilities` includes the public read rule and configured membership writers.
+Personal-writer discovery uses necessary `manage_members` evidence for write candidates;
+conditional or unknown evidence does not guarantee a successful mutation.
+
+Write input examples, respectively add, update and delete:
+
+```json
+{"items":[{"project_id":5,"user_id":27,"role_ids":[2]}]}
+```
+
+```json
+{"items":[{"project_id":5,"membership_id":101,"role_ids":[2,3]}]}
+```
+
+```json
+{"items":[{"project_id":5,"membership_id":101}]}
+```
+
+Whole-batch preflight proves project access, necessary permissions, user targets, actual
+membership projects, role ID validity, add duplicate absence and delete inheritance eligibility.
+Add reads the visible user's memberships first, falling back to a complete bounded project
+inventory only when the expansion is omitted. Existing memberships are reported with
+`membership_already_exists` and readable observed state; add never becomes update. Any known
+preflight error prevents every mutation. Budget exhaustion also fails preflight. Requests may
+need fewer than ten items to fit the configured read budget.
+
+After preflight, native writes run sequentially with refreshed permission and target evidence.
+There is one native POST, PUT or DELETE per attempted item. Independent native rejections
+can coexist with accepted peers. Shared credential, transport or budget failures and uncertain
+writes stop later dispatches. No automatic retry, rollback or cross-project transaction exists.
+Admission waiting counts toward the batch deadline. After acquiring capacity, the upstream
+transport rechecks the deadline before dispatch and releases capacity if the deadline expired.
+That rejection preserves earlier receipts and prevents later items from being dispatched.
+
+Write results have `phase` (`preflight_failed` or `executed`) and ordered `results`. Each result
+contains `index` (zero-based), `project_id`, nullable `membership_id`/`user_id`, `outcome`
+(`accepted`, `rejected`, `uncertain`, `not_executed`), `verification` (`matched`, `mismatch`,
+`unavailable`), nullable `requested_role_ids`, `observed_membership`, `observed_present`,
+`permission_state` (`conditional`, `unknown`, `denied`) and nullable `error:{code,message,status}`.
+Batch envelopes use HTTP 200; global input, authentication and deployment gate failures use
+normal HTTP errors. An MCP batch result can therefore contain rejected items without being a
+transport-level tool error.
+
+For example, an accepted update may report `requested_role_ids:[2]`,
+`observed_membership.roles:[{"id":2,"name":"Developer","inherited":false},
+{"id":3,"name":"Reporter","inherited":true}]` and `verification:"mismatch"`.
+Acceptance records Redmine's success response, while verification compares actual effective
+role IDs with the requested set. Redmine preserves inherited and unmanageable roles and can
+filter assignable roles. The public role API lists givable roles and permissions, but does not
+fully expose the caller's managed-role configuration. Unknown role authority is not a denial.
+
+Delete rejects groups and any inherited role before dispatch. Native Redmine also requires
+all target roles to be manageable. Matched deletion requires absence from a complete readable
+project inventory; a membership 404, missing page or loss of project access is insufficient.
+Failed read-back retains an accepted outcome with unavailable verification. Native membership
+changes can propagate to inheriting descendants; deletion can clear category/project default
+assignees. These effects require separately authorized synthetic verification.
+
+An uncertain write, lost response or interrupted connection requires reconciliation in Redmine
+before any new attempt. Inspect the project/user pair for add and the original membership ID
+and role set for update/delete. External cancellation propagates and stops further items;
+shutdown/disconnect can prevent delivery of the batch receipt. Do not infer failure from a
+missing response. Implementation is finished; offline and owned Redmine 7.0.2 acceptance remain
+pending. The shared container observed during planning was 6.0.5.
+
 ## Create project version
 
 `create_project_version` is writer-only at
@@ -210,6 +318,7 @@ data. The external Redmine data can change.
 | `list_project_versions` | `GET /api/v1/projects/{project_id}/versions` | Required positive integer `project_id` |
 | `list_project_issue_categories` | `GET /api/v1/projects/{project_id}/issue-categories` | Required positive integer `project_id` |
 | `list_project_files` | `GET /api/v1/projects/{project_id}/files` | Required positive integer `project_id` |
+| `list_project_members` | `GET /api/v1/projects/memberships` | Unique positive `project_ids` array (1–10), `limit=25`, `offset=0`; independent project pages |
 | `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
 | `get_attachment` | `GET /api/v1/attachments/{attachment_id}` | Required positive integer `attachment_id` |

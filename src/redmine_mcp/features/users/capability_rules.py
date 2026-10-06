@@ -32,6 +32,11 @@ ATTACHMENT_READ = ReadCapabilityRule(
 )
 
 PROJECT_READ_RULES: dict[str, ReadCapabilityRule] = {
+    "list_project_members": ReadCapabilityRule(
+        (frozenset(),),
+        "Redmine 7.0.2 view_members is public; project access and state are checked on "
+        "invocation. Manage members permission is not required for listing.",
+    ),
     "get_project": ReadCapabilityRule(
         (frozenset(),),
         "This project was visible to the caller when listed or read; "

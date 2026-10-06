@@ -48,6 +48,8 @@ class RedmineWriter:
         *,
         accepted_statuses: tuple[int, ...] = (201, 204),
         params: dict[str, str] | None = None,
+        allow_empty_success: bool = False,
+        uncertain_server_errors: bool = False,
     ) -> WriteReceipt:
         body = None if payload is None else json.dumps(payload, separators=(",", ":")).encode()
         if body is not None and len(body) > self.policy.max_response_bytes:
@@ -57,7 +59,14 @@ class RedmineWriter:
                 http_status.HTTP_413_CONTENT_TOO_LARGE,
             )
         return await self._write(
-            method, path, body, "application/json", accepted_statuses, params=params
+            method,
+            path,
+            body,
+            "application/json",
+            accepted_statuses,
+            params=params,
+            allow_empty_success=allow_empty_success,
+            uncertain_server_errors=uncertain_server_errors,
         )
 
     async def write_binary(self, path: str, content: bytes, *, filename: str) -> WriteReceipt:
@@ -79,6 +88,8 @@ class RedmineWriter:
         content_type: str,
         accepted_statuses: tuple[int, ...],
         params: dict[str, str] | None = None,
+        allow_empty_success: bool = False,
+        uncertain_server_errors: bool = False,
     ) -> WriteReceipt:
         if (
             not path
@@ -107,6 +118,8 @@ class RedmineWriter:
                 )
                 status = response.status_code
                 try:
+                    if uncertain_server_errors and status >= 500:
+                        return WriteReceipt("uncertain", status)
                     if status in (
                         http_status.HTTP_400_BAD_REQUEST,
                         http_status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -123,6 +136,8 @@ class RedmineWriter:
                             return WriteReceipt("uncertain", status)
                         data.extend(chunk)
                     try:
+                        if allow_empty_success and not data:
+                            return WriteReceipt("accepted", status)
                         payload = json.loads(data)
                     except (ValueError, RecursionError):
                         return WriteReceipt("uncertain", status)

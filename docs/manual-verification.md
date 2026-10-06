@@ -87,6 +87,56 @@ environment. Read credentials privately and record only redacted evidence.
 6. Clean up only recorded task-owned version IDs with the separately authorized fixture
    procedure. Never delete a pre-existing version returned as a duplicate.
 
+## Project membership management (live authorization required)
+
+The follow-up testing assignment implements offline unit/service/gateway and REST/MCP tests
+for tool-033, including lifespan startup through the isolated ASGI application and DELETE
+JSON body forwarding. Results and scenario ownership are recorded in the combined task;
+Inspector calls and live mutations remain pending. Target-version acceptance owns
+TOOL-033-011 in the
+[combined task](plans/tasks/tool-033-project-members-management.md). Use the marked, owned
+Redmine **7.0.2** environment; the shared container observed during planning was **6.0.5** and
+does not establish target-version acceptance. Preserve shared users, projects and memberships.
+
+1. Run the authorized offline regression command recorded in the combined task and review
+   scenario coverage. Offline protected/inherited-role assertions use a synthetic upstream;
+   record the actual native behavior separately during target-version acceptance.
+2. Prepare owned ordinary users with manager access in one project and denied access in
+   another, plus visible groups, direct/inherited memberships, protected roles and a parent/child
+   project. Record initial membership roles and category/project default assignees.
+3. Verify the reader exposes list only. In Inspector list one/two projects, paginate each,
+   inspect users/groups/inherited flags and public `view_members` access. Exercise page/read
+   budget errors and distinguish unavailable projects from empty membership pages.
+   Include repeated role IDs from two groups or parent inheritance, and mixed direct/inherited
+   rows. Expect one role per ID with inheritance true if any source is inherited. Confirm
+   conflicting names/malformed role flags remain errors and duplicate requested role IDs fail.
+   On a continued-page batch, make one project exceed its page scope while another fits;
+   require the scoped rejection and the other project's readable page in the same result.
+4. Configure only authorized membership writer operations. Check disabled gates, missing
+   operations, user restrictions, pinned/personal-key modes, scoped capability reports and
+   caller-specific discovery. An administrator must still pass MCP gates.
+5. Submit invalid IDs/arrays/extra fields, duplicates, mismatched membership/project IDs,
+   group writes and inherited deletes. A mixed batch with one known failure must perform
+   zero mutations. Confirm malformed upstream data and incomplete inventories fail safely.
+6. Add owned users; confirm exact native payload, one attempt and resulting memberships.
+   Repeat add and simulate a concurrent duplicate; require explicit existing membership
+   outcomes with no update fallback. Update roles and inspect inherited/protected retention,
+   including accepted updates with mismatch verification and valid 200/204 empty responses.
+7. Delete an eligible owned user membership; verify visible absence using the complete bounded
+   project inventory. A 404 or access loss alone must yield unavailable verification. Inspect
+   descendant propagation and category/project default-assignee effects separately.
+8. Exercise mid-batch 403/422 versus shared authentication/outage/budget failures, server errors,
+   timeouts, cancellation and failed read-back. Preserve accepted peers, stop later dispatches
+   when required, and confirm no retry or rollback. Revoke the caller's management role in an
+   earlier item and confirm fresh evidence before later writes.
+   Hold admission capacity until the remaining batch deadline expires, then release it.
+   Require no queued mutation dispatch, a released permit, retained earlier receipts and
+   not-executed later items. Cover direct/proxy admission and reader compatibility as well.
+9. Reconcile attempted project/user pairs or membership IDs after every uncertain/interrupted
+   outcome before a new request. Restore only task-owned memberships, roles and assignments;
+   record actual tool outputs, native state, cleanup and limitations. Keep acceptance pending
+   until this evidence satisfies the task criteria.
+
 ## Preparation and startup
 
 Use an existing synthetic environment or deliberately create one with `bash scripts/dev-up.sh`.

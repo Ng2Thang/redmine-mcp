@@ -16,6 +16,7 @@ from redmine_mcp.features import (
     TimeEntryService,
     UserService,
 )
+from redmine_mcp.features.projects.membership_service import ProjectMembershipService
 from redmine_mcp.features.users.capability_service import ProjectCapabilityService
 
 
@@ -29,6 +30,16 @@ def get_container(
 
 def get_projects(container: Annotated[Container, Depends(get_container)]) -> ProjectService:
     return container.projects
+
+
+def get_project_members(
+    container: Annotated[Container, Depends(get_container)],
+) -> ProjectMembershipService:
+    if container.project_members is None:
+        raise ApplicationError(
+            codes_text.SERVICE_UNAVAILABLE, "Membership service unavailable", 503
+        )
+    return container.project_members
 
 
 def get_attachments(container: Annotated[Container, Depends(get_container)]) -> AttachmentService:

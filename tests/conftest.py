@@ -1,5 +1,7 @@
+import os
 from collections.abc import AsyncIterator
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -10,6 +12,36 @@ from fastapi import status as http_status
 from pydantic import SecretStr
 
 from redmine_mcp.config import Settings
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption("--run-e2e", action="store_true", help="Enable owned synthetic live tests")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    live = [item for item in items if "e2e" in Path(str(item.path)).parts]
+    if live and not config.getoption("--run-e2e"):
+        raise pytest.UsageError("Live tests require: pytest tests/e2e --run-e2e")
+    for item in live:
+        item.add_marker(pytest.mark.e2e)
+
+
+@pytest.fixture(autouse=True)
+def offline_isolation(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    if request.node.get_closest_marker("e2e"):
+        return
+    for name in tuple(os.environ):
+        if name.upper().startswith("REDMINE_"):
+            monkeypatch.delenv(name, raising=False)
+
+    def blocked(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("Offline tests attempted an external network request")
+
+    async def blocked_async(*args: Any, **kwargs: Any) -> None:
+        blocked()
+
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", blocked_async)
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", blocked)
 
 
 @pytest.fixture
@@ -70,6 +102,19 @@ async def app(
         status, body = upstream.get("responses", {}).get(
             request.url.path, (upstream["status"], upstream["body"])
         )
+        if (
+            request.url.params.get("limit") == "1"
+            and request.url.params.get("offset") == "0"
+            and isinstance(body, dict)
+        ):
+            body = dict(body)
+            for collection in ("projects", "issues", "time_entries"):
+                if isinstance(body.get(collection), list):
+                    body[collection] = body[collection][:1]
+            if "limit" in body:
+                body["limit"] = 1
+            if "offset" in body:
+                body["offset"] = 0
         return httpx.Response(status, json=body)
 
     def create_upstream_client(settings: Settings) -> httpx.AsyncClient:

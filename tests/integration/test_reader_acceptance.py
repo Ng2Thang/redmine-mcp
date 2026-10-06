@@ -3,7 +3,8 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import status as http_status
-from test_offline_baseline import ISSUE, PROJECT
+
+from tests.helpers import ISSUE, PROJECT
 
 
 @pytest.mark.asyncio

@@ -5,19 +5,20 @@ import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi import status as http_status
-from test_offline_baseline import ISSUE, mcp_session
+
+from tests.helpers import ISSUE, mcp_session
 
 
 @pytest.mark.asyncio
 async def test_defaults_pagination_and_combined_filters(
     rest_client: httpx.AsyncClient, upstream: dict[str, Any]
 ) -> None:
-    upstream["body"] = {"issues": [ISSUE], "total_count": 12}
+    upstream["body"] = {"issues": [ISSUE], "total_count": 10}
     default = await rest_client.get("/api/v1/issues", params={"limit": 1, "offset": 2})
     assert default.status_code == http_status.HTTP_200_OK
     assert default.json()["items"][0]["id"] == 42
     assert (default.json()["total"], default.json()["limit"], default.json()["offset"]) == (
-        12,
+        10,
         1,
         2,
     )

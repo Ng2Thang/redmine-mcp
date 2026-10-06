@@ -106,7 +106,7 @@ Keep feature routers out of package initializers to avoid API/composition import
 | `redmine_mcp.mcp` | Catalog, annotations, registration, shutdown |
 | `redmine_mcp.integrations` | Supported integration namespaces |
 | `redmine_mcp.integrations.redmine` | Redmine client, policy, gateways, transport factory |
-| `tools`, `tools.seed` | Baseline synthetic seed entry point; importing does not execute seeding |
+| `tools`, `tools.seed` | Compatible baseline seed function; `python -m tools.seed` selects base/history/all; importing does not execute seeding |
 
 The root app factory is loaded on access, allowing domain imports without loading HTTP adapters.
 Architecture checks resolve public re-exports back to their defining modules before evaluating
@@ -201,7 +201,9 @@ The pre-commit dependency is already included; use the actual package name for f
 Review both `pyproject.toml` and `uv.lock` and submit them together. Avoid unrelated dependency
 upgrades. Never hand-edit resolved hashes. Only `src/redmine_mcp` is packaged as runtime code.
 
-Automated testing is authorized and required as a shared prerequisite for future reader tools,
-but its baseline is not yet implemented. A coding-without-tests assignment cannot install test
-dependencies or create/run fixtures and tests; assign that baseline separately. Coverage
-thresholds and testing CI remain deferred. Follow the [testing roadmap](testing-roadmap.md).
+The automated baseline is organized into `tests/unit/`, `tests/integration/` and `tests/e2e/`.
+Default pytest discovery runs the two offline layers. Live tests require explicit directory
+selection, `--run-e2e` and owned Redmine 7.0.2 fixtures. A coding-without-tests assignment cannot
+install test dependencies or create/run fixtures and tests; assign verification separately.
+Coverage thresholds and testing CI remain deferred. Follow the
+[testing roadmap](testing-roadmap.md) and [coverage matrix](plans/testing-coverage.md).

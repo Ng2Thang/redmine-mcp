@@ -1,15 +1,227 @@
-"""Add a repeatable, dated fixture to the marked synthetic Redmine instance."""
+"""Generate baseline and optional history data for the marked synthetic Redmine.
 
-import fcntl
+Reading map:
+1. Shared state and atomic manifest writes.
+2. generate_base: 4 projects, 150 issues, notes, a relation and 2 attachments.
+3. Redmine and ensure_* helpers: 8 history projects, 20 users, 12 sprint versions,
+   300 issues and 900 time entries.
+4. generate_history: prerequisite checks, lock, reconciliation and checkpoints.
+5. main: select base, history or all; the Bash wrapper handles Rails bootstrap.
+
+Edit dataset definitions here. Package entry points select the generation mode.
+See docs/test-data.md for execution and recovery notes. Importing never seeds data.
+"""
+
+import argparse
+import base64
 import json
 import os
+from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import httpx
 
-from tools.seed.generator import KIND, STATE, save
+# Inside Docker these paths map to ignored .local/ on the host.
+STATE = Path("/seed-state")
+KIND = "redmine-mcp-synthetic-v1"
 
+
+def save(path: Path, data: dict[str, Any]) -> None:
+    """Replace one manifest atomically so a partial write does not corrupt progress."""
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary.replace(path)
+
+
+def generate_base() -> None:
+    """Create the small baseline; incomplete runs require a guarded environment reset."""
+    if os.environ.get("REDMINE_TEST_MARKER") != KIND:
+        raise SystemExit("Missing synthetic environment marker")
+    if json.loads((STATE / "environment.json").read_text())["kind"] != KIND:
+        raise SystemExit("Wrong environment")
+    manifest_path = STATE / "manifest.json"
+    if manifest_path.exists():
+        existing = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if existing.get("status") == "complete":
+            print("Dataset already complete; skipped. Use reset-test-env.sh to regenerate.")
+            return
+        raise SystemExit("Incomplete seed found. Reset the dedicated test environment first.")
+    credentials = json.loads((STATE / "credentials.json").read_text())
+    manifest = {
+        "kind": KIND,
+        "status": "in_progress",
+        "projects": {},
+        "issues": [],
+        "hidden_issues": [],
+        "private_journals": [],
+        "attachments": [],
+    }
+    save(manifest_path, manifest)
+
+    with Redmine(credentials["admin_key"]) as redmine:
+        call = redmine.call
+
+        trackers = call("GET", "trackers.json")["trackers"]
+        statuses = call("GET", "issue_statuses.json")["issue_statuses"]
+        priorities = call("GET", "enumerations/issue_priorities.json")["issue_priorities"]
+        open_status = next(s["id"] for s in statuses if not s["is_closed"])
+        closed_status = next(s["id"] for s in statuses if s["is_closed"])
+        # Stage 1: private projects and role-based memberships.
+        for key, name in [
+            ("main", "Demo Việt Nam"),
+            ("child", "Demo API"),
+            ("empty", "Demo Empty"),
+            ("restricted", "Demo Restricted"),
+        ]:
+            project = {
+                "name": name,
+                "identifier": f"mcp-demo-{key}",
+                "is_public": False,
+                "enabled_module_names": ["issue_tracking"],
+                "tracker_ids": [t["id"] for t in trackers],
+            }
+            if key == "child":
+                project["parent_id"] = manifest["projects"]["main"]
+                project["inherit_members"] = False
+            result = call("POST", "projects.json", json={"project": project})["project"]
+            pid = result["id"]
+            manifest["projects"][key] = pid
+            for username, role in [
+                ("manager", "manager"),
+                ("developer", "developer"),
+                ("reporter", "reporter"),
+                ("mcp-reader", "reader"),
+            ]:
+                if key == "restricted" and username == "mcp-reader":
+                    continue
+                call(
+                    "POST",
+                    f"projects/{pid}/memberships.json",
+                    json={
+                        "membership": {
+                            "user_id": credentials["users"][username],
+                            "role_ids": [credentials["roles"][role]],
+                        }
+                    },
+                )
+            save(manifest_path, manifest)
+
+        # Stage 2: Unicode issues, visibility cases, notes and workflow changes.
+        fields = credentials["custom_fields"]
+        for index in range(150):
+            project_key = "main" if index < 110 else ("child" if index < 130 else "restricted")
+            private = index in (5, 115)
+            issue = {
+                "project_id": manifest["projects"][project_key],
+                "subject": f"[DEMO-{index + 1:03d}] Kiểm tra chức năng Redmine",
+                "description": ""
+                if index % 10 == 0
+                else ("Dữ liệu mẫu tiếng Việt. " * (200 if index == 1 else 2)),
+                "tracker_id": trackers[index % len(trackers)]["id"],
+                "priority_id": priorities[index % len(priorities)]["id"],
+                "status_id": open_status,
+                "is_private": private,
+                "custom_fields": [
+                    {"id": fields[0]["id"], "value": "Docker local"},
+                    {"id": fields[1]["id"], "value": "stable" if index % 2 else "beta"},
+                    {"id": fields[2]["id"], "value": ["api", "web"]},
+                ],
+            }
+            if index % 3:
+                issue["assigned_to_id"] = credentials["users"]["developer"]
+            if index in (2, 3):
+                issue["parent_issue_id"] = manifest["issues"][0]
+            result = call("POST", "issues.json", json={"issue": issue})["issue"]
+            iid = result["id"]
+            manifest["issues"].append(iid)
+            if private or project_key == "restricted":
+                manifest["hidden_issues"].append(iid)
+            if index < 12:
+                call(
+                    "PUT",
+                    f"issues/{iid}.json",
+                    json={
+                        "issue": {
+                            "notes": "Bình luận công khai để kiểm tra MCP.",
+                            "done_ratio": 30,
+                        }
+                    },
+                )
+                call(
+                    "PUT",
+                    f"issues/{iid}.json",
+                    json={
+                        "issue": {
+                            "notes": "Ghi chú nội bộ chỉ dành cho quản lý.",
+                            "private_notes": True,
+                        }
+                    },
+                )
+                manifest["private_journals"].append(iid)
+            if index % 4 == 0 and index != 0:
+                call(
+                    "PUT",
+                    f"issues/{iid}.json",
+                    json={
+                        "issue": {
+                            "status_id": closed_status,
+                            "notes": "Đã hoàn thành công việc mẫu.",
+                        }
+                    },
+                )
+            save(manifest_path, manifest)
+            if (index + 1) % 25 == 0:
+                print(f"Created {index + 1}/150 issues", flush=True)
+        # Stage 3: one relation and text/image attachments.
+        call(
+            "POST",
+            f"issues/{manifest['issues'][6]}/relations.json",
+            json={
+                "relation": {
+                    "issue_to_id": manifest["issues"][7],
+                    "relation_type": "relates",
+                }
+            },
+        )
+        png = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aF1sAAAAASUVORK5CYII="
+        )
+        for filename, body, content_type in [
+            ("sample.txt", "Tệp mẫu Redmine MCP".encode(), "text/plain"),
+            ("sample.png", png, "image/png"),
+        ]:
+            uploaded = call(
+                "POST",
+                f"uploads.json?filename={filename}",
+                content=body,
+                headers={"Content-Type": "application/octet-stream"},
+            )
+            call(
+                "PUT",
+                f"issues/{manifest['issues'][0]}.json",
+                json={
+                    "issue": {
+                        "uploads": [
+                            {
+                                "token": uploaded["upload"]["token"],
+                                "filename": filename,
+                                "content_type": content_type,
+                            }
+                        ]
+                    }
+                },
+            )
+            manifest["attachments"].append(filename)
+        # Mark complete only after every stage succeeds.
+        manifest["status"] = "complete"
+        manifest["visible_issue_count"] = 128
+        save(manifest_path, manifest)
+        print("Synthetic dataset complete. Manifest saved; credentials not printed.")
+
+
+# History dataset definitions and shared REST adapter.
 MANIFEST_PATH = STATE / "history-manifest.json"
 PROJECTS = (
     ("alpha", "History Alpha", None),
@@ -25,6 +237,8 @@ PROJECT_KEYS = tuple(project[0] for project in PROJECTS)
 
 
 class Redmine:
+    """Shared synchronous REST client; errors omit response bodies and credentials."""
+
     def __init__(self, api_key: str) -> None:
         self.client = httpx.Client(
             base_url=os.environ["REDMINE_URL"].rstrip("/") + "/",
@@ -41,9 +255,7 @@ class Redmine:
     def call(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
         response = self.client.request(method, path, **kwargs)
         if response.is_error or response.is_redirect:
-            raise RuntimeError(
-                f"History seed request failed: {method} {path} ({response.status_code})"
-            )
+            raise RuntimeError(f"Seed request failed: {method} {path} ({response.status_code})")
         return response.json() if response.content else {}
 
     def all(
@@ -62,6 +274,7 @@ class Redmine:
 
 
 def checkpoint(manifest: dict[str, Any]) -> None:
+    """Save history progress independently of the baseline manifest."""
     save(MANIFEST_PATH, manifest)
 
 
@@ -109,6 +322,7 @@ def inspect_existing(redmine: Redmine, manifest: dict[str, Any]) -> dict[str, An
 
 
 def ensure_projects(redmine: Redmine, manifest: dict[str, Any], remote: dict[str, Any]) -> None:
+    """Create parents before children, or reuse records recovered after interruption."""
     for key, name, parent in PROJECTS:
         if key in manifest["projects"]:
             continue
@@ -135,6 +349,7 @@ def ensure_projects(redmine: Redmine, manifest: dict[str, Any], remote: dict[str
 def ensure_users(
     redmine: Redmine, manifest: dict[str, Any], remote: dict[str, Any], password: str
 ) -> None:
+    """Create twenty ordinary users, split later into Alpha and Beta cohorts."""
     for number in range(1, 21):
         login = f"history-user-{number:02d}"
         if login in manifest["users"]:
@@ -167,6 +382,7 @@ def ensure_memberships(
     roles: dict[str, int],
     reader_id: int,
 ) -> None:
+    """Assign cohort roles and omit the MCP reader from the restricted Beta project."""
     for project_index, key in enumerate(PROJECT_KEYS):
         cohort = 0 if project_index < 4 else 10
         members = [
@@ -199,11 +415,13 @@ def ensure_memberships(
 
 
 def sprint_dates(anchor: date, sprint_index: int) -> tuple[date, date]:
+    """Return a fifteen-day sprint within the ninety days before the saved anchor."""
     start = anchor - timedelta(days=90 - sprint_index * 15)
     return start, start + timedelta(days=14)
 
 
 def ensure_versions(redmine: Redmine, manifest: dict[str, Any], remote: dict[str, Any]) -> None:
+    """Create six sprint versions per parent, shared with its descendants."""
     anchor = date.fromisoformat(manifest["anchor_date"])
     for root in ("alpha", "beta"):
         for sprint_index in range(6):
@@ -232,6 +450,7 @@ def ensure_versions(redmine: Redmine, manifest: dict[str, Any], remote: dict[str
 
 
 def issue_details(index: int, manifest: dict[str, Any]) -> tuple[str, int, int, date, date]:
+    """Resolve an issue's project, sprint version and schedule deterministically."""
     project_key = PROJECT_KEYS[index % 8]
     root = "alpha" if index % 8 < 4 else "beta"
     sprint_index = (index // 8) % 6
@@ -253,6 +472,7 @@ def ensure_issues(
     statuses: list[dict[str, Any]],
     priorities: list[dict[str, Any]],
 ) -> None:
+    """Create three hundred scheduled issues with predictable subjects for reconciliation."""
     open_status = next(status["id"] for status in statuses if not status["is_closed"])
     closed_status = next(status["id"] for status in statuses if status["is_closed"])
     for index in range(300):
@@ -297,6 +517,7 @@ def ensure_time_entries(
     remote: dict[str, Any],
     activities: list[dict[str, Any]],
 ) -> None:
+    """Create three dated work entries per issue, using unique comments for resume."""
     for issue_index in range(300):
         issue_key = f"{issue_index + 1:03d}"
         project_key, _, _, start, _ = issue_details(issue_index, manifest)
@@ -333,7 +554,14 @@ def ensure_time_entries(
             print(f"History time entries: {(issue_index + 1) * 3}/900", flush=True)
 
 
-def main() -> None:
+def generate_history() -> None:
+    """Extend a complete baseline; checkpoints and a Linux lock support safe resume."""
+    # fcntl is Linux-only. Importing this module on Windows must remain harmless.
+    try:
+        import fcntl
+    except ImportError as error:
+        raise SystemExit("Run history seeding through the Linux seed container") from error
+
     if os.environ.get("REDMINE_TEST_MARKER") != KIND:
         raise SystemExit("Missing synthetic environment marker")
     if json.loads((STATE / "environment.json").read_text(encoding="utf-8"))["kind"] != KIND:
@@ -369,6 +597,7 @@ def main() -> None:
             }
             checkpoint(manifest)
         with Redmine(credentials["admin_key"]) as redmine:
+            # Reconcile committed records before creating anything after an interrupted run.
             remote = inspect_existing(redmine, manifest)
             trackers = redmine.call("GET", "trackers.json")["trackers"]
             statuses = redmine.call("GET", "issue_statuses.json")["issue_statuses"]
@@ -380,6 +609,7 @@ def main() -> None:
             ]
             if not all((trackers, statuses, priorities, activities)):
                 raise SystemExit("Required Redmine catalog is empty")
+            # Dependency order: projects -> users -> memberships -> versions -> issues -> time.
             ensure_projects(redmine, manifest, remote)
             ensure_users(redmine, manifest, remote, password)
             ensure_memberships(
@@ -391,6 +621,23 @@ def main() -> None:
         manifest["status"] = "complete"
         checkpoint(manifest)
         print("History complete: 8 projects, 20 users, 12 versions, 300 issues, 900 time entries.")
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    """Dispatch dataset generation; default to the original baseline behavior."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "mode",
+        nargs="?",
+        default="base",
+        choices=("base", "history", "all"),
+        help="base: small fixture; history: extend completed base; all: base then history",
+    )
+    mode = parser.parse_args(argv).mode
+    if mode in ("base", "all"):
+        generate_base()
+    if mode in ("history", "all"):
+        generate_history()
 
 
 if __name__ == "__main__":

@@ -32,8 +32,10 @@ bash scripts/check.sh
 Run relevant [manual verification](docs/manual-verification.md) checks for runtime changes.
 Pre-commit hooks are available as an opt-in local convenience. Mandatory hook enforcement,
 coverage thresholds and testing CI remain deferred. The tool workflow requires an
-automated baseline, still pending a separate testing assignment. Coding-only work excludes
-test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md).
+automated baseline, now organized into unit, offline integration and opt-in live E2E layers.
+Execute tests only within an explicitly authorized testing assignment. Coding-only work excludes
+test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md)
+and [coverage matrix](docs/plans/testing-coverage.md).
 
 Use concise imperative commit subjects, such as `Add issue status filtering`. Review descriptions
 should explain the behavior change, reference applicable issues, list checks actually performed,

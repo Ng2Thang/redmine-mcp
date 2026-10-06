@@ -9,14 +9,15 @@ Tool entries default to `operation_id` and `state`; `include_reasons=true` adds 
 Optional `project_id` and `operation_id` filters scope destination/action lookups; operation
 matches default to conditional evidence, with `include_unknown=true` retaining unknowns.
 The merged permission, read-rule and optional explanation follow-ups were inspected in source
-only; checks and runtime acceptance await
-separately authorized verification. Earlier static checks are recorded in its implementation record.
+only in the earlier implementation assignment. The subsequently authorized three-phase
+testing record below establishes selected offline/live scenarios, including merged and
+inherited roles and scoped permission revocation. Earlier static checks are recorded in its implementation record.
 
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
 Active task IDs are continuous: `tool-001` through `tool-031` and `prep-001` through
-`prep-015`. On 2026-10-02, the user requested compact numbering after document tasks
+`prep-018`. On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through
 `issues-008` IDs remain retired.
@@ -24,15 +25,20 @@ together; earlier IDs remain available in Git history. The deleted `issues-000` 
 The next strictly sequential capability roadmap is specified in
 [Redmine 7.0.2 files and issues](redmine-7-0-2-capabilities.md).
 Its tasks are listed below. The 7.0.2 deployment target is configured and accepted;
-the user waived actual runtime verification on 2026-10-02. Runtime tool behavior
-remains unverified.
+the user waived actual runtime verification on 2026-10-02. Selected runtime scenarios now pass under prep-018; older broader acceptance criteria remain
+tracked in their original task records.
 
 Synthetic deployment: Redmine `7.0.2-bookworm` is pinned in `deploy/compose.test.yaml`.
 Planning baseline: 2026-09-30. Task records below contain the implementation and acceptance
 evidence completed since that baseline. Existing runtime configuration already has a
 false-default write gate, but the currently deployed catalog remains read-only.
 
-## Current MCP catalog
+The original capability dashboards below retain historical task status and pending variants.
+Current selected testing evidence is the [coverage matrix](testing-coverage.md) and the
+prep-016 through prep-018 records dated 2026-10-06. Implementation-time statements about
+unexecuted verification describe the earlier assignments.
+
+## Earlier reader catalog and historical task status
 
 | Tool | What a client can do today | Status |
 |---|---|---|
@@ -147,6 +153,22 @@ large query previews require narrowing before continuation, and attachments retu
 | Order | Task | Client outcome | Depends on | Status | Blocker / next action |
 |---|---|---|---|---|---|
 | 1 | [prep-015-bounded-redmine-reads](tasks/prep-015-bounded-redmine-reads.md) | Bound pagination scans, upstream concurrency and logical read work; retrieve browser attachment links | Existing prep-003/005/010-013 and tool-031 implementations; prep-002 for testing | blocked | Implementation finished; timeout-boundary, shared proxy-admission and pagination-guidance review fixes applied; user-approved defaults are concurrency 50, admission 30s, read attempts 30 and aggregate deadline 90s. Ruff lint/format, mypy and diff whitespace checks pass. TEST-001 through TEST-006, updated old paging/download expectations and synthetic acceptance require separate verification authorization. |
+
+## Three-phase application testing
+
+The user explicitly authorized implementation and execution on 2026-10-05. The three directories
+are unit, offline integration and opt-in live E2E. [Coverage matrix](testing-coverage.md) maps all
+15 reader tools, eleven writers and shared runtime scenarios. Historical evidence is preserved.
+
+| Order | Task | Outcome | Depends on | Status | Next action |
+|---|---|---|---|---|---|
+| 1 | [prep-016-unit-testing](tasks/prep-016-unit-testing.md) | Validate service/model/policy logic using fake ports | Existing prep-002 baseline | complete | 102 unit cases and static checks pass; see task evidence. |
+| 2 | [prep-017-offline-integration-testing](tasks/prep-017-offline-integration-testing.md) | Verify current REST/MCP tools against mocked Redmine | prep-016 | complete | 395 integration cases and live opt-in gate pass. |
+| 3 | [prep-018-live-e2e-testing](tasks/prep-018-live-e2e-testing.md) | Verify real permissions, write state and owned cleanup | prep-017 | complete | 14 live cases, Inspector, browser and owned cleanup pass. |
+
+The existing shared synthetic environment runs 6.0.5. New live acceptance uses a separate
+`redmine-mcp-e2e` Compose project on localhost port 3001, with its own labeled database/files
+volumes and guarded fixture scripts. Existing containers, credentials and data are preserved.
 
 ## Future ideas, not assigned tasks
 

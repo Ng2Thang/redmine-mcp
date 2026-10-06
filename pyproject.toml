@@ -25,6 +25,10 @@ dev = [
 ]
 [tool.hatch.build.targets.wheel]
 packages = ["src/redmine_mcp"]
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
+asyncio_mode = "strict"
+markers = ["e2e: opt-in tests against the owned synthetic Redmine environment"]
 [tool.ruff]
 target-version = "py313"
 line-length = 100

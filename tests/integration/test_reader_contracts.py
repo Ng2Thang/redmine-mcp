@@ -9,11 +9,11 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import FastAPI
-from test_offline_baseline import ISSUE, PROJECT, mcp_session
 
 from redmine_mcp.config import Settings
 from redmine_mcp.features.issues import ISSUE_INCLUDES
 from redmine_mcp.mcp.catalog import OPERATIONS
+from tests.helpers import ISSUE, PROJECT, mcp_session
 
 pytestmark = pytest.mark.asyncio
 
@@ -102,6 +102,20 @@ READ_ROUTES = [
 
 def reader_responses() -> dict[str, Any]:
     return {
+        "/projects/7/files.json": (200, {"files": [], "total_count": 0}),
+        "/enumerations/document_categories.json": (200, {"document_categories": []}),
+        "/attachments/9.json": (
+            200,
+            {
+                "attachment": {
+                    "id": 9,
+                    "filename": "sample.txt",
+                    "filesize": 1,
+                    "content_url": "http://redmine.invalid/attachments/download/9/sample.txt",
+                    "created_on": "2026-10-05T00:00:00Z",
+                }
+            },
+        ),
         "/projects.json": (200, {"projects": [PROJECT], "total_count": 1}),
         "/projects/7.json": (200, {"project": PROJECT}),
         "/issues.json": (200, {"issues": [ISSUE], "total_count": 1}),
@@ -636,6 +650,8 @@ async def test_user_005_009_all_reader_mcp_invocation_and_sanitized_errors(
         },
     )
     arguments = {
+        "list_project_files": {"project_id": 7},
+        "get_attachment": {"attachment_id": 9},
         "get_project": {"project_id": 7},
         "get_issue": {"issue_id": 42},
         "list_project_versions": {"project_id": 7},

@@ -11,7 +11,8 @@ or HTTPX. MCP reuses REST routes and never accesses PostgreSQL directly.
 `deploy/` contains Docker definitions; `scripts/` contains Git Bash helpers;
 `tools/seed/` generates synthetic data. Documentation lives in `docs/`.
 Generated credentials, manifests, attachments in snapshots, and dumps belong in
-ignored `.local/`. No automated test directory currently exists.
+ignored `.local/`. Automated tests live in `tests/unit/`, `tests/integration/`, and
+the explicitly selected live `tests/e2e/` directory.
 
 ## Development & Build Commands
 
@@ -42,12 +43,13 @@ changes with `uv.lock`. All Markdown must be English; provide Bash commands only
 
 ## Testing Guidelines
 
-The tool workflow requires automated testing as a prerequisite for future
-reader capabilities; its baseline is not implemented yet. Coverage thresholds and
+The automated baseline and three testing layers are implemented. Run tests only when the
+assignment explicitly authorizes testing. Default pytest discovery is offline; live E2E requires
+`tests/e2e --run-e2e` and the owned pinned synthetic environment. Coverage thresholds and
 testing CI remain deferred. Coding-without-tests assignments must hand off testing
-dependencies, fixtures, and execution separately. For relevant changes, check service startup and call
+dependencies, fixtures, and execution separately. For authorized verification, check startup and call
 the affected tools through Inspector. Record verification limitations; follow
-`docs/testing-roadmap.md` when testing work begins.
+`docs/testing-roadmap.md` and `docs/plans/testing-coverage.md` for commands and scenario coverage.
 Track proposed MCP capabilities and task status in `docs/plans/index.md`.
 
 Pre-commit hooks are opt-in; do not install them automatically. See `CONTRIBUTING.md`,

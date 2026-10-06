@@ -1,8 +1,72 @@
 # Testing roadmap
 
-Current verification includes a credential-free offline baseline and operational smoke checking:
-startup, completed seed, tool discovery and one call per tool through Inspector. Testing CI does
-not yet exist.
+Current verification has three layers: unit tests, offline REST/MCP integration tests, and opt-in
+live E2E against an isolated owned Redmine 7.0.2 environment. Testing CI and percentage coverage
+thresholds remain deferred. The [coverage matrix](plans/testing-coverage.md) maps every current
+operation and common runtime scenario to its task and selected evidence.
+
+## Three-phase implementation
+
+| Phase | Directory | Task | Environment |
+|---|---|---|---|
+| Unit | `tests/unit/` | [prep-016](plans/tasks/prep-016-unit-testing.md) | Fake ports, models and policies |
+| Integration | `tests/integration/` | [prep-017](plans/tasks/prep-017-offline-integration-testing.md) | Mocked Redmine and in-process REST/MCP |
+| E2E | `tests/e2e/` | [prep-018](plans/tasks/prep-018-live-e2e-testing.md) | Owned Redmine 7.0.2 and PostgreSQL |
+
+The user authorized implementation and execution on 2026-10-05. Future coding-only assignments
+still require separate testing authorization. Run from Git Bash within an authorized assignment:
+
+```bash
+uv run --frozen pytest tests/unit
+uv run --frozen pytest tests/integration
+uv run --frozen pytest
+bash scripts/check.sh
+```
+
+Default discovery selects only unit and integration. Explicit E2E selection without `--run-e2e`
+exits with usage error before fixtures run. Offline fixtures disable dotenv loading, clear inherited
+Redmine settings and reject real HTTPX network dispatch. Shared data and MCP session helpers are
+in `tests/helpers.py`; collected test modules do not provide helpers to other modules.
+
+### Isolated live environment
+
+The pre-existing shared synthetic environment runs 6.0.5. Preparation creates a separate
+`redmine-mcp-e2e` Compose project on localhost port 3001 with owned database/files volumes,
+preserving existing containers, configuration and data. Existing E2E volumes must match ownership
+and version labels. Preparation creates fixtures; it is not a read-only smoke check.
+
+```bash
+uv run --frozen python scripts/prepare-e2e.py
+uv run --frozen pytest tests/e2e --run-e2e
+uv run --frozen python scripts/verify-e2e-supplement.py
+```
+
+Preflight verifies the image pin, synthetic markers, volume ownership, private manifest and
+native project identifiers before mutation. Ordinary personal keys exercise the separately
+configured writer application. Administrative fixture inspection and cleanup stay separate;
+the MCP application never accesses the database directly. Keys and generated configuration remain
+in ignored `.local/testing-e2e/`, never command arguments or committed artifacts.
+
+Assertions distinguish write acceptance from matched state, including accepted but ignored fields
+under author/tracker restrictions. Uncertain outcomes require reconciliation before a retry.
+Cleanup affects only created resources; restored fixture subjects or role grants can leave owned
+journal history. Baseline fixtures and containers remain available for reruns; no reset is automatic.
+
+The supplemental script starts a temporary localhost application on port 18081, runs Inspector
+2.8.0 discovery and a read call, then uses installed Edge/Node to download an attachment through
+its authenticated metadata link and compare content. It stops its application/browser and removes
+the created attachment. JSON credential configs, browser profiles and redacted results stay ignored.
+For interactive supplemental review:
+
+```bash
+uv run --frozen uvicorn tests.e2e.server:create_app --factory --host 127.0.0.1 --port 18081
+npx @modelcontextprotocol/inspector@2.8.0
+```
+
+Connect privately to `http://127.0.0.1:18081/mcp` with an owned ordinary user's key.
+Redmine is at `http://127.0.0.1:3001`; never put keys into URLs or screenshots.
+
+## Baseline history and further work
 
 The [tool workflow](workflows/redmine-tools.md) requires an offline automated
 baseline before dependent reader-tool implementation. The baseline uses locked pytest and
@@ -13,18 +77,18 @@ session checks. Run it from Git Bash without Docker or credentials:
 uv run --frozen pytest
 ```
 
-The suite covers all eleven current reader tools at the REST boundary and MCP discovery,
+The historical suite covered the then-current eleven reader tools at the REST boundary and MCP discovery,
 invocation, authentication, validation, and error envelopes. Authorized prep-004 work also
 covers concurrent identities, bounded upstream reads, readiness, and resource cleanup.
 See [the dated acceptance evidence](plans/prep-004-verification.md) for actual results and
 remaining live fixture gaps. Opt-in live synthetic checks remain separate;
 coverage thresholds and testing CI remain separate decisions.
 
-Future write verification requires a separate restricted synthetic writer, disposable task-owned
+Current write verification uses a separate restricted synthetic writer, disposable task-owned
 resources, resulting-state checks and isolated cleanup. Existing reader credentials must remain
 read-only. See the [MCP tool dashboard](plans/index.md) for dependency and scenario records.
 
-Future work:
+Further work beyond the selected acceptance:
 - Unit: service filters/defaults/pagination with fake gateways.
 - Integration: mapping, upstream errors, TLS/timeouts, personal-key authentication and forwarding.
 - MCP: schemas/names, error responses, shutdown and session cleanup.
@@ -38,8 +102,9 @@ Successful basic calls do not establish production readiness.
 
 ## Per-user authentication scenarios for a separately authorized test stage
 
-Do not create or run automated tests for this change without separate authorization. When
-authorized, cover these scenarios with mocked Redmine responses and REST/MCP requests:
+For future coding-only assignments, do not create or run tests without testing authorization.
+The three-phase assignment above explicitly authorizes current verification. These original
+authentication handoff scenarios remain useful traceability requirements:
 
 - Two distinct keys resolve different Redmine user IDs. Interleaved and concurrent calls forward
   each key only to its own `/users/current.json` and resource requests; `me` remains upstream.

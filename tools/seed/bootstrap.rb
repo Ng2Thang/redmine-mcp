@@ -1,3 +1,6 @@
+# Rails-only preparation: environment marker, settings, roles, users and custom fields.
+# Dataset generation follows in generate.py; scripts/seed.sh coordinates both runtimes.
+# Credentials stay in /seed-state (ignored .local/ on the host), never in console output.
 require 'json'
 require 'fileutils'
 abort 'Not the synthetic environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1'

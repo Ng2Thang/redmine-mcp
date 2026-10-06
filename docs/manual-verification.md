@@ -1,5 +1,18 @@
 # Manual verification
 
+## Current three-phase acceptance
+
+The user authorized the testing implementation and its execution on 2026-10-05. Current selected
+acceptance is recorded in [prep-016](plans/tasks/prep-016-unit-testing.md),
+[prep-017](plans/tasks/prep-017-offline-integration-testing.md), and
+[prep-018](plans/tasks/prep-018-live-e2e-testing.md), with a shared
+[coverage matrix](plans/testing-coverage.md). The older assignment restrictions below remain
+historical scope records; the new authorization applies to the selected scenarios.
+
+Use the [testing roadmap](testing-roadmap.md) for the isolated 7.0.2 environment, automated E2E,
+supplemental Inspector/browser commands and private credential handling. Do not upgrade or reset
+the existing shared synthetic environment merely to run these checks.
+
 ## Bounded reads and attachment links (separately authorized)
 
 The [prep-015 task](plans/tasks/prep-015-bounded-redmine-reads.md) owns pending acceptance.

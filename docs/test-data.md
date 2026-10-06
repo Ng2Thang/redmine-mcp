@@ -1,5 +1,55 @@
 # Synthetic data
 
+## Quick usage and reading notes
+
+Run from the repository root in Git Bash after the marked Redmine/PostgreSQL services are ready:
+
+```bash
+bash scripts/seed.sh base     # Original small dataset; also the default with no argument
+bash scripts/seed.sh history  # Add or resume history after a complete baseline
+bash scripts/seed.sh all      # Bootstrap, baseline, then history
+```
+
+Choose one mode for the dataset you need. `bash scripts/seed.sh --help` explains the modes.
+`bash scripts/dev-up.sh` still starts services and creates only the baseline. The seed command
+does not start services. The existing `bash scripts/seed-history.sh` command forwards to history.
+These commands write synthetic data; they do not run application tests or prepare live E2E data.
+
+All Python dataset logic is in [`tools/seed/generate.py`](../tools/seed/generate.py).
+Read it in this order:
+
+1. `STATE`, `KIND` and `save`: container state directory, environment marker and atomic checkpoints.
+2. `generate_base`: private projects/memberships, Unicode issues/notes, relation and attachments.
+3. `PROJECTS`, `Redmine` and `ensure_*`: history definitions, REST helper and creation stages.
+4. `generate_history`: prerequisites, Linux lock, existing-record reconciliation and resume.
+5. `main`: mode selection; `all` completes baseline before beginning history.
+
+Edit fixture content and quantities in `generate.py`. The old `generator.py` and `history.py`
+were removed after consolidation; `__init__.py` and `__main__.py` provide package entry points.
+`bootstrap.rb` stays separate because Redmine configuration requires its Rails runtime.
+Python imports do not create data. History execution uses a Linux-only lock inside Docker;
+its deferred import lets the generator module be imported on Windows.
+
+For direct container execution, use `python -m tools.seed base`, `python -m tools.seed history`
+or `python -m tools.seed all`. The removed `tools.seed.generator` and `tools.seed.history`
+module paths are no longer supported. The Git Bash commands above remain the normal workflow.
+
+Baseline generation creates 4 projects and 150 issues. History adds 8 projects, 20 users,
+12 versions, 300 issues and 900 time entries: 12 generated projects, 450 issues and 900 time
+entries across both datasets. These totals exclude unrelated records and the separate owned
+E2E fixture environment described in [the testing roadmap](testing-roadmap.md).
+
+Recovery note: a completed stage skips generation on rerun. An interrupted baseline requires
+the existing guarded synthetic reset; interrupted history resumes from its own manifest.
+`all` preserves both rules and stops if the baseline is incomplete. No automatic reset is added.
+Keep both manifests separate and never edit credentials or progress files by hand.
+
+Implementation note, 2026-10-06: the Python generators were consolidated and reading notes added.
+Seed execution and automated tests were not run for this refactor; dataset equivalence and live
+resume behavior still require separately authorized verification.
+
+## Baseline dataset
+
 Bootstrap requires redmine-mcp-synthetic-v1 and refuses unknown nonempty instances.
 It sets a dedicated application title; Git Bash helpers also validate the .env marker.
 
@@ -45,5 +95,5 @@ For examples, read `projects.alpha-api`, `projects.beta-private`, `versions.alph
 The base manifest's 128 visible issues remain; the expanded fixture adds 263 visible issues,
 for 391 total visible issues with `status_id="*"` when no other manual changes have been made.
 The restricted project contains 37 of the new issues. Time entries can be checked in Redmine's
-Spent time pages; current MCP tools do not expose them.
+Spent time pages and through `list_issue_time_entries` for a visible issue.
 

@@ -14,6 +14,8 @@ that a release has been published.
 
 ### Fixed
 
+- Preserve nullable description and due-date MCP input schemas for `create_project_version`;
+  explicit null now follows the same omission contract as REST. Offline regression tests cover it.
 - Correct the public Redmine URL classmethod validator signature, which prevented Pydantic
   from constructing settings during application import.
 - Align time-entry tool descriptions and aggregation examples with pagination policy. Blocked
@@ -24,6 +26,11 @@ that a release has been published.
   upstream transport; direct and proxy connections share the same semaphore.
 
 ### Added
+
+- Writer-only `create_project_version` creates open, unshared Target versions with optional
+  description and due date. Readable same-project duplicates return their existing data with
+  `version_already_exists`; acceptance, read-back verification, and uncertainty remain separate.
+  Requires explicit writer configuration and `manage_versions`. Runtime acceptance is pending.
 
 - Shared upstream request semaphore, bounded admission, aggregate logical-read request/byte/time
   budgets, and stateless pagination policy. Large collections return a first-page preview but

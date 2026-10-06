@@ -106,7 +106,16 @@ class ProjectCapabilityService:
             operation_id=operation,
             state=state,
             reason=(
-                "Necessary permission evidence exists; target, tracker and workflow checks remain."
+                (
+                    "Manage versions permission evidence exists; Redmine checks the target project "
+                    "and version validation on invocation. Version reads are optional and require "
+                    "view_issues for verification or duplicate recovery."
+                    if operation == "create_project_version"
+                    else (
+                        "Necessary permission evidence exists; target, tracker and workflow "
+                        "checks remain."
+                    )
+                )
                 if state == "conditional"
                 else "Permission evidence is incomplete; Redmine decides on invocation."
             ),

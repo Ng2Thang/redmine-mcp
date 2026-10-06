@@ -1,7 +1,5 @@
 import re
 
-from fastapi import status as http_status
-
 from redmine_mcp.auth.capability_models import WriteIntent
 from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import (
@@ -17,13 +15,19 @@ from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.features.projects.models import (
     AddProjectFileRequest,
     AddProjectFileResult,
+    CreateProjectVersionRequest,
+    CreateProjectVersionResult,
     IssueCategory,
     Project,
     ProjectDetail,
     ProjectFile,
     Version,
 )
-from redmine_mcp.features.projects.ports import ProjectReader, ProjectWriter
+from redmine_mcp.features.projects.ports import (
+    ProjectReader,
+    ProjectVersionCreator,
+    ProjectWriter,
+)
 
 
 class ProjectService:
@@ -32,10 +36,13 @@ class ProjectService:
         reader: ProjectReader,
         writer: ProjectWriter | None = None,
         authorizer: WriteAuthorizer | None = None,
+        *,
+        version_creator: ProjectVersionCreator | None = None,
     ) -> None:
         self.reader = reader
         self.writer = writer
         self.authorizer = authorizer
+        self.version_creator = version_creator
 
     async def list_projects(self, limit: int = 25, offset: int = 0) -> Page[Project]:
         query = validated_query(PageRequest, {"limit": limit, "offset": offset})
@@ -69,14 +76,14 @@ class ProjectService:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.INVALID_FILENAME,
-                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                422,
             )
         match = re.fullmatch(r"([1-9][0-9]*)\.[0-9a-f]+", request.token)
         if match is None:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.INVALID_UPLOAD_TOKEN,
-                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                422,
             )
         if request.version_id is not None:
             versions = await self.reader.list_project_versions(project_id)
@@ -87,7 +94,7 @@ class ProjectService:
                 raise ApplicationError(
                     codes_text.INVALID_PARAMETERS,
                     redmine_text.INVALID_PROJECT_VERSION,
-                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    422,
                 )
         if self.writer is None:
             raise RuntimeError("Project writer is not configured")
@@ -101,3 +108,15 @@ class ProjectService:
             request.version_id,
             int(match.group(1)),
         )
+
+    async def create_project_version(
+        self, project_id: int, request: CreateProjectVersionRequest
+    ) -> CreateProjectVersionResult:
+        require_positive_id(project_id, "project_id")
+        if self.version_creator is None:
+            raise RuntimeError("Project version creator is not configured")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(
+                WriteIntent("create_project_version", project_id=project_id)
+            )
+        return await self.version_creator.create_project_version(project_id, request)

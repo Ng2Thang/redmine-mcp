@@ -10,6 +10,7 @@ from redmine_mcp.bootstrap import read_budget_policy
 from redmine_mcp.common.read_budget import ReadBudgetPolicy
 from redmine_mcp.config import Settings
 from redmine_mcp.constants import runtime as runtime_text
+from redmine_mcp.features.projects.models import CreateProjectVersionRequest
 from redmine_mcp.mcp.annotations import annotate_read_tools
 from redmine_mcp.mcp.catalog import (
     OPERATIONS,
@@ -40,6 +41,12 @@ def register_mcp(
     )
     validate_generated_tools(mcp.tools, operations)
     for tool in mcp.tools:
+        if tool.name == "create_project_version":
+            # FastAPI-MCP 0.4 collapses nullable body fields to one JSON type.
+            # Preserve this tool's explicit-null contract before SDK schema caching.
+            tool.inputSchema["properties"].update(
+                CreateProjectVersionRequest.model_json_schema()["properties"]
+            )
         if tool.name in {
             "list_projects",
             "list_issues",

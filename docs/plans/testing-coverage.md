@@ -7,6 +7,14 @@ not every possible workflow, role combination, Redmine version or infrastructure
 
 ## Current tools
 
+Follow-up on 2026-10-06: [tool-032](tasks/tool-032-create-project-version.md) adds 80 feature cases
+plus four existing writer-matrix cases. The full offline suite now passes 581 cases. Its live
+acceptance remains pending; earlier prep-018 evidence does not cover this operation.
+
+| Added operation | Unit coverage | Offline integration coverage | Live coverage |
+|---|---|---|---|
+| `create_project_version` | `tests/unit/test_project_versions.py`: invalid/optional fields, exact dates, invalid project IDs, permission denial and manage_versions evidence | `tests/integration/test_project_versions.py`: REST/MCP payloads and nullable schema regression, stateful duplicates, lookup failures, sanitized upstream errors, uncertainty, read-back, deployment/caller gates, discovery and capabilities; generic writer matrix in `test_current_tools.py` | TOOL-032-008 pending separately authorized isolated 7.0.2 state/permission verification |
+
 | Operation | Unit scenario | Offline integration scenario | Live scenario | Baseline classification |
 |---|---|---|---|---|
 | `get_current_user` | UNIT-001/002: shared authorization and relevant validation | INT-001: current-reader SDK invocation `get_current_user`; preserved REST scenarios | LIVE-001: reader SDK invocation `get_current_user` | Preserved baseline |

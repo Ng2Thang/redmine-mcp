@@ -75,6 +75,7 @@ class SyntheticRedmine:
             }
         )
         self.write_failure = None
+        self.versions = {}
         self.readback_failure = False
         self.writes = 0
 
@@ -133,6 +134,19 @@ class SyntheticRedmine:
                     {k: v for k, v in payload["file"].items() if k in ("filename", "description")}
                 )
                 return httpx.Response(204)
+            if path == "/projects/7/versions.json":
+                if any(v["name"] == payload["version"]["name"] for v in self.versions.values()):
+                    return httpx.Response(422, json={"errors": ["must-not-leak"]})
+                version_id = 100 + len(self.versions)
+                version = {
+                    "id": version_id,
+                    "project": {"id": 7, "name": "Demo"},
+                    "description": "",
+                    "due_date": None,
+                    **payload["version"],
+                }
+                self.versions[version_id] = version
+                return httpx.Response(201, json={"version": version})
             if path == "/attachments/9.json":
                 if request.method == "DELETE":
                     self.files = []
@@ -197,6 +211,13 @@ class SyntheticRedmine:
             )
         if path == "/projects/7.json":
             return httpx.Response(200, json={"project": PROJECT})
+        if path.startswith("/versions/"):
+            version_id = int(path.split("/")[2].split(".")[0])
+            return (
+                httpx.Response(200, json={"version": self.versions[version_id]})
+                if version_id in self.versions
+                else httpx.Response(404)
+            )
         if path == "/issues.json":
             return httpx.Response(200, json={"issues": [self.issues[42]], "total_count": 1})
         if path.startswith("/issues/") and path.endswith(".json"):
@@ -212,7 +233,7 @@ class SyntheticRedmine:
             return httpx.Response(200, json={"relation": self.relation})
         collections = {
             "/projects/7/files.json": ("files", self.files),
-            "/projects/7/versions.json": ("versions", []),
+            "/projects/7/versions.json": ("versions", list(self.versions.values())),
             "/projects/7/issue_categories.json": ("issue_categories", []),
             "/issue_statuses.json": ("issue_statuses", []),
             "/trackers.json": ("trackers", []),

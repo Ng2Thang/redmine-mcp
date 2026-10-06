@@ -1,5 +1,62 @@
 # Tool reference
 
+## Create project version
+
+`create_project_version` is writer-only at
+`POST /api/v1/projects/{project_id}/versions`. Resolve a project name with `list_projects` and
+pass its positive numeric `project_id`. The writer must explicitly allow this operation and
+Redmine requires `manage_versions` on that project. Personal-key discovery and
+`list_my_project_capabilities` use that necessary permission; Redmine decides access on invocation.
+
+Supply `name` (1-60 characters, not whitespace-only), optional `description` (at most 255
+characters), and optional `due_date` (valid calendar date in `YYYY-MM-DD`). Name spelling and
+whitespace are preserved. Empty descriptions are allowed; omitted or null optional fields are
+not sent upstream. Empty dates, datetime values, and unknown body fields are rejected.
+`status=open` and `sharing=none` are fixed; version updates, sharing selection, custom fields,
+wiki settings, and issue assignment are excluded.
+
+Example MCP input, after replacing the project ID with one returned by `list_projects`:
+
+```json
+{"project_id": 10, "name": "sprint-01", "description": "First sprint", "due_date": "2026-10-20"}
+```
+
+The result contains `outcome` (`accepted`, `existing`, or `uncertain`), nullable
+`upstream_accepted`, nullable positive `resource_id`, `verification` (`matched`, `mismatch`, or
+`unavailable`), nullable `observed_version`, and nullable `error`. Observations contain the
+existing version fields plus required `sharing`. Structured receipts use REST HTTP 200 and
+the same MCP result; receipt status does not prove creation or verification succeeded.
+Annotations are read-only false, destructive false, idempotent false, and open-world true.
+
+A valid upstream 201 captures the version ID, then reads that ID independently and compares
+project, name, fixed status/sharing, and supplied optional fields. Read-back failure preserves
+acceptance with verification unavailable. Version reading requires `view_issues`; this is not
+an additional prerequisite for creation.
+
+After an upstream 422, a bounded best-effort project version lookup can return exactly one
+case-sensitive name match owned by the requested project. Shared versions owned elsewhere are
+excluded. The receipt has `outcome=existing`, `upstream_accepted=false`, the existing ID/data,
+`verification=unavailable`, and this application-level error:
+
+```json
+{
+  "code": "version_already_exists",
+  "message": "Creation was rejected; a version with this name already exists. The existing version is returned. Supplied fields were not applied."
+}
+```
+
+Clients must display this error even though resource data is available in a normal structured
+MCP result. Existing metadata remains unchanged, including when the requested fields differ.
+Unreadable, malformed, absent, or ambiguous matches preserve the original sanitized validation
+error. Other authentication, permission, project, and upstream failures retain current errors.
+
+Writes are attempted once. A dispatched timeout, unexpected success status, or unusable creation
+response reports `uncertain`; a seen 201 retains `upstream_accepted=true`. Reconcile with
+`list_project_versions` before deciding whether to retry. A matching name after a timeout does
+not prove this invocation created it. No automatic retry, rollback, or concurrency guarantee
+is provided. Offline acceptance for [tool-032](plans/tasks/tool-032-create-project-version.md)
+passes; live 7.0.2 state and permission verification remains pending separate authorization.
+
 ## Caller project capabilities
 
 `list_my_project_capabilities` reads the authenticated account's visible projects, membership

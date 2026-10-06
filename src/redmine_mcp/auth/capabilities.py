@@ -38,6 +38,7 @@ UPLOAD_PERMISSIONS = frozenset(
 OPERATION_PERMISSIONS: dict[str, frozenset[str]] = {
     "upload_attachment": UPLOAD_PERMISSIONS,
     "add_project_file": frozenset({"manage_files"}),
+    "create_project_version": frozenset({"manage_versions"}),
     "update_attachment": ISSUE_EDIT_PERMISSIONS | {"manage_files"},
     "delete_attachment": ISSUE_EDIT_PERMISSIONS | {"manage_files"},
     "create_issue": frozenset({"add_issues"}),

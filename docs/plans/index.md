@@ -16,7 +16,7 @@ inherited roles and scoped permission revocation. Earlier static checks are reco
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
-Active task IDs are continuous: `tool-001` through `tool-031` and `prep-001` through
+Active task IDs are continuous: `tool-001` through `tool-032` and `prep-001` through
 `prep-018`. On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through
@@ -169,6 +169,12 @@ are unit, offline integration and opt-in live E2E. [Coverage matrix](testing-cov
 The existing shared synthetic environment runs 6.0.5. New live acceptance uses a separate
 `redmine-mcp-e2e` Compose project on localhost port 3001, with its own labeled database/files
 volumes and guarded fixture scripts. Existing containers, credentials and data are preserved.
+
+## Target version creation
+
+| Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|
+| [tool-032-create-project-version](tasks/tool-032-create-project-version.md) | Create an open, unshared Target version; return readable existing versions with an explicit duplicate error | Existing project reader; prep-007/010-013 writer implementations; prep-016-018 testing infrastructure | blocked | Implementation and offline verification finished on 2026-10-06: full suite 581 passed; Ruff lint/format, mypy and diff checks pass. Testing found and fixed explicit-null MCP schema loss. TOOL-032-008 live 7.0.2 state/permission acceptance remains pending separate authorization. |
 
 ## Future ideas, not assigned tasks
 

@@ -31,6 +31,7 @@ from redmine_mcp.integrations.redmine import (
     RedmineIssueWatchers,
     RedmineProjectFiles,
     RedmineProjects,
+    RedmineProjectVersions,
     RedmineReferenceData,
     RedmineTimeEntries,
     RedmineUploads,
@@ -112,7 +113,10 @@ def build_container(
             authorizer=authorizer,
         ),
         ProjectService(
-            project_reader, RedmineProjectFiles(writer, project_reader), authorizer=authorizer
+            project_reader,
+            RedmineProjectFiles(writer, project_reader),
+            authorizer=authorizer,
+            version_creator=RedmineProjectVersions(client, writer),
         ),
         IssueService(
             RedmineIssues(client),

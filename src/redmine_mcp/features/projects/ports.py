@@ -3,6 +3,8 @@ from typing import Protocol
 from redmine_mcp.common import Collection, Page
 from redmine_mcp.features.projects.models import (
     AddProjectFileResult,
+    CreateProjectVersionRequest,
+    CreateProjectVersionResult,
     IssueCategory,
     Project,
     ProjectDetail,
@@ -33,3 +35,9 @@ class ProjectWriter(Protocol):
         version_id: int | None,
         attachment_id: int,
     ) -> AddProjectFileResult: ...
+
+
+class ProjectVersionCreator(Protocol):
+    async def create_project_version(
+        self, project_id: int, request: CreateProjectVersionRequest
+    ) -> CreateProjectVersionResult: ...

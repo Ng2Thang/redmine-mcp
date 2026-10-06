@@ -199,6 +199,11 @@ class RedmineCapabilities:
             return PermissionExpression(
                 ((PermissionClause(project_id, frozenset({"manage_files"})),),)
             )
+        if operation == "create_project_version":
+            project_id = await self._project(target_id(intent.project_id))
+            return PermissionExpression(
+                ((PermissionClause(project_id, frozenset({"manage_versions"})),),)
+            )
         if operation == "create_issue":
             project_id = await self._project(target_id(intent.project_id))
             clauses = [PermissionClause(project_id, frozenset({"add_issues"}))]

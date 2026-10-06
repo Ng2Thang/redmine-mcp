@@ -26,6 +26,14 @@ class WriteReceipt:
     payload: dict[str, Any] | None = None
 
 
+class RedmineWriteRejected(ApplicationError):
+    """Keep the original validation status without exposing the upstream response body."""
+
+    def __init__(self, upstream_status: int) -> None:
+        super().__init__(codes_text.INVALID_PARAMETERS, redmine_text.WRITE_REJECTED, 422)
+        self.upstream_status = upstream_status
+
+
 class RedmineWriter:
     def __init__(self, http: httpx.AsyncClient, api_key: str, policy: ReadPolicy) -> None:
         self.http = http
@@ -103,11 +111,7 @@ class RedmineWriter:
                         http_status.HTTP_400_BAD_REQUEST,
                         http_status.HTTP_422_UNPROCESSABLE_CONTENT,
                     ):
-                        raise ApplicationError(
-                            codes_text.INVALID_PARAMETERS,
-                            redmine_text.WRITE_REJECTED,
-                            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
-                        )
+                        raise RedmineWriteRejected(status)
                     raise_for_upstream_status(status)
                     if status not in accepted_statuses:
                         return WriteReceipt("uncertain", status)

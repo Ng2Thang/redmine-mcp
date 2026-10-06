@@ -222,6 +222,19 @@ evidence; no proactive list-change notification is promised. The MCP adapter ret
 definitions and never mutates the shared superset schema cache for another caller.
 
 The writer catalog contains only configured operation IDs from the code's explicit write allowlist.
+
+To permit Target version creation, explicitly include `create_project_version` in the separate
+ignored writer env-file's operation list. A writer limited to that mutation uses:
+
+```bash
+REDMINE_WRITER_OPERATIONS=create_project_version
+```
+
+Retain the writer's existing authentication settings and write gate. Grant the ordinary caller
+`manage_versions` in each destination project. `view_issues` is needed only for version read-back
+and duplicate recovery; creation does not require it. See the [tool contract](tool-reference.md#create-project-version).
+This example does not change deployed configuration or enable writes on the reader.
+
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Each future write route must use `require_write_access`, which checks its operation ID
 against the configured list. Reader REST write attempts return 403. No public write operation is

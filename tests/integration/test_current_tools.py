@@ -11,6 +11,13 @@ from tests.helpers import mcp_session
 
 WRITES = [
     (
+        "create_project_version",
+        "POST",
+        "/api/v1/projects/7/versions",
+        {"name": "sprint-01"},
+        "/projects/7/versions.json",
+    ),
+    (
         "upload_attachment",
         "POST",
         "/api/v1/uploads",
@@ -97,7 +104,7 @@ def prepare(synthetic: Any, operation: Any) -> Any:
 
 def arguments(operation: Any, payload: Any) -> Any:
     result = {} if payload is None else payload.copy()
-    if operation in ("add_project_file",):
+    if operation in ("add_project_file", "create_project_version"):
         result["project_id"] = 7
     if operation in ("update_attachment", "delete_attachment"):
         result.update(attachment_id=9)

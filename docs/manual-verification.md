@@ -64,6 +64,29 @@ This guide records operational smoke checks. It does not add an automated test s
 production readiness. Full permission, restore, and failure-recovery verification remains in the
 [testing roadmap](testing-roadmap.md).
 
+## Target version creation (separate authorization required)
+
+[tool-032](plans/tasks/tool-032-create-project-version.md) owns its new acceptance scenarios;
+earlier testing authorization and results do not establish acceptance for this operation.
+Do not run these procedures without a separate verification assignment. Use the isolated marked
+7.0.2 environment, its restricted writer, and task-owned versions; preserve the shared 6.0.5
+environment. Read credentials privately and record only redacted evidence.
+
+1. Configure only the authorized writer operation and an ordinary caller with `manage_versions`.
+   Inspect discovery, capability reporting, annotations, and the generated REST/MCP schemas.
+2. Create a uniquely named version with description and due date. Compare the returned ID and
+   resulting Redmine state: owning project, exact name, optional fields, open status, no sharing.
+3. Repeat the name with different metadata. Expect existing ID/data and the explicit
+   `version_already_exists` error. Confirm version count and existing metadata remain unchanged.
+4. Compare denied project permission, excluded caller, excluded operation, and the reader
+   deployment; no denied call may mutate state. A caller with `manage_versions` but no
+   `view_issues` can create, while verification is unavailable and unreadable duplicates retain
+   the validation error.
+5. Use offline transports for timeout, malformed responses, shared/ambiguous duplicate matches,
+   and read-back failure. Confirm one mutation attempt and correct acceptance/uncertainty.
+6. Clean up only recorded task-owned version IDs with the separately authorized fixture
+   procedure. Never delete a pre-existing version returned as a duplicate.
+
 ## Preparation and startup
 
 Use an existing synthetic environment or deliberately create one with `bash scripts/dev-up.sh`.

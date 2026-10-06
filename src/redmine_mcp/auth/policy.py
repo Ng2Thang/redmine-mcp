@@ -26,6 +26,7 @@ READ_OPERATIONS = (
 WRITE_OPERATIONS: tuple[str, ...] = (
     "upload_attachment",
     "add_project_file",
+    "create_project_version",
     "update_attachment",
     "delete_attachment",
     "create_issue",

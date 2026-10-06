@@ -7,6 +7,7 @@ CapabilityState = Literal["denied", "conditional", "unknown"]
 WriteOperation = Literal[
     "upload_attachment",
     "add_project_file",
+    "create_project_version",
     "update_attachment",
     "delete_attachment",
     "create_issue",

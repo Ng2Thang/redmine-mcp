@@ -70,7 +70,7 @@ class RedmineIssues:
             "issues",
             limit,
             offset,
-            observed_fields=ISSUE_HOUR_FIELDS,
+            observed_fields=(*ISSUE_HOUR_FIELDS, *ISSUE_ESTIMATE_FIELDS),
             requested_fields=selected,
             unrequested_fields=sorted(ISSUE_LIST_INCLUDES.difference(selected)),
         )

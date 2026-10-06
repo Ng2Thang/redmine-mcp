@@ -22,3 +22,8 @@ def create_app() -> Any:
             redmine_writer_operations=",".join(WRITE_OPERATIONS),
         )
     )
+
+
+def create_reader_app() -> Any:
+    preflight()
+    return application(Settings(_env_file=None, redmine_url="http://127.0.0.1:3001"))

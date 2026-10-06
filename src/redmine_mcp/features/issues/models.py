@@ -146,6 +146,8 @@ class Issue(BaseModel):
     due_date: IssueDate | None = None
     spent_hours: IssueHours | None = None
     total_spent_hours: IssueHours | None = None
+    estimated_hours: IssueHours | None = None
+    total_estimated_hours: IssueHours | None = None
     created_on: str
     updated_on: str
     custom_fields: list[CustomField] = Field(default_factory=list)
@@ -163,6 +165,4 @@ class Issue(BaseModel):
 
 
 class IssueDetail(Issue):
-    estimated_hours: IssueHours | None = None
-    total_estimated_hours: IssueHours | None = None
     visibility: Visibility = Field(default_factory=Visibility)

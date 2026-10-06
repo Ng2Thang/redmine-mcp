@@ -51,6 +51,11 @@ def register_mcp(
             tool.inputSchema["properties"].update(
                 CreateProjectVersionRequest.model_json_schema()["properties"]
             )
+        if tool.name == "list_time_entries":
+            # FastAPI-MCP 0.4 adds a scalar type alongside the query's anyOf.
+            # It selects from a set, excluding either integer IDs or 'me'. Keep
+            # the complete union before install_read_limits caches SDK schemas.
+            tool.inputSchema["properties"]["user_id"].pop("type", None)
         if tool.name in {
             "list_projects",
             "list_issues",

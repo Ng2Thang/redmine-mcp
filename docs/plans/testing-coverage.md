@@ -7,13 +7,41 @@ not every possible workflow, role combination, Redmine version or infrastructure
 
 ## Current tools
 
+### Estimate and general spent-time acceptance
+
+The user separately authorized testing for [tool-034](tasks/tool-034-list-issue-estimates.md)
+and [tool-035](tasks/tool-035-list-time-entries.md) on 2026-10-06. The assignment adds service,
+REST, gateway and MCP SDK coverage, extends the stateful reader fixture and catalog checks,
+and runs dedicated live acceptance on the owned pinned Redmine 7.0.2 environment.
+
+| Behavior | Planned offline coverage | Planned live coverage | Status |
+|---|---|---|---|
+| Issue-list estimates | TOOL-034-001..004: `tests/integration/test_issue_estimates.py`, additive OpenAPI coverage and existing reader contracts | TOOL-034-005: `tests/e2e/test_reporting_acceptance.py`, eight 12-hour issues and native/list/detail/SDK parity | Passed; execution records in task 034 |
+| General time entries | TOOL-035-001..006: `tests/unit/test_time_entry_search.py`, `tests/integration/test_time_entries_overview.py`, extended reader errors/catalog/stateful fixture | TOOL-035-007: `tests/e2e/test_reporting_acceptance.py`, project-only entries, scopes, date boundaries, same-day ordering, own/all-log visibility | Passed; execution records in task 035 |
+
+The new tests preserve issue-preflight coverage and exercise numeric user IDs and `me` through
+the real SDK. Broad previews, scope growth, malformed metadata and exhausted request budgets
+cannot be claimed as complete totals. Client examples deduplicate IDs and use decimal sums.
+The live fixture adds an owned reporting project and a role with own-log visibility and no
+issue-read grant; disposable issues and logs are removed in `finally` blocks.
+
+Inspector 2.8.0 discovery and six reader calls passed with
+`uv run --frozen --no-sync python scripts/verify-reporting-inspector.py`. Its reader-only server
+stops after execution; credentials and detailed evidence remain ignored under `.local/testing-e2e`.
+This assignment did not change the shared Redmine deployment or run unrelated live write tests.
+
+Final execution: **883 offline cases passed**, including **139 new dedicated reporting cases**
+and eight additional shared reader-error scenarios. Both focused owned live tests passed;
+Inspector discovery and six calls passed. Ruff lint/format, mypy and whitespace checks passed.
+One existing Pydantic deprecation warning remains in test output.
+
 Follow-up on 2026-10-06: [tool-032](tasks/tool-032-create-project-version.md) adds 80 feature cases
 plus four existing writer-matrix cases. That assignment passed 581 offline cases. Its live
 acceptance remains pending; earlier prep-018 evidence does not cover this operation.
 
 The tool-033 follow-up adds 155 cases (86 unit/service/gateway and 69 REST/MCP integration),
 updates the existing reader catalog checks and extends the stateful offline fixture. The full
-offline suite passes **736 cases** with one existing Pydantic deprecation warning. Execution
+offline suite at that assignment passed **736 cases** with one existing Pydantic deprecation warning. Execution
 results are recorded in [tool-033](tasks/tool-033-project-members-management.md). Live
 TOOL-033-011 remains pending; synthetic role filtering and inheritance do not establish
 Redmine 7.0.2 runtime acceptance. The shared container observed during planning was 6.0.5.

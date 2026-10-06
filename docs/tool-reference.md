@@ -223,6 +223,7 @@ Permissions may come from different readable roles, including partial permission
 | `list_project_issue_categories` | `view_issues` OR `manage_categories` | Issue tracking availability and project access |
 | `list_project_files` | `view_files` | Files module and project/version file visibility |
 | `list_issue_time_entries` | `view_issues` AND `view_time_entries` | Issue preflight, time tracking module and role time-entry visibility |
+| `list_time_entries` | `view_time_entries` | Project access, time tracking module and role time-entry visibility; no issue preflight |
 | `get_attachment` | Any of `view_issues`, `view_files`, `view_documents`, `view_news`, `view_messages`, `view_wiki_pages` | Actual container type and visibility; metadata and browser link only |
 
 An explicitly reported Redmine administrator also provides positive project read evidence.
@@ -275,7 +276,7 @@ without revealing what was hidden.
 
 ## Pagination and read work
 
-`list_projects`, `list_issues`, `list_issue_time_entries`, and
+`list_projects`, `list_issues`, `list_issue_time_entries`, `list_time_entries`, and
 `list_my_project_capabilities` add `pagination_policy` to paginated responses:
 
 ```json
@@ -323,6 +324,7 @@ data. The external Redmine data can change.
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
 | `get_attachment` | `GET /api/v1/attachments/{attachment_id}` | Required positive integer `attachment_id` |
 | `list_issue_time_entries` | `GET /api/v1/issues/{issue_id}/time-entries` | Required positive integer `issue_id`; optional `limit`, `offset` |
+| `list_time_entries` | `GET /api/v1/time-entries` | Optional `project_id`, `user_id` (positive integer or `"me"`), `issue_id`, `spent_from`, `spent_to`; `include_subprojects=false`, `limit=25`, `offset=0` |
 | `list_issue_statuses` | `GET /api/v1/issue-statuses` | None |
 | `list_trackers` | `GET /api/v1/trackers` | None |
 | `list_issue_priorities` | `GET /api/v1/issue-priorities` | None |
@@ -510,8 +512,9 @@ Example `get_issue` response:
 ```
 
 `list_issues` wraps issue objects in the same page structure as `list_projects`.
-`get_issue` also returns nullable `estimated_hours` and `total_estimated_hours` as finite,
-nonnegative numbers. Missing upstream estimates produce `not_returned` visibility observations;
+Both `list_issues` and `get_issue` return nullable `estimated_hours` and
+`total_estimated_hours` as finite, nonnegative numbers. Missing upstream estimates produce
+`not_returned` visibility observations;
 explicit upstream nulls do not. Attachments expose nullable `content_url`, and journals expose
 nullable `updated_on` and `updated_by` when Redmine supplies them. Reading a URL does not
 download its content. These values provide context and do not guarantee edit permissions.
@@ -545,6 +548,64 @@ inclusive range `2026-09-01` through `2026-09-30`, count each issue ID once, and
 total as unavailable or partial. Do not add `total_spent_hours`, since parent and child time can
 overlap. This range selects issues by their schedule dates; it does not filter when time was
 logged. Paging is not a snapshot if Redmine changes during the query.
+
+To calculate an estimated-hours total, collect the complete permitted issue scope, deduplicate
+issue IDs, select the matching issues and sum numeric `estimated_hours` using decimal
+arithmetic. Do not sum descendant-inclusive `total_estimated_hours` across overlapping issues.
+Report the numeric subtotal and the number of unavailable estimates if any selected estimate is
+null; do not present that subtotal as a complete estimate. A numeric zero is a known estimate.
+Before concluding a list estimate is unset, check `get_issue` for that issue using the same
+caller. A missing field is unavailable; an explicit upstream null says no numeric estimate was
+returned. Missing list fields have `/items/{index}/estimated_hours` or
+`/items/{index}/total_estimated_hours` observations marked `not_returned`.
+If paging is incomplete or a budget error stops collection, the total is partial or unavailable.
+
+### General spent-time logs
+
+`list_time_entries` reads time logs without requiring an issue ID. Omit `project_id` to read
+entries across all caller-visible projects. With a project ID, the default excludes subprojects;
+`include_subprojects=true` includes descendants and requires `project_id`. Both modes are explicit
+upstream filters and do not depend on Redmine's default subproject setting. Optional `issue_id`
+matches only entries directly on that issue. Project-only entries are included when no issue
+filter is supplied. This tool uses native time-entry visibility without an issue-read preflight;
+`view_issues` is not an added prerequisite.
+
+`user_id` accepts a positive integer or `"me"` and selects the user credited with the hours,
+who may differ from the submitter or issue assignee. `spent_from` and `spent_to` accept ISO
+calendar dates (`YYYY-MM-DD`), are inclusive, and can be supplied independently. When both are
+supplied, the first must be on or before the last. They filter `spent_on`, not issue start/due
+dates or the log's creation timestamp. Omitted dates impose no date bound. Use `get_current_user`
+for caller identity and `list_projects` for project IDs.
+
+Each page contains `items`, entry count `total`, `limit`, `offset`, `visibility` and
+`pagination_policy`. Entries contain a positive `id`, `project` and credited `user` references
+(`id`, `name`), nullable positive `issue_id`, finite nonnegative numeric `hours`, ISO `spent_on`,
+nullable `activity` reference and nullable `comments`. An omitted issue reference maps to null
+and does not establish whether the entry is unattached or the reference is unavailable.
+Entries are ordered by `spent_on` ascending, with Redmine's entry-ID tie breaker.
+Required malformed fields produce the existing sanitized 502 error; malformed present issue or
+activity references are not silently discarded. `total` counts entries, not hours.
+
+Example MCP input:
+
+```json
+{"spent_from":"2026-09-01","spent_to":"2026-09-30","limit":100,"offset":0}
+```
+
+After completing permitted pagination, deduplicate entries by `id` and sum `hours` using decimal
+arithmetic, optionally grouping by `project.id`, `user.id`, `activity.id` or `spent_on`.
+Use an explicit unavailable-activity group for null activity references. Do not add issue-level
+`spent_hours` or `total_spent_hours` to these sums: they can count the same time again.
+The total covers only the caller-visible logs. Role restrictions may permit only the caller's
+own logs even after complete pagination. An empty result is an empty caller-visible scope.
+
+Check `pagination_policy` before every continuation. If `requires_narrowing=true`, the page is
+only a preview; narrow project, user, issue or log-date filters and preserve the intended scope.
+Stop on `scope_required` or `scan_budget_exceeded` and label incomplete totals partial or
+unavailable. A narrower query changes the report's scope unless it is part of a complete,
+nonoverlapping partition of the original question. Paging is not a snapshot when logs change.
+
+### Time entries for one issue
 
 `list_issue_time_entries` returns a page of entries logged directly on one visible issue.
 Each entry has `id`, `issue_id`, credited `user` (`id` and `name`), numeric `hours`, and

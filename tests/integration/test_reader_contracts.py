@@ -31,6 +31,7 @@ MEMBERSHIP = {
 }
 ENTRY = {
     "id": 1,
+    "project": {"id": 7, "name": "Demo"},
     "issue": {"id": 42},
     "user": {"id": 8, "name": "Credited"},
     "hours": 1.5,
@@ -92,6 +93,7 @@ LOOKUPS = [
     ),
 ]
 READ_ROUTES = [
+    "/api/v1/time-entries",
     "/api/v1/issues/42",
     "/api/v1/projects/7",
     "/api/v1/issues",

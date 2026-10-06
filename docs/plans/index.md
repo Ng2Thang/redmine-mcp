@@ -1,5 +1,16 @@
 # MCP tool roadmap
 
+## Issue estimates and general spent-time reporting
+
+The user assigned both independent coding tasks on 2026-10-06. Test implementation, execution,
+startup, Inspector and live verification require a separate testing assignment. Existing task
+evidence and unrelated work remain intact.
+
+| Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|
+| [tool-034-list-issue-estimates](tasks/tool-034-list-issue-estimates.md) | Preserve issue-list estimates and missing-field evidence for truthful client totals | Existing issue reader, tool-015 detail models, prep-015 read budgets | complete | TOOL-034-001..005 passed: full offline suite 883 cases, owned 7.0.2 estimate parity/96-hour fixture, Inspector and static checks |
+| [tool-035-list-time-entries](tasks/tool-035-list-time-entries.md) | Read caller-visible spent-time logs across projects, users and dates, including logs without issues | Existing time-entry reader, prep-015 budgets, tool-031 capability discovery | complete | TOOL-035-001..007 passed: full offline suite 883 cases, owned 7.0.2 scopes/date bounds/own-log visibility, Inspector numeric/me calls and static checks |
+
 The [writer `allowed_all` configuration follow-up](writer-operations-allowed-all.md) implements
 the user-requested option for every registered write operation. Testing remains pending.
 
@@ -19,7 +30,7 @@ inherited roles and scoped permission revocation. Earlier static checks are reco
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
-Active task IDs are continuous: `tool-001` through `tool-033` and `prep-001` through
+Active task IDs are continuous: `tool-001` through `tool-035` and `prep-001` through
 `prep-018`. On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through

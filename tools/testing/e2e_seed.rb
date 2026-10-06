@@ -35,6 +35,7 @@ if File.exist?(path)
   ensure_fixture_journals(issue, User.find(previous['users']['a']['id']))
   previous['journals'] = issue.journals.pluck(:id)
   File.write(path, JSON.pretty_generate(previous))
+  load '/opt/testing/e2e_reporting_seed.rb'
   exit
 end
 
@@ -115,3 +116,4 @@ File.write(path, JSON.pretty_generate({kind: ENV['REDMINE_TEST_MARKER'], owner: 
   tracker_ids: trackers.map(&:id), version_id: version.id, category_id: category.id,
   group_id: group.id, created_issues: [], attachments: [], relations: []}))
 File.chmod(0600, path)
+load '/opt/testing/e2e_reporting_seed.rb'

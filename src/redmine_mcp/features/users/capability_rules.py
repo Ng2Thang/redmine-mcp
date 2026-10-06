@@ -61,5 +61,10 @@ PROJECT_READ_RULES: dict[str, ReadCapabilityRule] = {
         "The tool reads the issue first; issue visibility, time tracking availability and "
         "role restrictions on visible time entries are checked on invocation.",
     ),
+    "list_time_entries": ReadCapabilityRule(
+        (frozenset({"view_time_entries"}),),
+        "Project access, time tracking availability and role time-entry visibility are checked "
+        "by Redmine on invocation. No issue preflight is required; entries may be project-only.",
+    ),
     "get_attachment": ATTACHMENT_READ,
 }

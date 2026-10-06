@@ -1,5 +1,38 @@
 # Manual verification
 
+## Issue estimates and general spent-time logs
+
+The user authorized the testing stage for [tool-034](plans/tasks/tool-034-list-issue-estimates.md)
+and [tool-035](plans/tasks/tool-035-list-time-entries.md) on 2026-10-06. Dedicated offline,
+owned Redmine 7.0.2 live and Inspector checks passed; see the tasks for execution evidence.
+Repeat the focused live checks in Git Bash against the owned environment:
+
+```bash
+uv run --frozen --no-sync pytest tests/unit/test_time_entry_search.py tests/integration/test_issue_estimates.py tests/integration/test_time_entries_overview.py -q
+uv run --frozen --no-sync python scripts/prepare-e2e.py
+uv run --frozen --no-sync pytest tests/e2e/test_reporting_acceptance.py --run-e2e -q
+uv run --frozen --no-sync python scripts/verify-reporting-inspector.py
+```
+
+The preparation helper adds only owned fixtures; live tests delete their disposable issues and
+logs. Inspector creates a temporary reader-only server and stops it afterward. Keep its private
+header configuration and evidence in ignored `.local/testing-e2e`; do not reset the shared deployment.
+
+- Compare `list_issues` and `get_issue` estimates with same-key native Redmine responses.
+  Verify numeric estimates, explicit null and missing-field evidence; sum eight 12-hour
+  estimates to 96 hours only when the complete selected scope actually contains those values.
+- In Inspector, discover `list_time_entries` and call it across projects with inclusive
+  `spent_from`/`spent_to` dates, then with project, credited user (`"me"` and an ID) and issue
+  filters. Compare IDs, references, hours, dates and counts with native `time_entries.json`.
+- Compare exact-project and descendant-inclusive scopes independent of the native default
+  subproject setting. Include an owned project-only entry and check nullable `issue_id`.
+- Compare own-log and all-log reader roles, inaccessible projects and module-disabled scopes.
+  Complete pagination must still be labeled caller-visible.
+- Exercise permitted pagination and broad-query narrowing; deduplicate entry IDs and sum
+  `hours` with decimal arithmetic. Check safe malformed-response/budget cases offline and
+  ensure partial collections never produce an asserted complete total.
+
+
 ## Current three-phase acceptance
 
 The user authorized the testing implementation and its execution on 2026-10-05. Current selected

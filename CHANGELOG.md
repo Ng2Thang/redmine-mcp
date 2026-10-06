@@ -14,6 +14,16 @@ that a release has been published.
 
 ### Fixed
 
+- Preserve the `list_time_entries.user_id` MCP input union so both positive numeric user IDs
+  and `"me"` are supported. Remove FastAPI-MCP's conflicting scalar type before SDK caching.
+
+- Preserve `estimated_hours` and `total_estimated_hours` in `list_issues`, with visibility
+  observations for missing upstream estimates. Issue detail estimates retain their contract.
+- Add task 034/035 service, gateway, REST and MCP SDK regressions, owned Redmine 7.0.2
+  reporting acceptance, and a repeatable reader-only Inspector check. Cover estimate absence,
+  decimal client totals, project-only logs, credited-user/date filters, own-log visibility,
+  bounded pagination and the numeric/`me` MCP schema regression.
+
 - Normalize repeated native project membership role IDs while retaining any inherited source;
   keep other selected projects readable after a project-specific pagination scope error.
 - Recheck active operation deadlines after upstream admission and release expired requests'
@@ -31,6 +41,11 @@ that a release has been published.
   upstream transport; direct and proxy connections share the same semaphore.
 
 ### Added
+
+- Add read-only `list_time_entries` for spent-time logs across caller-visible projects, credited
+  users and inclusive log-date ranges, including entries without an issue. Project filters
+  explicitly select exact-project or descendant scope. Totals remain client calculations over
+  complete permitted pagination; testing and live acceptance are pending.
 
 - Support standalone `REDMINE_WRITER_OPERATIONS=allowed_all` to permit all registered write
   operations through the existing writer catalog and authorization gates. Explicit operation

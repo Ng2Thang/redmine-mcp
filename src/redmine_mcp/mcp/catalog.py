@@ -23,6 +23,7 @@ OPERATIONS = (
     "get_issue",
     "get_attachment",
     "list_issue_time_entries",
+    "list_time_entries",
     "list_issue_statuses",
     "list_issue_priorities",
     "list_document_categories",

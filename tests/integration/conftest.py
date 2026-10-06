@@ -81,6 +81,24 @@ class SyntheticRedmine:
         self.writes = 0
         self.members = {20: membership(), 21: membership(21, user_id=11)}
         self.protected_roles: set[int] = set()
+        self.time_entries = [
+            {
+                "id": 1,
+                "project": {"id": 7, "name": "Demo"},
+                "user": {"id": 3, "name": "Writer"},
+                "issue": {"id": 42},
+                "hours": 0.1,
+                "spent_on": "2026-09-01",
+            },
+            {
+                "id": 2,
+                "project": {"id": 7, "name": "Demo"},
+                "user": {"id": 8, "name": "Reader"},
+                "hours": 0.2,
+                "spent_on": "2026-09-30",
+            },
+        ]
+        self.own_time_entries_only = False
 
     async def respond(self, request: Any) -> Any:
         self.requests.append(request)
@@ -300,6 +318,34 @@ class SyntheticRedmine:
             return httpx.Response(200, json={"attachment": self.attachment})
         if path == "/relations/1.json":
             return httpx.Response(200, json={"relation": self.relation})
+        if path == "/time_entries.json":
+            params = request.url.params
+            rows = self.time_entries
+            if self.own_time_entries_only:
+                rows = [row for row in rows if row["user"]["id"] == uid]
+            for key, reference in [
+                ("project_id", "project"),
+                ("issue_id", "issue"),
+                ("user_id", "user"),
+            ]:
+                if key in params:
+                    value = uid if params[key] == "me" else int(params[key])
+                    rows = [row for row in rows if row.get(reference, {}).get("id") == value]
+            if "from" in params:
+                rows = [row for row in rows if row["spent_on"] >= params["from"]]
+            if "to" in params:
+                rows = [row for row in rows if row["spent_on"] <= params["to"]]
+            rows = sorted(rows, key=lambda row: (row["spent_on"], row["id"]))
+            limit, offset = int(params.get("limit", 25)), int(params.get("offset", 0))
+            return httpx.Response(
+                200,
+                json={
+                    "time_entries": rows[offset : offset + limit],
+                    "total_count": len(rows),
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
         collections = {
             "/projects/7/files.json": ("files", self.files),
             "/projects/7/versions.json": ("versions", list(self.versions.values())),
@@ -308,7 +354,6 @@ class SyntheticRedmine:
             "/trackers.json": ("trackers", []),
             "/enumerations/issue_priorities.json": ("issue_priorities", []),
             "/enumerations/document_categories.json": ("document_categories", []),
-            "/time_entries.json": ("time_entries", []),
         }
         if path in collections:
             name, items = collections[path]

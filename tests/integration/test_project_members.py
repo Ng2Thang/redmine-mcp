@@ -242,9 +242,12 @@ async def test_failed_readback_preserves_acceptance(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failure", [403, 422, 401, 500, httpx.ReadTimeout("private-error")])
+@pytest.mark.parametrize(
+    "failure", [403, 422, 401, 500, 503, 504, httpx.ReadTimeout("private-error")]
+)
+@pytest.mark.parametrize("boundary", ["rest", "mcp"])
 async def test_partial_execution_and_shared_failure_stopping(
-    writer_app: Any, synthetic: Any, failure: Any
+    writer_app: Any, synthetic: Any, failure: Any, boundary: str
 ) -> None:
     synthetic.members[22] = membership(22, user_id=12)
     original = synthetic.respond
@@ -257,7 +260,9 @@ async def test_partial_execution_and_shared_failure_stopping(
         return await original(request)
 
     synthetic.respond = respond
-    status, result = await invoke(writer_app, "update", [item("update", n) for n in (20, 21, 22)])
+    status, result = await invoke(
+        writer_app, "update", [item("update", n) for n in (20, 21, 22)], boundary=boundary
+    )
     assert status == 200 and result["phase"] == "executed", result
     expected = (
         ["accepted", "rejected", "accepted"]
@@ -269,6 +274,19 @@ async def test_partial_execution_and_shared_failure_stopping(
     assert synthetic.writes == (3 if failure in (403, 422) else 2)
     assert not any(r.method == "DELETE" for r in synthetic.requests)
     assert "must-not-leak" not in json.dumps(result) and "private-error" not in json.dumps(result)
+    if failure in (500, 503, 504):
+        second_write = next(
+            i
+            for i, r in enumerate(synthetic.requests)
+            if r.method == "PUT" and r.url.path == "/memberships/21.json"
+        )
+        assert not any(
+            r.method != "GET"
+            or r.url.path.startswith("/memberships/")
+            or r.url.path.endswith("/memberships.json")
+            for r in synthetic.requests[second_write + 1 :]
+        )
+        assert result["results"][1]["verification"] == "unavailable"
 
 
 @pytest.mark.asyncio
@@ -591,3 +609,64 @@ async def test_mixed_project_permission_preflight(writer_app: Any, synthetic: An
     assert [r["outcome"] for r in result["results"]] == ["not_executed", "rejected"]
     assert result["results"][1]["permission_state"] == "denied"
     assert synthetic.writes == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("action", OPERATIONS)
+@pytest.mark.parametrize("boundary", ["rest", "mcp"])
+@pytest.mark.parametrize("failure", [500, 503, 504])
+async def test_received_server_error_preserves_batch_item_contract(
+    writer_app: Any, synthetic: Any, action: str, boundary: str, failure: int
+) -> None:
+    synthetic.write_failure = failure
+    status, result = await invoke(writer_app, action, [item(action)], boundary=boundary)
+    assert status == 200 and result["phase"] == "executed"
+    assert "outcome" not in result and "upstream_accepted" not in result
+    row = result["results"][0]
+    assert row["outcome"] == "uncertain" and row["verification"] == "unavailable"
+    assert row["observed_present"] is None
+    assert synthetic.writes == 1
+    write_index = next(i for i, r in enumerate(synthetic.requests) if r.method != "GET")
+    assert not any(
+        r.method != "GET"
+        or r.url.path.startswith("/memberships/")
+        or r.url.path.endswith("/memberships.json")
+        for r in synthetic.requests[write_index + 1 :]
+    )
+    assert "must-not-leak" not in json.dumps(result)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [500, 503, 504])
+@pytest.mark.parametrize("stage", ["preflight", "readback", "recheck"])
+async def test_batch_get_failures_preserve_phase_and_prior_receipts(
+    writer_app: Any, synthetic: Any, failure: int, stage: str
+) -> None:
+    synthetic.members[22] = membership(22, user_id=12)
+    original = synthetic.respond
+
+    async def respond(request: Any) -> Any:
+        response = await original(request)
+        target = "/memberships/21.json" if stage == "recheck" else "/memberships/20.json"
+        if request.method == "GET" and request.url.path == target:
+            if stage == "preflight" or synthetic.writes:
+                return httpx.Response(failure, json={"secret": "must-not-leak"})
+        return response
+
+    synthetic.respond = respond
+    status, result = await invoke(writer_app, "update", [item("update", n) for n in (20, 21, 22)])
+    assert status == 200
+    outcomes = [row["outcome"] for row in result["results"]]
+    if stage == "preflight":
+        assert result["phase"] == "preflight_failed"
+        assert outcomes == ["rejected", "not_executed", "not_executed"]
+        assert synthetic.writes == 0
+    elif stage == "readback":
+        assert outcomes == ["accepted", "not_executed", "not_executed"]
+        assert result["results"][0]["verification"] == "unavailable"
+        assert synthetic.writes == 1
+    else:
+        assert outcomes == ["accepted", "rejected", "not_executed"]
+        assert result["results"][0]["verification"] == "matched"
+        assert synthetic.writes == 1
+    assert "must-not-leak" not in json.dumps(result)

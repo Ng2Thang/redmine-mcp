@@ -284,7 +284,23 @@ request may have reached Redmine but a reliable response could not be obtained. 
 inspect uncertain results before trying again. Logs record method, status, and timing without
 the request body, key, or response content. Live behavior still needs separate verification.
 
+Every JSON and binary mutation classifies a received HTTP 500-599 as `uncertain`. There is no
+per-operation opt-in or configuration switch. Individual results retain `outcome=uncertain`
+and `upstream_accepted=null`; create/upload results do not invent a new resource ID or token.
+Known target IDs remain available for reconciliation. Existing known-target read-back can
+report observations independently, but cannot turn uncertainty into confirmed acceptance.
+No server-error response body is parsed or exposed, and the response is closed.
+
+Authentication, preflight, and read-back GETs retain their existing sanitized read errors.
+A failed initial preflight dispatches no mutations; failed read-back preserves the preceding
+mutation receipt. No automatic retry or rollback is added. Received-5xx behavior changes callers'
+error handling: inspect the returned receipt before deciding whether to attempt the write again.
+
 Membership update/delete additionally accept native 200 or 204, including empty success bodies.
-Membership writes classify server errors after dispatch as uncertain because a mutation may
-already have occurred. There are no automatic retries. Acceptance and actual read-back state
-are reported independently; interrupted response delivery requires manual reconciliation.
+Membership batches retain `phase` and per-item `results`. A mutation 5xx leaves `phase=executed`
+and the dispatched item's `outcome=uncertain`, `verification=unavailable`, and
+`error.code=write_outcome_uncertain`. It returns without read-back, preserves accepted peers,
+and leaves later items `not_executed`. No batch-wide acceptance field is added. Acceptance and
+actual read-back state are reported independently; interrupted response delivery requires
+manual reconciliation. Prep-019 acceptance passes offline and in the owned Redmine 7.0.2
+commit/HTTP-500 reconciliation scenario; Inspector discovery/schema compatibility also passes.

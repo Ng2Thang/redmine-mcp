@@ -14,6 +14,12 @@ that a release has been published.
 
 ### Fixed
 
+- Classify received HTTP 500-599 as uncertain across all registered JSON and binary mutations
+  through the shared writer transport. Remove the membership-only opt-in; preserve individual
+  and batch result schemas, GET error mapping, authorization, single dispatch, and independent
+  read-back behavior. Callers must reconcile before retrying. Prep-019 offline acceptance,
+  owned Redmine 7.0.2 commit/HTTP-500 reconciliation and cleanup, and Inspector compatibility pass.
+
 - Preserve the `list_time_entries.user_id` MCP input union so both positive numeric user IDs
   and `"me"` are supported. Remove FastAPI-MCP's conflicting scalar type before SDK caching.
 

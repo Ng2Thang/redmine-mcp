@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -328,3 +329,108 @@ async def test_uncertain_create_reconciles_real_state_without_retry(
             assert dispatched == 1
     finally:
         await live.cleanup()
+
+
+async def test_received_500_after_real_commit_is_uncertain_without_retry(
+    live: Any, monkeypatch: Any
+) -> None:
+    await assert_ownership(live)
+    project_id = live.manifest["projects"]["a"]
+    subject = f"E2E prep-019 {uuid4().hex}"
+    state = Path(__file__).resolve().parents[2] / ".local/testing-e2e"
+    evidence_dir = state / "prep-019" / uuid4().hex
+    evidence_dir.mkdir(parents=True)
+    cleanup_path = state / "last-cleanup.json"
+    if cleanup_path.exists():
+        (evidence_dir / "previous-cleanup.json").write_bytes(cleanup_path.read_bytes())
+    original = httpx.AsyncHTTPTransport.handle_async_request
+    dispatched = 0
+    evidence = {"owner": "prep-019", "version": "7.0.2", "scenario": "STAB-019-006"}
+
+    async def matching_owned_ids() -> list[int]:
+        matches = []
+        offset = 0
+        expected_total = None
+        for _ in range(100):
+            page = await live.redmine(
+                "GET",
+                "issues.json",
+                user="a",
+                params={"project_id": project_id, "status_id": "*", "limit": 100, "offset": offset},
+            )
+            total = page["total_count"]
+            expected_total = total if expected_total is None else expected_total
+            assert total == expected_total and page["offset"] == offset
+            rows = page["issues"]
+            assert all(row["project"]["id"] == project_id for row in rows)
+            matches.extend(row["id"] for row in rows if row["subject"] == subject)
+            offset += len(rows)
+            if offset == total:
+                return matches
+            assert rows and offset < total, "Owned inventory is incomplete"
+        pytest.fail("Owned inventory exceeds reconciliation budget")
+
+    async def replace_committed_response(transport: Any, request: Any) -> Any:
+        nonlocal dispatched
+        target = (
+            request.method == "POST"
+            and request.url.host == "127.0.0.1"
+            and request.url.port == 3001
+            and request.url.path == "/issues.json"
+        )
+        if target:
+            issue = json.loads(request.content).get("issue", {})
+            target = issue.get("project_id") == project_id and issue.get("subject") == subject
+        response = await original(transport, request)
+        if not target:
+            return response
+        dispatched += 1
+        try:
+            await response.aread()
+            assert response.status_code == 201, "Owned create did not return native 201"
+            created_id = response.json()["issue"]["id"]
+            assert type(created_id) is int and created_id > 0, "Owned create ID is invalid"
+            live.created_issues.append(created_id)
+        finally:
+            await response.aclose()
+        return httpx.Response(500, request=request, json={"secret": "must-not-leak"})
+
+    try:
+        with monkeypatch.context() as scoped:
+            scoped.setattr(
+                httpx.AsyncHTTPTransport, "handle_async_request", replace_committed_response
+            )
+            async with live.client(user="a", writer=True) as client:
+                receipt = await client.post(
+                    "/api/v1/issues", json={"project_id": project_id, "subject": subject}
+                )
+            assert receipt.status_code == 200
+            data = receipt.json()
+            assert data["outcome"] == "uncertain" and data["upstream_accepted"] is None
+            assert data["resource_id"] is None and data["verification"] == "unavailable"
+            assert "must-not-leak" not in receipt.text
+        assert dispatched == 1 and len(live.created_issues) == 1
+        created_id = live.created_issues[0]
+        native = await live.redmine("GET", f"issues/{created_id}.json", user="a")
+        assert native["issue"]["subject"] == subject
+        assert native["issue"]["project"]["id"] == project_id
+        assert await matching_owned_ids() == [created_id]
+        evidence.update(
+            {"dispatches": dispatched, "reconciliation": "passed", "receipt": "uncertain"}
+        )
+    finally:
+        try:
+            try:
+                if dispatched and not live.created_issues:
+                    matches = await matching_owned_ids()
+                    assert len(matches) <= 1, (
+                        "Owned create cannot be uniquely reconciled for cleanup"
+                    )
+                    live.created_issues.extend(matches)
+            finally:
+                await live.cleanup()
+                evidence["cleanup"] = "passed"
+        finally:
+            if cleanup_path.exists():
+                (evidence_dir / "cleanup.json").write_bytes(cleanup_path.read_bytes())
+            (evidence_dir / "evidence.json").write_text(json.dumps(evidence, indent=2))

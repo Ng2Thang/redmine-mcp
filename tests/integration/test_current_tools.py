@@ -257,3 +257,169 @@ async def test_accepted_write_with_failed_readback_is_not_a_failed_write(
     assert response.json()["outcome"] == "accepted"
     assert response.json()["verification"] == "unavailable"
     assert synthetic.issues[42]["subject"] == "changed"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", WRITES, ids=[row[0] for row in WRITES])
+@pytest.mark.parametrize("boundary", ["rest", "mcp"])
+@pytest.mark.parametrize("failure", [500, 503, 504])
+async def test_received_server_error_is_uncertain_for_every_individual_writer(
+    writer_app: Any, synthetic: Any, case: Any, boundary: str, failure: int
+) -> None:
+    operation, method, path, payload, upstream_path = case
+    prepare(synthetic, operation)
+    synthetic.write_failure = failure
+    if boundary == "rest":
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=writer_app),
+            base_url="http://testserver",
+            headers={"X-Redmine-API-Key": "offline-redmine-key"},
+        ) as client:
+            response = await client.request(method, path, json=payload)
+        assert response.status_code == 200
+        data = response.json()
+    else:
+        async with mcp_session(writer_app) as session:
+            result = await session.call_tool(operation, arguments(operation, payload))
+        assert not result.isError
+        data = json.loads(result.content[0].text)
+    assert data["outcome"] == "uncertain" and data["upstream_accepted"] is None
+    assert "must-not-leak" not in json.dumps(data)
+    writes = [r for r in synthetic.requests if r.method != "GET"]
+    assert len(writes) == 1 and writes[0].url.path == upstream_path
+    if operation in {"create_issue", "create_project_version", "upload_attachment"}:
+        identifier = {
+            "create_issue": "resource_id",
+            "create_project_version": "resource_id",
+            "upload_attachment": "attachment_id",
+        }[operation]
+        assert data[identifier] is None and data["verification"] == "unavailable"
+        after = [r.url.path for r in synthetic.requests[synthetic.requests.index(writes[0]) + 1 :]]
+        assert not any(
+            path.startswith(("/issues", "/attachments", "/uploads"))
+            or path.endswith(("/versions.json", "/files.json", "/memberships.json"))
+            for path in after
+        ), after
+        if operation == "upload_attachment":
+            assert data["token"] is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [500, 503, 504])
+@pytest.mark.parametrize("stage", ["authentication", "preflight", "readback"])
+async def test_get_server_errors_remain_distinct_from_mutation_errors(
+    writer_app: Any, synthetic: Any, failure: int, stage: str
+) -> None:
+    original = synthetic.respond
+
+    async def respond(request: Any) -> Any:
+        response = await original(request)
+        target = "/users/current.json" if stage == "authentication" else "/issues/42.json"
+        if request.method == "GET" and request.url.path == target:
+            if stage != "readback" or synthetic.writes:
+                return httpx.Response(failure, json={"secret": "must-not-leak"})
+        return response
+
+    synthetic.respond = respond
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=writer_app),
+        base_url="http://testserver",
+        headers={"X-Redmine-API-Key": "offline-redmine-key"},
+    ) as client:
+        response = await client.put("/api/v1/issues/42", json={"subject": "changed"})
+    if stage == "readback":
+        assert response.status_code == 200
+        assert response.json()["outcome"] == "accepted"
+        assert response.json()["upstream_accepted"] is True
+        assert response.json()["verification"] == "unavailable"
+        assert synthetic.writes == 1
+    else:
+        assert response.status_code == (504 if failure == 504 else 502)
+        assert synthetic.writes == 0
+    assert "must-not-leak" not in response.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [500, 503, 504])
+async def test_committed_update_observation_does_not_promote_uncertain_receipt(
+    writer_app: Any, synthetic: Any, failure: int
+) -> None:
+    original = synthetic.respond
+
+    async def respond(request: Any) -> Any:
+        response = await original(request)
+        return httpx.Response(failure) if request.method == "PUT" else response
+
+    synthetic.respond = respond
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=writer_app),
+        base_url="http://testserver",
+        headers={"X-Redmine-API-Key": "offline-redmine-key"},
+    ) as client:
+        response = await client.put("/api/v1/issues/42", json={"subject": "changed"})
+    assert response.status_code == 200
+    assert response.json()["outcome"] == "uncertain"
+    assert response.json()["upstream_accepted"] is None
+    assert response.json()["verification"] == "matched"
+    assert synthetic.issues[42]["subject"] == "changed" and synthetic.writes == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [500, 503, 504])
+@pytest.mark.parametrize("stage", ["preflight", "readback"])
+async def test_mcp_get_failures_preserve_receipt_boundary(
+    writer_app: Any, synthetic: Any, failure: int, stage: str
+) -> None:
+    original = synthetic.respond
+
+    async def respond(request: Any) -> Any:
+        response = await original(request)
+        if request.method == "GET" and request.url.path == "/issues/42.json":
+            if stage == "preflight" or synthetic.writes:
+                return httpx.Response(failure, json={"secret": "must-not-leak"})
+        return response
+
+    synthetic.respond = respond
+    async with mcp_session(writer_app) as session:
+        result = await session.call_tool("update_issue", {"issue_id": 42, "subject": "changed"})
+    assert "must-not-leak" not in result.content[0].text
+    if stage == "preflight":
+        assert result.isError and synthetic.writes == 0
+    else:
+        assert not result.isError and synthetic.writes == 1
+        data = json.loads(result.content[0].text)
+        assert data["outcome"] == "accepted" and data["upstream_accepted"] is True
+        assert data["verification"] == "unavailable"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [500, 503, 504])
+@pytest.mark.parametrize("boundary", ["rest", "mcp"])
+async def test_committed_delete_observation_does_not_promote_uncertainty(
+    writer_app: Any, synthetic: Any, failure: int, boundary: str
+) -> None:
+    prepare(synthetic, "delete_issue_relation")
+    original = synthetic.respond
+
+    async def respond(request: Any) -> Any:
+        response = await original(request)
+        return httpx.Response(failure) if request.method == "DELETE" else response
+
+    synthetic.respond = respond
+    if boundary == "rest":
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=writer_app),
+            base_url="http://testserver",
+            headers={"X-Redmine-API-Key": "offline-redmine-key"},
+        ) as client:
+            response = await client.delete("/api/v1/relations/1")
+        assert response.status_code == 200
+        data = response.json()
+    else:
+        async with mcp_session(writer_app) as session:
+            result = await session.call_tool("delete_issue_relation", {"relation_id": 1})
+        assert not result.isError
+        data = json.loads(result.content[0].text)
+    assert data["outcome"] == "uncertain" and data["upstream_accepted"] is None
+    assert data["verification"] == "matched" and data["observed_present"] is False
+    assert data["resource_id"] == 1 and synthetic.writes == 1

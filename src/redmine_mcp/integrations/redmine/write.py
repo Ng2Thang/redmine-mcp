@@ -49,7 +49,6 @@ class RedmineWriter:
         accepted_statuses: tuple[int, ...] = (201, 204),
         params: dict[str, str] | None = None,
         allow_empty_success: bool = False,
-        uncertain_server_errors: bool = False,
     ) -> WriteReceipt:
         body = None if payload is None else json.dumps(payload, separators=(",", ":")).encode()
         if body is not None and len(body) > self.policy.max_response_bytes:
@@ -66,7 +65,6 @@ class RedmineWriter:
             accepted_statuses,
             params=params,
             allow_empty_success=allow_empty_success,
-            uncertain_server_errors=uncertain_server_errors,
         )
 
     async def write_binary(self, path: str, content: bytes, *, filename: str) -> WriteReceipt:
@@ -89,7 +87,6 @@ class RedmineWriter:
         accepted_statuses: tuple[int, ...],
         params: dict[str, str] | None = None,
         allow_empty_success: bool = False,
-        uncertain_server_errors: bool = False,
     ) -> WriteReceipt:
         if (
             not path
@@ -118,7 +115,9 @@ class RedmineWriter:
                 )
                 status = response.status_code
                 try:
-                    if uncertain_server_errors and status >= 500:
+                    # A received server error cannot prove the mutation did not commit.
+                    # Apply this policy to every JSON and binary write before error mapping.
+                    if response.is_server_error:
                         return WriteReceipt("uncertain", status)
                     if status in (
                         http_status.HTTP_400_BAD_REQUEST,

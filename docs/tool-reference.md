@@ -903,6 +903,34 @@ remain unchanged.
 
 ## Errors
 
+### Mutation uncertainty
+
+All registered writes, including binary attachment upload, treat a received native HTTP 500-599
+as an uncertain mutation receipt. REST returns the existing 200 result envelope; MCP returns
+the corresponding existing tool result. This replaces ordinary upstream-error responses for
+mutation 5xx on writers that previously did not opt in to this policy. It does not prove the
+mutation committed or failed. Reconcile caller-visible state before any manual retry.
+
+Individual results retain `outcome=uncertain` and `upstream_accepted=null`. Create/upload results
+do not fabricate IDs or upload tokens; update/delete results preserve known target IDs.
+Adapters that already inspect known targets may report matched/mismatch read-back independently
+while the mutation remains uncertain. Creates without a reliable new ID do not perform a
+speculative lookup. The native 5xx body is not parsed or exposed; no automatic retry is performed.
+
+Membership tools retain `phase=executed` and `results[i].outcome=uncertain` for the dispatched
+item, with `verification=unavailable` and `error.code=write_outcome_uncertain`. The uncertain
+item has no read-back. Earlier accepted items retain their receipts; later items remain
+`not_executed`. There is no new top-level `outcome` or `upstream_accepted` field.
+
+Authentication and initial preflight GET 5xx still use the existing error contracts and dispatch
+no mutations. Read-back GET failures preserve the preceding receipt and existing unavailable
+verification/error fields. An execution recheck failure in a membership batch preserves earlier
+receipts and current stopping behavior. The shared mutation policy passes offline acceptance,
+owned Redmine 7.0.2 commit/HTTP-500 reconciliation and cleanup, and Inspector compatibility in
+[prep-019](plans/tasks/prep-019-write-outcome-consistency.md).
+
+### Sanitized error responses
+
 The following statuses and bodies describe REST behavior. MCP may wrap failures as tool errors;
 do not assume a tool failure appears as the same outer HTTP status.
 
@@ -924,7 +952,9 @@ do not assume a tool failure appears as the same outer HTTP status.
 | `500` | `internal_error` | Unexpected server failure; details are withheld. |
 | `403` | `permission_denied` | The application policy does not authorize the operation. |
 
-Redmine 503 maps to `502 upstream_unavailable`; Redmine 504 maps to `504 upstream_timeout`.
+For upstream GET responses, Redmine 503 maps to `502 upstream_unavailable` and Redmine 504 maps
+to `504 upstream_timeout`. Received mutation HTTP 500-599 instead returns the uncertain receipt
+described above. Pre-dispatch failures retain their existing error mappings.
 Every HTTP response includes `X-Request-ID` for correlation with application logs. A failure
 after MCP streaming headers have been sent terminates the stream rather than replacing it
 with a new JSON response. Error responses never include upstream bodies or exception messages.

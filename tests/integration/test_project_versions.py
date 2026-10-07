@@ -133,7 +133,7 @@ async def test_unreliable_duplicate_lookup_preserves_validation_error(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failure", [400, 401, 403, 404, 503])
+@pytest.mark.parametrize("failure", [400, 401, 403, 404, 429])
 async def test_other_upstream_errors_do_not_lookup_duplicates(
     writer_app: Any,
     synthetic: Any,
@@ -141,7 +141,9 @@ async def test_other_upstream_errors_do_not_lookup_duplicates(
 ) -> None:
     synthetic.write_failure = failure
     status, result = await invoke(writer_app, "rest", {"name": "sprint-01"})
-    assert status == {400: 422, 503: 502}.get(failure, failure)
+    assert status == {400: 422, 429: 502}.get(failure, failure)
+    if failure == 429:
+        assert result["error"]["code"] == "upstream_rate_limited"
     assert "must-not-leak" not in json.dumps(result) and synthetic.writes == 1
     assert not any(
         r.url.path == "/projects/7/versions.json" and r.method == "GET" for r in synthetic.requests

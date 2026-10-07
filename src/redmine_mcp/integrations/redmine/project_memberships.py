@@ -172,7 +172,6 @@ class RedmineProjectMemberships:
                 f"projects/{result.project_id}/memberships.json",
                 {"membership": {"user_id": result.user_id, "role_ids": result.requested_role_ids}},
                 accepted_statuses=(201,),
-                uncertain_server_errors=True,
             )
         except RedmineWriteRejected as exc:
             result.outcome = "rejected"
@@ -211,7 +210,6 @@ class RedmineProjectMemberships:
             {"membership": {"role_ids": result.requested_role_ids}} if action == "update" else None,
             accepted_statuses=(200, 204),
             allow_empty_success=True,
-            uncertain_server_errors=True,
         )
 
     async def write(self, action: MembershipAction, result: MembershipWriteResult) -> None:

@@ -1,6 +1,5 @@
 """Caller-specific discovery without mutating the SDK's shared tool schema cache."""
 
-from fastapi import Request
 from fastapi_mcp import FastApiMCP
 from mcp.shared.exceptions import McpError
 from mcp.types import INTERNAL_ERROR, ErrorData, ListToolsRequest, ListToolsResult, ServerResult
@@ -10,29 +9,23 @@ from redmine_mcp.auth import WRITE_OPERATIONS, AuthContext
 from redmine_mcp.bootstrap import build_capabilities
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import auth as auth_text
-from redmine_mcp.constants import runtime as runtime_text
+from redmine_mcp.mcp.compatibility import MCPCompatibility
 
 
-def install_caller_discovery(mcp: FastApiMCP) -> None:
-    server = mcp.server
-    cache = getattr(server, "_tool_cache", None)
-    if not isinstance(cache, dict):
-        raise RuntimeError(runtime_text.MCP_START_FAILED)
+def install_caller_discovery(
+    mcp: FastApiMCP, *, compatibility: MCPCompatibility | None = None
+) -> None:
+    if compatibility is None:
+        compatibility = MCPCompatibility(mcp)
+        compatibility.seed_tool_cache()
     # SDK 1.30.0's list_tools decorator replaces this global cache on every list response.
     # Seed the immutable deployment superset once and register a raw response handler instead.
-    tools = tuple(mcp.tools)
-    cache.clear()
-    cache.update({tool.name: tool.model_copy(deep=True) for tool in tools})
+    tools = compatibility.snapshot_tools()
     write_operations = tuple(tool.name for tool in tools if tool.name in WRITE_OPERATIONS)
 
     async def list_tools(_request: ListToolsRequest | None) -> ServerResult:
-        try:
-            request = server.request_context.request
-        except (LookupError, AttributeError):
-            raise McpError(
-                ErrorData(code=INTERNAL_ERROR, message=auth_text.PERMISSION_DENIED)
-            ) from None
-        if not isinstance(request, Request):
+        request = compatibility.original_request()
+        if request is None:
             raise McpError(ErrorData(code=INTERNAL_ERROR, message=auth_text.PERMISSION_DENIED))
         context = getattr(request.state, "auth_context", None)
         if not isinstance(context, AuthContext):
@@ -69,4 +62,4 @@ def install_caller_discovery(mcp: FastApiMCP) -> None:
                 )
         return ServerResult(ListToolsResult(tools=selected))
 
-    server.request_handlers[ListToolsRequest] = list_tools
+    compatibility.install_list_tools_handler(list_tools)

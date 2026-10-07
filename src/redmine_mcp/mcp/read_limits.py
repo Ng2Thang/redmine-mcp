@@ -1,8 +1,7 @@
-"""Keep version-specific MCP admission, error conversion and budget wiring here."""
+"""Keep MCP admission, safe error conversion and logical budget policy here."""
 
 import json
-from collections.abc import Awaitable, Callable
-from typing import Any, cast
+from typing import Any
 
 import httpx
 from fastapi_mcp import FastApiMCP
@@ -11,6 +10,7 @@ from mcp import types
 from redmine_mcp.auth import READ_OPERATIONS
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.common.read_budget import ReadBudgetPolicy, current_budget, read_operation
+from redmine_mcp.mcp.compatibility import MCPCompatibility
 
 
 class MCPRestClient(httpx.AsyncClient):
@@ -51,19 +51,19 @@ def tool_error(code: str, message: str) -> types.ServerResult:
     )
 
 
-def install_read_limits(mcp: FastApiMCP, policy: ReadBudgetPolicy) -> None:
-    server = mcp.server
-    original_call = cast(
-        Callable[[types.CallToolRequest], Awaitable[types.ServerResult]],
-        server.request_handlers[types.CallToolRequest],
-    )
-    original_list = cast(
-        Callable[[types.ListToolsRequest | None], Awaitable[types.ServerResult]],
-        server.request_handlers[types.ListToolsRequest],
-    )
-    operations = frozenset(tool.name for tool in mcp.tools)
+def install_read_limits(
+    mcp: FastApiMCP,
+    policy: ReadBudgetPolicy,
+    *,
+    compatibility: MCPCompatibility | None = None,
+) -> None:
     # Prevent SDK lazy schema lookup from running a second discovery budget inside a call.
-    server._tool_cache.update({tool.name: tool.model_copy(deep=True) for tool in mcp.tools})
+    if compatibility is None:
+        compatibility = MCPCompatibility(mcp)
+        compatibility.seed_tool_cache()
+    original_call = compatibility.call_tool_handler()
+    original_list = compatibility.list_tools_handler()
+    operations = frozenset(tool.name for tool in compatibility.snapshot_tools())
 
     async def call_tool(request: types.CallToolRequest) -> types.ServerResult:
         name = request.params.name
@@ -102,5 +102,5 @@ def install_read_limits(mcp: FastApiMCP, policy: ReadBudgetPolicy) -> None:
                 )
             ) from None
 
-    server.request_handlers[types.CallToolRequest] = call_tool
-    server.request_handlers[types.ListToolsRequest] = list_tools
+    compatibility.install_call_tool_handler(call_tool)
+    compatibility.install_list_tools_handler(list_tools)

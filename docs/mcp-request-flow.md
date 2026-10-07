@@ -11,10 +11,14 @@ middleware and exception handlers, and includes the feature REST routers. It cre
 internal HTTPX client using `ASGITransport`, so MCP can invoke those routes in process.
 `http://apiserver` is this client's base URL, not another deployed service.
 
-`mcp.registration.register_mcp()` validates the explicit operation catalog, generates tool
-definitions from OpenAPI, validates the generated tool names, adds read-only annotations,
-and mounts Streamable HTTP at `/mcp`. Descriptions and parameter schemas come from the
-feature routers. Only allowlisted operations are published as tools.
+`mcp.registration.register_mcp()` validates the explicit operation catalog and generates tool
+definitions from OpenAPI. The compatibility facade checks pinned versions/hook shapes and
+installs the exact membership DELETE-body override. Registration validates names, repairs
+schemas from the REST contract, adds annotations, seeds the deployment schema cache, installs
+personal-writer discovery and budget wrappers, then mounts Streamable HTTP at `/mcp` and checks
+transport shapes. Descriptions and parameter schemas come from the feature routers.
+Only allowlisted operations are published as tools. Identified vendor-private integration is
+owned by `mcp/compatibility.py`; this refactor's runtime acceptance remains pending in PREP-026.
 
 `RuntimeLifecycle.lifespan()` then creates the shared Redmine HTTP client and registers cleanup
 for both clients and the MCP transport. It starts the MCP manager and waits until the SDK's

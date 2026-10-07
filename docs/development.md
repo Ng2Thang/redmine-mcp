@@ -89,6 +89,29 @@ To remove the optional hook:
 uv run --frozen pre-commit uninstall
 ```
 
+## Maintain the pinned MCP compatibility boundary
+
+FastAPI-MCP 0.4.0 and MCP SDK 1.30.0 are the supported pair. `mcp/compatibility.py` owns
+identified vendor-private hooks, handler/cache installation, native HTTP request-context access
+and manager lifecycle. Other runtime modules call the typed facade and keep tool/auth/schema,
+discovery and budget policy outside it. Do not access `_request`, `_http_transport`, `_tool_cache`,
+manager flags/tasks or SDK handler/context internals in a new policy module.
+
+Compatibility checks run before hook installation and after mount, then again before lifecycle
+startup. Failure uses the existing sanitized startup message; do not log version lookup errors,
+package paths, exception contents or caller credentials. The facade performs no installation
+and provides no fallback that relaxes validation or authorization.
+
+A dependency upgrade is separate work: inspect the proposed versions' source and signatures,
+update pins and lockfile together, revise the facade checks, and retain schema repair/annotation,
+cache seeding, discovery, budget and mount ordering. Within a separately authorized verification
+stage, execute SDK-026-001..006: source isolation, incompatible metadata/hooks, nullable/union
+calls, two-caller discovery/session ownership, membership DELETE JSON, fresh budgets, writer
+uncertainty, startup/readiness/cancellation/shutdown and owned Inspector/native cleanup.
+Move lifecycle fault-injection patches from `mcp/registration.py` to the compatibility module
+and use valid pinned-server/transport fixtures rather than unchecked partial namespaces.
+No upgrade or runtime acceptance is implied by PREP-026's passing static checks.
+
 ## Add a read-only tool
 
 Packages declare their public interfaces in `__init__.py` with explicit `__all__` exports.
@@ -103,7 +126,7 @@ Keep feature routers out of package initializers to avoid API/composition import
 | `redmine_mcp.auth` | Identity/context, identity port, authentication, permission policy, key normalization |
 | `redmine_mcp.common` | Errors, pagination, visibility, validation helpers |
 | `redmine_mcp.api` | HTTP dependencies, security adapters, middleware, error handlers, route inspection, health router |
-| `redmine_mcp.mcp` | Catalog, annotations, registration, shutdown |
+| `redmine_mcp.mcp` | Catalog, annotations, registration and shutdown; internal modules own compatibility and schema/discovery/budget policy |
 | `redmine_mcp.integrations` | Supported integration namespaces |
 | `redmine_mcp.integrations.redmine` | Redmine client, policy, gateways, transport factory |
 | `tools`, `tools.seed` | Compatible baseline seed function; `python -m tools.seed` selects base/history/all; importing does not execute seeding |

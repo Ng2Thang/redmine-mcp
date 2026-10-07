@@ -22,6 +22,12 @@ that a release has been published.
 
 ### Changed
 
+- Isolate FastAPI-MCP 0.4.0 and MCP SDK 1.30.0 private integration in a typed compatibility
+  facade. Check versions/hook shapes before serving, retain repaired schemas and discovery/budget
+  ordering, preserve membership DELETE JSON, and coordinate safe manager readiness/cleanup.
+  Public registration/lifecycle entry points remain. No dependency upgrade; PREP-026 and
+  prerequisite PREP-022 runtime acceptance are pending.
+
 - Bound MCP POST and REST mutation bodies before JSON parsing and upstream authentication.
   Optional `REDMINE_MAX_REQUEST_BODY_BYTES` overrides an upload-aware derived cap (10 MiB
   at current defaults). Count actual bytes, reject invalid framing or non-identity encoding

@@ -13,6 +13,25 @@ passed. It includes version and membership acceptance, `allowed_all`, and Inspec
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 
+## MCP compatibility boundary (verification pending)
+
+[PREP-026](plans/tasks/prep-026-mcp-sdk-compatibility-boundary.md) isolates pinned vendor hooks;
+SDK-026-001..006 require separate authorization. Inspect that identified private accesses only
+remain in `mcp/compatibility.py`. Inject incorrect package metadata and absent/wrong request,
+handler/cache/context and transport/lifecycle hooks; expect the safe startup failure before ready.
+Use the actual pinned pair rather than installing alternate versions. Lifecycle fixtures should
+patch the compatibility module and provide a valid server/transport with the required shapes.
+
+Verify repaired nullable/union schemas with two callers, immutable invocation cache, caller-specific
+discovery and cross-caller session rejection. Check exact membership DELETE JSON, fresh read/list
+budgets, sanitized REST/tool errors and accepted/uncertain writer receipts with one mutation at
+most. Exercise manager failure before readiness, cancellation before its first coroutine step,
+cancellation after entry, repeated lifecycle entry and shutdown/cleanup errors. Assert readiness
+is only published after `run()` yields, startup cannot hang, the owned task settles and both HTTP
+clients close in the existing order. Authorized Inspector/native parity uses owned Redmine 7.0.2
+fixtures and cleanup only of task-owned resources. No SDK-026 scenario was executed during coding;
+prep-022 acceptance also remains pending under the explicit coding dependency waiver.
+
 ## Declared upstream fields (verification pending)
 
 [PREP-025](plans/tasks/prep-025-strict-upstream-fields.md) hardens known resource fields.

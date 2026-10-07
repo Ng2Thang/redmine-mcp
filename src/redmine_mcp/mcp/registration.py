@@ -1,15 +1,11 @@
-import asyncio
-
 import httpx
 from fastapi import Depends, FastAPI
 from fastapi_mcp import AuthConfig, FastApiMCP
-from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
 from redmine_mcp.api import require_mcp_access
 from redmine_mcp.bootstrap import read_budget_policy
 from redmine_mcp.common.read_budget import ReadBudgetPolicy
 from redmine_mcp.config import Settings
-from redmine_mcp.constants import runtime as runtime_text
 from redmine_mcp.mcp.annotations import annotate_read_tools
 from redmine_mcp.mcp.catalog import (
     OPERATIONS,
@@ -17,6 +13,7 @@ from redmine_mcp.mcp.catalog import (
     validate_operation_catalog,
     writer_catalog,
 )
+from redmine_mcp.mcp.compatibility import MCPCompatibility
 from redmine_mcp.mcp.discovery import install_caller_discovery
 from redmine_mcp.mcp.membership_transport import install_membership_transport
 from redmine_mcp.mcp.read_limits import install_read_limits
@@ -32,6 +29,7 @@ def register_mcp(
         else OPERATIONS
     )
     validate_operation_catalog(app, operations)
+    MCPCompatibility.check_versions()
     mcp = FastApiMCP(
         app,
         name="Redmine MCP",
@@ -40,7 +38,8 @@ def register_mcp(
         headers=["x-redmine-api-key"],
         auth_config=AuthConfig(dependencies=[Depends(require_mcp_access)]),
     )
-    install_membership_transport(mcp)
+    compatibility = MCPCompatibility(mcp)
+    install_membership_transport(mcp, compatibility=compatibility)
     validate_generated_tools(mcp.tools, operations)
     repair_input_schemas(mcp.tools, app.openapi())
     for tool in mcp.tools:
@@ -60,52 +59,21 @@ def register_mcp(
                 "continue on scope_required or scan_budget_exceeded."
             )
     annotate_read_tools(mcp.tools)
+    compatibility.seed_tool_cache()
     if settings is not None and settings.personal_writer:
-        install_caller_discovery(mcp)
-    install_read_limits(mcp, read_budget_policy(settings) if settings else ReadBudgetPolicy())
-    mcp.mount_http()
+        install_caller_discovery(mcp, compatibility=compatibility)
+    install_read_limits(
+        mcp,
+        read_budget_policy(settings) if settings else ReadBudgetPolicy(),
+        compatibility=compatibility,
+    )
+    compatibility.mount_transport()
     return mcp
 
 
 async def start_mcp(mcp: FastApiMCP) -> None:
-    # FastAPI-MCP 0.4 sets its lazy-start flag before the SDK manager is ready.
-    # Own startup here and publish that flag only after the SDK run context yields.
-    # Keep all version-specific transport access in this adapter.
-    transport = mcp._http_transport
-    if transport is None or transport._manager_started:
-        raise RuntimeError(runtime_text.MCP_START_FAILED)
-    manager = StreamableHTTPSessionManager(
-        app=transport.mcp_server,
-        event_store=transport.event_store,
-        json_response=transport.json_response,
-        stateless=False,
-        security_settings=transport.security_settings,
-    )
-    transport._session_manager = manager
-    ready: asyncio.Future[None] = asyncio.get_running_loop().create_future()
-
-    async def run_manager() -> None:
-        try:
-            async with manager.run():
-                ready.set_result(None)
-                await asyncio.Event().wait()
-        except BaseException:
-            if not ready.done():
-                ready.set_exception(RuntimeError(runtime_text.MCP_START_FAILED))
-            raise
-
-    task = asyncio.create_task(run_manager())
-    transport._manager_task = task
-    try:
-        await ready
-    except BaseException:
-        task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
-        raise
-    transport._manager_started = True
+    await MCPCompatibility(mcp).start()
 
 
 async def shutdown_mcp(mcp: FastApiMCP) -> None:
-    # FastAPI-MCP 0.4 has no public server close method.
-    if mcp._http_transport is not None:
-        await mcp._http_transport.shutdown()
+    await MCPCompatibility(mcp).shutdown()

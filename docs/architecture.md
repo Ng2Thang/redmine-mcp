@@ -47,6 +47,25 @@ startup finishes. This avoids FastAPI-MCP 0.4's lazy-start race for simultaneous
 Each application instance owns one lifespan; construct a new instance for another runtime.
 Imports do not load credentials or call the network.
 
+`mcp/compatibility.py` owns vendor-private integration through the typed `MCPCompatibility`
+facade. It supports exactly FastAPI-MCP 0.4.0 and MCP SDK 1.30.0, checks registration hook
+shapes before installation and transport/lifecycle shapes after mounting and before readiness.
+Unsupported versions or incompatible hooks fail with the existing sanitized startup message.
+No fallback disables authentication, schema validation, budgets or membership DELETE bodies.
+The facade owns REST-hook replacement, handler/cache access, native request-context extraction,
+manager/task coordination and shutdown. Discovery, budget, catalog, annotations and schema
+policy remain in their existing modules; `register_mcp`, `start_mcp`, `shutdown_mcp` and
+`app.state.mcp` retain their entry points. No process-global facade/cache is introduced.
+
+Registration retains this order: catalog selection/validation, exact membership DELETE-body
+compatibility, schema repair/annotations, deep-copied deployment cache seeding, personal-writer
+discovery, budget wrappers, mount/transport validation, then lifespan manager startup/readiness.
+Discovery returns caller-selected copies without replacing the invocation schema superset.
+Manager readiness is published only after `run()` enters; startup failure/cancellation settles
+the future and cancels/awaits the owned task. Shutdown consumes owned task failures without
+logging their contents, clears readiness and propagates external cancellation. Client cleanup
+remains owned by the existing lifespan exit stack. PREP-026 runtime acceptance is pending.
+
 Register routes before MCP creation. Feature routes own stable operation IDs, descriptions, and
 schemas; `mcp/catalog.py` explicitly selects which routes become MCP tools. Startup rejects a
 catalog entry unless it matches exactly one route under `/api/v1/` with a response schema and
@@ -77,6 +96,7 @@ Redmine.
 | Resource ownership | `lifecycle.py`, `api/runtime.py` | Ordered cleanup and checked access to the running client |
 | Business query validation | `features/issues/queries.py`, feature services | Validated immutable queries, IDs, includes, and cross-field rules |
 | MCP client hints | `mcp/annotations.py` | Explicit read/idempotence hints; never a substitute for authorization |
+| Pinned SDK integration | `mcp/compatibility.py` | Checked private hooks, repaired schema cache, authenticated request context and transport lifecycle; policies remain outside |
 | Upstream requests and status mapping | `integrations/redmine/client.py` | Per-request key; relative paths; redirects disabled; shared cookies excluded |
 | Raw response envelopes | `integrations/redmine/responses.py` | Validate objects, arrays, identity, counts, and pagination before model conversion |
 | Feature model conversion and visibility | `integrations/redmine/mapping.py` | Convert validated records and preserve omission observations |

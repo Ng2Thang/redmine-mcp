@@ -20,11 +20,14 @@ waivers and current catalog acceptance remain intact.
 | 2 | 3 / P2 | [prep-023-membership-batch-budgets](tasks/prep-023-membership-batch-budgets.md) | Complete documented small ten-item membership fixtures with a dedicated bounded batch policy and accurate receipts | tool-033 current acceptance; prep-019 receipts; prep-020 baseline | blocked | Implementation finished; static checks passed; confirm commit, then separately authorize BATCH-023-001..006 verification |
 | 3 | 4 / P2 | [prep-024-bounded-request-bodies](tasks/prep-024-bounded-request-bodies.md) | Reject oversized REST/MCP bodies before parsing while preserving ordinary uploads | Existing upload/middleware contracts; prep-020 baseline | blocked | Implementation finished; Ruff lint/format, mypy and diff checks passed; separately authorize BODY-024-001..006 verification |
 | 4 | 5 / P2 | [prep-025-strict-upstream-fields](tasks/prep-025-strict-upstream-fields.md) | Receive trustworthy declared IDs, counts, flags and progress without coercion or receipt corruption | prep-020 resource contracts; prep-019 observation boundaries | blocked | Implementation finished; update/copy preflight review gap fixed; Ruff lint/format, mypy and diff checks passed; separately authorize FIELD-025-001..006 verification |
-| 5 | 6 / maintenance | [prep-026-mcp-sdk-compatibility-boundary](tasks/prep-026-mcp-sdk-compatibility-boundary.md) | Maintain pinned SDK hooks through one typed boundary with stable dispatch/discovery/lifecycle | prep-022 accepted; existing session/discovery/receipt baseline | planned | Await prep-022 acceptance for implementation; SDK-026 verification requires separate assignment |
+| 5 | 6 / maintenance | [prep-026-mcp-sdk-compatibility-boundary](tasks/prep-026-mcp-sdk-compatibility-boundary.md) | Maintain pinned SDK hooks through one typed boundary with stable dispatch/discovery/lifecycle | prep-022 acceptance pending; coding waiver authorized; existing session/discovery/receipt baseline | blocked | Implementation finished; Ruff lint/format, mypy and diff checks passed; prep-022 acceptance and SDK-026-001..006 verification remain separately authorized work |
 
 Tasks prep-022 through prep-025 are independent correction tracks. Preferred order is priority
 and integration guidance, not permission to execute a task range. prep-026 has a new hard
 dependency on accepted prep-022 behavior and should normally run last to consolidate final hooks.
+On 2026-10-07, the user explicitly authorized prep-026 coding before prep-022 acceptance,
+keeping both tasks' testing pending. This waives coding order only; it does not establish
+prep-022 acceptance or authorize SDK/runtime testing.
 On 2026-10-07, the user explicitly requested numbering these five tasks from `prep-022`.
 The former pilot task's number is reused with this authorization; filenames, task IDs,
 dependencies and scenario/evidence IDs were renumbered together. This does not restore the

@@ -8,13 +8,13 @@
 | Assigned capability | Keep tool dispatch, discovery and session lifecycle stable when maintaining the pinned MCP adapter |
 | Type / access | Shared internal refactor; existing reader and restricted writer catalog |
 | Destructive effects | None introduced; existing authorized writer invocations retain their effects |
-| Status | planned |
-| Dependencies | [prep-022](prep-022-mcp-schema-parity.md) accepted; existing session/discovery/receipt contracts and [prep-020](prep-020-current-catalog-acceptance.md) baseline |
+| Status | blocked - implementation finished; testing pending |
+| Dependencies | [prep-022](prep-022-mcp-schema-parity.md) acceptance pending; explicit user waiver permits coding first; existing session/discovery/receipt contracts and [prep-020](prep-020-current-catalog-acceptance.md) baseline |
 | Related tasks | prep-010..015 implementations, prep-019, prep-023/025/026; [dashboard](../index.md) |
 | Target Redmine version | 7.0.2; adapter refactor unverified |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Compatibility boundary and behavior invariants specified; no refactor |
-| Next action | Accept prep-022, then review/assign this refactor and its separate verification stage |
+| Progress summary | Typed facade, checked hooks and lifecycle wiring implemented; Ruff/mypy checks pass; prep-022/SDK-026 acceptance pending |
+| Next action | Separately authorize prep-022 acceptance and SDK-026-001..006 verification using pinned SDK, lifecycle faults and owned native fixtures |
 
 ## 2. Discovery and evidence
 
@@ -44,6 +44,7 @@ inspection establish the refactor's outcome and boundaries.
 | DEC-002 | One typed compatibility module owns third-party private access and handler installation | No |
 | DEC-003 | Preserve public registration/lifecycle entry points and all tool behavior | No |
 | DEC-004 | Use sanitized startup compatibility failures; no fallback that disables auth, validation, budgets or DELETE bodies | No |
+| DEC-005 | On 2026-10-07 the user explicitly allowed prep-026 coding before prep-022 acceptance, retaining both tasks' testing pending | No coding blocker; acceptance dependency remains |
 
 ## 3. Requirements
 
@@ -165,22 +166,83 @@ to run tests. A package build is needed only if package layout/dependency metada
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-026-001 | Source and installed-dependency inspection on 2026-10-07 | Private integration locations identified; no runtime regression run | Planning only |
-| EVID-026-002 | Static/offline/lifecycle/native/Inspector scenarios | Not run | Pending |
+| EVID-026-002 | Offline/lifecycle/native/Inspector SDK-026-001..006 scenarios | Not run; separate verification authorization required | Pending |
+| EVID-026-003 | `bash scripts/doctor.sh` in Git Bash, 2026-10-07 | Required prerequisites ready; Python 3.13.3, uv 0.12.21; no dependency installation | Passed |
+| EVID-026-004 | `uv run --frozen --no-sync ruff check .` | All checks passed | Passed |
+| EVID-026-005 | `uv run --frozen --no-sync ruff format --check .` | 263 files already formatted | Passed |
+| EVID-026-006 | `uv run --frozen --no-sync mypy src` | Success: no issues found in 123 source files | Passed |
+| EVID-026-007 | `git diff --check` and final source/diff inspection | No whitespace errors; expected CRLF-to-LF notices only; private access and hook ordering reviewed below | Passed |
 
 ## 8. Implementation and review record
 
-Only task/dashboard documents created. Facade implementation, hook-order review, private-access
-inspection, static checks and all SDK/live cases are pending. Existing pinned-version acceptance
-does not imply this future refactor passes. No upgrade or unrelated behavior change is authorized.
+Implemented on 2026-10-07 using `redmine-implement-task`. The working tree was clean at this
+assignment's start; prior prep-025 changes are preserved in the existing baseline. The user
+explicitly authorized coding before prep-022 acceptance, with both testing stages pending.
+DEC-005 records this limited dependency waiver; no prior acceptance evidence is rewritten.
+
+- Added typed `MCPCompatibility` and narrow request/list/call handler types. Exact metadata
+  versions are checked before adapter construction and hook installation. Registration checks
+  cover the SDK server, request-context descriptor, handler signatures, tool list/cache and REST
+  request/mount signatures without extracting a request outside its SDK context.
+- Mounted transport checks cover the concrete pinned transport, matching server, flags, task,
+  startup lock, manager, security settings/event store and lifecycle signatures. Manager `run`
+  must retain its async context-manager generator shape. Mount/construction/compatibility
+  failures use the existing sanitized startup message and do not expose vendor exception data.
+- The facade now owns `_request` replacement, `_tool_cache`, `request_handlers`, native
+  request-context extraction, `_http_transport`, manager/task/startup state and cleanup access.
+  Source inspection found no identified private vendor access outside `compatibility.py`.
+  The exact membership batch DELETE endpoint still sends JSON and all other methods delegate
+  to the original request hook unchanged. No generic request rewriting was introduced.
+- Registration selects/validates catalog, installs DELETE compatibility, repairs schemas and
+  annotates, seeds the full deep-copied deployment cache, installs personal-writer discovery,
+  then budget wrappers, and mounts/validates transport. Discovery snapshots full tool schemas,
+  returns caller-selected copies and never replaces the invocation cache. Budget wrappers
+  capture the already-installed discovery handler; lazy invocation cache is seeded first.
+- Policy helpers retain their existing entry points with an optional internal facade argument.
+  Catalog, schema, annotations, caller authorization, safe tool-error conversion and logical
+  budgets remain outside the compatibility module. Public registration/start/shutdown wrappers
+  and `app.state.mcp` remain available. No global facade registry/cache was added.
+- Manager startup owns its task and readiness future. Readiness is published only after SDK
+  `run()` enters, and a done callback settles early task cancellation even before its first
+  coroutine step. Startup failure cancels/awaits the task; cancellation and process-control
+  exceptions propagate. Regular manager failures are sanitized. Shutdown cancels/awaits the
+  owned task, consumes task exceptions without logging their contents, resets readiness in
+  `finally` and preserves external cancellation. The existing lifespan exit stack still closes
+  MCP before upstream and internal clients; `lifecycle.py` did not require a change.
+- Updated architecture, development, request flow, manual verification, changelog and dashboard
+  with supported pins, upgrade instructions, source ownership and pending verification.
+- Initial mypy identified an imported `EventStore` re-export not explicitly exported by the
+  SDK; corrected the import to its defining module, `mcp.server.streamable_http`. Final Ruff
+  lint/format and mypy checks pass without suppression. No pre-existing static failures found.
+  Formatting was restricted to changed runtime files. Final diff/source review checked private
+  isolation, hook order, cache copying, error sanitization, cancellation and unrelated edits.
+
+No tool, schema/input/output contract, auth policy, upstream endpoint, configuration, package
+pin/lockfile or Docker deployment changed. Tests, fixtures, harnesses and test dependencies were
+not changed or executed. No startup, Inspector, runtime probes, live calls or builds were run.
+The only plan deviation is the explicitly authorized coding-order waiver. Runtime acceptance
+and prep-022 acceptance remain pending; passing static checks do not establish either.
 
 ## 9. Completion and handoff
 
-- [ ] Typed facade owns private SDK integration.
+- [x] Typed facade owns private SDK integration (source inspection).
 - [ ] Version/shape, hook order and schema/session invariants accepted.
 - [ ] Lifecycle failure/cancellation and receipt/error cases pass.
 - [ ] Required owned Inspector/native cleanup evidence recorded.
-- [ ] Documentation/final diff/task/dashboard synchronized.
+- [x] Static checks passed; documentation/final diff/task/dashboard synchronized.
 
-Final status: planned. Contract blockers: none; prep-022 acceptance is an implementation
-dependency. Next action: finish and accept prep-022, review this refactor, then assign coding and
-SDK-026-001..006 verification separately.
+Final status: blocked - **implementation finished; testing pending**. Coding/contract blockers:
+none under DEC-005. Outstanding acceptance prerequisites: prep-022 SCHEMA-022-001..007 and
+prep-026 SDK-026-001..006 verification, each requiring separate authorization.
+
+Next action: implement source-isolation and version/shape fault coverage SDK-026-001/002,
+then pinned-SDK schema/cache/two-caller/session checks SDK-026-003. Move old lifecycle manager
+patches from `registration.py` to `compatibility.py` and replace partial namespaces with valid
+server/transport fixtures; inject faults into individual validated hooks. SDK-026-004 covers
+DELETE JSON, fresh budgets, error sanitization and writer 500/timeout uncertainty with at most
+one mutation. SDK-026-005 covers readiness, early task cancellation before first coroutine
+execution, context-entry failure, external startup/shutdown cancellation, cleanup errors and
+closure of both clients. After prerequisite schema acceptance, separately authorize startup,
+Inspector and SDK-026-006 against the owned pinned 7.0.2 environment with existing task-owned
+membership fixtures, native state verification and owned cleanup. No package metadata changed;
+packaging/build verification is not part of this coding assignment. AC-001..005 remain pending.

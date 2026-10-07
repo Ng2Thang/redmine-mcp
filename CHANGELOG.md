@@ -22,6 +22,12 @@ that a release has been published.
 
 ### Changed
 
+- Bound MCP POST and REST mutation bodies before JSON parsing and upstream authentication.
+  Optional `REDMINE_MAX_REQUEST_BODY_BYTES` overrides an upload-aware derived cap (10 MiB
+  at current defaults). Count actual bytes, reject invalid framing or non-identity encoding
+  with sanitized correlated HTTP errors, and preserve accepted replay and MCP streaming.
+  Existing encoded/decoded upload checks remain. PREP-024 runtime verification is pending.
+
 - Give membership write batches a dedicated configurable scope: 300 physical requests,
   30 MiB of GET response bytes and a 300-second cooperative deadline. Reuse successful
   project/user proofs only during preflight; retain per-item execution refresh, reader caps,

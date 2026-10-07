@@ -722,6 +722,20 @@ confirmed upload. An uncertain result may have created a temporary object; inspe
 state before any manual retry. The reader deployment does not discover this tool and rejects its
 REST route with 403.
 
+REST mutation bodies and MCP POST envelopes also pass a transport byte limit before parsing
+or upstream authentication, including internal MCP-to-REST dispatch. Optional
+`REDMINE_MAX_REQUEST_BODY_BYTES` overrides the derived cap of
+`max(REDMINE_MAX_RESPONSE_BYTES, 4 * ceil(REDMINE_MAX_BINARY_BYTES / 3) + 65536)`
+(10 MiB with current defaults). Ordinary compact JSON for a maximum-size upload fits the
+derived cap; excessive escaping/padding or a lower explicit cap can reject a valid file.
+The encoded-character and decoded-file checks remain independent service limits.
+Oversized transport bodies return HTTP `413 request_body_too_large`, invalid/conflicting or
+mismatched lengths return `400 invalid_request_body`, and non-identity encoding returns
+`415 request_encoding_unsupported`. These sanitized errors include `X-Request-ID` and dispatch
+no native upload. Outer MCP admission rejects at HTTP level before JSON-RPC parsing, so there is
+no `CallToolResult`; internal REST admission uses existing tool-error conversion. Accepted
+envelopes retain existing invalid-base64, decoded-size, authorization and receipt behavior.
+
 `add_project_file` is writer-only. Pass a positive `project_id`, an upload `token`, a basename
 `filename`, and optional `description` and `version_id`. A version must belong to the selected
 project. Redmine attaches the temporary upload at `POST /projects/{project_id}/files.json` and

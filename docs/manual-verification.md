@@ -13,6 +13,24 @@ passed. It includes version and membership acceptance, `allowed_all`, and Inspec
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 
+## Request-body admission (verification pending)
+
+[PREP-024](plans/tasks/prep-024-bounded-request-bodies.md) implements admission before REST/MCP
+parsing; BODY-024-001..006 require a separate verification assignment. Historical catalog
+acceptance does not verify this new middleware. Use raw ASGI fixtures for exact cap/cap+1,
+missing/chunked/understated lengths, identical/conflicting duplicates, negative/malformed lengths,
+completed mismatches and non-identity encoding. Assert sanitized 400/413/415 errors, correlation
+headers and zero downstream parser/authentication/native dispatch on rejection. Include huge
+decimal lengths, empty chunks, accepted byte replay, disconnect and cancellation.
+
+Check compact uploads at decoded N-1/N/N+1 against default and custom body/binary caps. Verify
+that invalid base64 and existing writer gates retain their service/authorization behavior.
+Exercise MCP POST admission, GET/SSE, session DELETE and internal REST error conversion without
+double dispatch or interrupted accepted responses. Authorized startup/Inspector/live checks use
+the owned pinned Redmine 7.0.2 writer environment and task-owned tool-020 upload fixtures;
+verify resulting temporary attachment state and clean up only those owned attachments.
+Do not reset shared data. No BODY-024 scenario has been run in the coding assignment.
+
 ## Issue estimates and general spent-time logs
 
 The user authorized the testing stage for [tool-034](plans/tasks/tool-034-list-issue-estimates.md)

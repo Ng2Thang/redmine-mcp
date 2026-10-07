@@ -7,6 +7,7 @@ from redmine_mcp.api import (
     health_router,
     unexpected_error,
 )
+from redmine_mcp.api.body_limits import RequestBodyLimitsMiddleware
 from redmine_mcp.api.read_limits import ReadLimitsMiddleware
 from redmine_mcp.bootstrap import read_budget_policy
 from redmine_mcp.common import ApplicationError
@@ -38,6 +39,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.upstream = None
     app.add_middleware(ReadLimitsMiddleware, policy=read_budget_policy(settings))
+    app.add_middleware(
+        RequestBodyLimitsMiddleware, max_body_bytes=settings.effective_max_request_body_bytes
+    )
     app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(ApplicationError, application_error)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, unexpected_error)

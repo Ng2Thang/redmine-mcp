@@ -8,13 +8,13 @@
 | Assigned capability | Submit bounded attachment/tool inputs without allowing oversized JSON bodies to consume unbounded application buffering |
 | Type / access | Shared REST/MCP admission prerequisite; existing readers and restricted writers |
 | Destructive effects | Planning has none; accepted writer calls retain their existing effects |
-| Status | planned |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | Existing upload contract and request middleware; selected baseline in [prep-020](prep-020-current-catalog-acceptance.md) |
 | Related tasks | tool-020, prep-015, prep-016/017; [dashboard](../index.md); prep-026 |
 | Target Redmine version | 7.0.2; body admission is local and new behavior is unverified |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | ASGI limits and error/configuration contract specified; no implementation or tests |
-| Next action | Review and assign local admission implementation; verification remains separate |
+| Progress summary | ASGI admission, derived cap and public documentation implemented; Ruff/mypy checks pass; BODY-024 acceptance pending |
+| Next action | Separately authorize BODY-024-001..006 test implementation and offline/startup/Inspector/owned live verification |
 
 ## 2. Discovery and evidence
 
@@ -155,21 +155,69 @@ normalize framing. Live native upload parity reuses owned tool-020 fixtures; do 
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-024-001 | Source/configuration inspection on 2026-10-07 | Late limit location identified; no memory benchmark or runtime call | Planning only |
-| EVID-024-002 | Static/offline/startup/Inspector scenarios | Not run | Pending |
+| EVID-024-002 | Offline/startup/Inspector scenarios BODY-024-001..006 | Not run; separate verification assignment required | Pending |
+| EVID-024-003 | `bash scripts/doctor.sh` in Git Bash, 2026-10-07 | Required prerequisites ready; Python 3.13.3, uv 0.12.21; no dependencies installed | Passed |
+| EVID-024-004 | `uv run --frozen --no-sync ruff check .` | All checks passed | Passed |
+| EVID-024-005 | `uv run --frozen --no-sync ruff format --check .` | 262 files already formatted | Passed |
+| EVID-024-006 | `uv run --frozen --no-sync mypy src` | Success: no issues found in 122 source files | Passed |
+| EVID-024-007 | `git diff --check` and final source/diff inspection | No whitespace errors; expected CRLF-to-LF notices only; source review recorded below | Passed |
 
 ## 8. Implementation and review record
 
-Task/dashboard documents only. No runtime setting, middleware, upload, dependency or test changed.
-Implementation, compatibility review and all planned checks remain pending. Historical native
-acceptance does not establish the new body-admission behavior.
+Implemented on 2026-10-07 in the explicitly assigned coding-only stage using
+`redmine-implement-task`. Baseline working tree was clean. Historical planning evidence above
+is preserved; historical native acceptance does not establish this new admission behavior.
+
+- Added optional positive `redmine_max_request_body_bytes` and the effective-cap property in
+  `config.py`; omitted configuration derives the specified upload-aware cap. No dependency,
+  lockfile or Docker configuration changed.
+- Added pure ASGI `api/body_limits.py`. Declared oversize rejects before receiving; actual chunks
+  are checked before retention in one byte buffer. Empty chunks do not accumulate message objects.
+  A complete accepted payload is replayed once, then the original receive channel remains
+  available to disconnect listeners. Premature disconnect terminates without handler dispatch;
+  cancellation propagates and no scope state is rewritten.
+- Framing accepts absent length and identical repeated decimal lengths, including combined
+  identical comma-list headers and leading zeroes. Malformed/negative/conflicting lengths fail
+  safely. Decimal-byte comparison rejects arbitrarily long oversized lengths without unsafe
+  integer conversion. Completed mismatch returns 400; actual oversize returns 413 first.
+  Non-identity encoding returns 415 without decompression. No request content enters errors/logs.
+- Wired admission inside correlation and outside read limits/routes/mounted MCP. Installed
+  Starlette source confirms middleware insertion/order and that `Request.json()` buffers before
+  decoding. Internal MCP ASGI dispatch crosses the same boundary; existing `MCPRestClient`
+  already converts sanitized error envelopes, so no adapter change is needed.
+- Inspected the existing encoded and decoded attachment checks and bootstrap configuration;
+  both service checks remain intact. No fixed schema maximum, gateway/port, operation ID,
+  write gate, receipt, retry or success-model change was required.
+- Updated `.env.example`, configuration, tool reference, manual verification, changelog and
+  dashboard. The optional override is commented so copied configuration retains cap derivation.
+- Applied Ruff formatting only to the three changed runtime files, then ran the static commands
+  in EVID-024-004..007. No pre-existing static failures were observed. Git Bash was launched
+  directly because the command runner's default Bash/WSL path could not start; no PowerShell
+  scripts were used. Final source/diff review found no unrelated changes or credential exposure.
+
+No tests, fixtures, test dependencies, runtime probes, builds, startup, Inspector or live calls
+were created, changed or executed. No contract deviation is needed. Runtime claims remain
+unverified until the following handoff is executed.
 
 ## 9. Completion and handoff
 
-- [ ] Effective cap and middleware implemented with correct ordering.
+- [x] Effective cap and middleware implemented with correct ordering (source inspection).
 - [ ] Boundary/framing/replay/error cases have passing named evidence.
 - [ ] Existing upload/session/receipt behavior remains accepted.
-- [ ] Documentation and owned cleanup evidence recorded.
-- [ ] Final diff/task/dashboard synchronized.
+- [x] Public configuration, error and upload documentation updated.
+- [ ] Owned live temporary attachment state and cleanup evidence recorded.
+- [x] Static checks passed and final diff/task/dashboard synchronized.
 
-Final status: planned. Contract blockers: none. Next action: review, then separately assign coding
-and BODY-024-001..006 verification; do not enable or deploy configuration as part of planning.
+Final status: blocked - **implementation finished; testing pending**. Contract/coding blockers:
+none. Outstanding acceptance prerequisite: separately authorized verification, with existing
+offline test infrastructure and the owned pinned Redmine 7.0.2 writer environment for live work.
+
+Next action: assign test implementation for BODY-024-001..005 using raw ASGI fixtures plus
+REST/MCP integration. Add exact-cap/cap+1, repeated/combined/huge/mismatched lengths, empty chunks,
+encoding, bounded retention, zero rejected dispatch, replay, disconnect/cancellation and
+GET/SSE/session DELETE coverage. Exercise default/custom binary and body settings, invalid
+configuration/base64, existing writer authorization, receipt compatibility and internal MCP error
+conversion. Then authorize startup/Inspector and BODY-024-006 with owned tool-020 upload
+fixtures; verify native temporary attachment state and cleanup only those owned objects.
+Acceptance criteria AC-001..005 and all BODY-024 scenarios remain pending. No build is required
+by this code-only change; no deployment or additional task is included in this handoff.

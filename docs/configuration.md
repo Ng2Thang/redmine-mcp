@@ -20,6 +20,7 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_REQUEST_DEADLINE_SECONDS` | `60` | Positive finite deadline for each upstream HTTP read, including connection/pool waits and streamed body acquisition/closure. |
 | `REDMINE_MAX_RESPONSE_BYTES` | `10485760` | Positive limit on accumulated decoded JSON payload bytes per upstream read. |
 | `REDMINE_MAX_BINARY_BYTES` | `5242880` (5 MiB) | Positive decoded-byte limit for writer attachment uploads. Direct attachment downloads are disabled. |
+| `REDMINE_MAX_REQUEST_BODY_BYTES` | Derived; currently `10485760` (10 MiB) | Optional positive REST/MCP request-body byte cap before parsing and upstream authentication. Omit to derive it; explicit lower caps can limit otherwise valid uploads. |
 | `REDMINE_MAX_CONNECTIONS` | `100` | Positive maximum number of shared upstream connections. |
 | `REDMINE_MAX_KEEPALIVE_CONNECTIONS` | `20` | Nonnegative idle connection limit; must not exceed maximum connections. |
 | `REDMINE_MAX_CONCURRENT_REQUESTS` | `50` | Positive shared outgoing-request semaphore limit per server process, including authentication, discovery, and writes. |
@@ -39,6 +40,32 @@ required settings prevent application startup. `REDMINE_API_KEY` and `MCP_API_TO
 runtime settings; remove them from existing external environment files. The synthetic setup
 helper removes them from its marked `.env`.
 The internal MCP-to-REST client uses the configured timeout plus five seconds.
+
+Request-body admission covers POSTs at `/mcp` and under `/mcp/`, and REST
+POST/PUT/PATCH/DELETE under `/api/v1/`, including internal MCP-to-REST calls. Without an explicit
+`REDMINE_MAX_REQUEST_BODY_BYTES`, the cap is
+`max(REDMINE_MAX_RESPONSE_BYTES, 4 * ceil(REDMINE_MAX_BINARY_BYTES / 3) + 65536)`.
+The base64 bound plus 64 KiB accommodates ordinary compact upload JSON and MCP envelopes.
+Arbitrarily escaped or padded JSON may still exceed that allowance. Decoded attachment bytes
+remain independently limited by `REDMINE_MAX_BINARY_BYTES`; the service also checks encoded
+base64 length. Omit the optional setting instead of assigning an empty value.
+
+Declared oversized bodies are rejected immediately; otherwise actual received bytes are counted
+before JSON/SDK parsing. Missing `Content-Length` and chunked input are supported. Malformed,
+negative, conflicting or mismatched lengths return `400 invalid_request_body`; actual oversize
+takes precedence over a length mismatch and returns `413 request_body_too_large`. Non-identity
+`Content-Encoding` returns `415 request_encoding_unsupported`; compressed input is not decoded.
+Errors use a sanitized envelope and include `X-Request-ID`. Outer MCP rejection is an HTTP
+transport error before JSON-RPC parsing; internal REST rejection uses the existing MCP tool-error
+conversion. Rejected requests do not reach upstream authentication or mutations.
+
+Only a completely accepted body is replayed downstream. Admission stops at the first oversized
+chunk and does not retain it; a disconnect during acquisition stops dispatch. Bodyless GET/SSE
+and MCP session DELETE behavior are preserved, as are cancellation and response streaming.
+The cap bounds retained request payload bytes, not total process memory, ASGI/server chunk
+allocations, parser allocations or concurrent load. Deployment environment forwarding is a
+separate configuration action; no Compose configuration is changed by PREP-024. Runtime
+acceptance remains pending under [the task](plans/tasks/prep-024-bounded-request-bodies.md).
 
 Each REST or MCP request must carry `X-Redmine-API-Key: <personal key>`. The server verifies it
 through Redmine's `/users/current.json` and sends that same key on the request's upstream calls.

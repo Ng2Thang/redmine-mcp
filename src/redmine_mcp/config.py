@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     redmine_request_deadline_seconds: float = Field(default=60, gt=0, allow_inf_nan=False)
     redmine_max_response_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
     redmine_max_binary_bytes: int = Field(default=5 * 1024 * 1024, ge=1)
+    redmine_max_request_body_bytes: int | None = Field(default=None, ge=1)
     redmine_max_connections: int = Field(default=100, ge=1)
     redmine_max_keepalive_connections: int = Field(default=20, ge=0)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -89,6 +90,15 @@ class Settings(BaseSettings):
         if self.redmine_writer_auth_mode == "personal_key" and self.redmine_writer_key_sha256:
             raise ValueError(runtime_text.PERSONAL_WRITER_HASH_FORBIDDEN)
         return self
+
+    @property
+    def effective_max_request_body_bytes(self) -> int:
+        if self.redmine_max_request_body_bytes is not None:
+            return self.redmine_max_request_body_bytes
+        return max(
+            self.redmine_max_response_bytes,
+            4 * ((self.redmine_max_binary_bytes + 2) // 3) + 65536,
+        )
 
     @property
     def personal_writer(self) -> bool:

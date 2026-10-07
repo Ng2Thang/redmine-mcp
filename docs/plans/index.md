@@ -9,16 +9,16 @@ they do not add public operations. Review item 2 (unknown input/filter handling)
 output-context/`extra_fields` discussion are outside these five tasks. Input unknown-property
 policy and output field preservation must not be conflated.
 
-This is a document-generation assignment only. No runtime code, dependency, tests, fixtures,
-startup, Inspector, native mutations or deployment are authorized by this plan. Each task has
-a decision-complete contract and a separate pending verification handoff. Existing task histories,
+The original planning assignment generated documents only. Subsequent explicitly assigned coding
+stages and their pending verification handoffs are recorded below. The plan itself authorizes no
+tests, fixtures, startup, Inspector, native mutations or deployment. Existing task histories,
 waivers and current catalog acceptance remain intact.
 
 | Preferred order | Review item | Task | Client outcome | Dependencies | Status | Blocker / next action |
 |---|---|---|---|---|---|---|
 | 1 | 1 / P1 | [prep-022-mcp-schema-parity](tasks/prep-022-mcp-schema-parity.md) | Invoke existing REST-valid null and union inputs through MCP without adapter restrictions | Accepted prep-020 contracts; existing prep-016/017 infrastructure | blocked | Implementation finished; static checks passed; confirm commit, then separately authorize SCHEMA-022-001..007 verification |
 | 2 | 3 / P2 | [prep-023-membership-batch-budgets](tasks/prep-023-membership-batch-budgets.md) | Complete documented small ten-item membership fixtures with a dedicated bounded batch policy and accurate receipts | tool-033 current acceptance; prep-019 receipts; prep-020 baseline | blocked | Implementation finished; static checks passed; confirm commit, then separately authorize BATCH-023-001..006 verification |
-| 3 | 4 / P2 | [prep-024-bounded-request-bodies](tasks/prep-024-bounded-request-bodies.md) | Reject oversized REST/MCP bodies before parsing while preserving ordinary uploads | Existing upload/middleware contracts; prep-020 baseline | planned | No contract blocker; assign ASGI admission coding and BODY-024 verification separately |
+| 3 | 4 / P2 | [prep-024-bounded-request-bodies](tasks/prep-024-bounded-request-bodies.md) | Reject oversized REST/MCP bodies before parsing while preserving ordinary uploads | Existing upload/middleware contracts; prep-020 baseline | blocked | Implementation finished; Ruff lint/format, mypy and diff checks passed; separately authorize BODY-024-001..006 verification |
 | 4 | 5 / P2 | [prep-025-strict-upstream-fields](tasks/prep-025-strict-upstream-fields.md) | Receive trustworthy declared IDs, counts, flags and progress without coercion or receipt corruption | prep-020 resource contracts; prep-019 observation boundaries | planned | No contract blocker; assign field-validation coding and FIELD-025 verification separately |
 | 5 | 6 / maintenance | [prep-026-mcp-sdk-compatibility-boundary](tasks/prep-026-mcp-sdk-compatibility-boundary.md) | Maintain pinned SDK hooks through one typed boundary with stable dispatch/discovery/lifecycle | prep-022 accepted; existing session/discovery/receipt baseline | planned | Await prep-022 acceptance for implementation; SDK-026 verification requires separate assignment |
 

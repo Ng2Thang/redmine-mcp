@@ -96,6 +96,7 @@ async def test_all_live_tools_and_resulting_state(live: Any) -> None:
                 "list_project_versions": {"project_id": project_id},
                 "list_project_issue_categories": {"project_id": project_id},
                 "list_project_files": {"project_id": project_id},
+                "list_project_members": {"project_ids": [project_id]},
                 "get_issue": {"issue_id": issue_id},
                 "get_attachment": {"attachment_id": attachment_id},
                 "list_issue_time_entries": {"issue_id": live.manifest["issues"]["a"]},

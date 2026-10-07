@@ -196,3 +196,11 @@ case mapping, and limitations. Current authentication is each caller's personal
 Future contract wording was reconciled; historical discovery/execution notes were retained.
 Final current status remains **blocked** until outstanding acceptance is established; the
 earlier handoff above describes the previous implementation stage.
+
+## Prep-020 evidence reconciliation, 2026-10-07
+
+Current `get_current_user` functional evidence is mapped in the
+[32-operation ledger](../current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
+cases pass, including Inspector and cleanup. This preserves the preceding historical record;
+it does not blanket close this owner's wider matrix. See H3 and the operation row for
+matching criteria and exact remaining fixtures/role variants before claiming broader acceptance.

@@ -189,3 +189,11 @@ Final status: blocked. Next action: Continue tool-022 coding as directed; separa
 offline and marked synthetic checks before acceptance. Coding finished; testing remains pending.
 
 Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior runtime observations do not establish acceptance for the pinned target.
+
+## Prep-020 evidence reconciliation, 2026-10-07
+
+Current `add_project_file` functional evidence is mapped in the
+[32-operation ledger](../current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
+cases pass, including Inspector and cleanup. This preserves the preceding historical record;
+it does not blanket close this owner's wider matrix. See H2 and the operation row for
+matching criteria and exact remaining fixtures/role variants before claiming broader acceptance.

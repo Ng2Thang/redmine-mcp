@@ -1,8 +1,8 @@
 # Application testing coverage matrix
 
 This matrix owns current testing traceability, not historical acceptance. Task ownership is unit
-prep-016, offline integration prep-017 and live E2E prep-018. All evidence below is dated
-2026-10-06; final suite results are recorded in the phase tasks. Scenarios cover selected behavior,
+prep-016, offline integration prep-017 and live E2E prep-018. Historical evidence below is dated
+2026-10-06; current 2026-10-07 reconciliation is recorded in the follow-up section and ledger. Scenarios cover selected behavior,
 not every possible workflow, role combination, Redmine version or infrastructure failure.
 
 ## Current tools
@@ -126,3 +126,32 @@ Unit: 102 passed. Offline integration: 395 passed. Default discovery: 497 passed
 Live E2E: 14 passed. The live opt-in rejection, static checks, Inspector catalog/call,
 authenticated Edge attachment content and owned cleanup pass. The phase task records
 link execution artifacts and limitations. A Pydantic deprecation warning is retained.
+
+## Current catalog reconciliation, 2026-10-07
+
+[prep-020](tasks/prep-020-current-catalog-acceptance.md) owns the
+[32-operation current ledger](current-catalog-acceptance.md): 17 reads and 15 writes, with one
+contract owner and original criteria/evidence/limitations for each operation. Earlier counts,
+waivers and dated tables above are historical; the ledger supplies current functional status.
+
+- Full offline: **1086 passed**, 335.59 seconds, including 49 new allowed_all cases. Unit
+  parsing and integration cases preserve syntax/catalog rejection, empty/CSV compatibility,
+  caller/deployment/project gates, all 15 writer REST/MCP payloads and filtered capabilities.
+- Owned pinned 7.0.2 live suite: **21 passed**, 115.61 seconds. TOOL-032-008/TOOL-033-011 now
+  pass in `tests/e2e/test_catalog_acceptance.py`: actual version/duplicate/read-permission state,
+  native protected/managed/inherited memberships, child effects, assignment defaults and cleanup.
+- Historical populated read variants now include nonempty workflow, shared parent/child versions,
+  categories/Target version filters, exact/descendant scope, September direct-hour aggregates,
+  registry/project tracker parity, native issue logs and two ordinary caller profiles.
+- Inspector 2.8.0 with allowed_all passes catalog/writer schemas and three native-parity reads.
+  The owned localhost application stops afterward. Existing baseline/reporting live scenarios
+  and prep-019 mutation-500 reconciliation also pass in the current full run.
+- Catalog audit, source digests, Ruff lint/format (256 Python files), mypy (120 runtime files)
+  and scoped diff checks pass. One existing Pydantic dependency warning remains.
+
+The new fixture helper creates disposable projects/roles without changing existing grants;
+teardown verifies zero matching resources and no external role use. Baseline temporary grant
+revocation is restored, and its registered resources are cleaned up. Journals may remain;
+CI, coverage thresholds, restore/production readiness and blanket older permission matrices
+remain outside these passing functional results. H1..H5 in the ledger list exact outstanding
+original-owner scope; no dated pending row is treated as passed solely from the suite count.

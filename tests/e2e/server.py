@@ -27,3 +27,19 @@ def create_app() -> Any:
 def create_reader_app() -> Any:
     preflight()
     return application(Settings(_env_file=None, redmine_url="http://127.0.0.1:3001"))
+
+
+def create_allowed_all_app() -> Any:
+    manifest = preflight()
+    return application(
+        Settings(
+            _env_file=None,
+            redmine_url="http://127.0.0.1:3001",
+            redmine_write_enabled=True,
+            redmine_writer_auth_mode="personal_key",
+            redmine_writer_user_ids=",".join(
+                str(row["id"]) for name, row in manifest["users"].items() if name != "admin"
+            ),
+            redmine_writer_operations="allowed_all",
+        )
+    )

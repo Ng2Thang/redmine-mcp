@@ -8,13 +8,13 @@
 | Assigned capability | Give maintainers a truthful, current evidence ledger for every registered capability |
 | Type / access | Shared verification prerequisite; existing reads and writes |
 | Destructive effects | Later testing may create/delete disposable resources and alter owned fixture roles; no production or shared-data mutation |
-| Status | planned |
+| Status | complete - current functional acceptance and evidence reconciliation |
 | Dependencies | [prep-019](prep-019-write-outcome-consistency.md) accepted; existing prep-016/017/018 infrastructure |
 | Related tasks | [Dashboard](../index.md); tool-032/033; allowed_all follow-up; original prep-009 release review |
 | Target Redmine version | Pinned isolated 7.0.2; operation-specific gaps remain pending |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Acceptance scope planned; no evidence ledger generated or verification executed |
-| Next action | After prep-019 acceptance, assign evidence reconciliation; authorize testing separately |
+| Progress summary | All 32 operation rows audited; 1086 offline and 21 owned live cases pass; version/membership/allowed_all accepted; broader original variants explicitly retained |
+| Next action | Proceed to prep-021 documentation with the current ledger and explicit historical limitations; final release stays with prep-009/022 |
 
 ## 2. Discovery and evidence
 
@@ -118,11 +118,11 @@ Do not run tests during a documentation-only or coding-only assignment.
 
 | Requirement | Criteria | Verification | Result |
 |---|---|---|---|
-| REQ-001 | AC-001 | STAB-020-001 | Pending |
-| REQ-002 | AC-002 | TOOL-032-008, TOOL-033-011 | Pending |
-| REQ-003 | AC-003 | STAB-020-002/003 | Pending |
-| REQ-004 | AC-004 | STAB-020-004 and prep-019 evidence | Pending |
-| REQ-005 | AC-005 | Ledger/task/dashboard document review | Pending |
+| REQ-001 | AC-001 | STAB-020-001 | Passed |
+| REQ-002 | AC-002 | TOOL-032-008, TOOL-033-011 | Passed |
+| REQ-003 | AC-003 | STAB-020-002/003 | Passed |
+| REQ-004 | AC-004 | STAB-020-004 and prep-019 evidence | Passed |
+| REQ-005 | AC-005 | Ledger/task/dashboard document review | Passed |
 
 ## 7. Test plan and execution record
 
@@ -141,9 +141,9 @@ running existing helpers; do not automatically reseed or reset an environment.
 
 | Evidence | Planned procedure | Actual result | Status |
 |---|---|---|---|
-| EVID-020-001 | Current evidence audit | Not performed | Pending |
-| EVID-020-002 | Authorized focused offline scenarios and appropriate regression suite | Not run | Pending |
-| EVID-020-003 | Authorized owned 7.0.2 state, permissions, Inspector, and cleanup | Not run | Pending |
+| EVID-020-001 | `uv run --frozen --no-sync python scripts/audit-catalog-acceptance.py` and original criterion audit | 32 unique rows, 17 reads/15 writes, owner links, matching registry, dated revision/source digests and H1..H6 limitations | Passed, 2026-10-07 |
+| EVID-020-002 | `uv run --frozen --no-sync pytest -q` | 1086 passed, 1 existing dependency warning, 335.59 seconds; includes 49 new sentinel cases and every current writer through REST/MCP | Passed, 2026-10-07 |
+| EVID-020-003 | `uv run --frozen --no-sync pytest tests/e2e --run-e2e -q --tb=short`; Inspector script invoked by the owned test | 21 passed, 1 existing dependency warning, 115.61 seconds; all four prep-020 scenarios, native state/role/side-effect assertions, Inspector catalog and three native-parity reads, cleanup and restored grants | Passed, 2026-10-07 |
 
 ## 8. Implementation and review record
 
@@ -152,15 +152,67 @@ running existing helpers; do not automatically reseed or reset an environment.
 - No test files, fixtures, native grants, or deployment configuration changed.
 - Unavailable role/fixture evidence must block the affected criterion, not produce a waiver.
 
+### Authorized execution and reconciliation, 2026-10-07
+
+The user assigned prep-020 after prep-019 testing. This authorizes evidence reconciliation,
+missing offline scenarios, owned native verification and Inspector within this task. No task
+delegation, dependency installation, shared reset, production deployment or commit was performed.
+
+- Added `docs/plans/current-catalog-acceptance.md`: one row for every operation, original owner,
+  source revision/date, original/offline/live scenario mapping, status, limitations and next action.
+  H1..H6 distinguish executed selected criteria, unexecuted broader matrices and historical waivers.
+- Added `scripts/audit-catalog-acceptance.py`: verifies 32 unique rows, registry agreement and
+  owner links, with ignored per-file source digests for the uncommitted working tree.
+- Added settings and integration sentinel tests and reused the exact existing success/payload
+  assertions for all 15 writers through REST/MCP. Reader/personal/restricted/pinned/wrong-key
+  and project-permission boundaries, filtered capabilities, empty/CSV compatibility and invalid
+  sentinel/unknown operation handling pass. Unknown operation rejection occurs in catalog
+  validation; denied/disabled filtered candidates are omitted, not reported as grants.
+- Added `tools/testing/e2e_catalog.rb` and `tests/e2e/test_catalog_acceptance.py`: four disposable
+  projects and five task-owned roles; no modifications to existing native grants. Ordinary
+  manager/readers, managed-role filtering, protected retention and native deletion rejection,
+  public/private visibility, inheritance, child effects, assignments, native version fields,
+  duplicate state/count, create without view_issues, and REST/SDK paths are asserted.
+- `scripts/verify-catalog-inspector.py` runs Inspector 2.8.0 against a separate allowed_all
+  localhost application, checks the full catalog and writer schemas/annotations, compares three
+  reads with native versions/memberships/grants, and stops the server in `finally`. No Inspector
+  mutations are performed. E2E factories now accept an explicit operation ceiling for testing.
+- Populated historical fixtures verify nonempty workflow/native parity, parent/child shared
+  versions, category and Target version filters, exact/descendant issue scope, September direct
+  hours, registry/project trackers, native issue-log IDs and two ordinary profiles. Broader
+  original matrices remain named follow-ups, not silently accepted.
+- Updated the older all-reader lifecycle test with `list_project_members.project_ids` required
+  by the current contract. Initial failures were test assumptions/fixture output/inheritance
+  setup; no new production runtime defect or runtime change was required.
+- Teardown checks zero task-owned projects/roles, external role-membership protection and owned
+  tree boundaries. Deletion clears project/category default assignees; existing issue assignment
+  remains. Existing baseline resources use prep-018 cleanup, and temporary permission revocation
+  is restored. Journals can remain as documented; no history rollback is claimed.
+- Current offline: 1086 passed. Current live: 21 passed. Ruff lint/format: passed (256 files);
+  mypy: passed (120 runtime files); diff review/whitespace and catalog audit pass. The sole warning
+  is the existing installed-dependency Pydantic schema-hook deprecation.
+
+AC-001: all 32 rows/owners audited. AC-002: TOOL-032-008 and TOOL-033-011 accepted with native
+state and cleanup. AC-003: allowed_all modes, discovery, admission and capabilities pass.
+AC-004: prep-019 and historical variants reconciled explicitly, with remaining broader
+original-owner blockers named H1..H5. AC-005: source tasks, ledger, coverage and dashboard agree;
+historical records preserved and no operational release claim. Original tool-032/033 are now
+complete; other task matrices are not blanket closed. The completion checklist below describes
+evidence reconciliation, as AC-004 permits explicit remaining blockers rather than invented passes.
+
+Exact artifacts and reproduction commands are in the current ledger. Git base
+`533202519485ac1510e72e688fd40d6a695ac968` includes prep-019; prep-020 remains uncommitted.
+
 ## 9. Completion and handoff
 
-- [ ] All current operations and shared criteria mapped to evidence.
-- [ ] Version, membership, allowed_all, and required historical gaps accepted.
-- [ ] State verification and cleanup actually recorded.
-- [ ] Ledger, source task records, coverage matrix, and dashboard synchronized.
-- [ ] No unsupported completion or publication claim.
+- [x] All current operations and shared criteria mapped to evidence.
+- [x] Version, membership and allowed_all accepted; historical variants executed or explicitly mapped to remaining original-owner blockers.
+- [x] State verification and cleanup actually recorded.
+- [x] Ledger, source task records, coverage matrix, and dashboard synchronized.
+- [x] No unsupported completion or publication claim.
 
-Final status: planned. Next action: complete prep-019, then assign the evidence and testing
-stages explicitly. If required scenarios cannot pass or run, record exact blockers; do not start
-dependent documentation as though the full catalog were accepted. Final release review stays
-with prep-009 and requires the later operational work as applicable.
+Final status: **complete for current functional acceptance and evidence reconciliation**.
+Next action: prep-021 must document the accepted 32-operation catalog and the ledger's explicit
+limits. Broader original-owner variants H1..H5 remain open before unsupported release claims;
+their acceptance is not inferred. Final release review stays with prep-009 and the later
+operational/recovery work in prep-022. No production rollout or publication was performed.

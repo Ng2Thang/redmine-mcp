@@ -9,13 +9,13 @@
 | Type | Four new MCP tools with a shared foundation owned by this single task. |
 | Access | List is read-only; add, update, and delete require the separate enabled writer deployment. |
 | Destructive effects | Removal or replacement of editable roles changes access; deletion removes membership and can affect inherited memberships and assignment defaults. |
-| Status | blocked |
+| Status | complete |
 | Dependencies | Existing project reader; prep-007 and prep-010 through prep-013 writer/auth/discovery implementations; prep-015 read budgets. Existing acceptance limitations remain in those records. |
 | Related tasks | [tool-013](tool-013-get-current-user.md), [tool-031](tool-031-list-my-project-capabilities.md), [prep-016](prep-016-unit-testing.md), [prep-017](prep-017-offline-integration-testing.md), [prep-018](prep-018-live-e2e-testing.md). |
-| Target Redmine version | Redmine 7.0.2; task-specific runtime acceptance pending. |
-| Last updated | 2026-10-06, Codex |
-| Progress summary | Implementation and offline testing finished. Added 155 feature cases; full offline suite passes 736 cases. Real 7.0.2 runtime acceptance remains pending. |
-| Next action | Prepare and authorize owned Redmine 7.0.2 acceptance for TOOL-033-011, including actual managed roles, inherited memberships, side effects and task-owned cleanup. |
+| Target Redmine version | Owned pinned Redmine 7.0.2; TOOL-033-011 passes in prep-020. |
+| Last updated | 2026-10-07, Codex |
+| Progress summary | All four tools have passing offline and owned native role/visibility/inheritance/assignment evidence; Inspector and disposable cleanup pass. |
+| Next action | Use prep-020's current ledger; release and broader historical matrices retain their own owners. |
 
 The user explicitly selected one task document for four separate tools. This overrides the
 usual one-public-tool-per-task decomposition. Shared prerequisites stay here; no prep-019 or
@@ -23,11 +23,11 @@ tool-034 through tool-036 documents are assigned for these outcomes.
 
 | Operation | Implementation status | Acceptance status |
 |---|---|---|
-| Shared models, preflight, receipts, and permission integration | Finished | Offline passed; 7.0.2 live pending |
-| `list_project_members` | Finished | Offline passed; 7.0.2 live pending |
-| `add_project_members` | Finished | Offline passed; 7.0.2 live pending |
-| `update_project_members` | Finished | Offline passed; 7.0.2 live pending |
-| `delete_project_members` | Finished | Offline passed; 7.0.2 live pending |
+| Shared models, preflight, receipts, and permission integration | Finished | Offline and owned 7.0.2 acceptance passed |
+| `list_project_members` | Finished | Offline and owned 7.0.2 acceptance passed |
+| `add_project_members` | Finished | Offline and owned 7.0.2 acceptance passed |
+| `update_project_members` | Finished | Offline and owned 7.0.2 acceptance passed |
+| `delete_project_members` | Finished | Offline and owned 7.0.2 acceptance passed |
 
 ## 2. Discovery and evidence
 
@@ -552,13 +552,13 @@ unrelated acceptance records do not satisfy these scenarios.
 - [x] One combined task owns the four agreed outcomes and shared prerequisites.
 - [x] Public contracts, permission behavior and verification scenarios are documented.
 - [x] Shared foundation and permission integration implemented.
-- [ ] List implemented and accepted.
-- [ ] Add implemented and accepted.
-- [ ] Update implemented and accepted.
-- [ ] Delete implemented and accepted.
-- [ ] Every requirement has passing acceptance evidence.
+- [x] List implemented and accepted.
+- [x] Add implemented and accepted.
+- [x] Update implemented and accepted.
+- [x] Delete implemented and accepted.
+- [x] Every requirement has passing acceptance evidence.
 - [x] Required static checks and authorized offline tests pass.
-- [ ] Required 7.0.2 live state/permission/side-effect verification completed.
+- [x] Required 7.0.2 live state/permission/side-effect verification completed.
 - [x] Tool reference, configuration and manual verification reflect implemented behavior.
 - [x] Implementation diff reviewed and dashboard synchronized with actual progress.
 
@@ -567,6 +567,28 @@ Overall status: **blocked; implementation and offline testing finished; 7.0.2 li
 Passing offline tests does not enable a deployed writer or establish native target-version
 acceptance. Retain operation-level evidence and keep overall status `blocked` until scenario
 011 supplies the required native state, permission and side-effect evidence.
+
+### Current acceptance reconciliation, 2026-10-07
+
+The preceding blocked result is the historical offline handoff. The user subsequently assigned
+[prep-020](prep-020-current-catalog-acceptance.md), authorizing TOOL-033-011 against owned 7.0.2.
+`tests/e2e/test_catalog_acceptance.py` now observes ordinary manager/readers, public/private
+membership visibility, native managed-role filtering, protected-role retention and explicit
+accepted/mismatch observation, protected deletion rejection, inherited/group deletion denial,
+parent/child propagation and removal, zero-change mixed-batch preflight, and REST/MCP calls for
+all four tools. Native metadata and actual descendant state are asserted, rather than inferred
+from mock role flags. Inspector 2.8.0 compares membership rows with native state and checks
+the allowed_all writer catalog/schema and management capability grants.
+
+EVID-033-LIVE-020: native scenario and Inspector pass. Membership deletion clears the disposable
+project default assignee and category assignee; existing issue assignment remains unchanged.
+The guarded helper creates disposable projects/roles, uses existing ordinary users, and verifies
+that no task projects/roles remain after teardown. Existing grants/memberships are not changed.
+Full current offline regression passes 1086 cases and preserves original 001..010 criteria,
+including prep-019 uncertainty and batch stopping. AC-001..010 therefore have combined offline
+and native evidence. See the [current ledger](../current-catalog-acceptance.md) for commands,
+execution results and narrower observations. Current final status: **complete**. This is not
+operational release approval or a promise that public role metadata exposes every restriction.
 
 Next action: authorize scenario 011 startup/Inspector and resulting-state checks in the owned
 7.0.2 synthetic environment, including inherited and protected roles, descendant/default-assignee

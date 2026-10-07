@@ -3,8 +3,8 @@
 ## Sequential stabilization plan
 
 The user requested task documents for the four project-review priorities on 2026-10-07.
-This assignment creates plans only: no runtime implementation, tests, startup, Inspector,
-live mutation, CI activation, deployment, or recovery rehearsal is authorized or performed.
+The original planning stage created documents only. Subsequent explicitly assigned implementation
+and verification results are recorded below; CI activation, deployment and recovery remain separate.
 Existing task IDs, contracts, waivers, and execution evidence are preserved.
 
 Execute the following tasks one at a time. Write-outcome consistency comes first so the later
@@ -15,7 +15,7 @@ dependency. The operational task must resolve its recorded decisions before impl
 | Order | Review priority | Task | Client outcome | Depends on | Status | Blocker / next action |
 |---|---|---|---|---|---|---|
 | 1 | Inconsistent write outcomes | [prep-019-write-outcome-consistency](tasks/prep-019-write-outcome-consistency.md) | Treat mutation HTTP 5xx as uncertain while preserving individual/batch schemas, GET errors, and reconciliation | Existing writer/auth implementations; prep-016/017 baseline; prep-018 owned live infrastructure | complete | Accepted on 2026-10-07: full offline suite 1035 passed; transport/admission tests 22 passed; all 15 writers covered through REST/MCP; owned 7.0.2 real commit/HTTP-500 reconciliation and cleanup plus Inspector compatibility pass. Ruff/format/mypy and diff checks pass; proceed to prep-020 in its own assignment |
-| 2 | Outstanding acceptance | [prep-020-current-catalog-acceptance](tasks/prep-020-current-catalog-acceptance.md) | Map current capabilities to actual evidence and close version, membership, allowed_all, and relevant historical gaps | prep-019 accepted; existing prep-018 isolated environment guidance | planned | Build the current acceptance ledger; execute missing scenarios only in an explicit testing assignment |
+| 2 | Outstanding acceptance | [prep-020-current-catalog-acceptance](tasks/prep-020-current-catalog-acceptance.md) | Map current capabilities to actual evidence and close version, membership, allowed_all, and relevant historical gaps | prep-019 accepted; existing prep-018 isolated environment guidance | complete | Accepted 2026-10-07: [32-operation ledger](current-catalog-acceptance.md) audited; 1086 offline and 21 owned 7.0.2 live cases pass; TOOL-032-008/033-011, allowed_all and Inspector pass; broader original variants remain explicitly open in H1..H5; proceed to prep-021 without a release-readiness claim |
 | 3 | Stale documentation | [prep-021-current-catalog-documentation](tasks/prep-021-current-catalog-documentation.md) | Make setup, writer configuration, security guidance, and release limitations match current behavior | prep-020 accepted | planned | Update current guidance from the accepted ledger while retaining historical records |
 | 4 | Operational readiness | [prep-022-operational-readiness](tasks/prep-022-operational-readiness.md) | Establish readiness, writer audit, metrics, CI/packaging, and deployment/recovery procedures | prep-019/020/021 accepted | blocked | Resolve pilot environment, CI provider/activation, telemetry access/retention, and recovery ownership before coding |
 
@@ -216,7 +216,7 @@ volumes and guarded fixture scripts. Existing containers, credentials and data a
 
 | Task | Client outcome | Dependencies | Status | Blocker / next action |
 |---|---|---|---|---|
-| [tool-032-create-project-version](tasks/tool-032-create-project-version.md) | Create an open, unshared Target version; return readable existing versions with an explicit duplicate error | Existing project reader; prep-007/010-013 writer implementations; prep-016-018 testing infrastructure | blocked | Implementation and offline verification finished on 2026-10-06: full suite 581 passed; Ruff lint/format, mypy and diff checks pass. Testing found and fixed explicit-null MCP schema loss. TOOL-032-008 live 7.0.2 state/permission acceptance remains pending separate authorization. |
+| [tool-032-create-project-version](tasks/tool-032-create-project-version.md) | Create an open, unshared Target version; return readable existing versions with an explicit duplicate error | Existing project reader; prep-007/010-013 writer implementations; prep-016-018 testing infrastructure | complete | Current acceptance reconciled in prep-020 on 2026-10-07: 1086 offline/21 owned live cases pass; operation-specific 7.0.2 native state/roles/side effects, Inspector and disposable cleanup pass. Historical records remain in the task; current source-linked evidence is in the [ledger](current-catalog-acceptance.md) |
 
 ## Project membership management
 
@@ -226,7 +226,7 @@ List remains available on the reader; user-only writes require the restricted en
 
 | Task | Client outcome | Dependencies | Status | Blocker / next action |
 |---|---|---|---|---|
-| [tool-033-project-members-management](tasks/tool-033-project-members-management.md) | List project memberships and add, update, or delete user memberships across selected projects with whole-batch preflight and individual results | Existing project reader; prep-007/010-013 writer/auth/discovery implementations; prep-015 read budgets; prep-016-018 testing infrastructure | blocked | Implementation and offline testing finished on 2026-10-06. Added 155 feature cases (86 unit/service/gateway, 69 REST/MCP); full offline suite passes 736 cases. Ruff lint/format, mypy and diff checks pass. All four tools have passing offline evidence, including the three review regressions, batch outcomes, writer gates and MCP DELETE forwarding. Owned 7.0.2 native permission/state/side-effect acceptance 011 remains pending; no live calls were run and the container observed during planning was 6.0.5. |
+| [tool-033-project-members-management](tasks/tool-033-project-members-management.md) | List project memberships and add, update, or delete user memberships across selected projects with whole-batch preflight and individual results | Existing project reader; prep-007/010-013 writer/auth/discovery implementations; prep-015 read budgets; prep-016-018 testing infrastructure | complete | Current acceptance reconciled in prep-020 on 2026-10-07: 1086 offline/21 owned live cases pass; operation-specific 7.0.2 native state/roles/side effects, Inspector and disposable cleanup pass. Historical records remain in the task; current source-linked evidence is in the [ledger](current-catalog-acceptance.md) |
 
 ## Future ideas, not assigned tasks
 

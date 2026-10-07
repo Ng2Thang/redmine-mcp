@@ -130,7 +130,9 @@ class LiveEnvironment:
         return data["issue"]
 
     @asynccontextmanager
-    async def application(self, *, writer: Any = True, admitted: Any = None) -> Any:
+    async def application(
+        self, *, writer: Any = True, admitted: Any = None, operations: Any = None
+    ) -> Any:
         settings = Settings(
             _env_file=None,
             redmine_url="http://127.0.0.1:3001",
@@ -145,15 +147,17 @@ class LiveEnvironment:
                 if admitted is None
                 else str(admitted)
             ),
-            redmine_writer_operations=",".join(WRITE_OPERATIONS) if writer else "",
+            redmine_writer_operations=(operations or ",".join(WRITE_OPERATIONS)) if writer else "",
         )
         app = create_app(settings)
         async with app.router.lifespan_context(app):
             yield app
 
     @asynccontextmanager
-    async def client(self, *, user: Any = "a", writer: Any = True, admitted: Any = None) -> Any:
-        async with self.application(writer=writer, admitted=admitted) as app:
+    async def client(
+        self, *, user: Any = "a", writer: Any = True, admitted: Any = None, operations: Any = None
+    ) -> Any:
+        async with self.application(writer=writer, admitted=admitted, operations=operations) as app:
             async with httpx.AsyncClient(
                 transport=httpx.ASGITransport(app=app),
                 base_url="http://testserver",

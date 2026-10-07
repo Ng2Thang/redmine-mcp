@@ -423,3 +423,17 @@ async def test_committed_delete_observation_does_not_promote_uncertainty(
     assert data["outcome"] == "uncertain" and data["upstream_accepted"] is None
     assert data["verification"] == "matched" and data["observed_present"] is False
     assert data["resource_id"] == 1 and synthetic.writes == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", WRITES, ids=[row[0] for row in WRITES])
+@pytest.mark.parametrize("boundary", ["rest", "mcp"])
+async def test_allowed_all_admits_every_individual_writer(
+    application_factory: Any, synthetic: Any, case: Any, boundary: str
+) -> None:
+    async with application_factory(
+        redmine_write_enabled=True,
+        redmine_writer_auth_mode="personal_key",
+        redmine_writer_operations="allowed_all",
+    ) as app:
+        await test_all_writer_success_and_single_dispatch(app, synthetic, case, boundary)

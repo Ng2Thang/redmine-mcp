@@ -8,13 +8,13 @@
 | Assigned capability | Create sprint-01 in the selected Demo API project and receive its version ID |
 | Type / access | Add tool / write |
 | Destructive effects | None intended; creates one version, with native Redmine creation hooks |
-| Status | blocked |
+| Status | complete |
 | Dependencies | Existing project reader; prep-007 and prep-010-013 writer implementations; prep-016-018 testing infrastructure |
 | Related tasks | [tool-007](tool-007-list-project-versions.md), [tool-031](tool-031-list-my-project-capabilities.md) |
-| Target Redmine version | 7.0.2; this operation's runtime acceptance pending |
-| Last updated | 2026-10-06, Codex |
-| Progress summary | Implementation and offline verification finished; 581 offline cases pass; live acceptance pending |
-| Next action | Separately authorize TOOL-032-008 on the isolated marked 7.0.2 environment |
+| Target Redmine version | Owned pinned 7.0.2; TOOL-032-008 passes in prep-020 |
+| Last updated | 2026-10-07, Codex |
+| Progress summary | Implementation, offline criteria and owned native version/permission/state acceptance pass; Inspector compatibility and cleanup pass |
+| Next action | Use prep-020's current ledger; retain wider release prerequisites with prep-009/022 |
 
 ## 2. Discovery and evidence
 
@@ -263,10 +263,10 @@ by dependency or packaging changes in this task.
 ## 9. Completion and handoff
 
 - [x] Required code and documentation implemented.
-- [ ] Every requirement has passing acceptance evidence.
+- [x] Every requirement has passing acceptance evidence.
 - [x] Required static checks recorded as passing.
 - [x] Separately authorized offline unit and integration verification completed.
-- [ ] Live verification completed.
+- [x] Live verification completed.
 - [x] Final diff reviewed and task/dashboard synchronized.
 - [x] No unresolved product decision changes the specified behavior.
 
@@ -276,3 +276,21 @@ Next action: separately authorize TOOL-032-008 to verify resulting 7.0.2 synthet
 permission boundaries, inspect the tool through Inspector, clean up only owned versions, and
 update this record and dashboard. No deployment, operation enablement, commit, or real Demo API
 version creation was performed by the coding or offline-testing assignments.
+
+### Current acceptance reconciliation, 2026-10-07
+
+The preceding blocked result is the historical coding/offline handoff. The user subsequently
+assigned [prep-020](prep-020-current-catalog-acceptance.md), authorizing the missing acceptance.
+TOOL-032-008 now passes in `tests/e2e/test_catalog_acceptance.py`: ordinary manager creation
+matches native project/name/description/due date/open/unshared state; duplicate ID, state and
+version inventory remain unchanged; the contrasting ordinary reader is denied without a new
+version; manage_versions without view_issues succeeds with unavailable observation; SDK calls
+and target capability evidence agree. Inspector 2.8.0 compares native version listing and checks
+the expanded writer schema/catalog. No permission bypass or new runtime fix was required.
+
+EVID-032-LIVE-020: owned 7.0.2 version scenario and Inspector pass; disposable projects own all
+created versions and are deleted in guarded fixture teardown. Existing roles/grants are not
+modified. Current full offline regression passes 1086 cases. AC-001/003/004 receive the missing
+native evidence; AC-002/005/006 retain their offline evidence, including prep-019 receipts.
+See the [current ledger](../current-catalog-acceptance.md) for exact procedures and limitations.
+Current final status: **complete**. This accepts the version tool, not operational release.

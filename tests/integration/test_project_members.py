@@ -637,6 +637,20 @@ async def test_received_server_error_preserves_batch_item_contract(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("action", OPERATIONS)
+@pytest.mark.parametrize("boundary", ["rest", "mcp"])
+async def test_allowed_all_admits_each_membership_writer(
+    application_factory: Any, synthetic: Any, action: str, boundary: str
+) -> None:
+    async with application_factory(
+        redmine_write_enabled=True,
+        redmine_writer_auth_mode="personal_key",
+        redmine_writer_operations="allowed_all",
+    ) as app:
+        await test_native_payload_single_attempt_and_readback(app, synthetic, action, boundary)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("failure", [500, 503, 504])
 @pytest.mark.parametrize("stage", ["preflight", "readback", "recheck"])
 async def test_batch_get_failures_preserve_phase_and_prior_receipts(

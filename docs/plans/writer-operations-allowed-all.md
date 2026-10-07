@@ -3,6 +3,10 @@
 Date: 2026-10-06. Assignment: support `REDMINE_WRITER_OPERATIONS=allowed_all` without enumerating
 individual write operations. Implementation finished; testing pending.
 
+Current reconciliation, 2026-10-07: [prep-020](tasks/prep-020-current-catalog-acceptance.md)
+verifies the sentinel with the current 15 writers. The original coding-only record below is
+preserved; it is not the current testing status.
+
 ## Contract and implementation
 
 - Standalone lowercase `allowed_all`, with optional surrounding whitespace, expands to
@@ -33,3 +37,19 @@ the condition was formatted. Final `uv run --frozen --no-sync ruff check .` pass
 Final diff review: configuration expansion feeds existing catalog/admission consumers; no
 authorization bypass, credential changes or test edits were introduced. Pre-existing membership
 implementation changes in the working tree were preserved.
+
+## Authorized prep-020 acceptance, 2026-10-07
+
+The user assigned prep-020 after prep-019 testing. Settings cases cover standalone/whitespace,
+mixed/duplicated/trailing/uppercase sentinel rejection, empty and explicit CSV compatibility.
+Unknown valid-looking operation names are rejected by catalog validation at application startup,
+rather than by the Settings syntax validator. All 15 writers pass through REST and MCP under
+`allowed_all`. Personal/pinned identity, restricted IDs, wrong pinned key, reader deployment and
+project-role denials remain enforced. Disabled/denied capability candidates are omitted by
+operation filtering, rather than reported as grants.
+
+The full offline suite passes 1086 cases. Owned 7.0.2 version/membership state checks pass;
+Inspector 2.8.0 verifies the expanded catalog, writer schema/annotations and three native-parity
+read calls. Disposable project/role cleanup passes. The sentinel does not modify native grants,
+enable production writes, or provide unconditional permissions. See the [current ledger](current-catalog-acceptance.md)
+for final cross-catalog execution and original historical limitations.

@@ -29,6 +29,11 @@ that a release has been published.
 
 ### Fixed
 
+- Restore MCP input validation from each route's canonical OpenAPI schema before discovery
+  and SDK caching. Nullable and union inputs retain every REST-supported branch, with
+  required fields, defaults and nested constraints preserved. PREP-022 runtime verification
+  remains pending; existing unknown-property policies and response models are unchanged.
+
 - Classify received HTTP 500-599 as uncertain across all registered JSON and binary mutations
   through the shared writer transport. Remove the membership-only opt-in; preserve individual
   and batch result schemas, GET error mapping, authorization, single dispatch, and independent

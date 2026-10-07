@@ -15,6 +15,19 @@ Current functional acceptance is recorded in the
 the evidence boundary. Other versions, all historical variants and production readiness are
 not established. Direct attachment content download is retired; reads provide metadata/links.
 
+## MCP input validation
+
+MCP input schemas are restored from the canonical REST OpenAPI schemas before discovery
+and SDK caching. Union and nullable properties retain all branches: for example,
+`update_issue.assigned_to_id` accepts a positive integer, `"me"`, or explicit `null`
+to clear assignment. Nullable version fields and `list_time_entries.user_id` likewise
+retain their route-defined alternatives, defaults and bounds.
+
+REST model validators still enforce rules that OpenAPI cannot fully express. For example,
+a supplied null issue subject remains invalid. Existing unknown-property policies and
+response field handling are unchanged. PREP-022 runtime acceptance is pending; the dated
+baseline ledger above predates this adapter correction.
+
 ## Project membership management
 
 The four tools manage memberships in selected projects. Listing is available on the reader;

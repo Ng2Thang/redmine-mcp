@@ -1,5 +1,36 @@
 # MCP tool roadmap
 
+## Tool quality follow-up plan
+
+The user requested five technical task plans on 2026-10-07, covering review items 1, 3, 4, 5
+and 6: input-schema parity, membership batch budgets, request-body admission, declared upstream
+field validation, and private SDK integration. These extend existing tools and runtime boundaries;
+they do not add public operations. Review item 2 (unknown input/filter handling) and the separate
+output-context/`extra_fields` discussion are outside these five tasks. Input unknown-property
+policy and output field preservation must not be conflated.
+
+This is a document-generation assignment only. No runtime code, dependency, tests, fixtures,
+startup, Inspector, native mutations or deployment are authorized by this plan. Each task has
+a decision-complete contract and a separate pending verification handoff. Existing task histories,
+waivers and current catalog acceptance remain intact.
+
+| Preferred order | Review item | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|---|
+| 1 | 1 / P1 | [prep-022-mcp-schema-parity](tasks/prep-022-mcp-schema-parity.md) | Invoke existing REST-valid null and union inputs through MCP without adapter restrictions | Accepted prep-020 contracts; existing prep-016/017 infrastructure | blocked | Implementation finished; static checks passed; confirm commit, then separately authorize SCHEMA-022-001..007 verification |
+| 2 | 3 / P2 | [prep-023-membership-batch-budgets](tasks/prep-023-membership-batch-budgets.md) | Complete documented small ten-item membership fixtures with a dedicated bounded batch policy and accurate receipts | tool-033 current acceptance; prep-019 receipts; prep-020 baseline | planned | No contract blocker; review dedicated defaults, then assign coding and BATCH-023 verification separately |
+| 3 | 4 / P2 | [prep-024-bounded-request-bodies](tasks/prep-024-bounded-request-bodies.md) | Reject oversized REST/MCP bodies before parsing while preserving ordinary uploads | Existing upload/middleware contracts; prep-020 baseline | planned | No contract blocker; assign ASGI admission coding and BODY-024 verification separately |
+| 4 | 5 / P2 | [prep-025-strict-upstream-fields](tasks/prep-025-strict-upstream-fields.md) | Receive trustworthy declared IDs, counts, flags and progress without coercion or receipt corruption | prep-020 resource contracts; prep-019 observation boundaries | planned | No contract blocker; assign field-validation coding and FIELD-025 verification separately |
+| 5 | 6 / maintenance | [prep-026-mcp-sdk-compatibility-boundary](tasks/prep-026-mcp-sdk-compatibility-boundary.md) | Maintain pinned SDK hooks through one typed boundary with stable dispatch/discovery/lifecycle | prep-022 accepted; existing session/discovery/receipt baseline | planned | Await prep-022 acceptance for implementation; SDK-026 verification requires separate assignment |
+
+Tasks prep-022 through prep-025 are independent correction tracks. Preferred order is priority
+and integration guidance, not permission to execute a task range. prep-026 has a new hard
+dependency on accepted prep-022 behavior and should normally run last to consolidate final hooks.
+On 2026-10-07, the user explicitly requested numbering these five tasks from `prep-022`.
+The former pilot task's number is reused with this authorization; filenames, task IDs,
+dependencies and scenario/evidence IDs were renumbered together. This does not restore the
+removed pilot workstream. Operational readiness, recovery, CI and production deployment remain
+outside this plan.
+
 ## Sequential stabilization plan
 
 The user requested task documents for the project-review priorities on 2026-10-07.
@@ -26,7 +57,7 @@ remain deferred outside the current local-development roadmap.
 The original prep-009 final release review remains separate; completing
 this plan does not publish a release or silently close its historical prerequisites.
 
-Active task IDs now run from `prep-001` through `prep-021` and `tool-001` through `tool-035`.
+Active task IDs are `prep-001` through `prep-026` and `tool-001` through `tool-035`.
 
 ## Issue estimates and general spent-time reporting
 
@@ -58,9 +89,10 @@ inherited roles and scoped permission revocation. Earlier static checks are reco
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
-Active task IDs are continuous: `tool-001` through `tool-035` and `prep-001` through
-`prep-021`. The retained stabilization follow-up consists of prep-019 through prep-021,
-added on 2026-10-07.
+Active task IDs are `tool-001` through `tool-035` and `prep-001` through `prep-026`.
+The retained stabilization follow-up consists of prep-019 through prep-021. The five
+tool-quality plans are prep-022 through prep-026, added and renumbered at the user's request
+on 2026-10-07.
 On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through

@@ -10,7 +10,6 @@ from redmine_mcp.bootstrap import read_budget_policy
 from redmine_mcp.common.read_budget import ReadBudgetPolicy
 from redmine_mcp.config import Settings
 from redmine_mcp.constants import runtime as runtime_text
-from redmine_mcp.features.projects.models import CreateProjectVersionRequest
 from redmine_mcp.mcp.annotations import annotate_read_tools
 from redmine_mcp.mcp.catalog import (
     OPERATIONS,
@@ -21,6 +20,7 @@ from redmine_mcp.mcp.catalog import (
 from redmine_mcp.mcp.discovery import install_caller_discovery
 from redmine_mcp.mcp.membership_transport import install_membership_transport
 from redmine_mcp.mcp.read_limits import install_read_limits
+from redmine_mcp.mcp.schema import repair_input_schemas
 
 
 def register_mcp(
@@ -42,20 +42,10 @@ def register_mcp(
     )
     install_membership_transport(mcp)
     validate_generated_tools(mcp.tools, operations)
+    repair_input_schemas(mcp.tools, app.openapi())
     for tool in mcp.tools:
         if tool.name in {"add_project_members", "update_project_members", "delete_project_members"}:
             tool.inputSchema["additionalProperties"] = False
-        if tool.name == "create_project_version":
-            # FastAPI-MCP 0.4 collapses nullable body fields to one JSON type.
-            # Preserve this tool's explicit-null contract before SDK schema caching.
-            tool.inputSchema["properties"].update(
-                CreateProjectVersionRequest.model_json_schema()["properties"]
-            )
-        if tool.name == "list_time_entries":
-            # FastAPI-MCP 0.4 adds a scalar type alongside the query's anyOf.
-            # It selects from a set, excluding either integer IDs or 'me'. Keep
-            # the complete union before install_read_limits caches SDK schemas.
-            tool.inputSchema["properties"]["user_id"].pop("type", None)
         if tool.name in {
             "list_projects",
             "list_issues",

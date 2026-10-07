@@ -241,7 +241,7 @@ Target record (2026-10-02): Redmine 7.0.2 is the sole supported release. Prior r
 ## Prep-020 evidence reconciliation, 2026-10-07
 
 Current `delete_issue_relation` functional evidence is mapped in the
-[32-operation ledger](../current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
+[32-operation ledger](../../testing/evidence/current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
 cases pass, including Inspector and cleanup. This preserves the preceding historical record;
 it does not blanket close this owner's wider matrix. See H2/H4 and the operation row for
 matching criteria and exact remaining fixtures/role variants before claiming broader acceptance.

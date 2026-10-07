@@ -106,7 +106,7 @@ separate contract; an administrator credential is not an acceptable shortcut.
 
 ## Contract blockers and next actions
 
-The [prep-010 contract review](prep-010-contract-review.md) completed on 2026-10-05 resolves
+The [prep-010 contract review](../reviews/prep-010-contract-review.md) completed on 2026-10-05 resolves
 the operation/context matrix, bounded inventory completeness, raw discovery handler, immutable
 schema cache, and SDK session owner binding. prep-012/013 are now planned. The subsequent user
 assignment requests implementation of all five tasks, quality checks and sequential per-prep

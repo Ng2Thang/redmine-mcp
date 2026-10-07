@@ -233,7 +233,7 @@ Single-attempt mutation receipts distinguish acceptance, uncertainty and indepen
 received HTTP 500-599 is uncertain across JSON and binary writes. No automatic retry or rollback
 is implied. See [write outcomes](tool-reference.md#mutation-uncertainty).
 
-The [2026-10-07 acceptance ledger](plans/current-catalog-acceptance.md) records functional
+The [2026-10-07 acceptance ledger](testing/evidence/current-catalog-acceptance.md) records functional
 evidence against owned Redmine 7.0.2 and remaining historical variants. Liveness is not upstream
 readiness; complete audit, metrics, CI and recovery behavior remain deferred outside the
 current local-development roadmap.

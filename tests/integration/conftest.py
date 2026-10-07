@@ -222,11 +222,13 @@ class SyntheticRedmine:
                 return httpx.Response(204)
             if path == "/issues.json":
                 self.issues[44] = {**copy.deepcopy(ISSUE), "id": 44, **payload["issue"]}
+                self.apply_assignment(self.issues[44], payload["issue"], uid)
                 return httpx.Response(201, json={"issue": {"id": 44}})
             if path == "/issues/42.json":
                 changes = payload["issue"].copy()
                 note = changes.pop("notes", None)
                 self.issues[42].update(changes)
+                self.apply_assignment(self.issues[42], changes, uid)
                 if note is not None:
                     self.issues[42]["journals"].append(
                         {
@@ -365,6 +367,20 @@ class SyntheticRedmine:
                 )
             return httpx.Response(200, json=data)
         return httpx.Response(404, json={})
+
+    @staticmethod
+    def apply_assignment(issue: Any, changes: Any, caller_id: int) -> None:
+        if "assigned_to_id" not in changes or changes["assigned_to_id"] is None:
+            return  # Native 7.0.2 ignores JSON null; empty string explicitly clears.
+        value = changes["assigned_to_id"]
+        issue.pop("assigned_to_id", None)
+        if value == "":
+            issue.pop("assigned_to", None)
+        else:
+            issue["assigned_to"] = {
+                "id": caller_id if value == "me" else value,
+                "name": "Assigned user",
+            }
 
 
 @pytest.fixture

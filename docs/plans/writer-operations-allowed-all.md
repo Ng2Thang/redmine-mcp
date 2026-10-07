@@ -51,5 +51,5 @@ operation filtering, rather than reported as grants.
 The full offline suite passes 1086 cases. Owned 7.0.2 version/membership state checks pass;
 Inspector 2.8.0 verifies the expanded catalog, writer schema/annotations and three native-parity
 read calls. Disposable project/role cleanup passes. The sentinel does not modify native grants,
-enable production writes, or provide unconditional permissions. See the [current ledger](current-catalog-acceptance.md)
+enable production writes, or provide unconditional permissions. See the [current ledger](../testing/evidence/current-catalog-acceptance.md)
 for final cross-catalog execution and original historical limitations.

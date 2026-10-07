@@ -7,16 +7,18 @@ startup, Inspector or live calls only in an explicitly assigned verification sta
 review uses manual source/prose/example/link inspection without executing the examples.
 Reader smoke checks do not authorize mutations, fixture creation or permission changes.
 
-The [2026-10-07 acceptance ledger](plans/current-catalog-acceptance.md) supersedes older pending
+The [2026-10-07 acceptance ledger](testing/evidence/current-catalog-acceptance.md) supersedes older pending
 summaries for the current functional catalog: 1,086 offline and 21 owned Redmine 7.0.2 live cases
 passed. It includes version and membership acceptance, `allowed_all`, and Inspector discovery
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 
-## MCP compatibility boundary (verification pending)
+## MCP compatibility boundary
 
 [PREP-026](plans/tasks/prep-026-mcp-sdk-compatibility-boundary.md) isolates pinned vendor hooks;
-SDK-026-001..006 require separate authorization. Inspect that identified private accesses only
+SDK-026-001..006 were assigned for verification on 2026-10-07; current execution results are
+in [Preparation regression testing](testing/evidence/prep-022-026-testing.md). For future authorized
+rechecks, inspect that identified private accesses only
 remain in `mcp/compatibility.py`. Inject incorrect package metadata and absent/wrong request,
 handler/cache/context and transport/lifecycle hooks; expect the safe startup failure before ready.
 Use the actual pinned pair rather than installing alternate versions. Lifecycle fixtures should
@@ -29,13 +31,14 @@ most. Exercise manager failure before readiness, cancellation before its first c
 cancellation after entry, repeated lifecycle entry and shutdown/cleanup errors. Assert readiness
 is only published after `run()` yields, startup cannot hang, the owned task settles and both HTTP
 clients close in the existing order. Authorized Inspector/native parity uses owned Redmine 7.0.2
-fixtures and cleanup only of task-owned resources. No SDK-026 scenario was executed during coding;
-prep-022 acceptance also remains pending under the explicit coding dependency waiver.
+fixtures and cleanup only of task-owned resources. The earlier coding dependency waiver and
+coding-only handoff are historical; use the shared verification record for current acceptance.
 
-## Declared upstream fields (verification pending)
+## Declared upstream fields
 
 [PREP-025](plans/tasks/prep-025-strict-upstream-fields.md) hardens known resource fields.
-FIELD-025-001..006 need separate verification authorization. Parameterize root, nested, list,
+FIELD-025-001..006 are covered by the assigned [preparation verification](testing/evidence/prep-022-026-testing.md).
+For future authorized rechecks, parameterize root, nested, list,
 parent, custom-field and receipt IDs with bool/string/float/zero/negative values. Check strict
 flags, nonnegative counts/sizes, 0/100 progress boundaries, unrestricted positive project status,
 and signed/null relation delays. Confirm safe upstream errors without raw Pydantic input.
@@ -51,13 +54,14 @@ both must return a sanitized upstream error before their PUT/POST, with zero mut
 Use native-shaped issue fixtures and retain omitted/null optional-field compatibility.
 Authorized Inspector/live parity uses the owned pinned 7.0.2 environment with ordinary
 restricted writer credentials; verify resulting state and remove only task-owned resources.
-No FIELD-025 scenario was executed in the coding assignment.
+The coding-only handoff has been superseded by the separately authorized testing assignment.
 
-## Request-body admission (verification pending)
+## Request-body admission
 
 [PREP-024](plans/tasks/prep-024-bounded-request-bodies.md) implements admission before REST/MCP
-parsing; BODY-024-001..006 require a separate verification assignment. Historical catalog
-acceptance does not verify this new middleware. Use raw ASGI fixtures for exact cap/cap+1,
+parsing; BODY-024-001..006 are covered by the assigned
+[preparation verification](testing/evidence/prep-022-026-testing.md). For future authorized rechecks,
+use raw ASGI fixtures for exact cap/cap+1,
 missing/chunked/understated lengths, identical/conflicting duplicates, negative/malformed lengths,
 completed mismatches and non-identity encoding. Assert sanitized 400/413/415 errors, correlation
 headers and zero downstream parser/authentication/native dispatch on rejection. Include huge
@@ -69,7 +73,10 @@ Exercise MCP POST admission, GET/SSE, session DELETE and internal REST error con
 double dispatch or interrupted accepted responses. Authorized startup/Inspector/live checks use
 the owned pinned Redmine 7.0.2 writer environment and task-owned tool-020 upload fixtures;
 verify resulting temporary attachment state and clean up only those owned attachments.
-Do not reset shared data. No BODY-024 scenario has been run in the coding assignment.
+Do not reset shared data. The SDK manager uses the same effective body cap as the outer
+middleware. Attach uploaded artifacts to a disposable issue before deleting that issue;
+native attachment deletion cannot remove an unattached upload. The shared verification record
+documents cleanup of interrupted owned artifacts.
 
 ## Issue estimates and general spent-time logs
 

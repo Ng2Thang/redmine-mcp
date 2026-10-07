@@ -16,6 +16,7 @@ from mcp.server.streamable_http import EventStore
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.server.transport_security import TransportSecuritySettings
 
+from redmine_mcp.config import Settings
 from redmine_mcp.constants import runtime as runtime_text
 
 CallToolHandler = Callable[[types.CallToolRequest], Awaitable[types.ServerResult]]
@@ -46,6 +47,20 @@ class MCPCompatibility:
         self.mcp = mcp
         self.check_versions()
         self._validate_registration()
+
+    def _manager_options(self, transport: FastApiHttpSessionManager) -> dict[str, Any]:
+        options: dict[str, Any] = {
+            "app": transport.mcp_server,
+            "event_store": transport.event_store,
+            "json_response": transport.json_response,
+            "stateless": False,
+            "security_settings": transport.security_settings,
+        }
+        settings = getattr(self.mcp.fastapi.state, "settings", None)
+        if isinstance(settings, Settings):
+            # Keep SDK admission aligned with the outer, pre-authentication byte cap.
+            options["max_request_body_size"] = settings.effective_max_request_body_bytes
+        return options
 
     @staticmethod
     def check_versions() -> None:
@@ -179,13 +194,7 @@ class MCPCompatibility:
                 raise _failure()
             if not _async_callable(transport.shutdown):
                 raise _failure()
-            inspect.signature(StreamableHTTPSessionManager).bind(
-                app=transport.mcp_server,
-                event_store=transport.event_store,
-                json_response=transport.json_response,
-                stateless=False,
-                security_settings=transport.security_settings,
-            )
+            inspect.signature(StreamableHTTPSessionManager).bind(**self._manager_options(transport))
             inspect.signature(StreamableHTTPSessionManager.run).bind(None)
             if not inspect.isasyncgenfunction(inspect.unwrap(StreamableHTTPSessionManager.run)):
                 raise _failure()
@@ -202,13 +211,7 @@ class MCPCompatibility:
         if transport._manager_started or transport._manager_task is not None:
             raise _failure()
         try:
-            manager = StreamableHTTPSessionManager(
-                app=transport.mcp_server,
-                event_store=transport.event_store,
-                json_response=transport.json_response,
-                stateless=False,
-                security_settings=transport.security_settings,
-            )
+            manager = StreamableHTTPSessionManager(**self._manager_options(transport))
         except Exception:
             raise _failure() from None
         transport._session_manager = manager

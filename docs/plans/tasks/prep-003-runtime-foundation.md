@@ -178,6 +178,6 @@ Final status: **blocked - implementation accepted with testing pending; offline 
 
 On 2026-10-02 the user accepted the implementation with testing pending and requested prep-004.
 The user also authorized the runtime fix after testing exposed the MCP startup race.
-See [prep-004 verification](../prep-004-verification.md) for executed foundation cases and
+See [prep-004 verification](../../testing/evidence/prep-004-verification.md) for executed foundation cases and
 remaining variants. Full runtime acceptance, including a second ordinary synthetic identity
 and the live permission/correlation matrix, remains pending.

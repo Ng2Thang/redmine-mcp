@@ -337,7 +337,7 @@ validates each operation's native success status/body, and returns an `uncertain
 request may have reached Redmine but a reliable response could not be obtained. Callers must
 inspect uncertain results before trying again. Logs record method, status, and timing without
 the request body, key, or response content. Selected native state/permission acceptance is in
-the [2026-10-07 ledger](plans/current-catalog-acceptance.md); broader historical variants and
+the [2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md); broader historical variants and
 operational readiness remain open. Configuration alone does not establish acceptance.
 
 Every JSON and binary mutation classifies a received HTTP 500-599 as `uncertain`. There is no

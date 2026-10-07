@@ -90,7 +90,7 @@ No dependencies, environment, runtime, or test files are changed by this task.
 | AC-003 | REQ-003 | Named adapter/SDK symbols and session binding lifecycle are implementable | CONTRACT-003 source review |
 | AC-004 | REQ-004 | prep-011/012/013 contracts match roadmap and preserve existing operation IDs | CONTRACT-004 document review |
 
-All four source/document criteria pass in the [dated contract review](../prep-010-contract-review.md).
+All four source/document criteria pass in the [dated contract review](../../reviews/prep-010-contract-review.md).
 No runtime acceptance is claimed by this evidence-only task.
 
 ## 7. Test plan and execution record

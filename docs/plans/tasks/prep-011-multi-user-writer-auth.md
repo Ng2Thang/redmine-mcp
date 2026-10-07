@@ -89,7 +89,7 @@ Existing writes can create/update/delete resources with no rollback promise. Pre
 single-attempt transport, accepted versus uncertain outcomes, independent read-back, and cleanup
 rules in tool-020 through tool-030. Authentication failures happen before mutation.
 
-Specification exit: product behavior and the [prep-010 session integration](../prep-010-contract-review.md)
+Specification exit: product behavior and the [prep-010 session integration](../../reviews/prep-010-contract-review.md)
 are resolved. Adapt authenticated scope to SDK owner binding; no exact permission list or dynamic
 discovery is promised by this phase.
 

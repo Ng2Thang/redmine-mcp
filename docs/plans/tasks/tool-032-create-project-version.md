@@ -292,5 +292,5 @@ EVID-032-LIVE-020: owned 7.0.2 version scenario and Inspector pass; disposable p
 created versions and are deleted in guarded fixture teardown. Existing roles/grants are not
 modified. Current full offline regression passes 1086 cases. AC-001/003/004 receive the missing
 native evidence; AC-002/005/006 retain their offline evidence, including prep-019 receipts.
-See the [current ledger](../current-catalog-acceptance.md) for exact procedures and limitations.
+See the [current ledger](../../testing/evidence/current-catalog-acceptance.md) for exact procedures and limitations.
 Current final status: **complete**. This accepts the version tool, not operational release.

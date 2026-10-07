@@ -22,8 +22,8 @@ deprecation warning. Ruff lint/format, mypy for 79 source files, and the archite
 79 runtime modules passed. Both source and wheel distributions built. Whitespace checks passed.
 No dependency or lockfile changes were needed.
 
-New cases live in [runtime foundation tests](../../tests/test_runtime_foundation.py) and
-[reader contract tests](../../tests/test_reader_contracts.py). The existing 46-case suite and
+New cases live in [runtime foundation tests](../../../tests/integration/test_runtime_foundation.py) and
+[reader contract tests](../../../tests/integration/test_reader_contracts.py). The existing 46-case suite and
 its earlier uncommitted edits were preserved. The mock fixture now supports isolated identity,
 profile, and asynchronous upstream responses without loading real credentials.
 

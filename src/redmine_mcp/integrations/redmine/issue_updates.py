@@ -97,6 +97,9 @@ class RedmineIssueUpdates:
         }
         if request.assigned_to_id == "me":
             expected["assigned_to_id"] = caller_id
+        if "assigned_to_id" in payload and payload["assigned_to_id"] is None:
+            # Redmine 7.0.2 ignores nil in safe_attributes=; an empty ID clears assignment.
+            payload["assigned_to_id"] = ""
         receipt = await self.writer.write_json(
             "PUT", f"issues/{issue_id}.json", {"issue": payload}, accepted_statuses=(204,)
         )

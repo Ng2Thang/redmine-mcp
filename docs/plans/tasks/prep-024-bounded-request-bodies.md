@@ -8,13 +8,13 @@
 | Assigned capability | Submit bounded attachment/tool inputs without allowing oversized JSON bodies to consume unbounded application buffering |
 | Type / access | Shared REST/MCP admission prerequisite; existing readers and restricted writers |
 | Destructive effects | Planning has none; accepted writer calls retain their existing effects |
-| Status | blocked - implementation finished; testing pending |
+| Status | complete |
 | Dependencies | Existing upload contract and request middleware; selected baseline in [prep-020](prep-020-current-catalog-acceptance.md) |
 | Related tasks | tool-020, prep-015, prep-016/017; [dashboard](../index.md); prep-026 |
-| Target Redmine version | 7.0.2; body admission is local and new behavior is unverified |
+| Target Redmine version | 7.0.2; tested functional scope accepted |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | ASGI admission, derived cap and public documentation implemented; Ruff/mypy checks pass; BODY-024 acceptance pending |
-| Next action | Separately authorize BODY-024-001..006 test implementation and offline/startup/Inspector/owned live verification |
+| Progress summary | Accepted: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed |
+| Next action | None in this assignment; retain regression coverage for future changes |
 
 ## 2. Discovery and evidence
 
@@ -28,7 +28,7 @@ limit applies; it did not perform a load test or claim a measured memory failure
 | `features/attachments/models.py`, `service.py`, `write_router.py` | 2026-10-07 | Encoded bound is enforced inside service; decoded binary default is 5 MiB |
 | `app.py`, `api/middleware.py`, `api/read_limits.py` | 2026-10-07 | Request context/read budgets exist; no body-byte admission middleware |
 | Installed Starlette `requests.py`, FastAPI routing behavior | Existing request pipeline; inspect during coding | Byte admission must precede JSON materialization, SDK parsing and upstream authentication |
-| [Redmine REST API](https://www.redmine.org/projects/redmine/wiki/Rest_api), [current ledger](../current-catalog-acceptance.md) | 2026-10-07 | Native upload uses an existing binary endpoint and temporary token; this plan does not change it |
+| [Redmine REST API](https://www.redmine.org/projects/redmine/wiki/Rest_api), [current ledger](../../testing/evidence/current-catalog-acceptance.md) | 2026-10-07 | Native upload uses an existing binary endpoint and temporary token; this plan does not change it |
 | `deploy/compose.test.yaml`, `config.py` | 2026-10-07 | Pinned 7.0.2 and existing request/binary response limits |
 
 Clean planning baseline: `36ff5f0`. Keep Git Bash, English Markdown, caller-key isolation, existing
@@ -129,15 +129,17 @@ BaseHTTPMiddleware or consume streaming MCP responses. No unsolicited startup or
 
 | Requirement | Criterion | Scenario | Evidence / result |
 |---|---|---|---|
-| REQ-001 | AC-001 | BODY-024-001 | Pending; not run |
-| REQ-002 | AC-002 | BODY-024-002 | Pending; not run |
-| REQ-003 | AC-003 | BODY-024-003 | Pending; not run |
-| REQ-004 | AC-004 | BODY-024-004 | Pending; not run |
-| REQ-005 | AC-005 | BODY-024-005/006 | Pending; not run |
+| REQ-001 | AC-001 | BODY-024-001 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-002 | AC-002 | BODY-024-002 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-003 | AC-003 | BODY-024-003 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-004 | AC-004 | BODY-024-004 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-005 | AC-005 | BODY-024-005/006 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
 
 ## 7. Test plan and execution record
 
-Test implementation, raw-ASGI probes, startup and Inspector are separately authorized work.
+The user explicitly authorized testing for prep-022 through prep-026 on 2026-10-07.
+See [the verification record](../../testing/evidence/prep-022-026-testing.md) for executable coverage, corrections
+and current results. Earlier coding-only prohibitions apply to that historical assignment.
 
 | Scenario | Layer / setup | Observable assertion |
 |---|---|---|
@@ -155,7 +157,7 @@ normalize framing. Live native upload parity reuses owned tool-020 fixtures; do 
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-024-001 | Source/configuration inspection on 2026-10-07 | Late limit location identified; no memory benchmark or runtime call | Planning only |
-| EVID-024-002 | Offline/startup/Inspector scenarios BODY-024-001..006 | Not run; separate verification assignment required | Pending |
+| EVID-024-002 | Authorized offline, static and owned live/Inspector verification | 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; [record](../../testing/evidence/prep-022-026-testing.md) | Passed |
 | EVID-024-003 | `bash scripts/doctor.sh` in Git Bash, 2026-10-07 | Required prerequisites ready; Python 3.13.3, uv 0.12.21; no dependencies installed | Passed |
 | EVID-024-004 | `uv run --frozen --no-sync ruff check .` | All checks passed | Passed |
 | EVID-024-005 | `uv run --frozen --no-sync ruff format --check .` | 262 files already formatted | Passed |
@@ -199,7 +201,7 @@ No tests, fixtures, test dependencies, runtime probes, builds, startup, Inspecto
 were created, changed or executed. No contract deviation is needed. Runtime claims remain
 unverified until the following handoff is executed.
 
-## 9. Completion and handoff
+## 9. Coding-stage handoff (superseded by section 10)
 
 - [x] Effective cap and middleware implemented with correct ordering (source inspection).
 - [ ] Boundary/framing/replay/error cases have passing named evidence.
@@ -221,3 +223,13 @@ conversion. Then authorize startup/Inspector and BODY-024-006 with owned tool-02
 fixtures; verify native temporary attachment state and cleanup only those owned objects.
 Acceptance criteria AC-001..005 and all BODY-024 scenarios remain pending. No build is required
 by this code-only change; no deployment or additional task is included in this handoff.
+
+
+## 10. Authorized testing record (2026-10-07)
+
+The user assigned testing for all five preparation tasks. Coverage, runtime corrections,
+owned fixture cleanup and final execution results are recorded in
+[Preparation regression testing](../../testing/evidence/prep-022-026-testing.md). Acceptance passed: 1395 offline tests, 23 owned live tests including Inspector,
+Ruff/mypy/architecture/diff checks and owned cleanup. All mapped acceptance criteria
+passed within the selected functional scope. This section
+supersedes the coding-stage testing handoff without removing its historical decisions.

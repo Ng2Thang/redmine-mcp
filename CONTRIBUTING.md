@@ -39,7 +39,7 @@ automated baseline, now organized into unit, offline integration and opt-in live
 Execute tests only within an explicitly authorized testing assignment. Coding-only work excludes
 test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md)
 and [coverage matrix](docs/plans/testing-coverage.md). The
-[2026-10-07 ledger](docs/plans/current-catalog-acceptance.md) records passing current functional
+[2026-10-07 ledger](docs/testing/evidence/current-catalog-acceptance.md) records passing current functional
 acceptance for 17 reads and 15 writes, including 1,086 offline and 21 owned live cases.
 Broader historical variants and operational/recovery acceptance remain separate follow-ups.
 

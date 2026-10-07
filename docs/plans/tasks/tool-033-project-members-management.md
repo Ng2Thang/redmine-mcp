@@ -586,7 +586,7 @@ The guarded helper creates disposable projects/roles, uses existing ordinary use
 that no task projects/roles remain after teardown. Existing grants/memberships are not changed.
 Full current offline regression passes 1086 cases and preserves original 001..010 criteria,
 including prep-019 uncertainty and batch stopping. AC-001..010 therefore have combined offline
-and native evidence. See the [current ledger](../current-catalog-acceptance.md) for commands,
+and native evidence. See the [current ledger](../../testing/evidence/current-catalog-acceptance.md) for commands,
 execution results and narrower observations. Current final status: **complete**. This is not
 operational release approval or a promise that public role metadata exposes every restriction.
 

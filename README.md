@@ -9,7 +9,7 @@ See the [tool reference](docs/tool-reference.md) for the maintained contracts.
 This is a development implementation for pilot evaluation, with no production release or SLA.
 On 2026-10-07, PREP-020 recorded **1,086 offline tests and 21 owned live tests passing**,
 including authentication, writer gates, and selected native state checks. The
-[acceptance ledger](docs/plans/current-catalog-acceptance.md) records the exact revision, scenarios,
+[acceptance ledger](docs/testing/evidence/current-catalog-acceptance.md) records the exact revision, scenarios,
 and broader historical gaps. Full restore validation, operational readiness, and testing CI
 remain outstanding; these results do not certify a production deployment.
 

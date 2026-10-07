@@ -10,7 +10,7 @@ lists and `allowed_all`. Authoritative input/output schemas remain in the featur
 and generated OpenAPI/MCP definitions; this reference explains their intended use.
 
 Current functional acceptance is recorded in the
-[2026-10-07 ledger](plans/current-catalog-acceptance.md): 1,086 offline and 21 owned Redmine
+[2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md): 1,086 offline and 21 owned Redmine
 7.0.2 live cases passed. Its source revision, exact scenarios and H1..H6 limitations define
 the evidence boundary. Other versions, all historical variants and production readiness are
 not established. Direct attachment content download is retired; reads provide metadata/links.
@@ -161,7 +161,7 @@ and role set for update/delete. External cancellation propagates and stops furth
 shutdown/disconnect can prevent delivery of the batch receipt. Do not infer failure from a
 missing response. Offline and owned Redmine 7.0.2 functional acceptance passed in PREP-020,
 including managed/protected roles, inheritance and assignment effects; see the
-[ledger](plans/current-catalog-acceptance.md) and combined task for exact results.
+[ledger](testing/evidence/current-catalog-acceptance.md) and combined task for exact results.
 The historical shared 6.0.5 container is not target-version evidence.
 
 ## Create project version
@@ -221,7 +221,7 @@ not prove this invocation created it. No automatic retry, rollback, or concurren
 is provided. Offline and owned 7.0.2 functional acceptance for
 [tool-032](plans/tasks/tool-032-create-project-version.md) passed in PREP-020, including optional
 fields, duplicate state/count parity and creation without issue-read permission. See the
-[ledger](plans/current-catalog-acceptance.md); future verification still requires authorization.
+[ledger](testing/evidence/current-catalog-acceptance.md); future verification still requires authorization.
 
 ## Caller project capabilities
 

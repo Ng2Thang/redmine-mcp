@@ -8,13 +8,13 @@
 | Assigned capability | Keep tool dispatch, discovery and session lifecycle stable when maintaining the pinned MCP adapter |
 | Type / access | Shared internal refactor; existing reader and restricted writer catalog |
 | Destructive effects | None introduced; existing authorized writer invocations retain their effects |
-| Status | blocked - implementation finished; testing pending |
+| Status | complete |
 | Dependencies | [prep-022](prep-022-mcp-schema-parity.md) acceptance pending; explicit user waiver permits coding first; existing session/discovery/receipt contracts and [prep-020](prep-020-current-catalog-acceptance.md) baseline |
 | Related tasks | prep-010..015 implementations, prep-019, prep-023/025/026; [dashboard](../index.md) |
-| Target Redmine version | 7.0.2; adapter refactor unverified |
+| Target Redmine version | 7.0.2; tested functional scope accepted |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Typed facade, checked hooks and lifecycle wiring implemented; Ruff/mypy checks pass; prep-022/SDK-026 acceptance pending |
-| Next action | Separately authorize prep-022 acceptance and SDK-026-001..006 verification using pinned SDK, lifecycle faults and owned native fixtures |
+| Progress summary | Accepted: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed |
+| Next action | None in this assignment; retain regression coverage for future changes |
 
 ## 2. Discovery and evidence
 
@@ -32,7 +32,7 @@ This is a maintenance risk rather than evidence of a current runtime failure.
 | `lifecycle.py`, `app.py`, `api/security.py` | 2026-10-07 | Lifespan cleanup order, original request authentication and session owner identity |
 | Installed FastAPI-MCP 0.4.0 and MCP SDK 1.30.0 source; `pyproject.toml`, `uv.lock` | 2026-10-07 | Existing versions are pinned; private behavior is not a cross-version public guarantee |
 | [MCP tools specification](https://modelcontextprotocol.io/specification/2025-11-25/server/tools) | 2026-10-07 | Public tool schemas/results; does not guarantee Python private attributes |
-| `deploy/compose.test.yaml`, [ledger](../current-catalog-acceptance.md) | 2026-10-07 | Existing target/functional baseline; no new Redmine API claim |
+| `deploy/compose.test.yaml`, [ledger](../../testing/evidence/current-catalog-acceptance.md) | 2026-10-07 | Existing target/functional baseline; no new Redmine API claim |
 
 Baseline: clean `36ff5f0` before planning. Follow repository architecture, Git Bash/English and
 explicit test authorization. No new analysis artifact is needed: this conversation and source
@@ -138,16 +138,17 @@ edits or merge their behavior changes into this refactor's ownership.
 
 | Requirement | Criterion | Scenario | Evidence / result |
 |---|---|---|---|
-| REQ-001 | AC-001 | SDK-026-001 | Pending; not run |
-| REQ-002 | AC-002 | SDK-026-002 | Pending; not run |
-| REQ-003 | AC-003 | SDK-026-003/006 | Pending; not run |
-| REQ-004 | AC-004 | SDK-026-004/006 | Pending; not run |
-| REQ-005 | AC-005 | SDK-026-005/006 | Pending; not run |
+| REQ-001 | AC-001 | SDK-026-001 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-002 | AC-002 | SDK-026-002 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-003 | AC-003 | SDK-026-003/006 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-004 | AC-004 | SDK-026-004/006 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-005 | AC-005 | SDK-026-005/006 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
 
 ## 7. Test plan and execution record
 
-Test implementation/execution, startup, Inspector and synthetic mutations require a separate
-assignment. Catalog counts alone are not behavioral acceptance.
+The user explicitly authorized testing for prep-022 through prep-026 on 2026-10-07.
+See [the verification record](../../testing/evidence/prep-022-026-testing.md) for executable coverage, corrections
+and current results. Earlier coding-only prohibitions apply to that historical assignment.
 
 | Scenario | Layer / setup | Observable assertion |
 |---|---|---|
@@ -166,7 +167,7 @@ to run tests. A package build is needed only if package layout/dependency metada
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-026-001 | Source and installed-dependency inspection on 2026-10-07 | Private integration locations identified; no runtime regression run | Planning only |
-| EVID-026-002 | Offline/lifecycle/native/Inspector SDK-026-001..006 scenarios | Not run; separate verification authorization required | Pending |
+| EVID-026-002 | Authorized offline, static and owned live/Inspector verification | 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; [record](../../testing/evidence/prep-022-026-testing.md) | Passed |
 | EVID-026-003 | `bash scripts/doctor.sh` in Git Bash, 2026-10-07 | Required prerequisites ready; Python 3.13.3, uv 0.12.21; no dependency installation | Passed |
 | EVID-026-004 | `uv run --frozen --no-sync ruff check .` | All checks passed | Passed |
 | EVID-026-005 | `uv run --frozen --no-sync ruff format --check .` | 263 files already formatted | Passed |
@@ -223,7 +224,7 @@ not changed or executed. No startup, Inspector, runtime probes, live calls or bu
 The only plan deviation is the explicitly authorized coding-order waiver. Runtime acceptance
 and prep-022 acceptance remain pending; passing static checks do not establish either.
 
-## 9. Completion and handoff
+## 9. Coding-stage handoff (superseded by section 10)
 
 - [x] Typed facade owns private SDK integration (source inspection).
 - [ ] Version/shape, hook order and schema/session invariants accepted.
@@ -246,3 +247,16 @@ closure of both clients. After prerequisite schema acceptance, separately author
 Inspector and SDK-026-006 against the owned pinned 7.0.2 environment with existing task-owned
 membership fixtures, native state verification and owned cleanup. No package metadata changed;
 packaging/build verification is not part of this coding assignment. AC-001..005 remain pending.
+
+
+## 10. Authorized testing record (2026-10-07)
+
+The user assigned testing for all five preparation tasks. Coverage, runtime corrections,
+owned fixture cleanup and final execution results are recorded in
+[Preparation regression testing](../../testing/evidence/prep-022-026-testing.md). Acceptance passed: 1395 offline tests, 23 owned live tests including Inspector,
+Ruff/mypy/architecture/diff checks and owned cleanup. All mapped acceptance criteria
+passed within the selected functional scope. This section
+supersedes the coding-stage testing handoff without removing its historical decisions.
+
+The prep-022 acceptance prerequisite is now satisfied. DEC-005 remains a historical
+coding-order waiver and does not constitute an outstanding dependency.

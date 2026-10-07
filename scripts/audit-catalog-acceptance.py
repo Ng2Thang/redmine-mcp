@@ -16,7 +16,7 @@ from redmine_mcp.mcp.catalog import OPERATIONS, writer_catalog  # noqa: E402
 
 
 def main() -> None:
-    ledger = ROOT / "docs/plans/current-catalog-acceptance.md"
+    ledger = ROOT / "docs/testing/evidence/current-catalog-acceptance.md"
     rows = [
         line for line in ledger.read_text(encoding="utf-8").splitlines() if line.startswith("| `")
     ]
@@ -28,8 +28,12 @@ def main() -> None:
     for row in rows:
         fields = row.split("|")
         assert all(field.strip() for field in fields[1:-1])
-        owners = re.findall(r"\]\((tasks/[^)]+)\)", fields[2])
-        assert owners and all((ledger.parent / path).is_file() for path in owners)
+        owners = re.findall(r"\]\(([^)]+)\)", fields[2])
+        assert owners and all(
+            (ledger.parent / path).is_file()
+            and (ledger.parent / path).resolve().parent == ROOT / "docs/plans/tasks"
+            for path in owners
+        )
         assert "R020 / 2026-10-07" in fields[3]
     sources = []
     for directory in ("src", "tests", "scripts", "tools/testing"):

@@ -141,6 +141,120 @@ def main() -> None:
                         assert {row["id"] for row in rows} == {
                             row["id"] for row in response.json()[kind]
                         }
+
+                # Preparation regressions use only disposable fixture state and private headers.
+                def invoke_preparation(name, arguments):
+                    command = [
+                        "npx.cmd" if os.name == "nt" else "npx",
+                        "--yes",
+                        "@modelcontextprotocol/inspector@2.8.0",
+                        "--cli",
+                        "--config",
+                        str(config),
+                        "--server",
+                        "owned",
+                        "--format",
+                        "json",
+                        "--method",
+                        "tools/call",
+                        "--tool-name",
+                        name,
+                        "--tool-args-json",
+                        json.dumps(arguments),
+                    ]
+                    result = subprocess.run(
+                        command, cwd=ROOT, capture_output=True, text=True, timeout=60
+                    )
+                    (state / f"inspector-preparation-{name}.log").write_text(
+                        result.stdout + result.stderr
+                    )
+                    assert result.returncode == 0, "Preparation Inspector call failed"
+                    payload = json.loads(result.stdout)["result"]
+                    assert not payload.get("isError"), "Preparation Inspector tool failed"
+                    return json.loads(payload["content"][0]["text"])
+
+                issue_id = attachment_id = None
+                try:
+                    created = invoke_preparation(
+                        "create_issue",
+                        {
+                            "project_id": project,
+                            "subject": "Prep022 Inspector disposable issue",
+                            "description": "clear",
+                            "estimated_hours": 2,
+                            "due_date": "2026-10-20",
+                        },
+                    )
+                    issue_id = created["resource_id"]
+                    assert created["outcome"] == "accepted"
+                    for assignment in ("me", None):
+                        updated = invoke_preparation(
+                            "update_issue",
+                            {
+                                "issue_id": issue_id,
+                                "assigned_to_id": assignment,
+                                "description": None,
+                                "estimated_hours": None,
+                                "due_date": None,
+                            },
+                        )
+                        assert updated["outcome"] == "accepted"
+                        observed = native.get(f"/issues/{issue_id}.json")
+                        assert observed.status_code == 200
+                        raw = observed.json()["issue"]
+                        expected = manifest["users"]["a"]["id"] if assignment == "me" else None
+                        assert raw.get("assigned_to", {}).get("id") == expected
+                        assert not raw.get("description") and raw.get("estimated_hours") is None
+                        assert raw.get("due_date") is None
+                    uploaded = invoke_preparation(
+                        "upload_attachment",
+                        {
+                            "filename": "prep024-inspector.txt",
+                            "content_base64": "aGVsbG8=",
+                        },
+                    )
+                    attachment_id = uploaded["attachment_id"]
+                    assert uploaded["outcome"] == "accepted"
+                    attached = native.put(
+                        f"/issues/{issue_id}.json",
+                        json={
+                            "issue": {
+                                "uploads": [
+                                    {
+                                        "token": uploaded["token"],
+                                        "filename": "prep024-inspector.txt",
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    assert attached.status_code == 204
+                    oversized = httpx.post(
+                        "http://127.0.0.1:18084/mcp",
+                        content=b"x" * (10 * 1024 * 1024 + 1),
+                        headers=headers,
+                        trust_env=False,
+                    )
+                    assert oversized.status_code == 413
+                finally:
+                    with httpx.Client(
+                        base_url="http://127.0.0.1:3001",
+                        trust_env=False,
+                        headers={"X-Redmine-API-Key": manifest["users"]["admin"]["key"]},
+                    ) as cleanup:
+                        if issue_id is not None:
+                            observed = cleanup.get(f"/issues/{issue_id}.json")
+                            assert observed.status_code == 200
+                            assert observed.json()["issue"]["project"]["id"] == project
+                            assert (
+                                observed.json()["issue"]["subject"]
+                                == "Prep022 Inspector disposable issue"
+                            )
+                            assert cleanup.delete(f"/issues/{issue_id}.json").status_code == 204
+                        if attachment_id is not None:
+                            assert cleanup.delete(
+                                f"/attachments/{attachment_id}.json"
+                            ).status_code in (204, 404)
             (state / "inspector-evidence.json").write_text(
                 json.dumps(
                     {
@@ -149,7 +263,8 @@ def main() -> None:
                         "allowed_all_catalog": "passed",
                         "native_read_parity": "passed",
                         "read_calls": 3,
-                        "mutation_calls": 0,
+                        "mutation_calls": 4,
+                        "preparation_schema_null_assignment_upload_body_limit": "passed",
                     },
                     indent=2,
                 )

@@ -20,7 +20,7 @@ They do not establish runtime acceptance for the current target.
 
 ## 2. Discovery and evidence
 
-Current evidence is in [the 2026-10-02 verification ledger](../prep-004-verification.md).
+Current evidence is in [the 2026-10-02 verification ledger](../../testing/evidence/prep-004-verification.md).
 The inventory and execution rows dated 2026-10-01 below remain historical evidence.
 On 2026-10-02 the user requested skipping live checks. Remaining live procedures and their
 fixture requirements are waived for prep-004. Acceptance now uses the passing offline suite,

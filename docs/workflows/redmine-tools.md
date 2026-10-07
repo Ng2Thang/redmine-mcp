@@ -75,7 +75,7 @@ The default reader remains read-only; implemented writes use a separate opt-in w
 configured operation gates and native permissions. New writes require a task defining exact
 side effects, least Redmine permissions, application permission rules and disposable synthetic
 verification. Current functional evidence and remaining variants are recorded in the
-[acceptance ledger](../plans/current-catalog-acceptance.md). Administrative seeding stays
+[acceptance ledger](../testing/evidence/current-catalog-acceptance.md). Administrative seeding stays
 separate. For each write, define success status/body, duplicates, retries, timeout uncertainty,
 partial success, concurrency, state reconciliation, and cleanup; do not invent upstream
 idempotency or rollback. A failed read-back cannot prove a preceding write failed.

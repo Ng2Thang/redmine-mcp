@@ -445,9 +445,9 @@ async def test_preflight_budget_rejection_has_zero_writes(
         "redmine_writer_operations": "update_project_members",
     }
     settings[
-        "redmine_read_operation_max_requests"
+        "redmine_membership_batch_max_requests"
         if budget == "requests"
-        else "redmine_read_operation_max_bytes"
+        else "redmine_membership_batch_max_read_bytes"
     ] = 1 if budget == "requests" else 300
     async with application_factory(**settings) as app:
         status, result = await invoke(app, "update", [item("update", n) for n in (20, 21)])
@@ -468,7 +468,7 @@ async def test_deadline_after_acceptance_keeps_receipt_and_stops_next_item(
     async def respond(request: Any) -> Any:
         response = await original(request)
         if request.method == "PUT":
-            current_budget.get().started -= 100
+            current_budget.get().started -= 1000
         return response
 
     synthetic.respond = respond

@@ -4,7 +4,7 @@
 
 Redmine MCP is a development implementation for pilot evaluation. Automated authentication,
 session isolation, permission gates and selected native permission/state checks have passing
-evidence in the [2026-10-07 acceptance ledger](docs/plans/current-catalog-acceptance.md).
+evidence in the [2026-10-07 acceptance ledger](docs/testing/evidence/current-catalog-acceptance.md).
 Complete permission matrices, operational readiness and full restore validation remain open.
 No production certification, supported release matrix, SLA or response deadline is promised.
 See the [testing roadmap](docs/testing-roadmap.md).

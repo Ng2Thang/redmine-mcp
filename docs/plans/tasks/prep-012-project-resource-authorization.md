@@ -118,7 +118,7 @@ Success, no-body responses, pagination, receipts, and MCP result shapes remain e
 contracts. Writes retain no automatic retry, uncertain outcome reconciliation, independent
 read-back, and task-owned cleanup; role checks do not provide locking or rollback.
 
-Specification exit: resolved by the [prep-010 contract review](../prep-010-contract-review.md).
+Specification exit: resolved by the [prep-010 contract review](../../reviews/prep-010-contract-review.md).
 That source-backed matrix supersedes the initial inventory above, including the route OR expression
 for mixed/notes-only issue updates and either-endpoint relation deletion. Discovery uses bounded
 visible-project inventory to establish completeness. Partial permissions are not full authorization.

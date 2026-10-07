@@ -8,13 +8,13 @@
 | Assigned capability | Execute a valid one-to-ten membership batch within an explicit batch budget while preserving individual receipts |
 | Type / access | Extend existing restricted membership writers; membership reads remain unchanged |
 | Destructive effects | Existing add/update/delete membership effects only; planning performs none |
-| Status | blocked |
+| Status | complete |
 | Dependencies | [tool-033](tool-033-project-members-management.md) and [prep-019](prep-019-write-outcome-consistency.md), accepted current paths in [prep-020](prep-020-current-catalog-acceptance.md) |
 | Related tasks | Existing prep-015 read-budget implementation; prep-016/017/018 infrastructure; [dashboard](../index.md) |
-| Target Redmine version | 7.0.2; new budget behavior unverified |
+| Target Redmine version | 7.0.2; tested functional scope accepted |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Implementation finished; static checks passed; testing pending |
-| Next action | Confirm implementation commit, then separately authorize BATCH-023-001..006 verification |
+| Progress summary | Accepted: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed |
+| Next action | None in this assignment; retain regression coverage for future changes |
 
 ## 2. Discovery and evidence
 
@@ -33,7 +33,7 @@ Native denial, larger inventories, roles and response sizes can require differen
 | `features/projects/membership_models.py`, `membership_service.py` | 2026-10-07 | Ten-item contract; whole-batch preflight; per-item refresh and shared reader budget |
 | `integrations/redmine/project_memberships.py`, `transport.py` | 2026-10-07 | Inventory/read-back calls and charging of every physical request |
 | `common/read_budget.py`, `config.py`, `bootstrap.py` | 2026-10-07 | Reader defaults and budget construction |
-| [tool-033](tool-033-project-members-management.md), [current ledger](../current-catalog-acceptance.md) | 2026-10-07 | Existing native permissions, side effects, read-back and receipt acceptance remain authoritative |
+| [tool-033](tool-033-project-members-management.md), [current ledger](../../testing/evidence/current-catalog-acceptance.md) | 2026-10-07 | Existing native permissions, side effects, read-back and receipt acceptance remain authoritative |
 | [Redmine membership API](https://www.redmine.org/projects/redmine/wiki/Rest_Memberships) | Existing task reference; not newly fetched | No new native API or permission assumption; use TOOL-033-011 evidence |
 | `deploy/compose.test.yaml` | 2026-10-07 | Pinned 7.0.2 target; no live command executed |
 
@@ -134,15 +134,17 @@ test pass. Code changes must fit router -> service -> port -> gateway.
 
 | Requirement | Criterion | Scenario | Evidence / result |
 |---|---|---|---|
-| REQ-001 | AC-001 | BATCH-023-001/006 | Pending; not run |
-| REQ-002 | AC-002 | BATCH-023-002 | Pending; not run |
-| REQ-003 | AC-003 | BATCH-023-003 | Pending; not run |
-| REQ-004 | AC-004 | BATCH-023-004 | Pending; not run |
-| REQ-005 | AC-005 | BATCH-023-005 | Pending; not run |
+| REQ-001 | AC-001 | BATCH-023-001/006 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-002 | AC-002 | BATCH-023-002 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-003 | AC-003 | BATCH-023-003 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-004 | AC-004 | BATCH-023-004 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-005 | AC-005 | BATCH-023-005 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
 
 ## 7. Test plan and execution record
 
-All test/fixture writing and execution are deferred to a separately authorized assignment.
+The user explicitly authorized testing for prep-022 through prep-026 on 2026-10-07.
+See [the verification record](../../testing/evidence/prep-022-026-testing.md) for executable coverage, corrections
+and current results. Earlier coding-only prohibitions apply to that historical assignment.
 
 | Scenario | Layer / setup | Observable assertion |
 |---|---|---|
@@ -160,7 +162,7 @@ large/changed inventories and cancellation in offline fault cases; no production
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-023-001 | Read-only source inspection on 2026-10-07 | Default mismatch modeled; no measured/tested call count | Planning only |
-| EVID-023-002 | Assigned checks and BATCH-023-001..006 | Not run | Pending |
+| EVID-023-002 | Authorized offline, static and owned live/Inspector verification | 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; [record](../../testing/evidence/prep-022-026-testing.md) | Passed |
 
 Existing passing suites do not accept the new defaults. No setup/reset or mutation ran in planning.
 
@@ -194,7 +196,7 @@ the owned Redmine 7.0.2 writer, non-admin manager, small complete inventories an
 memberships; verify native roles/inheritance/assignment effects and ownership-checked cleanup.
 Startup and Inspector remain pending, as does EVID-023-002. No historical gap is closed.
 
-## 9. Completion and handoff
+## 9. Coding-stage handoff (superseded by section 10)
 
 - [x] Dedicated settings/policy implemented and documented.
 - [ ] Defined ten-item fixtures and bounded failure cases pass.
@@ -205,3 +207,13 @@ Startup and Inspector remain pending, as does EVID-023-002. No historical gap is
 Final status: blocked for acceptance. **Implementation finished; testing pending.**
 Next action: confirm the implementation commit, then separately authorize BATCH-023-001..006.
 Configuration rollout and live verification have not been performed.
+
+
+## 10. Authorized testing record (2026-10-07)
+
+The user assigned testing for all five preparation tasks. Coverage, runtime corrections,
+owned fixture cleanup and final execution results are recorded in
+[Preparation regression testing](../../testing/evidence/prep-022-026-testing.md). Acceptance passed: 1395 offline tests, 23 owned live tests including Inspector,
+Ruff/mypy/architecture/diff checks and owned cleanup. All mapped acceptance criteria
+passed within the selected functional scope. This section
+supersedes the coding-stage testing handoff without removing its historical decisions.

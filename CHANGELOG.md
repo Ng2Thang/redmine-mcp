@@ -7,10 +7,16 @@ that a release has been published.
 
 ### Acceptance and documentation (2026-10-07)
 
+- PREP-022 through PREP-026 regression acceptance: 1395 offline tests, 23 owned
+  Redmine 7.0.2 live tests and Inspector 2.8.0 pass. Cover nullable/union schemas,
+  dedicated batch budgets, body admission, strict upstream fields and SDK lifecycle faults.
+  [Evidence](docs/testing/evidence/prep-022-026-testing.md) includes corrections and owned cleanup;
+  CI, coverage thresholds and production readiness remain deferred.
+
 - PREP-020 reconciled all 32 current operations against source-linked evidence: 1,086 offline
   tests and 21 owned Redmine 7.0.2 live tests passed, including version/membership native state,
   `allowed_all` admission and Inspector catalog/schema plus read compatibility. The
-  [ledger](docs/plans/current-catalog-acceptance.md) records the tested revision and broader
+  [ledger](docs/testing/evidence/current-catalog-acceptance.md) records the tested revision and broader
   historical gaps; these are functional results, not a published release or recovery guarantee.
 - PREP-021 aligns current setup, writer, authentication, security, architecture and testing
   guidance with that evidence. Documentation review executes no tests, deployment or setup
@@ -25,19 +31,18 @@ that a release has been published.
 - Isolate FastAPI-MCP 0.4.0 and MCP SDK 1.30.0 private integration in a typed compatibility
   facade. Check versions/hook shapes before serving, retain repaired schemas and discovery/budget
   ordering, preserve membership DELETE JSON, and coordinate safe manager readiness/cleanup.
-  Public registration/lifecycle entry points remain. No dependency upgrade; PREP-026 and
-  prerequisite PREP-022 runtime acceptance are pending.
+  Public registration/lifecycle entry points remain. No dependency upgrade; PREP-026 and prerequisite PREP-022 functional acceptance pass.
 
 - Bound MCP POST and REST mutation bodies before JSON parsing and upstream authentication.
   Optional `REDMINE_MAX_REQUEST_BODY_BYTES` overrides an upload-aware derived cap (10 MiB
   at current defaults). Count actual bytes, reject invalid framing or non-identity encoding
   with sanitized correlated HTTP errors, and preserve accepted replay and MCP streaming.
-  Existing encoded/decoded upload checks remain. PREP-024 runtime verification is pending.
+  Existing encoded/decoded upload checks remain. PREP-024 functional verification passes.
 
 - Give membership write batches a dedicated configurable scope: 300 physical requests,
   30 MiB of GET response bytes and a 300-second cooperative deadline. Reuse successful
   project/user proofs only during preflight; retain per-item execution refresh, reader caps,
-  receipt semantics and external cancellation. PREP-023 runtime verification is pending.
+  receipt semantics and external cancellation. PREP-023 functional verification passes.
 
 - Raise default upstream concurrency to 50 and admission wait to 30 seconds. Logical reads now
   allow 30 upstream attempts within a 90-second aggregate deadline. Code defaults, `.env.example`
@@ -46,16 +51,20 @@ that a release has been published.
 
 ### Fixed
 
+- Align the SDK HTTP body limit with the application's effective cap so a default 5 MiB
+  upload can pass through MCP. Translate explicit null issue assignment to an empty native
+  ID for Redmine 7.0.2 update and create/copy, retaining null expected-state verification
+  and omitted-field behavior. These defects were exposed by preparation regression testing.
+
 - Validate declared Redmine resource/reference and receipt IDs as positive JSON integers;
   enforce strict booleans, nonnegative sizes/counts, issue progress from 0 through 100 and
   signed integer relation delays. Preserve date/hour parsing, optional/default/visibility
   behavior and unknown-field policy. Malformed read-back observations retain the original
-  writer receipt. PREP-025 runtime verification is pending.
+  writer receipt. PREP-025 functional verification passes.
 
 - Restore MCP input validation from each route's canonical OpenAPI schema before discovery
   and SDK caching. Nullable and union inputs retain every REST-supported branch, with
-  required fields, defaults and nested constraints preserved. PREP-022 runtime verification
-  remains pending; existing unknown-property policies and response models are unchanged.
+  required fields, defaults and nested constraints preserved. PREP-022 functional verification passes; existing unknown-property policies and response models are unchanged.
 
 - Classify received HTTP 500-599 as uncertain across all registered JSON and binary mutations
   through the shared writer transport. Remove the membership-only opt-in; preserve individual

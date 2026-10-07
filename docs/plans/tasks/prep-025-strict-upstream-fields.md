@@ -8,13 +8,13 @@
 | Assigned capability | Give LLMs reliable resource identities and numeric state without silently coercing malformed upstream fields |
 | Type / access | Shared response-validation prerequisite; existing reads and writer observations |
 | Destructive effects | No new mutation; observation failures preserve existing write acceptance |
-| Status | blocked - implementation finished; testing pending |
+| Status | complete |
 | Dependencies | Current [prep-020](prep-020-current-catalog-acceptance.md) resource contracts; existing prep-019 receipts and prep-016/017 infrastructure |
 | Related tasks | tool-011/012/034/035 strict hours/IDs; tool-033 membership models; [dashboard](../index.md) |
-| Target Redmine version | 7.0.2; stricter field acceptance unverified |
+| Target Redmine version | 7.0.2; tested functional scope accepted |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Shared strict field types, resource/receipt models and raw observation paths hardened; static checks pass; runtime acceptance pending |
-| Next action | Separately authorize FIELD-025-001..006 test implementation and offline/startup/Inspector/owned native verification |
+| Progress summary | Accepted: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed |
+| Next action | None in this assignment; retain regression coverage for future changes |
 
 ## 2. Discovery and evidence
 
@@ -30,7 +30,7 @@ top-level `resource_object` identity checks are strict. This is source evidence,
 | `features/time_entries/models.py`, `users/models.py`, `projects/membership_models.py` | 2026-10-07 | Existing strict positive-ID examples to reuse |
 | `integrations/redmine/mapping.py`, `responses.py`, mutation read-back gateways | 2026-10-07 | Safe 502 conversion and independently accepted writes |
 | [Pydantic strict mode](https://docs.pydantic.dev/latest/concepts/strict_mode/) | 2026-10-07 | Per-field strictness avoids unwanted coercion; blanket strict parsing may alter date behavior |
-| [Redmine REST Issues](https://www.redmine.org/projects/redmine/wiki/Rest_Issues), [ledger](../current-catalog-acceptance.md) | 2026-10-07 | Existing issue representations; no new field, permission or enum claim |
+| [Redmine REST Issues](https://www.redmine.org/projects/redmine/wiki/Rest_Issues), [ledger](../../testing/evidence/current-catalog-acceptance.md) | 2026-10-07 | Existing issue representations; no new field, permission or enum claim |
 | `deploy/compose.test.yaml` | 2026-10-07 | Existing 7.0.2 pin; new checks require independent acceptance |
 
 Baseline: clean `36ff5f0`. Preserve unrelated later edits and all historical evidence. Harden only
@@ -130,15 +130,17 @@ lockfile, new operation, configuration, SDK patch or upstream permission change 
 
 | Requirement | Criterion | Scenario | Evidence / result |
 |---|---|---|---|
-| REQ-001 | AC-001 | FIELD-025-001 | Pending; not run |
-| REQ-002 | AC-002 | FIELD-025-002 | Pending; not run |
-| REQ-003 | AC-003 | FIELD-025-003 | Pending; not run |
-| REQ-004 | AC-004 | FIELD-025-004 | Pending; not run |
-| REQ-005 | AC-005 | FIELD-025-005/006 | Pending; not run |
+| REQ-001 | AC-001 | FIELD-025-001 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-002 | AC-002 | FIELD-025-002 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-003 | AC-003 | FIELD-025-003 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-004 | AC-004 | FIELD-025-004 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-005 | AC-005 | FIELD-025-005/006 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
 
 ## 7. Test plan and execution record
 
-Tests, fixtures, startup, Inspector and native verification need explicit separate authorization.
+The user explicitly authorized testing for prep-022 through prep-026 on 2026-10-07.
+See [the verification record](../../testing/evidence/prep-022-026-testing.md) for executable coverage, corrections
+and current results. Earlier coding-only prohibitions apply to that historical assignment.
 
 | Scenario | Layer / setup | Observable assertion |
 |---|---|---|
@@ -156,7 +158,7 @@ tests that only assert type aliases. Broader offline regressions belong to the t
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-025-001 | Source inspection on 2026-10-07 | Inconsistent declared-field validation identified; no test run | Planning only |
-| EVID-025-002 | Offline/native/Inspector FIELD-025-001..006 scenarios | Not run; separate verification assignment required | Pending |
+| EVID-025-002 | Authorized offline, static and owned live/Inspector verification | 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; [record](../../testing/evidence/prep-022-026-testing.md) | Passed |
 | EVID-025-003 | `bash scripts/doctor.sh` in Git Bash, 2026-10-07 | Required prerequisites ready; Python 3.13.3, uv 0.12.21; no installation | Passed |
 | EVID-025-004 | `uv run --frozen --no-sync ruff check .` | All checks passed | Passed |
 | EVID-025-005 | `uv run --frozen --no-sync ruff format --check .` | 262 files already formatted | Passed |
@@ -226,7 +228,7 @@ the raw update data and post-write receipt boundaries are preserved. FIELD-025-0
 update and copy with malformed preflight progress/flags/nested IDs and assert zero mutation
 calls, plus valid native-shaped responses with missing/null optional fields. No tests were run.
 
-## 9. Completion and handoff
+## 9. Coding-stage handoff (superseded by section 10)
 
 - [x] Declared output fields consistently validated (source inspection).
 - [ ] Malformed identities/counts/flags/progress have passing failure evidence.
@@ -249,3 +251,13 @@ only within that testing assignment. Then separately authorize startup/Inspector
 FIELD-025-006 native parity using the owned pinned Redmine 7.0.2 reader/restricted writer
 environment; observe native state and clean up only owned resources. AC-001..005 remain pending.
 No build, deployment or implementation of another task is included.
+
+
+## 10. Authorized testing record (2026-10-07)
+
+The user assigned testing for all five preparation tasks. Coverage, runtime corrections,
+owned fixture cleanup and final execution results are recorded in
+[Preparation regression testing](../../testing/evidence/prep-022-026-testing.md). Acceptance passed: 1395 offline tests, 23 owned live tests including Inspector,
+Ruff/mypy/architecture/diff checks and owned cleanup. All mapped acceptance criteria
+passed within the selected functional scope. This section
+supersedes the coding-stage testing handoff without removing its historical decisions.

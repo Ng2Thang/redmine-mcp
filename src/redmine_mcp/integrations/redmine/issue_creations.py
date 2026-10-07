@@ -140,6 +140,9 @@ class RedmineIssueCreations:
         if request.copy_from is not None:
             params["copy_from"] = str(request.copy_from)
         payload = request.model_dump(mode="json", exclude_unset=True, exclude={"copy_from"})
+        if "assigned_to_id" in payload and payload["assigned_to_id"] is None:
+            # Preserve explicit clearing when copying an assigned issue on Redmine 7.0.2.
+            payload["assigned_to_id"] = ""
         receipt = await self.writer.write_json(
             "POST", "issues.json", {"issue": payload}, accepted_statuses=(201,), params=params
         )

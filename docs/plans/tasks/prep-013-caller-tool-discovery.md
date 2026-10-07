@@ -97,7 +97,7 @@ falling back to a global privileged list. Avoid a dependency upgrade unless sour
 locked stack cannot support the required boundary; then revise `pyproject.toml` and `uv.lock`
 together with compatibility justification before coding.
 
-Specification exit: resolved by the [prep-010 contract review](../prep-010-contract-review.md).
+Specification exit: resolved by the [prep-010 contract review](../../reviews/prep-010-contract-review.md).
 Register a raw ListToolsRequest handler, initialize the superset schema cache once, and reuse
 the SDK session owner boundary via authenticated scope. No dependency upgrade is required.
 

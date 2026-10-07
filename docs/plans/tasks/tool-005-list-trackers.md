@@ -83,7 +83,7 @@ separately approved by the user and verified with readiness, concurrency, and cl
 
 TRACKER-001/002 pass offline. Three registry tracker IDs/names match Redmine; full comparison against visible project tracker settings and a clean live rerun remain pending.
 
-See [the dated verification ledger](../prep-004-verification.md) for procedures, exact
+See [the dated verification ledger](../../testing/evidence/prep-004-verification.md) for procedures, exact
 case mapping, and limitations. Current authentication is each caller's personal
 `X-Redmine-API-Key`; visibility is `requesting_redmine_user`, and rejected keys return 401.
 Future contract wording was reconciled; historical discovery/execution notes were retained.
@@ -93,7 +93,7 @@ earlier handoff above describes the previous implementation stage.
 ## Prep-020 evidence reconciliation, 2026-10-07
 
 Current `list_trackers` functional evidence is mapped in the
-[32-operation ledger](../current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
+[32-operation ledger](../../testing/evidence/current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
 cases pass, including Inspector and cleanup. This preserves the preceding historical record;
 it does not blanket close this owner's wider matrix. See H1 and the operation row for
 matching criteria and exact remaining fixtures/role variants before claiming broader acceptance.

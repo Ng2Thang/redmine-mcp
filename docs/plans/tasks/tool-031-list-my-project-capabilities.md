@@ -27,7 +27,7 @@ The tool is read-only and targets Redmine 7.0.2. No configuration or dependency 
 `get_current_user` returns visible memberships and roles, but does not explain permissions
 or tools per project. The existing capability gateway and necessary-permission checks are
 reused. Upstream limitations and version evidence are recorded in
-[prep-010](../prep-010-contract-review.md). Role permissions omit tracker/workflow restrictions.
+[prep-010](../../reviews/prep-010-contract-review.md). Role permissions omit tracker/workflow restrictions.
 Pre-existing prep-014 documentation edits and the relation endpoint correction were preserved.
 
 ## 3. Requirements and decisions
@@ -175,7 +175,7 @@ optional reasons, retained unfiltered behavior and MCP schema/invocation.
 ## Prep-020 evidence reconciliation, 2026-10-07
 
 Current `list_my_project_capabilities` functional evidence is mapped in the
-[32-operation ledger](../current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
+[32-operation ledger](../../testing/evidence/current-catalog-acceptance.md): 1086 offline and 21 owned 7.0.2 live
 cases pass, including Inspector and cleanup. This preserves the preceding historical record;
 it does not blanket close this owner's wider matrix. See H4 and the operation row for
 matching criteria and exact remaining fixtures/role variants before claiming broader acceptance.

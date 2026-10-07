@@ -5,7 +5,6 @@ import gzip
 import logging
 from contextlib import asynccontextmanager
 from importlib import import_module
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -514,14 +513,15 @@ async def test_mcp_startup_waits_for_readiness_and_cleans_failed_start(
     monkeypatch: pytest.MonkeyPatch,
     outcome: str,
 ) -> None:
+    from fastapi_mcp import FastApiMCP
     from fastapi_mcp.transport.http import FastApiHttpSessionManager
-    from mcp.server.lowlevel.server import Server
+    from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
     entered = asyncio.Event()
     release = asyncio.Event()
     closed = asyncio.Event()
 
-    class ControlledManager:
+    class ControlledManager(StreamableHTTPSessionManager):
         def __init__(self, **kwargs):
             pass
 
@@ -537,12 +537,13 @@ async def test_mcp_startup_waits_for_readiness_and_cleans_failed_start(
                 closed.set()
 
     monkeypatch.setattr(
-        import_module("redmine_mcp.mcp.registration"),
+        import_module("redmine_mcp.mcp.compatibility"),
         "StreamableHTTPSessionManager",
         ControlledManager,
     )
-    transport = FastApiHttpSessionManager(Server("offline"))
-    mcp = SimpleNamespace(_http_transport=transport)
+    mcp = FastApiMCP(FastAPI())
+    transport = FastApiHttpSessionManager(mcp.server)
+    mcp._http_transport = transport
     start = asyncio.create_task(start_mcp(mcp))
     await asyncio.wait_for(entered.wait(), 1)
     assert not transport._manager_started

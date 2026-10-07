@@ -180,7 +180,7 @@ Reconcile the actual target in Redmine before attempting again, preserving alrea
 batch peers. A failed read-back does not undo acceptance. See
 [write semantics](tool-reference.md#mutation-uncertainty) and membership batch contracts.
 
-The [2026-10-07 ledger](plans/current-catalog-acceptance.md) records current functional acceptance.
+The [2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md) records current functional acceptance.
 `/health` remains process liveness and does not contact Redmine. Complete writer audit, metrics,
 CI, deployment/rollback and recovery acceptance remain deferred outside the current
 local-development roadmap. Existing logs and Compose healthchecks do not establish these

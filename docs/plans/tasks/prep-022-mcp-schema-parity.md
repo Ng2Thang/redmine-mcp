@@ -8,13 +8,13 @@
 | Assigned capability | Let an LLM invoke existing tools with every valid union and nullable input supported by REST |
 | Type / access | Shared MCP prerequisite; existing read and restricted write operations |
 | Destructive effects | Planning has none; subsequent authorized tool invocations retain their existing effects |
-| Status | blocked |
+| Status | complete |
 | Dependencies | Accepted current contracts in [prep-020](prep-020-current-catalog-acceptance.md); existing prep-016/017 testing infrastructure |
 | Related tasks | [Dashboard](../index.md); prep-026; tool-024/025/032/035 |
-| Target Redmine version | 7.0.2; existing selected contracts accepted, new adapter behavior unverified |
+| Target Redmine version | 7.0.2; tested functional scope accepted |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Implementation finished; static checks passed; testing pending |
-| Next action | Confirm the implementation commit, then separately authorize SCHEMA-022-001..007 verification |
+| Progress summary | Accepted: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed |
+| Next action | None in this assignment; retain regression coverage for future changes |
 
 ## 2. Discovery and evidence
 
@@ -31,7 +31,7 @@ identifies a contract restriction; no new reproduction or test execution was per
 | Installed `fastapi_mcp/openapi/convert.py:228,248`, `utils.py:4` | 2026-10-07; 0.4.0 | Generated scalar types can restrict canonical unions |
 | Installed `mcp/server/lowlevel/server.py:498,536` | 2026-10-07; 1.30.0 | Input schema validation is enabled |
 | [JSON Schema combinations](https://json-schema.org/understanding-json-schema/reference/combining) | 2026-10-07 | Sibling constraints also apply when `anyOf` is present; no Redmine permission claim |
-| [Redmine REST API](https://www.redmine.org/projects/redmine/wiki/Rest_api), `deploy/compose.test.yaml`, [ledger](../current-catalog-acceptance.md) | 2026-10-07 | Existing native calls and pinned 7.0.2 scope remain unchanged; general API documentation is not new version-specific acceptance |
+| [Redmine REST API](https://www.redmine.org/projects/redmine/wiki/Rest_api), `deploy/compose.test.yaml`, [ledger](../../testing/evidence/current-catalog-acceptance.md) | 2026-10-07 | Existing native calls and pinned 7.0.2 scope remain unchanged; general API documentation is not new version-specific acceptance |
 
 Baseline: clean working tree at `36ff5f0` when planning began. Preserve unrelated later edits.
 Repository guidelines, contributor rules, the workflow and nine-section template apply.
@@ -132,16 +132,17 @@ is planned. Do not edit installed packages. prep-026 later owns consolidation of
 
 | Requirement | Criterion | Scenario | Evidence / result |
 |---|---|---|---|
-| REQ-001 | AC-001 | SCHEMA-022-001/002 | Pending; not run |
-| REQ-002 | AC-002 | SCHEMA-022-003 | Pending; not run |
-| REQ-003 | AC-003 | SCHEMA-022-004 | Pending; not run |
-| REQ-004 | AC-004 | SCHEMA-022-005 | Pending; not run |
-| REQ-005 | AC-005 | SCHEMA-022-006/007 | Pending; not run |
+| REQ-001 | AC-001 | SCHEMA-022-001/002 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-002 | AC-002 | SCHEMA-022-003 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-003 | AC-003 | SCHEMA-022-004 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-004 | AC-004 | SCHEMA-022-005 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
+| REQ-005 | AC-005 | SCHEMA-022-006/007 | Passed; see [verification record](../../testing/evidence/prep-022-026-testing.md) |
 
 ## 7. Test plan and execution record
 
-Testing requires a separate explicit assignment. This document authorizes no test writing,
-execution, application startup, Inspector or live mutations.
+The user explicitly authorized testing for prep-022 through prep-026 on 2026-10-07.
+See [the verification record](../../testing/evidence/prep-022-026-testing.md) for executable coverage, corrections
+and current results. Earlier coding-only prohibitions apply to that historical assignment.
 
 | Scenario | Layer / setup | Observable assertion |
 |---|---|---|
@@ -160,7 +161,7 @@ only within that verification assignment. No build is required unless packaging 
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-022-001 | Read-only source/dependency inspection on 2026-10-07 | Contract restriction identified; no runtime reproduction | Planning evidence only |
-| EVID-022-002 | Static checks, automated scenarios and owned live verification | Not run; authorization and implementation required | Pending |
+| EVID-022-002 | Authorized offline, static and owned live/Inspector verification | 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; [record](../../testing/evidence/prep-022-026-testing.md) | Passed |
 
 Existing PREP-020 results are baseline evidence, not acceptance of this change.
 
@@ -194,7 +195,7 @@ requires the owned pinned Redmine 7.0.2 writer and Inspector; verify resulting i
 and restore only task-owned assignment changes. Startup, SDK calls and live checks were
 not run. EVID-022-002 remains pending. No plan deviation changes the public contract.
 
-## 9. Completion and handoff
+## 9. Coding-stage handoff (superseded by section 10)
 
 - [x] Shared repair implemented and redundant special cases reconciled.
 - [ ] Every requirement has passing named acceptance evidence.
@@ -205,3 +206,13 @@ not run. EVID-022-002 remains pending. No plan deviation changes the public cont
 Final status: blocked for acceptance. **Implementation finished; testing pending.**
 Next action: confirm the requested implementation commit and separately authorize the
 SCHEMA-022-001..007 verification stage. Passing static checks do not replace that evidence.
+
+
+## 10. Authorized testing record (2026-10-07)
+
+The user assigned testing for all five preparation tasks. Coverage, runtime corrections,
+owned fixture cleanup and final execution results are recorded in
+[Preparation regression testing](../../testing/evidence/prep-022-026-testing.md). Acceptance passed: 1395 offline tests, 23 owned live tests including Inspector,
+Ruff/mypy/architecture/diff checks and owned cleanup. All mapped acceptance criteria
+passed within the selected functional scope. This section
+supersedes the coding-stage testing handoff without removing its historical decisions.

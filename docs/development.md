@@ -111,6 +111,11 @@ uncertainty, startup/readiness/cancellation/shutdown and owned Inspector/native 
 Move lifecycle fault-injection patches from `mcp/registration.py` to the compatibility module
 and use valid pinned-server/transport fixtures rather than unchecked partial namespaces.
 No upgrade or runtime acceptance is implied by PREP-026's passing static checks.
+The separately authorized [preparation regression record](testing/evidence/prep-022-026-testing.md)
+supersedes its coding-only handoff. Manager construction passes the application's effective
+request-body cap to the SDK so valid base64 uploads do not encounter the SDK's smaller default.
+At the Redmine gateway, explicit null assignment becomes an empty native ID because 7.0.2
+ignores JSON null assignment; omission still means leave the field unchanged.
 
 ## Add a read-only tool
 
@@ -239,6 +244,6 @@ Coverage thresholds and testing CI remain deferred. Follow the
 [testing roadmap](testing-roadmap.md) and [coverage matrix](plans/testing-coverage.md).
 
 Current functional evidence is recorded in the
-[2026-10-07 ledger](plans/current-catalog-acceptance.md): 1,086 offline and 21 owned live cases
+[2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md): 1,086 offline and 21 owned live cases
 passed for the 32-operation catalog. Those are dated results, not a claim that future edits or
 every historical variant are verified. Operational readiness, CI and recovery remain separate.

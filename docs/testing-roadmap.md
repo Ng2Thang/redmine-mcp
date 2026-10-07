@@ -1,5 +1,9 @@
 # Testing roadmap
 
+The user authorized testing for prep-022 through prep-026 on 2026-10-07.
+[Preparation regression testing](testing/evidence/prep-022-026-testing.md) records the new tests,
+runtime defects and corrections, owned live/Inspector results, cleanup and final offline evidence.
+
 Current verification has three layers: unit tests, offline REST/MCP integration tests, and opt-in
 live E2E against an isolated owned Redmine 7.0.2 environment. Testing CI and percentage coverage
 thresholds remain deferred. The [coverage matrix](plans/testing-coverage.md) maps every current
@@ -7,7 +11,7 @@ operation and common runtime scenario to its task and selected evidence.
 
 On 2026-10-07, [PREP-020](plans/tasks/prep-020-current-catalog-acceptance.md) reconciled the
 32-operation functional catalog: **1,086 offline and 21 owned Redmine 7.0.2 live tests passed**.
-The [current ledger](plans/current-catalog-acceptance.md) records the source revision and exact
+The [current ledger](testing/evidence/current-catalog-acceptance.md) records the source revision and exact
 evidence, including versions, memberships, `allowed_all`, shared write uncertainty and Inspector
 catalog/read compatibility. Broader historical variants remain in H1..H6; counts do not close
 them automatically. No tests or runtime checks were rerun for the PREP-021 documentation update.
@@ -87,7 +91,7 @@ uv run --frozen pytest
 The historical suite covered the then-current eleven reader tools at the REST boundary and MCP discovery,
 invocation, authentication, validation, and error envelopes. Authorized prep-004 work also
 covers concurrent identities, bounded upstream reads, readiness, and resource cleanup.
-See [the dated acceptance evidence](plans/prep-004-verification.md) for actual results and
+See [the dated acceptance evidence](testing/evidence/prep-004-verification.md) for actual results and
 remaining live fixture gaps. Opt-in live synthetic checks remain separate;
 coverage thresholds and testing CI remain separate decisions.
 

@@ -130,7 +130,7 @@ link execution artifacts and limitations. A Pydantic deprecation warning is reta
 ## Current catalog reconciliation, 2026-10-07
 
 [prep-020](tasks/prep-020-current-catalog-acceptance.md) owns the
-[32-operation current ledger](current-catalog-acceptance.md): 17 reads and 15 writes, with one
+[32-operation current ledger](../testing/evidence/current-catalog-acceptance.md): 17 reads and 15 writes, with one
 contract owner and original criteria/evidence/limitations for each operation. Earlier counts,
 waivers and dated tables above are historical; the ledger supplies current functional status.
 
@@ -155,3 +155,14 @@ revocation is restored, and its registered resources are cleaned up. Journals ma
 CI, coverage thresholds, restore/production readiness and blanket older permission matrices
 remain outside these passing functional results. H1..H5 in the ledger list exact outstanding
 original-owner scope; no dated pending row is treated as passed solely from the suite count.
+
+
+## Preparation acceptance (2026-10-07)
+
+The user separately assigned testing for prep-022 through prep-026. The final full offline
+suite passed 1395 tests (724.39 seconds); the owned pinned 7.0.2 live suite passed
+23 tests (246.84 seconds), including Inspector 2.8.0 and owned cleanup.
+[Preparation regression testing](../testing/evidence/prep-022-026-testing.md) maps every scenario to executable
+coverage and records the SDK upload-cap and native null-assignment corrections. Static
+lint/format, mypy, architecture and diff checks passed. Earlier counts above are historical.
+No CI, coverage threshold, recovery or production-readiness claim is added.

@@ -63,7 +63,7 @@ release publication. Defects discovered during verification need a reviewed fix 
 |---|---|
 | MCP / REST changes | None; invoke existing contracts, names, schemas, auth, and pagination |
 | Inputs | Current operation lists, original task criteria, dated artifacts, owned private fixture manifest |
-| Output | New `docs/plans/current-catalog-acceptance.md` with one row per operation and shared-policy sections |
+| Output | New `docs/testing/evidence/current-catalog-acceptance.md` with one row per operation and shared-policy sections |
 | Ledger fields | Operation, contract owner, source revision/date, offline scenarios, live scenarios, limitations, status, exact next action |
 | Configuration | Ordinary caller keys; reader and restricted writer separate; secrets stay ignored |
 | Native mapping | Inherited unchanged from feature tasks; no new Redmine endpoint or permission |
@@ -158,7 +158,7 @@ The user assigned prep-020 after prep-019 testing. This authorizes evidence reco
 missing offline scenarios, owned native verification and Inspector within this task. No task
 delegation, dependency installation, shared reset, production deployment or commit was performed.
 
-- Added `docs/plans/current-catalog-acceptance.md`: one row for every operation, original owner,
+- Added `docs/testing/evidence/current-catalog-acceptance.md`: one row for every operation, original owner,
   source revision/date, original/offline/live scenario mapping, status, limitations and next action.
   H1..H6 distinguish executed selected criteria, unexecuted broader matrices and historical waivers.
 - Added `scripts/audit-catalog-acceptance.py`: verifies 32 unique rows, registry agreement and

@@ -11,9 +11,10 @@ to the [security policy](SECURITY.md).
 - Use explicit type hints, four-space Python indentation, and a 100-character line limit.
   Keep Ruff and strict mypy configuration centralized in `pyproject.toml`.
 - Use async, lifespan-managed HTTP clients. Keep credentials and network access out of imports.
-- Current tools are read-only; future issue writes require the workflow prerequisites and a
-  separate opt-in restricted writer deployment. Keep administration separate. Preserve tool IDs
-  and explicitly register new tools in the MCP allowlist.
+- The reader remains read-only; implemented mutations require a separate opt-in restricted
+  writer, configured operation permissions and native authorization. New writes must satisfy
+  the [tool workflow](docs/workflows/redmine-tools.md) prerequisites. Keep administration
+  separate. Preserve tool IDs and explicitly register new tools in the MCP allowlist.
 - Submit dependency metadata and `uv.lock` together. Avoid unrelated upgrades and source rewrites.
 - Never commit credentials, dumps, snapshots, generated state, or real Redmine data.
 - Update the relevant guides and changelog when behavior, configuration, or public contracts change.
@@ -29,13 +30,18 @@ uv sync --frozen
 bash scripts/check.sh
 ```
 
-Run relevant [manual verification](docs/manual-verification.md) checks for runtime changes.
+Run relevant [manual verification](docs/manual-verification.md) checks for runtime changes only
+within an explicitly authorized verification assignment. Documentation-only work uses manual
+source, prose, example and link review; do not execute documented commands merely to review them.
 Pre-commit hooks are available as an opt-in local convenience. Mandatory hook enforcement,
 coverage thresholds and testing CI remain deferred. The tool workflow requires an
 automated baseline, now organized into unit, offline integration and opt-in live E2E layers.
 Execute tests only within an explicitly authorized testing assignment. Coding-only work excludes
 test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md)
-and [coverage matrix](docs/plans/testing-coverage.md).
+and [coverage matrix](docs/plans/testing-coverage.md). The
+[2026-10-07 ledger](docs/plans/current-catalog-acceptance.md) records passing current functional
+acceptance for 17 reads and 15 writes, including 1,086 offline and 21 owned live cases.
+Broader historical variants and operational/recovery acceptance remain separate follow-ups.
 
 Use concise imperative commit subjects, such as `Add issue status filtering`. Review descriptions
 should explain the behavior change, reference applicable issues, list checks actually performed,

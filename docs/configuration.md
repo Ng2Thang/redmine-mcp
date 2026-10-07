@@ -172,7 +172,21 @@ Do not share `docker compose config` output because interpolation can expose sec
 Base Compose always keeps `mcp-server` read-only. The opt-in `mcp-writer` profile binds to
 localhost port `8001` by default (`MCP_WRITER_HOST_PORT`). It needs a separate ignored env-file
 with explicit authentication mode. Default `pinned_key` requires `REDMINE_WRITER_USER_IDS` and
-`REDMINE_WRITER_KEY_SHA256`. Generate the digest locally in Git
+`REDMINE_WRITER_KEY_SHA256`. Prepare a private file without starting a deployment:
+
+```bash
+mkdir -p .local
+cp -n .env.example .local/writer.env
+chmod 600 .local/writer.env
+```
+
+Edit it privately: set the actual reachable `REDMINE_URL`, `REDMINE_WRITE_ENABLED=true`,
+`REDMINE_WRITER_AUTH_MODE=pinned_key`, the ordinary caller's positive numeric IDs in
+`REDMINE_WRITER_USER_IDS`, and its private digest in `REDMINE_WRITER_KEY_SHA256`.
+Leave `REDMINE_WRITER_OPERATIONS` empty until the intended operation scope is selected.
+These settings belong to the writer env-file; do not replace the reader's configuration.
+The Compose writer forces its write gate true, while a local writer needs the explicit setting.
+Generate the digest locally in Git
 Bash without putting the personal key in a command argument or history:
 
 ```bash
@@ -245,7 +259,10 @@ and project capability reporting, including membership writes. New registered wr
 are also permitted after upgrading the server. Use an explicit CSV list to keep a fixed scope.
 This option still requires `REDMINE_WRITE_ENABLED=true` on the separate writer deployment;
 writer identity restrictions, caller permissions and native Redmine authorization still apply.
-Restart the writer after changing its environment and refresh the MCP connection's tool list.
+Recreate the Compose writer after changing its env-file using the
+[startup command](operations.md#separate-writer), or restart a local writer process with the
+new environment; a plain Compose restart retains the existing container environment.
+Refresh client connections and tool lists.
 
 To permit project membership writes, explicitly configure only the needed operations in the
 separate ignored writer env-file, for example:
@@ -274,15 +291,18 @@ and duplicate recovery; creation does not require it. See the [tool contract](to
 This example does not change deployed configuration or enable writes on the reader.
 
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
-startup. Each future write route must use `require_write_access`, which checks its operation ID
+startup. Every write route uses `require_write_access`, which checks its operation ID
 against the expanded configured list. Reader REST write attempts return 403. No public write
-operation is part of this prerequisite.
+operation is admitted on the reader. The current explicit catalog has 15 write operations;
+see the [tool reference](tool-reference.md) for each native permission and outcome contract.
 
 The write transport sends each mutation once, bounds JSON and binary requests and JSON responses,
-accepts 201 with a JSON object or 204 without a body, and returns an `uncertain` receipt when a
+validates each operation's native success status/body, and returns an `uncertain` receipt when a
 request may have reached Redmine but a reliable response could not be obtained. Callers must
 inspect uncertain results before trying again. Logs record method, status, and timing without
-the request body, key, or response content. Live behavior still needs separate verification.
+the request body, key, or response content. Selected native state/permission acceptance is in
+the [2026-10-07 ledger](plans/current-catalog-acceptance.md); broader historical variants and
+operational readiness remain open. Configuration alone does not establish acceptance.
 
 Every JSON and binary mutation classifies a received HTTP 500-599 as `uncertain`. There is no
 per-operation opt-in or configuration switch. Individual results retain `outcome=uncertain`

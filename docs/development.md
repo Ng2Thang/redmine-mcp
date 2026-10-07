@@ -131,11 +131,14 @@ from redmine_mcp.mcp import register_mcp
    `operation_id`. Add its read permission to `auth/policy.py`; MCP exposure is a separate
    allowlist decision. The route owns the tool description and schemas. Register the router before MCP
    is created, then add the operation ID to `src/redmine_mcp/mcp/catalog.py` in the intended tool
-   order. Startup fails if a catalog ID is duplicated or does not match exactly one GET route.
+   order. Startup fails if a catalog ID is duplicated, lacks a response schema or the required
+   authorization dependency, or fails to match exactly one GET route under `/api/v1/`.
 6. Update the [tool reference](tool-reference.md), relevant configuration documentation, and
    [changelog](../CHANGELOG.md). Keep existing public tool names stable.
-7. Run quality checks and the relevant [manual verification](manual-verification.md) steps.
-   Record deferred checks and any limitations instead of claiming unperformed verification.
+7. Run quality checks within the assignment's scope. Execute automated tests, startup, Inspector
+   and the relevant [manual verification](manual-verification.md) steps only when explicitly
+   authorized. Documentation-only assignments use manual prose/source/link review. Record
+   deferred checks and limitations instead of claiming unperformed verification.
 
 Use `http_status.HTTP_*` constants imported from `fastapi.status` through
 `from fastapi import status as http_status` for HTTP statuses. The architecture gate permits
@@ -150,9 +153,13 @@ checks to enforce import boundaries and detect cycles without running applicatio
 Services should remain small and feature-focused. Start a new tool from the client's outcome and
 the [tool dashboard](plans/index.md), using Redmine REST only as implementation evidence. Avoid
 introducing a generic CRUD or connector framework. Administrative seed/restore functionality stays
-separate from runtime tools. Future issue writes require the
-[tool workflow](workflows/redmine-tools.md) prerequisites and a separate opt-in writer deployment;
-current tools remain read-only.
+separate from runtime tools. The reader remains read-only; the separate opt-in writer implements
+15 mutations. New writes require the [tool workflow](workflows/redmine-tools.md) prerequisites,
+typed inputs, configured operation gates and native permission checks. Register the operation
+in `auth/policy.py` and use `require_write_access` on its versioned POST/PUT/PATCH/DELETE route.
+Document exact effects, single-attempt uncertainty, independent read-back and owned cleanup.
+Explicit operation lists fix the deployment ceiling; `allowed_all` also admits newly registered
+writes after upgrade. Preserve existing IDs, schemas and reader isolation.
 
 ## Shared text constants
 
@@ -207,3 +214,8 @@ selection, `--run-e2e` and owned Redmine 7.0.2 fixtures. A coding-without-tests 
 install test dependencies or create/run fixtures and tests; assign verification separately.
 Coverage thresholds and testing CI remain deferred. Follow the
 [testing roadmap](testing-roadmap.md) and [coverage matrix](plans/testing-coverage.md).
+
+Current functional evidence is recorded in the
+[2026-10-07 ledger](plans/current-catalog-acceptance.md): 1,086 offline and 21 owned live cases
+passed for the 32-operation catalog. Those are dated results, not a claim that future edits or
+every historical variant are verified. Operational readiness, CI and recovery remain separate.

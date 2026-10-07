@@ -71,9 +71,11 @@ validated inputs, async HTTP, lifespan-managed clients, sanitized errors, and pe
 key authentication. Keep existing names/defaults compatible unless a task explicitly changes them.
 Avoid a generic CRUD proxy and never log API keys, tokens, or complete issue bodies.
 
-Current tools are read-only. Future writes are authorized only after their task defines exact
-side effects, least Redmine permissions, a separate opt-in writer deployment with application
-permission rules, and disposable synthetic verification. Administrative seeding stays
+The default reader remains read-only; implemented writes use a separate opt-in writer with
+configured operation gates and native permissions. New writes require a task defining exact
+side effects, least Redmine permissions, application permission rules and disposable synthetic
+verification. Current functional evidence and remaining variants are recorded in the
+[acceptance ledger](../plans/current-catalog-acceptance.md). Administrative seeding stays
 separate. For each write, define success status/body, duplicates, retries, timeout uncertainty,
 partial success, concurrency, state reconciliation, and cleanup; do not invent upstream
 idempotency or rollback. A failed read-back cannot prove a preceding write failed.

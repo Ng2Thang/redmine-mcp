@@ -5,6 +5,21 @@ that a release has been published.
 
 ## Unreleased
 
+### Acceptance and documentation (2026-10-07)
+
+- PREP-020 reconciled all 32 current operations against source-linked evidence: 1,086 offline
+  tests and 21 owned Redmine 7.0.2 live tests passed, including version/membership native state,
+  `allowed_all` admission and Inspector catalog/schema plus read compatibility. The
+  [ledger](docs/plans/current-catalog-acceptance.md) records the tested revision and broader
+  historical gaps; these are functional results, not a published release or recovery guarantee.
+- PREP-021 aligns current setup, writer, authentication, security, architecture and testing
+  guidance with that evidence. Documentation review executes no tests, deployment or setup
+  commands. Earlier entries below retain implementation history; current acceptance is defined
+  by the dated ledger. Operational readiness, CI and recovery remain deferred outside the
+  current local-development roadmap.
+- Remove the pilot-deployment task and its roadmap links at the user's request. Existing
+  local setup guides, functional acceptance and operational/recovery limitations remain intact.
+
 ### Changed
 
 - Raise default upstream concurrency to 50 and admission wait to 30 seconds. Logical reads now
@@ -51,7 +66,8 @@ that a release has been published.
 - Add read-only `list_time_entries` for spent-time logs across caller-visible projects, credited
   users and inclusive log-date ranges, including entries without an issue. Project filters
   explicitly select exact-project or descendant scope. Totals remain client calculations over
-  complete permitted pagination; testing and live acceptance are pending.
+  complete permitted pagination. Selected offline/live reporting acceptance passed on
+  2026-10-06 and is reconciled in the 2026-10-07 ledger.
 
 - Support standalone `REDMINE_WRITER_OPERATIONS=allowed_all` to permit all registered write
   operations through the existing writer catalog and authorization gates. Explicit operation
@@ -65,12 +81,14 @@ that a release has been published.
   and `delete_project_members`, with up to ten selected projects/items, whole-batch preflight,
   user-only writes, project permission checks and separate acceptance/read-back outcomes.
   Preserves native inherited/protected-role behavior and supports MCP DELETE batch bodies.
-  Ruff/mypy validation and documentation are included; offline and 7.0.2 acceptance remain pending.
+  Ruff/mypy validation and documentation are included; the initially pending offline and owned
+  7.0.2 native acceptance passed in PREP-020 on 2026-10-07.
 
 - Writer-only `create_project_version` creates open, unshared Target versions with optional
   description and due date. Readable same-project duplicates return their existing data with
   `version_already_exists`; acceptance, read-back verification, and uncertainty remain separate.
-  Requires explicit writer configuration and `manage_versions`. Runtime acceptance is pending.
+  Requires explicit writer configuration and `manage_versions`. Initially pending native
+  runtime acceptance passed in PREP-020 on 2026-10-07.
 
 - Shared upstream request semaphore, bounded admission, aggregate logical-read request/byte/time
   budgets, and stateless pagination policy. Large collections return a first-page preview but
@@ -78,7 +96,8 @@ that a release has been published.
 - Optional `REDMINE_PUBLIC_URL` mapping for validated attachment browser links. Attachment
   retrieval is metadata/link-only: `download_attachment` is removed from MCP discovery and cached
   invocations plus the retired REST content route are rejected. No generated exports or query
-  state are introduced. Runtime acceptance for prep-015 remains pending separately authorized testing.
+  state are introduced. The initial prep-015 coding handoff deferred runtime testing; subsequent
+  selected budget/proxy/link evidence is reconciled in PREP-020, with broader gaps retained.
 
 - Read-only `list_my_project_capabilities` with paginated caller-visible projects, membership
   roles deduplicated by ID, sorted unique project permissions merged across all readable roles,
@@ -150,20 +169,22 @@ that a release has been published.
 - Added the read-only global `list_document_categories` catalog.
 - Added `list_project_files` for project and version file metadata.
 - Added read-only `get_attachment` for metadata scoped by Redmine container visibility.
-- Added `download_attachment` for bounded base64 content; Project or Version download counts
-  may increase, so its MCP read-only and idempotent hints are false.
+- Historically added `download_attachment` for bounded base64 content; it is now retired as
+  described above. Its former download-count side effects required non-read-only hints.
 - Added `list_project_versions` with collection-completeness validation.
 - Added `list_project_issue_categories` with collection-completeness validation.
 - Issue requirement analysis, reviewed task backlog, and explicit testing/contract blockers.
-- Disabled-by-default write authorization prerequisite and separate writer deployment settings;
-  current tools remain read-only. Compose supports a configurable localhost MCP host port.
+- Initially added disabled-by-default write authorization and separate writer deployment
+  settings before implementing mutations. The default reader remains read-only; the current
+  writer is opt-in. Compose supports a configurable localhost MCP host port.
 
 - Read-only project listing, issue listing, and issue detail tools through REST and MCP.
 - Per-user Redmine API key authentication with request-scoped identity and paginated results.
 - Synthetic Redmine/PostgreSQL development environment and separate data-operation helpers.
 - EditorConfig, Python version selection, optional Flake8 compatibility settings, optional
   pre-commit checks, and a shared Git Bash quality-check command.
-- Inactive Codecov configuration; automated testing and coverage remain deferred.
+- Initially deferred automated testing with inactive Codecov configuration. The three testing
+  layers are now implemented; coverage thresholds and testing CI remain deferred.
 - Configuration, tool reference, manual verification, development, and operations guides.
 - Security reporting guidance and a project code of conduct.
 

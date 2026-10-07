@@ -5,6 +5,13 @@ live E2E against an isolated owned Redmine 7.0.2 environment. Testing CI and per
 thresholds remain deferred. The [coverage matrix](plans/testing-coverage.md) maps every current
 operation and common runtime scenario to its task and selected evidence.
 
+On 2026-10-07, [PREP-020](plans/tasks/prep-020-current-catalog-acceptance.md) reconciled the
+32-operation functional catalog: **1,086 offline and 21 owned Redmine 7.0.2 live tests passed**.
+The [current ledger](plans/current-catalog-acceptance.md) records the source revision and exact
+evidence, including versions, memberships, `allowed_all`, shared write uncertainty and Inspector
+catalog/read compatibility. Broader historical variants remain in H1..H6; counts do not close
+them automatically. No tests or runtime checks were rerun for the PREP-021 documentation update.
+
 ## Three-phase implementation
 
 | Phase | Directory | Task | Environment |
@@ -88,7 +95,9 @@ Current write verification uses a separate restricted synthetic writer, disposab
 resources, resulting-state checks and isolated cleanup. Existing reader credentials must remain
 read-only. See the [MCP tool dashboard](plans/index.md) for dependency and scenario records.
 
-Further work beyond the selected acceptance:
+The earlier backlog below identifies areas for further coverage, rather than declaring every
+scenario untested. Consult the current ledger and original owner tasks before assigning a gap:
+
 - Unit: service filters/defaults/pagination with fake gateways.
 - Integration: mapping, upstream errors, TLS/timeouts, personal-key authentication and forwarding.
 - MCP: schemas/names, error responses, shutdown and session cleanup.
@@ -99,6 +108,8 @@ Further work beyond the selected acceptance:
 - Packaging: isolated wheel, non-root image, import boundaries and CI.
 
 Successful basic calls do not establish production readiness.
+Operational readiness, audit/metrics, CI/package and owned recovery acceptance remain deferred
+outside the current local-development roadmap; final release review remains prep-009.
 
 ## Per-user authentication scenarios for a separately authorized test stage
 

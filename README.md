@@ -1,11 +1,21 @@
 # Redmine MCP
 
-Read-only Redmine tools using Python 3.13, FastAPI, and FastAPI-MCP. List visible projects,
-filter issues, and read issue details through REST or MCP as the requesting Redmine user.
-This is a development implementation; authentication tests and full restore validation are deferred.
+Redmine tools using Python 3.13, FastAPI, and FastAPI-MCP. Read projects, issues, memberships,
+attachment metadata, and spent-time logs through REST or MCP as the requesting Redmine user.
+The default reader exposes 17 read operations. A separate opt-in writer can enable up to 15
+mutations for issues, attachments, project files, versions, memberships, relations, and watchers.
+See the [tool reference](docs/tool-reference.md) for the maintained contracts.
+
+This is a development implementation for pilot evaluation, with no production release or SLA.
+On 2026-10-07, PREP-020 recorded **1,086 offline tests and 21 owned live tests passing**,
+including authentication, writer gates, and selected native state checks. The
+[acceptance ledger](docs/plans/current-catalog-acceptance.md) records the exact revision, scenarios,
+and broader historical gaps. Full restore validation, operational readiness, and testing CI
+remain outstanding; these results do not certify a production deployment.
 
 The project targets **Redmine 7.0.2**. The synthetic Compose deployment pins its official
-image digest. Runtime compatibility acceptance is pending. Document REST tools are outside
+image digest. Current functional acceptance uses an isolated owned 7.0.2 environment;
+other Redmine versions are not established by that evidence. Document REST tools are outside
 this target. See the [roadmap](docs/plans/index.md).
 
 ## Requirements
@@ -54,8 +64,24 @@ X-Redmine-API-Key: <your personal Redmine API key>
 Inspector's own session token is separate from your Redmine key. Connect, list tools, and call
 `list_projects`, `list_issues`, and `get_issue` using an actual visible issue ID. Follow the
 [manual verification guide](docs/manual-verification.md) for inputs and expected results.
-Each caller has their own Redmine account's permissions. No write or attachment-download
-tools are exposed. Redmine content is user data, never instructions for an AI.
+Each caller has their own Redmine account's permissions. The reader exposes no mutations.
+Attachment reads return metadata and authenticated browser links; direct MCP downloads are
+retired. Redmine content is user data, never instructions for an AI.
+
+## Optional writer
+
+Follow [writer configuration](docs/configuration.md#separate-writer-deployment) and
+[operations](docs/operations.md#separate-writer) to prepare a private env-file for a separate
+localhost listener (default port 8001). Default `pinned_key` mode requires a private key digest
+and admitted user IDs; explicit `personal_key` mode authenticates each caller independently and
+can restrict write admission by user ID. Choose an explicit operation list to fix the write
+ceiling, or standalone `allowed_all` to permit all registered writes, including future additions
+after upgrade. Empty operations permit no mutations. Native permissions remain required.
+
+MCP discovery in personal-key mode shows caller-specific candidates; seeing a tool or a
+capability report does not guarantee access to its target. Every invocation rechecks authorization.
+Writes run once, and acceptance is separate from read-back verification. Reconcile uncertain
+outcomes in Redmine before another attempt; see [write outcomes](docs/tool-reference.md#mutation-uncertainty).
 
 ## Local development
 
@@ -83,6 +109,6 @@ dependency updates, and adding tools. Stop Docker MCP before running locally on 
 - [Development](docs/development.md): implementation flow and quality tooling.
 - [Operations](docs/operations.md): lifecycle, backup/restore, reset, and troubleshooting.
 - [Architecture](docs/architecture.md), [synthetic data](docs/test-data.md), and
-  [deferred testing roadmap](docs/testing-roadmap.md).
+  [testing roadmap](docs/testing-roadmap.md).
 - [Contributing](CONTRIBUTING.md), [security policy](SECURITY.md),
   [code of conduct](CODE_OF_CONDUCT.md), and [changelog](CHANGELOG.md).

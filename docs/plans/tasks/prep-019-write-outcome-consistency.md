@@ -285,8 +285,9 @@ this stage to runtime code/documentation, installed Ruff/format/mypy checks, and
 No tests, fixtures, test dependencies, startup, Inspector, live calls, build, or deployment were
 created, modified, or executed. Existing review corrections and future scenarios remain intact.
 
-Working-tree baseline: `docs/plans/index.md` was already modified and prep-019 through prep-022
-were untracked planning documents from prior assignments. Preserve those plans and unrelated
+Working-tree baseline: `docs/plans/index.md` was already modified and the stabilization plans
+were untracked documents from prior assignments, including an operational draft later removed
+at the user's request. Preserve the retained plans and unrelated
 content; this stage changes only prep-019's record/dashboard row plus its runtime/public docs.
 
 Changes made:

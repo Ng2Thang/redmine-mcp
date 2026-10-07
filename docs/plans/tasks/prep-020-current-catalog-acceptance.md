@@ -214,5 +214,6 @@ Exact artifacts and reproduction commands are in the current ledger. Git base
 Final status: **complete for current functional acceptance and evidence reconciliation**.
 Next action: prep-021 must document the accepted 32-operation catalog and the ledger's explicit
 limits. Broader original-owner variants H1..H5 remain open before unsupported release claims;
-their acceptance is not inferred. Final release review stays with prep-009 and the later
-operational/recovery work in prep-022. No production rollout or publication was performed.
+their acceptance is not inferred. Final release review stays with prep-009;
+operational/recovery work remains deferred outside the current local-development roadmap.
+No production rollout or publication was performed.

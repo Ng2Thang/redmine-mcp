@@ -2,30 +2,31 @@
 
 ## Sequential stabilization plan
 
-The user requested task documents for the four project-review priorities on 2026-10-07.
+The user requested task documents for the project-review priorities on 2026-10-07.
 The original planning stage created documents only. Subsequent explicitly assigned implementation
 and verification results are recorded below; CI activation, deployment and recovery remain separate.
-Existing task IDs, contracts, waivers, and execution evidence are preserved.
+The user subsequently removed the pilot-deployment workstream from the current roadmap.
+Existing capability task IDs, contracts, waivers, and execution evidence are preserved.
 
 Execute the following tasks one at a time. Write-outcome consistency comes first so the later
 acceptance work verifies the corrected behavior. Each task separates implementation from
 separately authorized verification. A finished coding stage does not satisfy a verification
-dependency. The operational task must resolve its recorded decisions before implementation.
+dependency. The current stabilization sequence ends with the documentation task.
 
 | Order | Review priority | Task | Client outcome | Depends on | Status | Blocker / next action |
 |---|---|---|---|---|---|---|
 | 1 | Inconsistent write outcomes | [prep-019-write-outcome-consistency](tasks/prep-019-write-outcome-consistency.md) | Treat mutation HTTP 5xx as uncertain while preserving individual/batch schemas, GET errors, and reconciliation | Existing writer/auth implementations; prep-016/017 baseline; prep-018 owned live infrastructure | complete | Accepted on 2026-10-07: full offline suite 1035 passed; transport/admission tests 22 passed; all 15 writers covered through REST/MCP; owned 7.0.2 real commit/HTTP-500 reconciliation and cleanup plus Inspector compatibility pass. Ruff/format/mypy and diff checks pass; proceed to prep-020 in its own assignment |
 | 2 | Outstanding acceptance | [prep-020-current-catalog-acceptance](tasks/prep-020-current-catalog-acceptance.md) | Map current capabilities to actual evidence and close version, membership, allowed_all, and relevant historical gaps | prep-019 accepted; existing prep-018 isolated environment guidance | complete | Accepted 2026-10-07: [32-operation ledger](current-catalog-acceptance.md) audited; 1086 offline and 21 owned 7.0.2 live cases pass; TOOL-032-008/033-011, allowed_all and Inspector pass; broader original variants remain explicitly open in H1..H5; proceed to prep-021 without a release-readiness claim |
-| 3 | Stale documentation | [prep-021-current-catalog-documentation](tasks/prep-021-current-catalog-documentation.md) | Make setup, writer configuration, security guidance, and release limitations match current behavior | prep-020 accepted | planned | Update current guidance from the accepted ledger while retaining historical records |
-| 4 | Operational readiness | [prep-022-operational-readiness](tasks/prep-022-operational-readiness.md) | Establish readiness, writer audit, metrics, CI/packaging, and deployment/recovery procedures | prep-019/020/021 accepted | blocked | Resolve pilot environment, CI provider/activation, telemetry access/retention, and recovery ownership before coding |
+| 3 | Stale documentation | [prep-021-current-catalog-documentation](tasks/prep-021-current-catalog-documentation.md) | Make setup, writer configuration, security guidance, and release limitations match current behavior | prep-020 accepted | complete | Accepted 2026-10-07: current guides aligned with the 17-read/15-write ledger, pinned/personal writer modes and allowed_all; STAB-021-001..005 manual source/prose/example/link review and diff check pass. No tests or operational commands run; historical gaps and Unreleased status retained. Stabilization complete for local development; future feature or coverage work requires its own assignment |
 
 These are shared stabilization prerequisites, not new Redmine tools. prep-020 coordinates
 evidence without taking contract ownership from tool-032, tool-033, or the allowed_all follow-up.
-prep-021 owns correction of existing guidance; prep-022 owns documentation for its new
-operational behavior. The original prep-009 final release review remains separate; completing
+prep-021 owns correction of existing guidance. Operational readiness, CI and recovery work
+remain deferred outside the current local-development roadmap.
+The original prep-009 final release review remains separate; completing
 this plan does not publish a release or silently close its historical prerequisites.
 
-Active task IDs now run from `prep-001` through `prep-022` and `tool-001` through `tool-035`.
+Active task IDs now run from `prep-001` through `prep-021` and `tool-001` through `tool-035`.
 
 ## Issue estimates and general spent-time reporting
 
@@ -58,7 +59,8 @@ This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is i
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
 Active task IDs are continuous: `tool-001` through `tool-035` and `prep-001` through
-`prep-022`. The stabilization follow-up adds prep-019 through prep-022 on 2026-10-07.
+`prep-021`. The retained stabilization follow-up consists of prep-019 through prep-021,
+added on 2026-10-07.
 On 2026-10-02, the user requested compact numbering after document tasks
 were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
 together; earlier IDs remain available in Git history. The deleted `issues-000` through

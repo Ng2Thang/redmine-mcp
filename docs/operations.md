@@ -140,17 +140,51 @@ This uses base Compose, which runs MCP only. Never add the synthetic override or
 seed/reset/restore helpers for an external instance. Inside Docker, use `host.docker.internal`
 for Redmine running on the Windows host. Hosting, HTTPS ingress, and OAuth remain deferred.
 
-For the separate restricted writer, create an ignored `.local/writer.env` using the settings in
-[configuration](configuration.md). Start only the writer profile with its own Compose project:
+## Separate writer
+
+For the separate restricted writer, prepare an ignored `.local/writer.env` using
+[configuration](configuration.md#separate-writer-deployment). Keep its Redmine URL and caller
+restrictions private. Default pinned-key mode requires a key digest and admitted user IDs;
+personal-key mode requires an empty digest and supports an optional write-only user list.
+Use ordinary users with the least native permissions for the intended projects.
+
+Choose the needed IDs from the [tool reference](tool-reference.md), for example
+`create_project_version` with `manage_versions` or membership writers with `manage_members`.
+An empty `REDMINE_WRITER_OPERATIONS` permits no mutations. Standalone `allowed_all` expands to
+all 15 registered writes and future registered writes after upgrade; use explicit CSV IDs for
+a fixed ceiling. No configuration choice bypasses native permissions or per-request gates.
+
+Once the configuration and intended write scope have been reviewed, start only the writer
+profile with its own Compose project:
 
 ```bash
 docker compose -p redmine-mcp-writer --env-file .local/writer.env -f deploy/compose.yaml --profile writer up -d --build mcp-writer
 ```
 
 It listens on `127.0.0.1:8001` unless `MCP_WRITER_HOST_PORT` is set. The reader deployment
-continues to use port 8000 and cannot enable writes through `REDMINE_WRITE_ENABLED`. At this
-foundation stage, no write operations are registered; leave `REDMINE_WRITER_OPERATIONS` empty.
+continues to use port 8000; base Compose forces its `REDMINE_WRITE_ENABLED=false`.
+Changing the env-file requires recreating the writer service with the startup command above;
+refresh client connections and tool lists afterward. Personal-key discovery is caller-specific
+and reports candidates, not guaranteed target access. Direct/cached calls still enforce current gates.
 Do not share `docker compose config` output because it includes the writer key digest.
+
+For a synthetic writer, use the already marked synthetic instance with its own ignored writer
+configuration and a reachable Redmine URL. Do not add the synthetic override to this separate
+writer project: the existing synthetic instance owns its database and files. For an external
+writer, use only the base Compose file and the external instance's ordinary user permissions;
+seed/reset/restore helpers remain inapplicable.
+
+Writes have one upstream attempt and separate acceptance/verification fields. A timeout,
+lost response, interruption, or mutation HTTP 500-599 may leave an uncertain outcome.
+Reconcile the actual target in Redmine before attempting again, preserving already accepted
+batch peers. A failed read-back does not undo acceptance. See
+[write semantics](tool-reference.md#mutation-uncertainty) and membership batch contracts.
+
+The [2026-10-07 ledger](plans/current-catalog-acceptance.md) records current functional acceptance.
+`/health` remains process liveness and does not contact Redmine. Complete writer audit, metrics,
+CI, deployment/rollback and recovery acceptance remain deferred outside the current
+local-development roadmap. Existing logs and Compose healthchecks do not establish these
+guarantees.
 
 ## Troubleshooting
 

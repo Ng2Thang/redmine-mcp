@@ -1,11 +1,25 @@
 # Manual verification
 
+## Scope and authorization
+
+This guide describes procedures; it does not authorize their execution. Run automated tests,
+startup, Inspector or live calls only in an explicitly assigned verification stage. Documentation
+review uses manual source/prose/example/link inspection without executing the examples.
+Reader smoke checks do not authorize mutations, fixture creation or permission changes.
+
+The [2026-10-07 acceptance ledger](plans/current-catalog-acceptance.md) supersedes older pending
+summaries for the current functional catalog: 1,086 offline and 21 owned Redmine 7.0.2 live cases
+passed. It includes version and membership acceptance, `allowed_all`, and Inspector discovery
+plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
+historical limitations. Repeated checks are new work, not evidence already produced by this guide.
+
 ## Issue estimates and general spent-time logs
 
 The user authorized the testing stage for [tool-034](plans/tasks/tool-034-list-issue-estimates.md)
 and [tool-035](plans/tasks/tool-035-list-time-entries.md) on 2026-10-06. Dedicated offline,
 owned Redmine 7.0.2 live and Inspector checks passed; see the tasks for execution evidence.
-Repeat the focused live checks in Git Bash against the owned environment:
+Within a separately authorized verification assignment, repeat the focused checks in Git Bash
+against the owned environment:
 
 ```bash
 uv run --frozen --no-sync pytest tests/unit/test_time_entry_search.py tests/integration/test_issue_estimates.py tests/integration/test_time_entries_overview.py -q
@@ -48,7 +62,9 @@ the existing shared synthetic environment merely to run these checks.
 
 ## Bounded reads and attachment links (separately authorized)
 
-The [prep-015 task](plans/tasks/prep-015-bounded-redmine-reads.md) owns pending acceptance.
+The [prep-015 task](plans/tasks/prep-015-bounded-redmine-reads.md) owns the original bounded-read
+criteria. Selected budget/proxy/attachment-link evidence has passed; consult the current ledger
+and coverage matrix for the exact scope and remaining broader variants.
 Do not execute these scenarios without a separate verification assignment. Use offline fake
 million-record totals rather than generating a million live synthetic issues.
 
@@ -75,8 +91,10 @@ million-record totals rather than generating a million live synthetic issues.
   authenticated browser. MCP must not fetch the link or return base64 content. Verify a public
   subpath mapping and malformed/off-origin metadata links separately.
 
-Existing download-tool tests and old paging expectations need a later authorized update; this
-coding assignment does not modify tests or execute the historical procedures below.
+The historical coding handoff deferred download-tool tests and old paging expectations.
+Subsequent testing records are linked in the current ledger; preserve the original record rather
+than treating that earlier deferral as the current result. These procedures remain available for
+an authorized regression assignment.
 
 For separately authorized multi-user verification on the marked synthetic writer, use distinct
 ordinary personal keys privately. In personal-key mode verify both users can read/connect and
@@ -99,9 +117,10 @@ production readiness. Full permission, restore, and failure-recovery verificatio
 
 ## Target version creation (separate authorization required)
 
-[tool-032](plans/tasks/tool-032-create-project-version.md) owns its new acceptance scenarios;
-earlier testing authorization and results do not establish acceptance for this operation.
-Do not run these procedures without a separate verification assignment. Use the isolated marked
+[tool-032](plans/tasks/tool-032-create-project-version.md) owns its acceptance scenarios.
+PREP-020 completed selected offline/native 7.0.2 state, duplicate and permission checks, plus
+Inspector schema/read compatibility. The steps below are a regression procedure, not pending
+current acceptance or authorization to repeat mutations. Use the isolated marked
 7.0.2 environment, its restricted writer, and task-owned versions; preserve the shared 6.0.5
 environment. Read credentials privately and record only redacted evidence.
 
@@ -122,14 +141,14 @@ environment. Read credentials privately and record only redacted evidence.
 
 ## Project membership management (live authorization required)
 
-The follow-up testing assignment implements offline unit/service/gateway and REST/MCP tests
-for tool-033, including lifespan startup through the isolated ASGI application and DELETE
-JSON body forwarding. Results and scenario ownership are recorded in the combined task;
-Inspector calls and live mutations remain pending. Target-version acceptance owns
-TOOL-033-011 in the
-[combined task](plans/tasks/tool-033-project-members-management.md). Use the marked, owned
-Redmine **7.0.2** environment; the shared container observed during planning was **6.0.5** and
-does not establish target-version acceptance. Preserve shared users, projects and memberships.
+Offline unit/service/gateway and REST/MCP tests cover tool-033, including lifespan startup and
+DELETE JSON body forwarding. PREP-020 passed TOOL-033-011 with owned native **7.0.2** state,
+managed/protected roles, inheritance, assignment effects and disposable cleanup. Inspector
+verified catalog/schema and membership reads; it performed no mutations. The
+[combined task](plans/tasks/tool-033-project-members-management.md) and current ledger retain
+exact evidence and historical handoffs. These steps are future regression scenarios, requiring
+explicit live authorization; the shared **6.0.5** container is not target evidence. Preserve
+shared users, projects and memberships.
 
 1. Run the authorized offline regression command recorded in the combined task and review
    scenario coverage. Offline protected/inherited-role assertions use a synthetic upstream;
@@ -167,8 +186,8 @@ does not establish target-version acceptance. Preserve shared users, projects an
    not-executed later items. Cover direct/proxy admission and reader compatibility as well.
 9. Reconcile attempted project/user pairs or membership IDs after every uncertain/interrupted
    outcome before a new request. Restore only task-owned memberships, roles and assignments;
-   record actual tool outputs, native state, cleanup and limitations. Keep acceptance pending
-   until this evidence satisfies the task criteria.
+   record actual tool outputs, native state, cleanup and limitations. A future change needs
+   its own evidence; do not infer acceptance from the existing suite count alone.
 
 ## Preparation and startup
 
@@ -284,4 +303,4 @@ Known limitations and deferred checks:
 
 Record only redacted summaries, not complete issue bodies or credentials. Do not perform reset,
 backup, or restore merely to validate documentation. Successful smoke checks do not replace the
-deferred automated and recovery tests.
+automated scenario assertions or outstanding recovery acceptance.

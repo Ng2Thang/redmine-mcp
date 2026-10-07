@@ -97,8 +97,9 @@ Existing prep-018 lifecycle cleanup removes its separately registered issues/att
 Owned journal history may remain; no history rollback is promised. Inspector runs on a separate
 localhost application and terminates it in `finally`. No shared reset, dependency change, commit,
 production deployment, CI activation or release publication belongs to this assignment.
-Final operational/recovery/user-release approval remains [prep-009](tasks/prep-009-release-acceptance.md)
-and [prep-022](tasks/prep-022-operational-readiness.md).
+Final release review remains [prep-009](tasks/prep-009-release-acceptance.md).
+Operational and recovery acceptance remain deferred outside the current local-development
+roadmap; removing the deployment workstream does not establish those guarantees.
 
 ## Final execution, 2026-10-07
 

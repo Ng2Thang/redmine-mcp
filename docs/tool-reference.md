@@ -1,5 +1,20 @@
 # Tool reference
 
+## Catalog and support scope
+
+The current registered catalog contains 17 reads and 15 writes. The default reader exposes
+only reads; the separate writer exposes configured mutations alongside readers. Personal-key
+discovery is caller-specific, and conditional/unknown candidates are not permission grants.
+Use [configuration](configuration.md#separate-writer-deployment) for authentication, operation
+lists and `allowed_all`. Authoritative input/output schemas remain in the feature routes/models
+and generated OpenAPI/MCP definitions; this reference explains their intended use.
+
+Current functional acceptance is recorded in the
+[2026-10-07 ledger](plans/current-catalog-acceptance.md): 1,086 offline and 21 owned Redmine
+7.0.2 live cases passed. Its source revision, exact scenarios and H1..H6 limitations define
+the evidence boundary. Other versions, all historical variants and production readiness are
+not established. Direct attachment content download is retired; reads provide metadata/links.
+
 ## Project membership management
 
 The four tools manage memberships in selected projects. Listing is available on the reader;
@@ -105,8 +120,10 @@ An uncertain write, lost response or interrupted connection requires reconciliat
 before any new attempt. Inspect the project/user pair for add and the original membership ID
 and role set for update/delete. External cancellation propagates and stops further items;
 shutdown/disconnect can prevent delivery of the batch receipt. Do not infer failure from a
-missing response. Implementation is finished; offline and owned Redmine 7.0.2 acceptance remain
-pending. The shared container observed during planning was 6.0.5.
+missing response. Offline and owned Redmine 7.0.2 functional acceptance passed in PREP-020,
+including managed/protected roles, inheritance and assignment effects; see the
+[ledger](plans/current-catalog-acceptance.md) and combined task for exact results.
+The historical shared 6.0.5 container is not target-version evidence.
 
 ## Create project version
 
@@ -162,8 +179,10 @@ Writes are attempted once. A dispatched timeout, unexpected success status, or u
 response reports `uncertain`; a seen 201 retains `upstream_accepted=true`. Reconcile with
 `list_project_versions` before deciding whether to retry. A matching name after a timeout does
 not prove this invocation created it. No automatic retry, rollback, or concurrency guarantee
-is provided. Offline acceptance for [tool-032](plans/tasks/tool-032-create-project-version.md)
-passes; live 7.0.2 state and permission verification remains pending separate authorization.
+is provided. Offline and owned 7.0.2 functional acceptance for
+[tool-032](plans/tasks/tool-032-create-project-version.md) passed in PREP-020, including optional
+fields, duplicate state/count parity and creation without issue-read permission. See the
+[ledger](plans/current-catalog-acceptance.md); future verification still requires authorization.
 
 ## Caller project capabilities
 

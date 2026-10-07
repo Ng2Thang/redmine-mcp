@@ -7,13 +7,13 @@
 | Task ID | prep-021-current-catalog-documentation |
 | Assigned capability | Let a new user configure reader/writer access and understand the actual support level |
 | Type / access / destructive effects | Shared documentation prerequisite; read-only inspection; none |
-| Status | planned |
+| Status | complete |
 | Dependencies | [prep-020](prep-020-current-catalog-acceptance.md) accepted |
-| Related tasks | [Dashboard](../index.md); [prep-022](prep-022-operational-readiness.md); original prep-009 |
+| Related tasks | [Dashboard](../index.md); original prep-009 |
 | Target Redmine version | 7.0.2; describe only evidence supported by the accepted ledger |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Documentation discrepancies identified; no existing guidance updated yet |
-| Next action | After prep-020 acceptance, assign this documentation-only task |
+| Progress summary | Current guides reconciled with the accepted 32-operation ledger; STAB-021-001..005 manual review passed; no runtime commands executed |
+| Next action | Current stabilization sequence finished; assign future feature or coverage work separately |
 
 ## 2. Discovery and evidence
 
@@ -40,7 +40,7 @@ existing feature contracts and source evidence. Preserve unrelated working-tree 
 | DEC-001 | README summarizes current capabilities and links the maintained tool reference instead of duplicating every schema | No |
 | DEC-002 | Correct current instructions; preserve dated task records, prior waivers, and genuine verification gaps | No |
 | DEC-003 | Do not edit AGENTS.md or skill instructions as part of this documentation correction | No |
-| DEC-004 | prep-022 owns guidance for new readiness/audit/CI/recovery behavior; this task documents only existing accepted behavior | No |
+| DEC-004 | New readiness/audit/CI/recovery behavior is outside this documentation task and deferred from the current roadmap; this task documents only existing accepted behavior | No |
 
 ## 3. Requirements
 
@@ -109,11 +109,11 @@ No runtime, dependency, lockfile, test, CI, or deployment changes are planned.
 
 | Requirement | Criterion | Verification | Result |
 |---|---|---|---|
-| REQ-001 | AC-001 | STAB-021-001 | Pending |
-| REQ-002 | AC-002 | STAB-021-002 | Pending |
-| REQ-003 | AC-003 | STAB-021-003 | Pending |
-| REQ-004 | AC-004 | STAB-021-004 | Pending |
-| REQ-005 | AC-005 | STAB-021-005 | Pending |
+| REQ-001 | AC-001 | STAB-021-001 | Passed; EVID-021-001 |
+| REQ-002 | AC-002 | STAB-021-002 | Passed; EVID-021-001 |
+| REQ-003 | AC-003 | STAB-021-003 | Passed; EVID-021-001 |
+| REQ-004 | AC-004 | STAB-021-004 | Passed; EVID-021-001 |
+| REQ-005 | AC-005 | STAB-021-005 | Passed; EVID-021-001 |
 
 ## 7. Test plan and execution record
 
@@ -130,21 +130,64 @@ Markdown test tooling, startup, Inspector, build, or Docker commands merely to r
 
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
-| EVID-021-001 | Future manual review of STAB-021-001..005 | Not performed | Pending |
+| EVID-021-001 | Manual source, ledger, prose, examples, relative links/anchors and diff review on 2026-10-07; STAB-021-001..005 | Passed: catalog scope, setup gates/defaults, evidence dates/limits, Bash/private/localhost boundaries and linked guides agree; runtime/test/deployment commands were not executed | Passed |
 
 ## 8. Implementation and review record
 
-- Changes made: this planning document and dashboard only.
-- Runtime/tooling verification: not performed and not required for prose-only changes.
-- Future review must distinguish stale current summaries from genuine pending criteria.
-- Additional operational claims remain owned by prep-022 and cannot be marked complete here.
+### Documentation execution on 2026-10-07
+
+The user's `continue for prep 021` assignment authorized this documentation stage. The baseline
+was clean at Git HEAD `dffc8e3` (`feat: implement for prep-020`); the accepted predecessor ledger
+retains its original R020 execution revision rather than being rewritten for these prose edits.
+The planning discovery above records discrepancies before this implementation.
+
+| Documents | Discrepancy / correction | Manual evidence |
+|---|---|---|
+| `README.md` | Earlier read-only scope and deferred authentication summary replaced with 17 reader/15 writer scope, caller auth, setup links and dated functional support | STAB-021-001/003 |
+| `docs/operations.md`, `docs/configuration.md` | Removed obsolete empty writer foundation claims; private file setup, pinned/personal modes, native permissions, fixed CSV versus allowed_all, separate localhost startup and Compose recreation clarified | STAB-021-002/004 |
+| `docs/tool-reference.md` | Version/membership pending summaries reconciled with PREP-020; catalog/discovery support boundary added without schema changes | STAB-021-001/003/005 |
+| `docs/architecture.md`, `SECURITY.md` | Current route-method/dependency checks, operation policy, session/capability controls and single-attempt uncertainty replace earlier future-write descriptions | STAB-021-002/005 |
+| `CONTRIBUTING.md`, `docs/development.md`, `docs/manual-verification.md` | Current reader/writer workflow and explicit verification authorization clarified; older pending handoffs contextualized as history/regression procedures | STAB-021-003/004/005 |
+| `CHANGELOG.md`, `docs/testing-roadmap.md` | Dated 1086 offline/21 owned live results linked to the ledger; genuine broader gaps, inactive CI and recovery limits retained; release remains Unreleased | STAB-021-003/005 |
+| `docs/workflows/redmine-tools.md` | Small related contributor guidance correction removes its contradictory current read-only claim; task prerequisites and verification boundaries preserved | STAB-021-005 |
+
+- Manual factual sources: `auth/policy.py`, `config.py`, `mcp/catalog.py`, existing feature
+  contracts, Compose service settings, and the accepted PREP-020 ledger. No new upstream,
+  supported-version or operational contract was introduced.
+- Manual link review: relative documentation/task targets and new anchors were inspected;
+  `#separate-writer`, `#separate-writer-deployment` and `#mutation-uncertainty` match the
+  destination headings. Command examples remain Git Bash; private placeholders/env-files and
+  synthetic/external separation remain intact. Existing marker-guarded data helper procedures
+  and recovery limitations were preserved and not executed.
+- Verification performed: manual STAB-021-001..005 review and `git diff --check` (exit 0).
+  Git reported routine CRLF-to-LF notices for existing documents, with no whitespace errors.
+- Automated/runtime tests, Markdown test tooling, Ruff/mypy, startup, Inspector, build,
+  setup/reset/restore and Docker commands: not run; N/A for this documentation-only assignment.
+  Passing suite numbers are dated predecessor evidence, not new runs.
+- Final scope: English Markdown only; no runtime, dependencies, lockfile, fixtures, tests,
+  deployment or CI changed. AGENTS.md and skill instructions remain untouched. No commit,
+  publication or live configuration change was performed.
+- Scope adjustment: the existing contributor workflow received the same factual correction as
+  CONTRIBUTING/development so its linked guidance does not contradict the current catalog.
+- Additional operational decisions and claims remain deferred outside the current roadmap;
+  no historical capability task, release prerequisite or broader acceptance gap was silently closed.
+
+### Roadmap scope update on 2026-10-07
+
+The user removed the pilot-deployment workstream and its related task document. References and
+the next action were updated accordingly. This documentation task remains complete, and local
+development/testing can continue through separately assigned feature or coverage work.
+Operational and recovery limitations remain documented; no runtime behavior changed.
 
 ## 9. Completion and handoff
 
-- [ ] All required current guides corrected against accepted evidence.
-- [ ] Bash-only commands, private examples, and links manually reviewed.
-- [ ] Contracts, historical records, and genuine gaps preserved.
-- [ ] Task/dashboard synchronized with an accurate documentation result.
+- [x] All required current guides corrected against accepted evidence.
+- [x] Bash-only commands, private examples, and links manually reviewed.
+- [x] Contracts, historical records, and genuine gaps preserved.
+- [x] Task/dashboard synchronized with an accurate documentation result.
 
-Final status: planned. Next action: complete prep-020 acceptance, then assign documentation work.
-No automated tests are required for this task. Proceed to prep-022 decision resolution afterward.
+Final status: complete. Current user, operator and contributor guidance agrees with the accepted
+catalog and its actual support boundaries. No automated tests are required for this task.
+Next action: assign future feature or coverage work separately when needed. Pilot-deployment
+work is outside the current roadmap at the user's request. Release review remains owned by
+prep-009; this completion does not authorize deployment or publication.

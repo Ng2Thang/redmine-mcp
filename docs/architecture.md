@@ -30,7 +30,8 @@ flowchart TD
 The service calls the implementation supplied through its port. Only Redmine owns database
 access; the diagram describes runtime dependencies, not the separate administrative seed tools.
 
-A modular monolith with projects/issues features. Only redmine_mcp is packaged for runtime.
+A modular monolith with resource-focused features, including projects, issues, users,
+attachments and time entries. Only redmine_mcp is packaged for runtime.
 Features contain models, query contracts, small Protocol ports, services and routers. Concrete adapters
 live in integrations/redmine. Services depend on interfaces, not FastAPI or HTTPX.
 HTTP status constants are the narrow exception: `from fastapi import status as http_status`
@@ -48,11 +49,14 @@ Imports do not load credentials or call the network.
 
 Register routes before MCP creation. Feature routes own stable operation IDs, descriptions, and
 schemas; `mcp/catalog.py` explicitly selects which routes become MCP tools. Startup rejects a
-catalog entry unless it matches exactly one GET route under `/api/v1/`. Other REST routes need no
-MCP catalog entry. REST and MCP validate the personal Redmine key through `/users/current.json`.
+catalog entry unless it matches exactly one route under `/api/v1/` with a response schema and
+the corresponding authorization dependency. Readers require GET and `require_read_access`;
+configured writers require POST, PUT, PATCH or DELETE and `require_write_access`.
+Other REST routes need no MCP catalog entry. REST and MCP validate the personal Redmine key
+through `/users/current.json`.
 MCP forwards only that header to internal ASGI calls. A request-scoped principal contains the
-verified Redmine user ID; a central policy currently allows reads and prepares for application
-roles. Pydantic models are shared with response schemas until the contracts diverge.
+verified Redmine user ID; a central policy explicitly names read and enabled write operations.
+Pydantic models are shared with response schemas until the contracts diverge.
 
 Only bootstrap selects concrete implementations. Gateways do not import routers/services.
 Common code contains errors, pagination, and shared visibility response models. The Redmine
@@ -66,7 +70,7 @@ Redmine.
 |---|---|---|
 | Principal and credential context | `auth/models.py` | Immutable request identity; keys excluded from representations |
 | Identity port and authentication service | `auth/ports.py`, `auth/service.py` | Framework-independent key validation and authentication; no HTTP calls |
-| Explicit application permissions | `auth/policy.py` | Named read permissions, separate from upstream resource visibility |
+| Explicit application permissions | `auth/policy.py` | Named read/write permissions, separate from upstream resource visibility |
 | Header validation and FastAPI dependencies | `api/security.py` | Reject missing, repeated, oversized, or malformed keys before calling identity service |
 | Current-user lookup | `integrations/redmine/identity.py` | Implements the identity port using the request's Redmine client |
 | HTTP pool and timeouts | `integrations/redmine/transport.py` | Creates a credential-free, lifespan-managed client |
@@ -83,9 +87,13 @@ Redmine.
 Authentication creates a request-scoped identity; it never caches keys or principals across
 requests. FastAPI reuses its authentication dependency within a request. MCP connection
 authentication and internal REST authentication remain separate checks. Authorization accepts
-only the named read operations in `auth/policy.py` and `mcp:connect`; adding a read route requires
-an explicit permission entry. MCP exposure remains separately controlled by `mcp/catalog.py`.
-Catalog validation also rejects exposed tools missing an explicit read permission at startup.
+only the named read operations, configured write operations in `auth/policy.py`, and
+`mcp:connect`; adding a route requires an explicit permission entry. MCP exposure remains
+separately controlled by `mcp/catalog.py` and the deployment's writer ceiling.
+Catalog validation rejects exposed tools lacking the corresponding authorization dependency.
+The current catalog contains 17 reads and 15 writes; reader registration excludes all mutations.
+Standalone `allowed_all` expands to registered write IDs before catalog, REST and capability
+checks, including future registered writes after upgrade. It does not bypass other gates.
 
 The writer defaults to pinned-key authentication. Explicit personal-key mode authenticates
 multiple callers independently and applies an optional user list only at the write boundary.
@@ -109,9 +117,10 @@ superset for invocation. The adapter seeds SDK 1.30.0's cache once instead of us
 decorator, which mutates shared schema state. Missing context fails closed; unknown permission
 coverage remains a candidate and is resolved through the same REST boundary at invocation.
 Validation inspects normalized route contracts, including lazy included-router contexts in newer
-FastAPI versions. It rejects duplicate/hidden routes, non-GET routes, missing response schemas,
-and tools without the read-authorization dependency. Generated MCP tool names must exactly match
-the catalog. Version-dependent route inspection is isolated in `api/routing.py`.
+FastAPI versions. It rejects duplicate/hidden routes, incorrect read/write methods, missing
+response schemas and tools without the corresponding authorization dependency. Generated MCP
+tool names must exactly match the catalog. Version-dependent route inspection is isolated in
+`api/routing.py`.
 
 Authentication passes the normalized key to the identity port explicitly. The key used to verify
 the user is therefore the same key retained in the request context; readers cannot prebind a
@@ -185,7 +194,7 @@ gateways. Services invoke ports with named arguments to reduce positional filter
 | `redmine/` | `integrations/redmine/` | Transport, response envelopes, feature mapping, and visibility stay within adapters |
 | `http/` | `api/` plus feature routers | Shared request/error/auth handling stays in API; transport contracts stay with each feature |
 | `tools/` | `features/` with services and ports | Resource grouping retains business boundaries and shared REST/MCP behavior |
-| Attachments and upload store | Existing attachment metadata model | Upload/download/storage need contracts for retention, permissions, and SSRF prevention |
+| Attachments and upload store | Metadata/browser links and bounded writer upload tokens | MCP content download is retired; native Redmine owns attachment storage and retention |
 | Extensions, apps, custom fields, offload | Future capability specifications | Registration, MCP App UI, custom-field semantics, or blocking work require actual use cases |
 
 Static architecture checks run inside `scripts/check.sh`. They parse imports without loading the
@@ -198,8 +207,16 @@ from depending on feature implementations, and prevent domain code from importin
 Base Compose runs MCP only. The synthetic override adds Redmine/PostgreSQL and optional
 seed/backup services. Administrative tools are not shipped in the runtime image.
 Image pins provide development reproducibility, not production security certification.
-OAuth and hosting remain deferred. Current tools are read-only; future issue writes require
-workflow prerequisites, application permission rules, and a separate opt-in writer deployment.
+OAuth and hosting remain deferred. The reader remains read-only; implemented mutations require
+the separate opt-in writer, configured operations, caller admission and native permissions.
+Single-attempt mutation receipts distinguish acceptance, uncertainty and independent read-back;
+received HTTP 500-599 is uncertain across JSON and binary writes. No automatic retry or rollback
+is implied. See [write outcomes](tool-reference.md#mutation-uncertainty).
+
+The [2026-10-07 acceptance ledger](plans/current-catalog-acceptance.md) records functional
+evidence against owned Redmine 7.0.2 and remaining historical variants. Liveness is not upstream
+readiness; complete audit, metrics, CI and recovery behavior remain deferred outside the
+current local-development roadmap.
 
 See [development](development.md) for adding tools, [configuration](configuration.md) for settings,
 and [tool reference](tool-reference.md) for public contracts.

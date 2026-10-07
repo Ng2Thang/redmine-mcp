@@ -28,6 +28,26 @@ a supplied null issue subject remains invalid. Existing unknown-property policie
 response field handling are unchanged. PREP-022 runtime acceptance is pending; the dated
 baseline ledger above predates this adapter correction.
 
+## Declared response field validation
+
+Resource and reference IDs, including nested parent/custom-field IDs and public receipt IDs,
+must be positive JSON integers. Boolean, string, floating-point, zero and negative IDs are
+rejected. File sizes, download counts and pagination counts/offsets are nonnegative strict
+integers; page limits remain positive. Declared flags accept JSON booleans only.
+`Issue.done_ratio` accepts strict integers from 0 through 100 and defaults to zero when omitted.
+`Project.status` accepts any positive integer without a new closed status enum. Relation delays
+remain signed integers or null. Existing native date parsing, finite nonnegative numeric hours,
+optional values, missing-field observations and empty collections retain their existing behavior.
+The issue parent remains a dictionary, with its `id` checked before normal model conversion.
+
+Malformed declared upstream fields become sanitized `502 upstream_response` errors on reads
+and MCP tool errors. Malformed preflight data prevents dispatch. Malformed post-write
+observations leave the original accepted/uncertain receipt intact with verification unavailable
+and a safe error where the existing result supports one. Unusable creation identities retain
+existing uncertain-outcome handling; never infer an ID or automatically retry.
+No operation, input, field, upstream call or unknown-response-field policy is added.
+PREP-025 runtime acceptance is pending; the dated catalog ledger predates this hardening.
+
 ## Project membership management
 
 The four tools manage memberships in selected projects. Listing is available on the reader;

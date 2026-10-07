@@ -33,7 +33,7 @@ def response_items(data: dict[str, Any], key: str) -> list[dict[str, Any]]:
 
 def resource_object(value: Any, expected_id: int) -> dict[str, Any]:
     resource = response_object(value)
-    if type(resource.get("id")) is not int or resource["id"] != expected_id:
+    if type(resource.get("id")) is not int or resource["id"] < 1 or resource["id"] != expected_id:
         raise ApplicationError(
             codes_text.UPSTREAM_RESPONSE,
             redmine_text.UNEXPECTED_DATA,

@@ -47,6 +47,7 @@ class RedmineUploads:
         observed_filesize = observed.get("filesize")
         if (
             type(observed_id) is not int
+            or observed_id < 1
             or type(observed_filename) is not str
             or type(observed_filesize) is not int
             or observed_filesize < 0

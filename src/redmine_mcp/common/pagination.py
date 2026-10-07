@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 from redmine_mcp.common.errors import ApplicationError
+from redmine_mcp.common.validation import NonnegativeInt, PositiveID
 from redmine_mcp.common.visibility import Visibility
 
 T = TypeVar("T")
@@ -17,9 +18,9 @@ class PageRequest(BaseModel):
 
 
 class PaginationPolicy(BaseModel):
-    total_pages: int = Field(ge=0)
-    max_query_pages: int = Field(ge=1)
-    requires_narrowing: bool
+    total_pages: NonnegativeInt
+    max_query_pages: PositiveID
+    requires_narrowing: StrictBool
 
 
 @dataclass(frozen=True)
@@ -45,9 +46,9 @@ class PaginationGuard:
 
 class Page[T](BaseModel):
     items: list[T]
-    total: int
-    limit: int
-    offset: int
+    total: NonnegativeInt
+    limit: PositiveID
+    offset: NonnegativeInt
     visibility: Visibility = Field(default_factory=Visibility)
     pagination_policy: PaginationPolicy | None = Field(
         default=None, exclude_if=lambda value: value is None

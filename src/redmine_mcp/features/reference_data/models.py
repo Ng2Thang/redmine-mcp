@@ -1,16 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool
 
+from redmine_mcp.common import PositiveID
 from redmine_mcp.features.projects import Reference
 
 
 class IssueStatus(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str = Field(min_length=1)
-    is_closed: bool = Field(strict=True)
+    is_closed: StrictBool
 
 
 class Tracker(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str = Field(min_length=1)
     description: str | None = None
     default_status: Reference | None = None
@@ -18,12 +19,12 @@ class Tracker(BaseModel):
 
 
 class IssuePriority(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str = Field(min_length=1)
-    is_default: bool = Field(strict=True)
+    is_default: StrictBool
 
 
 class DocumentCategory(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str = Field(min_length=1)
-    is_default: bool = Field(strict=True)
+    is_default: StrictBool

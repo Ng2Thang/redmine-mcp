@@ -13,6 +13,27 @@ passed. It includes version and membership acceptance, `allowed_all`, and Inspec
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 
+## Declared upstream fields (verification pending)
+
+[PREP-025](plans/tasks/prep-025-strict-upstream-fields.md) hardens known resource fields.
+FIELD-025-001..006 need separate verification authorization. Parameterize root, nested, list,
+parent, custom-field and receipt IDs with bool/string/float/zero/negative values. Check strict
+flags, nonnegative counts/sizes, 0/100 progress boundaries, unrestricted positive project status,
+and signed/null relation delays. Confirm safe upstream errors without raw Pydantic input.
+
+Retain native-style required fields in journal, watcher and attachment preflight/read-back
+fixtures; sparse identity-only fixtures must be expanded where those resource models now validate
+the observation. Check valid dates, finite nonnegative numeric hours, defaults, omitted/null
+optional fields, empty collections, parent dictionary shape and existing unknown-field policy.
+Compare rejected preflight with accepted mutations followed by malformed observations: assert
+zero versus one native mutation, original receipt preservation and unavailable verification.
+Include update and copy issue preflight with malformed progress, flags and nested references;
+both must return a sanitized upstream error before their PUT/POST, with zero mutation calls.
+Use native-shaped issue fixtures and retain omitted/null optional-field compatibility.
+Authorized Inspector/live parity uses the owned pinned 7.0.2 environment with ordinary
+restricted writer credentials; verify resulting state and remove only task-owned resources.
+No FIELD-025 scenario was executed in the coding assignment.
+
 ## Request-body admission (verification pending)
 
 [PREP-024](plans/tasks/prep-024-bounded-request-bodies.md) implements admission before REST/MCP

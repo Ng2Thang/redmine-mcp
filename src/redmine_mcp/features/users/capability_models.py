@@ -2,9 +2,9 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool
 
-from redmine_mcp.common import Page
+from redmine_mcp.common import Page, PositiveID
 
 
 class ToolCapability(BaseModel):
@@ -18,13 +18,13 @@ class ToolCapability(BaseModel):
 
 
 class ProjectRoleCapability(BaseModel):
-    id: int = Field(gt=0, strict=True)
+    id: PositiveID
     name: str | None
-    inherited: bool
+    inherited: StrictBool
 
 
 class ProjectCapability(BaseModel):
-    id: int = Field(gt=0, strict=True)
+    id: PositiveID
     name: str
     roles: list[ProjectRoleCapability]
     permissions: list[str] | None = Field(
@@ -38,5 +38,5 @@ class ProjectCapability(BaseModel):
 
 
 class MyProjectCapabilities(Page[ProjectCapability]):
-    user_id: int = Field(gt=0, strict=True)
+    user_id: PositiveID
     global_tools: list[ToolCapability]

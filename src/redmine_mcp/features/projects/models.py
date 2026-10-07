@@ -2,34 +2,34 @@ import re
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
-from redmine_mcp.common import Visibility
+from redmine_mcp.common import NonnegativeInt, PositiveID, Visibility
 
 
 class Reference(BaseModel):
-    id: int
+    id: PositiveID
     name: str
 
 
 class Project(BaseModel):
-    id: int
+    id: PositiveID
     identifier: str
     name: str
     description: str | None = None
-    status: int
+    status: PositiveID
     parent: Reference | None = None
 
 
 class ProjectDetail(Project):
-    is_public: bool | None = None
+    is_public: StrictBool | None = None
     created_on: str | None = None
     updated_on: str | None = None
     visibility: Visibility = Field(default_factory=Visibility)
 
 
 class Version(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str = Field(min_length=1)
     project: Reference
     status: Literal["open", "locked", "closed"]
@@ -75,24 +75,24 @@ class ProjectVersionError(BaseModel):
 
 class CreateProjectVersionResult(BaseModel):
     outcome: Literal["accepted", "existing", "uncertain"]
-    upstream_accepted: bool | None
-    resource_id: int | None = Field(default=None, strict=True, gt=0)
+    upstream_accepted: StrictBool | None
+    resource_id: PositiveID | None = None
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
     observed_version: ProjectVersionObservation | None = None
     error: ProjectVersionError | None = None
 
 
 class IssueCategory(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str = Field(min_length=1)
     project: Reference
     assigned_to: Reference | None = None
 
 
 class ProjectFile(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     filename: str = Field(min_length=1)
-    filesize: int = Field(ge=0)
+    filesize: NonnegativeInt
     content_type: str | None = None
     description: str | None = None
     content_url: str
@@ -100,7 +100,7 @@ class ProjectFile(BaseModel):
     author: Reference | None = None
     version: Reference | None = None
     digest: str
-    downloads: int = Field(ge=0)
+    downloads: NonnegativeInt
 
 
 class AddProjectFileRequest(BaseModel):
@@ -114,7 +114,7 @@ class AddProjectFileRequest(BaseModel):
 
 class AddProjectFileResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
-    attachment_id: int = Field(gt=0)
+    attachment_id: PositiveID
     observed_file: ProjectFile | None = None

@@ -1,15 +1,15 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
 
-from redmine_mcp.common import Visibility
+from redmine_mcp.common import NonnegativeInt, PositiveID, Visibility
 from redmine_mcp.features.projects import Reference
 
 
 class AttachmentDetail(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     filename: str = Field(min_length=1)
-    filesize: int = Field(ge=0)
+    filesize: NonnegativeInt
     content_type: str | None = None
     description: str | None = None
     content_url: str = Field(min_length=1)
@@ -19,11 +19,11 @@ class AttachmentDetail(BaseModel):
 
 
 class AttachmentDownload(BaseModel):
-    attachment_id: int = Field(gt=0)
+    attachment_id: PositiveID
     filename: str = Field(min_length=1)
     content_type: str | None = None
     content_base64: str
-    filesize: int = Field(ge=0)
+    filesize: NonnegativeInt
     visibility: Visibility = Field(default_factory=Visibility)
 
 
@@ -36,12 +36,12 @@ class UploadRequest(BaseModel):
 
 class UploadResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
-    attachment_id: int | None = Field(default=None, gt=0)
+    attachment_id: PositiveID | None = None
     token: str | None = None
     observed_filename: str | None = None
-    observed_filesize: int | None = Field(default=None, ge=0)
+    observed_filesize: NonnegativeInt | None = None
 
 
 class AttachmentContainerRequest(BaseModel):
@@ -76,15 +76,15 @@ class AttachmentUpdateRequest(AttachmentContainerRequest):
 
 class AttachmentUpdateResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
-    attachment_id: int = Field(gt=0)
+    attachment_id: PositiveID
     observed_attachment: AttachmentDetail | None = None
 
 
 class AttachmentDeleteResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
-    attachment_id: int = Field(gt=0)
-    observed_present: bool | None = None
+    attachment_id: PositiveID
+    observed_present: StrictBool | None = None

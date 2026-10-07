@@ -1,14 +1,14 @@
 """Validated inputs and receipts for issue creation and native copying."""
 
 import re
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
 
-from redmine_mcp.common import Visibility
+from redmine_mcp.common import PositiveID, Visibility
 from redmine_mcp.features.issues.models import IssueDate, IssueDetail, IssueHours, Journal
 
-PositiveIssueId = Annotated[int, Field(strict=True, gt=0)]
+PositiveIssueId = PositiveID
 Verification = Literal["matched", "mismatch", "unavailable"]
 
 
@@ -101,8 +101,8 @@ class IssueCreateRequest(BaseModel):
 
 class IssueCreateResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
-    resource_id: int | None = Field(default=None, strict=True, gt=0)
+    upstream_accepted: StrictBool | None
+    resource_id: PositiveID | None = None
     verification: Verification = "unavailable"
     field_verification: dict[str, Verification] = Field(default_factory=dict)
     observed_issue: IssueDetail | None = None
@@ -196,12 +196,12 @@ class JournalObservation(Journal):
 
 class IssueNoteUpdateResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     issue_id: PositiveIssueId
     resource_id: PositiveIssueId
     verification: Verification = "unavailable"
     field_verification: dict[str, Verification] = Field(default_factory=dict)
-    observed_present: bool | None = None
+    observed_present: StrictBool | None = None
     observed_journal: JournalObservation | None = None
 
 
@@ -244,7 +244,7 @@ class RelationObservation(BaseModel):
 
 class IssueRelationCreateResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     resource_id: PositiveIssueId | None = None
     verification: Verification = "unavailable"
     field_verification: dict[str, Verification] = Field(default_factory=dict)
@@ -253,11 +253,11 @@ class IssueRelationCreateResult(BaseModel):
 
 class IssueRelationDeleteResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     resource_id: PositiveIssueId
     resolved_relation: RelationObservation
-    endpoint_observations: dict[str, bool | None] = Field(default_factory=dict)
-    observed_present: bool | None = None
+    endpoint_observations: dict[str, StrictBool | None] = Field(default_factory=dict)
+    observed_present: StrictBool | None = None
     verification: Verification = "unavailable"
 
 
@@ -269,8 +269,8 @@ class IssueWatcherAddRequest(BaseModel):
 
 class IssueWatcherResult(BaseModel):
     outcome: Literal["accepted", "uncertain"]
-    upstream_accepted: bool | None
+    upstream_accepted: StrictBool | None
     issue_id: PositiveIssueId
     user_id: PositiveIssueId
-    observed_present: bool | None = None
+    observed_present: StrictBool | None = None
     verification: Verification = "unavailable"

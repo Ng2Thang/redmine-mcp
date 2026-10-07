@@ -5,7 +5,7 @@ from typing import Any
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
-from redmine_mcp.features.issues.models import ISSUE_INCLUDES, IssueDetail
+from redmine_mcp.features.issues.models import ISSUE_INCLUDES, IssueDetail, Journal
 from redmine_mcp.features.issues.write_models import IssueUpdateRequest, IssueUpdateResult
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.issue_creations import (
@@ -14,7 +14,7 @@ from redmine_mcp.integrations.redmine.issue_creations import (
     compare_value,
     verify_creation_fields,
 )
-from redmine_mcp.integrations.redmine.mapping import visible_item
+from redmine_mcp.integrations.redmine.mapping import item, visible_item
 from redmine_mcp.integrations.redmine.responses import (
     resource_object,
     response_items,
@@ -26,8 +26,8 @@ from redmine_mcp.integrations.redmine.write import RedmineWriter
 def journal_ids(issue: dict[str, Any]) -> set[int]:
     ids: set[int] = set()
     for journal in response_items(issue, "journals"):
-        journal_id = journal.get("id")
-        if type(journal_id) is not int or journal_id < 1 or journal_id in ids:
+        journal_id = item(Journal, journal).id
+        if journal_id in ids:
             raise ApplicationError(codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502)
         ids.add(journal_id)
     return ids
@@ -83,6 +83,8 @@ class RedmineIssueUpdates:
         )
         before = await self.client.get(f"issues/{issue_id}.json", preflight_params)
         before_issue = resource_object(before.get("issue"), issue_id)
+        # Validate before dispatch; retain raw fields for presence and journal comparisons.
+        item(IssueDetail, before_issue)
         before_ids = journal_ids(before_issue) if request.notes is not None else set()
         caller_id = (
             await self._caller_id()

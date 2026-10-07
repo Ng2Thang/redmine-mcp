@@ -10,7 +10,7 @@ from redmine_mcp.features.issues.write_models import (
     Verification,
 )
 from redmine_mcp.integrations.redmine.client import RedmineClient
-from redmine_mcp.integrations.redmine.mapping import visible_item
+from redmine_mcp.integrations.redmine.mapping import item, visible_item
 from redmine_mcp.integrations.redmine.responses import resource_object
 from redmine_mcp.integrations.redmine.write import RedmineWriter
 
@@ -128,7 +128,7 @@ class RedmineIssueCreations:
     async def create_issue(self, request: IssueCreateRequest) -> IssueCreateResult:
         if request.copy_from is not None:
             source = await self.client.get(f"issues/{request.copy_from}.json", {})
-            resource_object(source.get("issue"), request.copy_from)
+            item(IssueDetail, resource_object(source.get("issue"), request.copy_from))
         expected = request.model_dump(mode="json", exclude_unset=True, exclude={"copy_from"})
         if request.assigned_to_id == "me":
             identity = await self.client.get("users/current.json", {})

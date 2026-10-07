@@ -8,8 +8,11 @@ from redmine_mcp.features.attachments.models import (
     AttachmentUpdateRequest,
     AttachmentUpdateResult,
 )
+from redmine_mcp.features.issues.models import Attachment
+from redmine_mcp.features.projects.models import Reference
 from redmine_mcp.integrations.redmine.attachments import RedmineAttachments
 from redmine_mcp.integrations.redmine.client import RedmineClient
+from redmine_mcp.integrations.redmine.mapping import item
 from redmine_mcp.integrations.redmine.projects import RedmineProjects
 from redmine_mcp.integrations.redmine.responses import (
     resource_object,
@@ -32,26 +35,17 @@ class RedmineAttachmentUpdates:
                 f"issues/{request.container_id}.json", {"include": "attachments"}
             )
             issue = resource_object(data.get("issue"), request.container_id)
-            attachments = response_items(issue, "attachments")
-            if any(type(item.get("id")) is not int or item["id"] < 1 for item in attachments):
-                raise ApplicationError(
-                    codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
-                )
-            matches = any(
-                type(item.get("id")) is int and item["id"] == attachment_id for item in attachments
-            )
+            attachments = [
+                item(Attachment, value) for value in response_items(issue, "attachments")
+            ]
+            matches = any(attachment.id == attachment_id for attachment in attachments)
         else:
             project_id = request.container_id
             if request.container_type == "version":
                 data = await self.client.get(f"versions/{request.container_id}.json", {})
                 version = resource_object(data.get("version"), request.container_id)
-                project = response_object(version.get("project"))
-                owning_project_id = project.get("id")
-                if type(owning_project_id) is not int or owning_project_id < 1:
-                    raise ApplicationError(
-                        codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
-                    )
-                project_id = owning_project_id
+                project = item(Reference, response_object(version.get("project")))
+                project_id = project.id
             files = await RedmineProjects(self.client).list_project_files(project_id)
             matches = any(
                 file.id == attachment_id

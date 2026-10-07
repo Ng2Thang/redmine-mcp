@@ -2,9 +2,18 @@ import re
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, BeforeValidator, Field, JsonValue, WithJsonSchema
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    JsonValue,
+    StrictBool,
+    StrictInt,
+    WithJsonSchema,
+    field_validator,
+)
 
-from redmine_mcp.common import Visibility
+from redmine_mcp.common import NonnegativeInt, PositiveID, Visibility
 from redmine_mcp.constants import issues as issues_text
 from redmine_mcp.features.projects import Reference
 
@@ -43,10 +52,10 @@ IssueHours = Annotated[
 
 
 class CustomField(BaseModel):
-    id: int
+    id: PositiveID
     name: str
     value: str | list[str] | None = None
-    multiple: bool = False
+    multiple: StrictBool = False
 
 
 class JournalDetail(BaseModel):
@@ -57,20 +66,20 @@ class JournalDetail(BaseModel):
 
 
 class Journal(BaseModel):
-    id: int
+    id: PositiveID
     user: Reference
     notes: str = ""
     created_on: str
     updated_on: str | None = None
     updated_by: Reference | None = None
-    private_notes: bool = False
+    private_notes: StrictBool = False
     details: list[JournalDetail] = Field(default_factory=list)
 
 
 class Attachment(BaseModel):
-    id: int
+    id: PositiveID
     filename: str
-    filesize: int
+    filesize: NonnegativeInt
     content_type: str | None = None
     description: str | None = None
     content_url: str | None = None
@@ -79,7 +88,7 @@ class Attachment(BaseModel):
 
 
 class IssueChild(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     tracker: Reference | None = None
     subject: str
     # FastAPI-MCP 0.4 cannot expand recursive OpenAPI references.
@@ -93,7 +102,7 @@ class IssueChild(BaseModel):
                     "type": "object",
                     "required": ["id", "subject"],
                     "properties": {
-                        "id": {"type": "integer"},
+                        "id": {"type": "integer", "exclusiveMinimum": 0},
                         "tracker": {
                             "anyOf": [
                                 {"$ref": "#/components/schemas/Reference"},
@@ -114,21 +123,21 @@ class IssueChild(BaseModel):
 
 
 class IssueRelation(BaseModel):
-    id: int = Field(gt=0)
-    issue_id: int = Field(gt=0)
-    issue_to_id: int = Field(gt=0)
+    id: PositiveID
+    issue_id: PositiveID
+    issue_to_id: PositiveID
     relation_type: str
-    delay: int | None = None
+    delay: StrictInt | None = None
 
 
 class AllowedStatus(BaseModel):
-    id: int = Field(gt=0)
+    id: PositiveID
     name: str
-    is_closed: bool
+    is_closed: StrictBool
 
 
 class Issue(BaseModel):
-    id: int
+    id: PositiveID
     subject: str
     description: str | None = None
     project: Reference
@@ -140,8 +149,8 @@ class Issue(BaseModel):
     category: Reference | None = None
     fixed_version: Reference | None = None
     parent: dict[str, int] | None = None
-    is_private: bool = False
-    done_ratio: int = 0
+    is_private: StrictBool = False
+    done_ratio: int = Field(default=0, strict=True, ge=0, le=100)
     start_date: IssueDate | None = None
     due_date: IssueDate | None = None
     spent_hours: IssueHours | None = None
@@ -162,6 +171,14 @@ class Issue(BaseModel):
     ] = Field(default_factory=list)
     watchers: list[Reference] = Field(default_factory=list)
     allowed_statuses: list[AllowedStatus] = Field(default_factory=list)
+
+    @field_validator("parent", mode="before")
+    @classmethod
+    def validate_parent_id(cls, value: object) -> object:
+        if value is not None:
+            if not isinstance(value, dict) or type(value.get("id")) is not int or value["id"] < 1:
+                raise ValueError("Parent must identify a positive integer issue ID")
+        return value
 
 
 class IssueDetail(Issue):

@@ -40,6 +40,12 @@ that a release has been published.
 
 ### Fixed
 
+- Validate declared Redmine resource/reference and receipt IDs as positive JSON integers;
+  enforce strict booleans, nonnegative sizes/counts, issue progress from 0 through 100 and
+  signed integer relation delays. Preserve date/hour parsing, optional/default/visibility
+  behavior and unknown-field policy. Malformed read-back observations retain the original
+  writer receipt. PREP-025 runtime verification is pending.
+
 - Restore MCP input validation from each route's canonical OpenAPI schema before discovery
   and SDK caching. Nullable and union inputs retain every REST-supported branch, with
   required fields, defaults and nested constraints preserved. PREP-022 runtime verification

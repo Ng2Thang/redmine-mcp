@@ -4,7 +4,9 @@ from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.features.issues.write_models import IssueWatcherResult
+from redmine_mcp.features.projects.models import Reference
 from redmine_mcp.integrations.redmine.client import RedmineClient
+from redmine_mcp.integrations.redmine.mapping import item
 from redmine_mcp.integrations.redmine.responses import resource_object, response_items
 from redmine_mcp.integrations.redmine.write import RedmineWriter
 
@@ -41,8 +43,8 @@ class RedmineIssueWatchers:
             return None
         seen: set[int] = set()
         for watcher in response_items(issue, "watchers"):
-            watcher_id = watcher.get("id")
-            if type(watcher_id) is not int or watcher_id < 1 or watcher_id in seen:
+            watcher_id = item(Reference, watcher).id
+            if watcher_id in seen:
                 raise ApplicationError(
                     codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
                 )

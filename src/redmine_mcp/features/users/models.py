@@ -1,25 +1,25 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool
 
-from redmine_mcp.common import Visibility
+from redmine_mcp.common import PositiveID, Visibility
 
 
 class UserReference(BaseModel):
-    id: int = Field(gt=0, strict=True)
+    id: PositiveID
     name: str = Field(min_length=1)
 
 
 class MembershipRole(UserReference):
-    inherited: bool = Field(default=False, strict=True)
+    inherited: StrictBool = False
 
 
 class UserMembership(BaseModel):
-    id: int = Field(gt=0, strict=True)
+    id: PositiveID
     project: UserReference
     roles: list[MembershipRole]
 
 
 class CurrentUser(BaseModel):
-    id: int = Field(gt=0, strict=True)
+    id: PositiveID
     login: str = Field(min_length=1)
     firstname: str
     lastname: str

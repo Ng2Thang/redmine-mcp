@@ -1,9 +1,12 @@
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from redmine_mcp.common.errors import InvalidInputError
 from redmine_mcp.constants import common as common_text
+
+PositiveID = Annotated[int, Field(strict=True, gt=0)]
+NonnegativeInt = Annotated[int, Field(strict=True, ge=0)]
 
 
 def require_positive_id(value: int, name: str) -> None:

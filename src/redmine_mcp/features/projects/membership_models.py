@@ -2,12 +2,11 @@
 
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator, model_validator
 
 from redmine_mcp.auth.capability_models import CapabilityState
-from redmine_mcp.common import Page, PageRequest, Visibility
+from redmine_mcp.common import NonnegativeInt, Page, PageRequest, PositiveID, Visibility
 
-PositiveID = Annotated[int, Field(strict=True, gt=0)]
 RoleIDs = Annotated[list[PositiveID], Field(min_length=1)]
 MembershipAction = Literal["add", "update", "delete"]
 
@@ -18,7 +17,7 @@ class MembershipReference(BaseModel):
 
 
 class MembershipRole(MembershipReference):
-    inherited: bool = Field(default=False, strict=True)
+    inherited: StrictBool = False
 
 
 def normalize_membership_roles(roles: list[MembershipRole]) -> list[MembershipRole]:
@@ -134,7 +133,7 @@ class MembershipError(BaseModel):
 
 
 class ProjectMembersResult(BaseModel):
-    project_id: int
+    project_id: PositiveID
     outcome: Literal["read", "rejected", "not_executed"]
     page: Page[ProjectMembership] | None = None
     error: MembershipError | None = None
@@ -145,15 +144,15 @@ class ListProjectMembersResult(BaseModel):
 
 
 class MembershipWriteResult(BaseModel):
-    index: int
-    project_id: int
-    membership_id: int | None = None
-    user_id: int | None = None
+    index: NonnegativeInt
+    project_id: PositiveID
+    membership_id: PositiveID | None = None
+    user_id: PositiveID | None = None
     outcome: Literal["accepted", "rejected", "uncertain", "not_executed"] = "not_executed"
     verification: Literal["matched", "mismatch", "unavailable"] = "unavailable"
-    requested_role_ids: list[int] | None = None
+    requested_role_ids: list[PositiveID] | None = None
     observed_membership: ProjectMembership | None = None
-    observed_present: bool | None = None
+    observed_present: StrictBool | None = None
     permission_state: CapabilityState = "unknown"
     error: MembershipError | None = None
 

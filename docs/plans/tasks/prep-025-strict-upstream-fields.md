@@ -8,13 +8,13 @@
 | Assigned capability | Give LLMs reliable resource identities and numeric state without silently coercing malformed upstream fields |
 | Type / access | Shared response-validation prerequisite; existing reads and writer observations |
 | Destructive effects | No new mutation; observation failures preserve existing write acceptance |
-| Status | planned |
+| Status | blocked - implementation finished; testing pending |
 | Dependencies | Current [prep-020](prep-020-current-catalog-acceptance.md) resource contracts; existing prep-019 receipts and prep-016/017 infrastructure |
 | Related tasks | tool-011/012/034/035 strict hours/IDs; tool-033 membership models; [dashboard](../index.md) |
 | Target Redmine version | 7.0.2; stricter field acceptance unverified |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Known-field rules and observation error boundary specified; no implementation |
-| Next action | Review, then assign model/gateway hardening; test work remains separate |
+| Progress summary | Shared strict field types, resource/receipt models and raw observation paths hardened; static checks pass; runtime acceptance pending |
+| Next action | Separately authorize FIELD-025-001..006 test implementation and offline/startup/Inspector/owned native verification |
 
 ## 2. Discovery and evidence
 
@@ -156,21 +156,96 @@ tests that only assert type aliases. Broader offline regressions belong to the t
 | Evidence | Procedure | Actual result | Status |
 |---|---|---|---|
 | EVID-025-001 | Source inspection on 2026-10-07 | Inconsistent declared-field validation identified; no test run | Planning only |
-| EVID-025-002 | Static/offline/native/Inspector scenarios | Not run | Pending |
+| EVID-025-002 | Offline/native/Inspector FIELD-025-001..006 scenarios | Not run; separate verification assignment required | Pending |
+| EVID-025-003 | `bash scripts/doctor.sh` in Git Bash, 2026-10-07 | Required prerequisites ready; Python 3.13.3, uv 0.12.21; no installation | Passed |
+| EVID-025-004 | `uv run --frozen --no-sync ruff check .` | All checks passed | Passed |
+| EVID-025-005 | `uv run --frozen --no-sync ruff format --check .` | 262 files already formatted | Passed |
+| EVID-025-006 | `uv run --frozen --no-sync mypy src` | Success: no issues found in 122 source files | Passed |
+| EVID-025-007 | `git diff --check` and final source/diff inspection | No whitespace errors; expected CRLF-to-LF notices only; source findings below | Passed |
 
 ## 8. Implementation and review record
 
-Planning documents only. Model/gateway changes, stricter-data migration notes, static checks,
-fixture updates and runtime verification are pending. No output-context behavior is implemented
-or claimed complete by this task. Preserve all prior task results and runtime data.
+Implemented on 2026-10-07 under the explicitly assigned `redmine-implement-task` coding stage.
+The working-tree baseline was clean; prior task changes and acceptance evidence are preserved.
+
+- Added and exported per-field `PositiveID` and `NonnegativeInt` in common validation code.
+  Applied them to declared projects, issues, nested references, children, journals, custom fields,
+  attachments, registries, users, memberships, time entries, capability reports and public
+  receipt IDs. Existing strict input aliases now reuse the same positive-ID rule without
+  changing caller contracts; HTTP query conversion remains untouched.
+- Applied strict booleans to resource flags and receipt observations. File sizes, downloads,
+  shared pagination metadata and batch indexes use strict nonnegative integers; limits remain
+  positive. Issue progress is strict 0..100 with the original omitted default. Project status
+  is any positive integer; relation delay is a signed strict integer or null. No enum added.
+- Kept issue dates and finite nonnegative numeric hour validators intact. Parent remains
+  `dict[str, int] | None`; its raw `id` must be present and strictly positive before normal
+  dictionary conversion. Other dictionary keys retain the existing policy. Journal detail
+  names and unstructured changesets are not reinterpreted as IDs. The existing recursive
+  child schema's ID minimum now reflects the runtime constraint.
+- `mapping.item` already sanitizes field-validation failures to `502 upstream_response`, so
+  no blanket strict model parsing or new mapping framework was added. `resource_object` now
+  also rejects nonpositive identities before expected-ID comparisons.
+- Audited raw writer comparisons. Journal inventories validate journal models before extracting
+  IDs; watcher inventories validate references; issue attachment container proofs validate
+  attachment models and version owner references. Upload read-back now rejects nonpositive
+  observed IDs in addition to its existing strict size/type checks. Duplicate and expected-ID
+  checks remain. Valid native response shapes are required where old probes used sparse rows.
+- Existing post-write exception boundaries retain original receipts when model conversion fails;
+  memberships retain their safe observation errors and creation identity handling is unchanged.
+  Issue/custom-field/upload comparisons occur only after typed issue conversion. No new read,
+  mutation, retry, cache, permission path or success field was introduced. Current-user safe
+  field selection and attachment-origin handling remain intact.
+- Updated tool reference, manual verification, changelog and dashboard with compatibility and
+  verification limitations. Unknown-field preservation/output-context work remains separate;
+  no new `extra="forbid"`, passthrough or filtering behavior was added.
+- Ruff formatted only changed runtime files; lint, formatting and mypy passed without suppression
+  or pre-existing failures. Final source/diff review checked field coverage, parser compatibility,
+  error sanitization, receipt boundaries, architecture and absence of unrelated changes/secrets.
+
+No dependencies, lockfile, settings, SDK hooks, Docker deployment, tests, fixtures or test
+infrastructure were changed. No tests, runtime probes, builds, startup, Inspector or native calls
+were executed. Contract deviations: none. Runtime acceptance remains pending.
+
+### Review follow-up: issue preflight validation
+
+Source review identified that update and copy preflight only checked the issue's root identity,
+allowing malformed declared fields to reach native dispatch. Fixed on 2026-10-07 after explicit
+user authorization: both existing preflight responses now pass through
+`mapping.item(IssueDetail, ...)` after `resource_object` and before mutation. Invalid progress,
+flags, nested IDs or other declared fields therefore use the existing sanitized 502 boundary.
+No extra upstream request is added. Normal model parsing preserves native dates/hours and
+optional/default/null behavior; the raw update object remains available for field-presence and
+journal comparisons. Post-write receipt handling is unchanged. Existing sparse update/copy
+fixtures must provide the issue model's required native fields in the later testing assignment.
+
+Follow-up static checks passed: `uv run --frozen --no-sync ruff check .` (all checks passed),
+`uv run --frozen --no-sync ruff format --check .` (262 files already formatted),
+`uv run --frozen --no-sync mypy src` (122 source files, no issues), and `git diff --check`
+(no whitespace errors). Source/diff inspection confirms both validations precede dispatch and
+the raw update data and post-write receipt boundaries are preserved. FIELD-025-004 must include both
+update and copy with malformed preflight progress/flags/nested IDs and assert zero mutation
+calls, plus valid native-shaped responses with missing/null optional fields. No tests were run.
 
 ## 9. Completion and handoff
 
-- [ ] Declared output fields consistently validated.
+- [x] Declared output fields consistently validated (source inspection).
 - [ ] Malformed identities/counts/flags/progress have passing failure evidence.
 - [ ] Date/optional/visibility/shape compatibility and receipts accepted.
 - [ ] Required owned native parity/cleanup recorded after authorization.
-- [ ] Documentation/final diff/task/dashboard synchronized.
+- [x] Static checks passed; documentation/final diff/task/dashboard synchronized.
 
-Final status: planned. Contract blockers: none. Next action: review and assign coding; hand off
-FIELD-025-001..006 separately without broadening unknown-field filtering.
+Final status: blocked - **implementation finished; testing pending**. Coding/contract blockers:
+none. Outstanding acceptance prerequisite: separately authorized FIELD-025-001..006 verification.
+
+Next action: add/update offline unit and integration fixtures for FIELD-025-001..005 through
+models, gateways, REST and SDK. Cover bool/string/float/zero/negative IDs at every declared depth,
+strict flags, nonnegative counts/sizes, 0/100 progress, positive project status and signed/null
+delays. Retain native-shaped required journal/watcher/attachment fields in existing sparse
+preflight/read-back fixtures. Confirm parent shape/extra-key compatibility, dates/hours,
+defaults, visibility, optional omissions/nulls, empty collections and unknown business fields.
+Verify zero preflight dispatch and original accepted/uncertain receipts after invalid read-back,
+including creation identities and safe membership errors. Run the selected catalog regressions
+only within that testing assignment. Then separately authorize startup/Inspector and
+FIELD-025-006 native parity using the owned pinned Redmine 7.0.2 reader/restricted writer
+environment; observe native state and clean up only owned resources. AC-001..005 remain pending.
+No build, deployment or implementation of another task is included.

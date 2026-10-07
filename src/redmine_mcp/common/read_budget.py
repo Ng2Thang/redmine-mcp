@@ -29,18 +29,25 @@ class ReadBudget:
     response_bytes: int = 0
     started: float = field(default_factory=monotonic)
 
+    @property
+    def deadline(self) -> float:
+        return self.started + self.policy.deadline_seconds
+
     def check_deadline(self) -> None:
-        if monotonic() - self.started >= self.policy.deadline_seconds:
+        if monotonic() >= self.deadline:
             raise ApplicationError(
                 "read_operation_timeout", "Read operation timed out; narrow the scope", 504
             )
 
-    def request(self) -> None:
+    def check_request_available(self) -> None:
         self.check_deadline()
         if self.requests >= self.policy.max_requests:
             raise ApplicationError(
                 "scan_budget_exceeded", "Read request budget exhausted; narrow the scope", 422
             )
+
+    def request(self) -> None:
+        self.check_request_available()
         self.requests += 1
 
     def consume(self, size: int) -> None:
@@ -71,6 +78,22 @@ def check_read_deadline() -> None:
     budget = current_budget.get()
     if budget is not None:
         budget.check_deadline()
+
+
+def check_read_request_available() -> None:
+    """Check retry admission without charging a second physical request."""
+    budget = current_budget.get()
+    if budget is not None:
+        budget.check_request_available()
+
+
+def read_deadline() -> float | None:
+    """Expose the absolute monotonic cutoff without restarting a cooperative batch timer."""
+    budget = current_budget.get()
+    if budget is None:
+        return None
+    budget.check_deadline()
+    return budget.deadline
 
 
 @asynccontextmanager

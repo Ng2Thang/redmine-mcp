@@ -153,10 +153,13 @@ async def test_foundation_002_transport_settings(fake_settings: Settings) -> Non
 async def test_foundation_003_transport_errors_no_retry(
     rest_client: httpx.AsyncClient,
     upstream: dict[str, Any],
+    fake_settings: Settings,
     exception: Exception,
     expected: int,
     code: str,
 ) -> None:
+    # This legacy mapping test explicitly exercises the supported retry-disable mode.
+    fake_settings.redmine_read_retry_max_attempts = 1
     upstream["exception"] = exception
     result = await rest_client.get("/api/v1/projects")
     assert result.status_code == expected
@@ -213,7 +216,9 @@ async def test_foundation_003_011_error_status_does_not_read_body(
         base_url="http://redmine.invalid/", transport=httpx.MockTransport(respond)
     ) as http:
         with pytest.raises(ApplicationError) as error:
-            await RedmineClient(http, "synthetic").get("projects.json", {})
+            await RedmineClient(http, "synthetic", ReadPolicy(retry_max_attempts=1)).get(
+                "projects.json", {}
+            )
     assert (error.value.status, error.value.code) == (expected, code)
     assert stream.closed and stream.reads == 0
     assert len(requests) == 1

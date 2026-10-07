@@ -1014,7 +1014,7 @@ do not assume a tool failure appears as the same outer HTTP status.
 | `404` | `resource_not_found` | Resource absent or not visible. |
 | `401` | `invalid_credentials` | Redmine rejected a key after the initial identity check. |
 | `502` | `upstream_unavailable` | Transport failure reaching Redmine. |
-| `502` | `upstream_rate_limited` | Redmine returned 429; the server does not automatically retry. |
+| `502` | `upstream_rate_limited` | Redmine returned 429 and bounded GET retry stopped or exhausted its attempts; mutations do not retry. |
 | `503` | `upstream_busy` | The local upstream connection pool could not supply a connection in time. |
 | `503` | `service_unavailable` | The application runtime client is not running or has already closed. |
 | `502` | `upstream_error` | Other unsuccessful upstream status, including redirects. |
@@ -1027,6 +1027,12 @@ do not assume a tool failure appears as the same outer HTTP status.
 For upstream GET responses, Redmine 503 maps to `502 upstream_unavailable` and Redmine 504 maps
 to `504 upstream_timeout`. Received mutation HTTP 500-599 instead returns the uncertain receipt
 described above. Pre-dispatch failures retain their existing error mappings.
+GET calls automatically retry eligible connection/read/write failures, timeouts, remote protocol
+errors and native 429/502/503/504, with three total attempts by default. Only the failed GET
+repeats, including authentication, discovery and writer preflight/read-back. Malformed data,
+HTTP 500, pool/admission failures, permissions and exhausted budgets do not retry. Backoff,
+`Retry-After` and all attempts share the existing deadline and budgets; failed writer read-back
+never replays a mutation. See [configuration](configuration.md) for tuning and delay rules.
 Every HTTP response includes `X-Request-ID` for correlation with application logs. A failure
 after MCP streaming headers have been sent terminates the stream rather than replacing it
 with a new JSON response. Error responses never include upstream bodies or exception messages.

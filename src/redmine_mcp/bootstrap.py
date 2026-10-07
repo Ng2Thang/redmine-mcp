@@ -64,6 +64,9 @@ def read_policy(settings: Settings | None) -> ReadPolicy:
         max_binary_bytes=settings.redmine_max_binary_bytes,
         max_query_pages=settings.redmine_max_query_pages,
         public_url=str(settings.redmine_public_url) if settings.redmine_public_url else None,
+        retry_max_attempts=settings.redmine_read_retry_max_attempts,
+        retry_base_delay_seconds=settings.redmine_read_retry_base_delay_seconds,
+        retry_max_delay_seconds=settings.redmine_read_retry_max_delay_seconds,
     )
 
 

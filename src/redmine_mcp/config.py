@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     redmine_connect_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
     redmine_pool_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
     redmine_request_deadline_seconds: float = Field(default=60, gt=0, allow_inf_nan=False)
+    redmine_read_retry_max_attempts: int = Field(default=3, ge=1, le=5)
+    redmine_read_retry_base_delay_seconds: float = Field(default=0.5, gt=0, allow_inf_nan=False)
+    redmine_read_retry_max_delay_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
     redmine_max_response_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
     redmine_max_binary_bytes: int = Field(default=5 * 1024 * 1024, ge=1)
     redmine_max_request_body_bytes: int | None = Field(default=None, ge=1)
@@ -56,6 +59,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_transport(self) -> "Settings":
+        if self.redmine_read_retry_base_delay_seconds > self.redmine_read_retry_max_delay_seconds:
+            raise ValueError("Read retry base delay must not exceed maximum delay")
         if self.redmine_max_keepalive_connections > self.redmine_max_connections:
             raise ValueError(runtime_text.INVALID_KEEPALIVE_LIMIT)
         if self.redmine_url.username or self.redmine_url.password:

@@ -1,8 +1,9 @@
 import asyncio
 import json
 import logging
+from dataclasses import dataclass
 from time import perf_counter
-from typing import Any
+from typing import Any, NoReturn
 from urllib.parse import unquote
 
 import httpx
@@ -10,14 +11,32 @@ from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.common.pagination import PaginationGuard
-from redmine_mcp.common.read_budget import charge_bytes
+from redmine_mcp.common.read_budget import (
+    charge_bytes,
+    check_read_deadline,
+    check_read_request_available,
+    read_deadline,
+)
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import logs as logs_text
 from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
 from redmine_mcp.integrations.redmine.responses import response_page
+from redmine_mcp.integrations.redmine.retry import (
+    RETRY_ERRORS,
+    RETRY_STATUSES,
+    RetryRuntime,
+    retry_reason,
+)
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _ReadAttempt:
+    status: int | None = None
+    retry_after: tuple[str, ...] = ()
+    failure: httpx.RequestError | None = None
 
 
 def raise_for_upstream_status(status: int) -> None:
@@ -63,12 +82,18 @@ def raise_for_upstream_status(status: int) -> None:
 
 class RedmineClient:
     def __init__(
-        self, http: httpx.AsyncClient, api_key: str, policy: ReadPolicy | None = None
+        self,
+        http: httpx.AsyncClient,
+        api_key: str,
+        policy: ReadPolicy | None = None,
+        *,
+        retry_runtime: RetryRuntime | None = None,
     ) -> None:
         self.http = http
         self.api_key = api_key
         self.policy = ReadPolicy() if policy is None else policy
         self.pagination = PaginationGuard(self.policy.max_query_pages)
+        self.retry_runtime = RetryRuntime() if retry_runtime is None else retry_runtime
 
     async def get_page(
         self,
@@ -157,6 +182,61 @@ class RedmineClient:
             "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
         )
 
+    async def _get_attempt(
+        self, path: str, params: dict[str, str | int], attempt: _ReadAttempt
+    ) -> bytearray | None:
+        request = self.http.build_request(
+            "GET", path, params=params, headers={"X-Redmine-API-Key": self.api_key}
+        )
+        # Rebuild each request: the shared pool must never supply authentication or cookies.
+        request.headers.pop("cookie", None)
+        request.headers.pop("authorization", None)
+        try:
+            response = await self.http.send(request, auth=None, follow_redirects=False, stream=True)
+        except RETRY_ERRORS as exc:
+            attempt.failure = exc
+            return None
+        try:
+            attempt.status = response.status_code
+            if response.status_code in RETRY_STATUSES:
+                attempt.retry_after = tuple(response.headers.get_list("retry-after"))
+                return None
+            # Do not acquire or inspect upstream error bodies.
+            raise_for_upstream_status(response.status_code)
+            content = bytearray()
+            try:
+                # Fixed-size chunking hides a buffered tail if the stream fails before EOF.
+                # Charge each decoded chunk immediately, including failed attempts' tails.
+                async for chunk in response.aiter_bytes():
+                    charge_bytes(len(chunk))
+                    if len(content) + len(chunk) > self.policy.max_response_bytes:
+                        raise ApplicationError(
+                            codes_text.UPSTREAM_RESPONSE_TOO_LARGE,
+                            redmine_text.RESPONSE_TOO_LARGE,
+                            http_status.HTTP_502_BAD_GATEWAY,
+                        )
+                    content.extend(chunk)
+            except RETRY_ERRORS as exc:
+                if response.is_closed:
+                    # HTTPX closes at iterator EOF. A failure there is cleanup, not a
+                    # broken read, and must not cause another dispatch.
+                    raise
+                attempt.failure = exc
+                return None
+            return content
+        finally:
+            # Cleanup failures propagate outside retry classification. The admitted stream
+            # completes its shielded socket cleanup before releasing the physical permit.
+            await response.aclose()
+
+    @staticmethod
+    def _raise_attempt_failure(attempt: _ReadAttempt) -> NoReturn:
+        if attempt.failure is not None:
+            raise attempt.failure
+        if attempt.status is not None:
+            raise_for_upstream_status(attempt.status)
+        raise RuntimeError("GET attempt ended without content or failure")
+
     async def get(self, path: str, params: dict[str, str | int]) -> dict[str, Any]:
         if (
             not path
@@ -166,34 +246,46 @@ class RedmineClient:
         ):
             raise ValueError(redmine_text.RELATIVE_PATH_REQUIRED)
         started = perf_counter()
-        status: int | None = None
+        attempt = _ReadAttempt()
         try:
-            request = self.http.build_request(
-                "GET", path, params=params, headers={"X-Redmine-API-Key": self.api_key}
-            )
-            # The pool is shared, but authentication and cookies must be per request.
-            request.headers.pop("cookie", None)
-            request.headers.pop("authorization", None)
-            async with asyncio.timeout(self.policy.deadline_seconds):
-                response = await self.http.send(
-                    request, auth=None, follow_redirects=False, stream=True
-                )
-                status = response.status_code
-                try:
-                    # Map failures before reading an upstream error body.
-                    raise_for_upstream_status(status)
-                    content = bytearray()
-                    async for chunk in response.aiter_bytes(chunk_size=64 * 1024):
-                        charge_bytes(len(chunk))
-                        if len(content) + len(chunk) > self.policy.max_response_bytes:
-                            raise ApplicationError(
-                                codes_text.UPSTREAM_RESPONSE_TOO_LARGE,
-                                redmine_text.RESPONSE_TOO_LARGE,
-                                http_status.HTTP_502_BAD_GATEWAY,
-                            )
-                        content.extend(chunk)
-                finally:
-                    await response.aclose()
+            runtime = self.retry_runtime
+            deadline = runtime.monotonic() + self.policy.deadline_seconds
+            budget_deadline = read_deadline()
+            if budget_deadline is not None:
+                deadline = min(deadline, budget_deadline)
+            content: bytearray | None = None
+            # One acquisition timer includes every attempt and wait. Clip cooperative batch
+            # time here without introducing a cancellation timer around mutations/receipts.
+            async with asyncio.timeout(max(0.0, deadline - runtime.monotonic())):
+                for number in range(1, self.policy.retry_max_attempts + 1):
+                    check_read_request_available()
+                    if runtime.monotonic() >= deadline:
+                        raise TimeoutError
+                    attempt = _ReadAttempt()
+                    content = await self._get_attempt(path, params, attempt)
+                    if content is not None:
+                        break
+                    if number >= self.policy.retry_max_attempts:
+                        self._raise_attempt_failure(attempt)
+                    check_read_request_available()
+                    delay = runtime.delay(self.policy, number, attempt.retry_after)
+                    available = deadline - runtime.monotonic()
+                    if available <= 0:
+                        check_read_deadline()
+                        raise TimeoutError
+                    if delay is None or delay >= available:
+                        self._raise_attempt_failure(attempt)
+                    logger.info(
+                        logs_text.UPSTREAM_READ_RETRY,
+                        number,
+                        number + 1,
+                        delay,
+                        attempt.status,
+                        retry_reason(attempt.failure),
+                    )
+                    await runtime.sleep(delay)
+            if content is None:
+                raise RuntimeError("GET acquisition ended without content")
             try:
                 result = json.loads(content)
                 if not isinstance(result, dict):
@@ -213,6 +305,8 @@ class RedmineClient:
                 http_status.HTTP_503_SERVICE_UNAVAILABLE,
             ) from None
         except (httpx.TimeoutException, TimeoutError):
+            # A cooperative batch timeout must not be flattened into a per-GET timeout.
+            check_read_deadline()
             raise ApplicationError(
                 codes_text.UPSTREAM_TIMEOUT,
                 redmine_text.TIMED_OUT,
@@ -227,6 +321,6 @@ class RedmineClient:
         finally:
             logger.info(
                 logs_text.UPSTREAM_COMPLETED,
-                status,
+                attempt.status,
                 (perf_counter() - started) * 1000,
             )

@@ -28,6 +28,14 @@ that a release has been published.
 
 ### Changed
 
+- Add bounded Redmine GET retries for transient transport failures and HTTP 429/502/503/504.
+  Default to three total attempts with configurable exponential backoff, jitter and Retry-After
+  handling. All attempts share existing deadlines, physical request/byte budgets and per-user
+  authentication; cooperative batch time also bounds GET waits. Mutations and internal REST
+  dispatch remain single attempt. PREP-027 accepted with focused retry tests, full regressions
+  plus corrected legacy contract reruns, and owned reader/Inspector verification; see
+  `docs/testing/evidence/prep-027-testing.md` for exact results and limitations.
+
 - Isolate FastAPI-MCP 0.4.0 and MCP SDK 1.30.0 private integration in a typed compatibility
   facade. Check versions/hook shapes before serving, retain repaired schemas and discovery/budget
   ordering, preserve membership DELETE JSON, and coordinate safe manager readiness/cleanup.

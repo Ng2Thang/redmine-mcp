@@ -10,3 +10,6 @@ class ReadPolicy:
     max_binary_bytes: int = 5 * 1024 * 1024
     max_query_pages: int = 10
     public_url: str | None = None
+    retry_max_attempts: int = 3
+    retry_base_delay_seconds: float = 0.5
+    retry_max_delay_seconds: float = 5

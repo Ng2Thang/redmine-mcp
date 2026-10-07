@@ -13,6 +13,26 @@ passed. It includes version and membership acceptance, `allowed_all`, and Inspec
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 
+## Bounded Redmine GET retries
+
+[PREP-027](plans/tasks/prep-027-redmine-read-retries.md) implements shared GET retry.
+The separately assigned [verification record](testing/evidence/prep-027-testing.md) documents
+103 focused offline cases, 2 owned live reader cases and startup/Inspector discovery plus three
+read calls. Full regressions and passing targeted corrections complete acceptance as recorded
+there. For future authorized rechecks,
+use the following coverage; do not exercise failure scenarios against a real or shared instance.
+
+- Cover each eligible exception/status followed by success and exhaustion; assert the final
+  existing REST/MCP result, unchanged parameters and exact physical-attempt count.
+- Cover Retry-After seconds/dates, malformed/repeated values, delay caps, jitter and disabled
+  retries with controlled clocks/sleep; close responses and release capacity before waits.
+- Cover partial streams, cancellation, per-GET and parent deadlines, aggregate request/byte
+  accounting, and cooperative membership batch time after an already accepted mutation.
+- Cover invalid JSON/model/attachment metadata, permissions, HTTP 500 and local saturation
+  with a single attempt; preserve per-user keys and sanitized logs.
+- Confirm one internal REST dispatch and one mutation per operation. Failed GET read-back
+  retains the original write receipt; no whole-tool, batch, session or mutation replay occurs.
+
 ## MCP compatibility boundary
 
 [PREP-026](plans/tasks/prep-026-mcp-sdk-compatibility-boundary.md) isolates pinned vendor hooks;

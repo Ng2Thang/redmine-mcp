@@ -1,5 +1,39 @@
 # MCP tool roadmap
 
+## Bug task plans
+
+Bug investigation and fix plans live in [bugs/](bugs/README.md).
+Use the [bug task template](bugs/TEMPLATE.md) for new reports and link assigned
+bug tasks and their status here.
+
+| Task | Affected tool | Status | Next action |
+|---|---|---|---|
+| [bug-001-get-issue-upstream-response](bugs/bug-001-get-issue-upstream-response.md) | `get_issue` | blocked | Fix authorized; source inspection cannot identify the cause from the generic error. Obtain the failing sanitized upstream response and exact arguments; testing remains pending. |
+
+## Redmine read retry plan
+
+On 2026-10-07, the user requested an implementation task for retrying Redmine calls.
+This plan covers bounded retries for eligible upstream GET failures, including identity,
+discovery and writer preflight/read-back reads. Mutations remain single attempt. The
+separate `get_issue` malformed-data bug is not resolved by this policy.
+The original assignment created planning documents only. Subsequent implementation and review
+fixes are finished, with user-authorized Ruff, formatting and mypy checks passing. Runtime
+testing was subsequently assigned on 2026-10-07. Focused offline, owned live reader,
+Inspector and static/architecture results are recorded in
+[PREP-027 testing](../testing/evidence/prep-027-testing.md). Full regressions completed with
+1,457 passes and 41 old single-attempt assertions; all 41 are resolved in 92 passing final targeted
+cases. The record distinguishes that evidence from a clean full-suite rerun after test edits.
+Follow-up source review confirmed one central GET retry owner covers current upstream reads.
+The task also specifies parent deadline handling, cooperative batch remaining time and
+single-dispatch MCP-to-REST behavior; no additional middleware/session retry loop is planned.
+The subsequent Inspector credential cleanup review finding is fixed; nine offline regression
+cases and scoped static checks pass. Runtime retry behavior and earlier acceptance evidence
+remain unchanged; see the verification record's follow-up review section.
+
+| Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|
+| [prep-027-redmine-read-retries](tasks/prep-027-redmine-read-retries.md) | Recover transient Redmine GET failures with configurable attempts, backoff and unchanged budgets | Existing prep-015 budgets, prep-019 receipts, prep-020 catalog baseline, prep-023 batch limits; prep-016/017/018 for verification | complete | 103 focused cases, 92 corrected legacy cases and 2 owned live reader cases pass; all 41 full-run failures resolved by final targeted reruns. Startup/Inspector discovery + 3 reads and static/architecture checks pass; zero live mutations. See verification record. |
+
 ## Tool quality follow-up plan
 
 The user requested five technical task plans on 2026-10-07, covering review items 1, 3, 4, 5
@@ -64,7 +98,7 @@ remain deferred outside the current local-development roadmap.
 The original prep-009 final release review remains separate; completing
 this plan does not publish a release or silently close its historical prerequisites.
 
-Active task IDs are `prep-001` through `prep-026` and `tool-001` through `tool-035`.
+Active task IDs are `prep-001` through `prep-027` and `tool-001` through `tool-035`.
 
 ## Issue estimates and general spent-time reporting
 
@@ -96,7 +130,7 @@ inherited roles and scoped permission revocation. Earlier static checks are reco
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
-Active task IDs are `tool-001` through `tool-035` and `prep-001` through `prep-026`.
+Active task IDs are `tool-001` through `tool-035` and `prep-001` through `prep-027`.
 The retained stabilization follow-up consists of prep-019 through prep-021. The five
 tool-quality plans are prep-022 through prep-026, added and renumbered at the user's request
 on 2026-10-07.

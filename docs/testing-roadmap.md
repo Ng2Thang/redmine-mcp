@@ -4,6 +4,12 @@ The user authorized testing for prep-022 through prep-026 on 2026-10-07.
 [Preparation regression testing](testing/evidence/prep-022-026-testing.md) records the new tests,
 runtime defects and corrections, owned live/Inspector results, cleanup and final offline evidence.
 
+The user subsequently assigned PREP-027 testing on 2026-10-07.
+[Read retry verification](testing/evidence/prep-027-testing.md) records deterministic retry,
+budget/deadline, cancellation, identity, REST/MCP and writer receipt scenarios, adapted reader
+error contracts, and read-only owned live/Inspector compatibility. Fault injection and mutations
+are covered offline; the selected live checks perform zero mutations.
+
 Current verification has three layers: unit tests, offline REST/MCP integration tests, and opt-in
 live E2E against an isolated owned Redmine 7.0.2 environment. Testing CI and percentage coverage
 thresholds remain deferred. The [coverage matrix](plans/testing-coverage.md) maps every current

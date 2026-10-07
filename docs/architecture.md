@@ -148,13 +148,25 @@ different key. API access to runtime settings is checked rather than relying on 
 
 The shared pool has separate connect and pool-acquisition timeouts and bounded connections.
 Redmine calls explicitly exclude stored cookies and default authorization headers so pooled
-connections do not share authentication state. Calls never follow redirects or retry automatically.
+connections do not share authentication state. Calls never follow redirects. `RedmineClient.get`
+owns bounded retries for eligible GET failures; the low-level transport retains `retries=0`
+for direct and proxy pools. Internal MCP-to-REST calls, middleware and mutations have no retry loop.
 The response validator rejects boolean/string counts, negative counts, non-object rows, oversized
 pages, and mismatched pagination echoes. Missing echoes remain supported for issues/projects;
 time entries require both echoes. Detail reads must return the requested resource ID.
 `ReadPolicy` adds a deadline for each HTTP read and a decoded-payload limit independent of the
 pool's inactivity timeouts. Bodies are streamed into a bounded buffer and responses close in a
 finally block; upstream error bodies are not consumed. See configuration for the precise limits.
+All GET attempts and backoff share one acquisition deadline, clipped to an active budget's
+absolute monotonic cutoff. Retry classification and injectable clocks, sleep and jitter live in
+`integrations/redmine/retry.py`. A fresh request/buffer is used on each attempt; partial bytes
+remain charged as decoded chunks arrive, without fixed-size buffering hiding a failed tail.
+A response closes before waiting so the semaphore is available to others.
+Budget checks before retry are non-charging; physical accounting stays in `AdmittedTransport`.
+Cooperative batch clipping applies to GETs only, preserving in-flight mutations and receipts.
+The in-process HTTPX ASGI client does not enforce its configured timeout as a whole-operation
+timer; the existing explicit reader/capability scopes provide that boundary. Exhausted read-back
+retries preserve accepted/uncertain writer receipts and never replay the mutation.
 
 The lifespan-created upstream transport also owns one semaphore shared by readers, writers,
 authentication and discovery. A permit covers acquisition through stream closure, with a bounded

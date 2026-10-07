@@ -14,6 +14,7 @@ from redmine_mcp.config import Settings
 from redmine_mcp.features.issues import ISSUE_INCLUDES
 from redmine_mcp.mcp.catalog import OPERATIONS
 from tests.helpers import ISSUE, PROJECT, mcp_session
+from tests.retry_helpers import RetryClock
 
 pytestmark = pytest.mark.asyncio
 
@@ -153,17 +154,24 @@ def reader_responses() -> dict[str, Any]:
 async def test_reader_error_contracts(
     rest_client: httpx.AsyncClient,
     upstream: dict[str, Any],
+    monkeypatch: Any,
     route: str,
     status: int,
     expected: int,
     code: str,
 ) -> None:
+    clock = RetryClock()
+    monkeypatch.setattr("redmine_mcp.integrations.redmine.client.RetryRuntime", clock.runtime)
     upstream.update(status=status, body={"secret": "must-not-leak"})
     result = await rest_client.get(route)
     assert result.status_code == expected
     assert result.json()["error"]["code"] == code
     assert "must-not-leak" not in result.text
-    assert len(upstream["requests"]) == 2
+    attempts = 3 if status in (429, 503, 504) else 1
+    requests = upstream["requests"]
+    assert len(requests) == 1 + attempts
+    assert requests[0].url.path == "/users/current.json"
+    assert all(request.url == requests[1].url for request in requests[1:])
 
 
 @pytest.mark.parametrize("route", READ_ROUTES)
@@ -528,14 +536,21 @@ async def test_user_001_003_004_memberships_roles_and_email_observations(
 async def test_user_006_008_profile_revocation_and_errors(
     rest_client: httpx.AsyncClient,
     upstream: dict[str, Any],
+    monkeypatch: Any,
     status: int,
     expected: int,
 ) -> None:
+    clock = RetryClock()
+    monkeypatch.setattr("redmine_mcp.integrations.redmine.client.RetryRuntime", clock.runtime)
     upstream["profile_response"] = status, {"secret": "must-not-leak"}
     result = await rest_client.get("/api/v1/users/current")
     assert result.status_code == expected
     assert "must-not-leak" not in result.text
-    assert len(upstream["requests"]) == 2
+    attempts = 3 if status in (429, 503, 504) else 1
+    requests = upstream["requests"]
+    assert len(requests) == 1 + attempts
+    assert dict(requests[0].url.params) == {}
+    assert all(dict(request.url.params) == {"include": "memberships"} for request in requests[1:])
 
 
 @pytest.mark.parametrize(
@@ -856,10 +871,13 @@ async def test_user_008_profile_acquisition_failure(
     rest_client: httpx.AsyncClient,
     upstream: dict[str, Any],
     fake_settings: Settings,
+    monkeypatch: Any,
     mode: str,
     expected: int,
     code: str,
 ) -> None:
+    clock = RetryClock()
+    monkeypatch.setattr("redmine_mcp.integrations.redmine.client.RetryRuntime", clock.runtime)
     fake_settings.redmine_max_response_bytes = 200
 
     async def respond(req):
@@ -879,7 +897,11 @@ async def test_user_008_profile_acquisition_failure(
     result = await rest_client.get("/api/v1/users/current")
     assert (result.status_code, result.json()["error"]["code"]) == (expected, code)
     assert "sensitive-profile-data" not in result.text
-    assert len(upstream["requests"]) == 2
+    attempts = 3 if mode in ("timeout", "transport") else 1
+    requests = upstream["requests"]
+    assert len(requests) == 1 + attempts
+    assert dict(requests[0].url.params) == {}
+    assert all(dict(request.url.params) == {"include": "memberships"} for request in requests[1:])
 
 
 async def test_detail_004_requested_omissions_and_malformed_expansion(

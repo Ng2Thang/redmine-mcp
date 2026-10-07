@@ -17,7 +17,10 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_TIMEOUT_SECONDS` | `20` | Positive finite read/write timeout in seconds; an inactivity timeout, not an end-to-end deadline. |
 | `REDMINE_CONNECT_TIMEOUT_SECONDS` | `5` | Positive finite connection timeout in seconds. |
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
-| `REDMINE_REQUEST_DEADLINE_SECONDS` | `60` | Positive finite deadline for each upstream HTTP read, including connection/pool waits and streamed body acquisition/closure. |
+| `REDMINE_REQUEST_DEADLINE_SECONDS` | `60` | Positive finite deadline for each upstream HTTP read, including every retry, backoff, connection/pool wait and streamed body acquisition/closure. |
+| `REDMINE_READ_RETRY_MAX_ATTEMPTS` | `3` | Total GET attempts including the first, from 1 through 5; 1 disables retries. Mutations remain single attempt. |
+| `REDMINE_READ_RETRY_BASE_DELAY_SECONDS` | `0.5` | Positive finite exponential backoff base; must not exceed the maximum delay. |
+| `REDMINE_READ_RETRY_MAX_DELAY_SECONDS` | `5` | Positive finite delay cap. A valid `Retry-After` above this cap prevents retry rather than shortening the requested wait. |
 | `REDMINE_MAX_RESPONSE_BYTES` | `10485760` | Positive limit on accumulated decoded JSON payload bytes per upstream read. |
 | `REDMINE_MAX_BINARY_BYTES` | `5242880` (5 MiB) | Positive decoded-byte limit for writer attachment uploads. Direct attachment downloads are disabled. |
 | `REDMINE_MAX_REQUEST_BODY_BYTES` | Derived; currently `10485760` (10 MiB) | Optional positive REST/MCP request-body byte cap before parsing and upstream authentication. Omit to derive it; explicit lower caps can limit otherwise valid uploads. |
@@ -39,7 +42,12 @@ Values in `.env.example` are placeholders and must be replaced for external use.
 required settings prevent application startup. `REDMINE_API_KEY` and `MCP_API_TOKEN` are retired
 runtime settings; remove them from existing external environment files. The synthetic setup
 helper removes them from its marked `.env`.
-The internal MCP-to-REST client uses the configured timeout plus five seconds.
+The internal MCP-to-REST client configures the HTTPX inactivity timeout plus five seconds,
+but its in-process ASGI transport does not enforce that setting as a whole-tool timer.
+The application's explicit GET, reader, capability and batch deadlines enforce work limits.
+Both Compose services forward the three `REDMINE_READ_RETRY_*` settings from the selected
+environment file with the same defaults as local Python. Setting attempts to `1` disables
+GET retry for that process; applying configuration to a running deployment is a separate action.
 
 Request-body admission covers POSTs at `/mcp` and under `/mcp/`, and REST
 POST/PUT/PATCH/DELETE under `/api/v1/`, including internal MCP-to-REST calls. Without an explicit
@@ -76,11 +84,34 @@ shared cookies or a default authorization header to Redmine.
 
 Every HTTP response includes a server-generated `X-Request-ID`. Application logs use the same
 identifier for request and upstream events. Logs contain timing and safe status/error metadata;
-they exclude caller input and upstream content. No automatic upstream retries are performed.
+they exclude caller input and upstream content. GET retry events include only the attempt,
+next attempt, delay, native status and an allowlisted failure reason.
+
+Redmine GETs retry connection/read/write transport errors and timeouts, remote protocol errors,
+and native HTTP 429, 502, 503 or 504. The default is three total attempts, including the first.
+HTTP 500, invalid JSON or declared data, oversized responses, pool/admission saturation,
+permission failures and aggregate budget/deadline errors do not retry. The policy covers
+identity verification, discovery, metadata, pagination and writer preflight/read-back GETs.
+It repeats only the failing GET; MCP-to-REST dispatch, whole tools, batches and mutations
+are not replayed. JSON/binary mutations remain single attempt with existing uncertain receipts.
+
+Retry waits use exponential backoff with jitter: by default 0.25..0.5 seconds before the
+second attempt and 0.5..1 second before the third. A single valid `Retry-After` integer or
+HTTP-date extends the wait when needed. Invalid or repeated header values use backoff.
+A header delay above the configured cap, or a wait that cannot fit the remaining deadline,
+ends retry with the current mapped error. Each response closes before waiting, releasing
+shared capacity; error bodies are never consumed. Every physical attempt and partial decoded
+body remains charged to the existing request/byte budget.
 
 The deadline applies separately to identity lookup and each feature HTTP read; it is not a
 deadline for an entire MCP invocation or stream. JSON parsing/model conversion occur after the
-HTTP acquisition deadline. The payload limit bounds the accumulated decoded body, not total
+HTTP acquisition deadline. All attempts share that same deadline; it never resets on retry.
+GET acquisition is clipped to the active aggregate budget's remaining time, including
+cooperative membership batches. Existing enclosing capability timers can end sooner.
+The cutoff uses the budget's absolute monotonic deadline rather than rebuilding it from two
+different clock readings. Decoded chunks are charged as they arrive, including a short tail
+from an attempt that fails before completing the response.
+The payload limit bounds the accumulated decoded body, not total
 process memory or transient decompressor/parser allocations. Oversized results fail with
 `502 upstream_response_too_large`; request a smaller page or fewer issue expansions when possible.
 
@@ -93,6 +124,8 @@ aggregate deadline exhaustion produces `504 read_operation_timeout`.
 
 Membership write batches use a dedicated policy, separate from the reader defaults: 300
 physical requests, 30 MiB of GET response bytes and a 300-second cooperative deadline.
+GET retries and backoff share the remaining batch time. Only the GET acquisition timer is
+clipped; no whole-batch timer is added around mutations or previously accepted receipts.
 Preflight, mutations, permission/target rechecks and read-back share one scope starting at
 batch service entry after authentication. No counter resets per item. The writer Compose
 service forwards the three batch environment settings; existing `.env` values override defaults.

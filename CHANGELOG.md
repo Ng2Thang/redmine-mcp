@@ -22,6 +22,11 @@ that a release has been published.
 
 ### Changed
 
+- Give membership write batches a dedicated configurable scope: 300 physical requests,
+  30 MiB of GET response bytes and a 300-second cooperative deadline. Reuse successful
+  project/user proofs only during preflight; retain per-item execution refresh, reader caps,
+  receipt semantics and external cancellation. PREP-023 runtime verification is pending.
+
 - Raise default upstream concurrency to 50 and admission wait to 30 seconds. Logical reads now
   allow 30 upstream attempts within a 90-second aggregate deadline. Code defaults, `.env.example`
   and both Compose services use the same values; query pages remain 10 and read bytes remain

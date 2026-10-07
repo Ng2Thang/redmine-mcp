@@ -5,6 +5,7 @@ from pydantic import Field, HttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from redmine_mcp.auth.policy import WRITE_OPERATIONS
+from redmine_mcp.common.read_budget import MEMBERSHIP_BATCH_DEFAULTS
 from redmine_mcp.constants import runtime as runtime_text
 
 
@@ -18,6 +19,15 @@ class Settings(BaseSettings):
     redmine_read_operation_max_requests: int = Field(default=30, ge=1)
     redmine_read_operation_deadline_seconds: float = Field(default=90, gt=0, allow_inf_nan=False)
     redmine_read_operation_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
+    redmine_membership_batch_max_requests: int = Field(
+        default=MEMBERSHIP_BATCH_DEFAULTS.max_requests, ge=1
+    )
+    redmine_membership_batch_max_read_bytes: int = Field(
+        default=MEMBERSHIP_BATCH_DEFAULTS.max_bytes, ge=1
+    )
+    redmine_membership_batch_deadline_seconds: float = Field(
+        default=MEMBERSHIP_BATCH_DEFAULTS.deadline_seconds, gt=0, allow_inf_nan=False
+    )
     redmine_write_enabled: bool = False
     redmine_writer_auth_mode: Literal["pinned_key", "personal_key"] = "pinned_key"
     redmine_writer_user_ids: str = ""

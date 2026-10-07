@@ -8,13 +8,13 @@
 | Assigned capability | Execute a valid one-to-ten membership batch within an explicit batch budget while preserving individual receipts |
 | Type / access | Extend existing restricted membership writers; membership reads remain unchanged |
 | Destructive effects | Existing add/update/delete membership effects only; planning performs none |
-| Status | planned |
+| Status | blocked |
 | Dependencies | [tool-033](tool-033-project-members-management.md) and [prep-019](prep-019-write-outcome-consistency.md), accepted current paths in [prep-020](prep-020-current-catalog-acceptance.md) |
 | Related tasks | Existing prep-015 read-budget implementation; prep-016/017/018 infrastructure; [dashboard](../index.md) |
 | Target Redmine version | 7.0.2; new budget behavior unverified |
 | Last updated | 2026-10-07, Codex |
-| Progress summary | Default mismatch and replacement budget contract specified; no implementation |
-| Next action | Review configuration defaults, then assign coding and testing as separate stages |
+| Progress summary | Implementation finished; static checks passed; testing pending |
+| Next action | Confirm implementation commit, then separately authorize BATCH-023-001..006 verification |
 
 ## 2. Discovery and evidence
 
@@ -166,17 +166,42 @@ Existing passing suites do not accept the new defaults. No setup/reset or mutati
 
 ## 8. Implementation and review record
 
-Only task/dashboard documentation created. Coding, static checks, automated/native execution,
-Inspector and diff review of runtime behavior remain pending. Retain tool-033 native restrictions
-and PREP-019 uncertainty evidence; no old historical acceptance gap is closed by this plan.
+Implemented on 2026-10-07 from clean HEAD `7310cb9`:
+
+- Added positive batch request/GET-byte settings and a positive finite cooperative deadline.
+  Shared default policy values keep direct service construction and Settings consistent.
+- Bootstrap injects the dedicated policy. Normal readers retain their existing policy.
+  The existing single batch context, unconditional reset, physical request charging and
+  GET-only byte accounting are retained; no outer mutation cancellation was added.
+- Preflight reuses successful project/user proofs using local sets. Execution passes no
+  reuse sets, refreshes caller permissions and obtains current target evidence per item.
+  Failed proofs are never cached as successes. Role validation and whole-batch failure remain.
+- Documented settings, receipt boundaries and runtime limitations in configuration, tool
+  reference and changelog. Also forwarded the new settings to the writer in
+  `deploy/compose.yaml`: this necessary configuration wiring extends the listed file scope
+  without changing the contract. No testing infrastructure, dependencies or tests changed.
+- `uv run --frozen --no-sync ruff check .`: passed.
+- `uv run --frozen --no-sync ruff format --check .`: 261 files already formatted.
+- `uv run --frozen --no-sync mypy src`: passed, 121 source files.
+- `git diff --check`: passed.
+- Diff review confirms unchanged mutation/read-back classification, sequential writes,
+  stop rules, caller isolation and external cancellation. No runtime behavior was exercised.
+
+Handoff BATCH-023-001..005 to an authorized offline assignment: add/update/delete at
+1/2/10 items, tiny budgets, cancellation/context restoration, stale permission/target
+changes, prior accepted receipts and concurrent reader isolation. BATCH-023-006 needs
+the owned Redmine 7.0.2 writer, non-admin manager, small complete inventories and disposable
+memberships; verify native roles/inheritance/assignment effects and ownership-checked cleanup.
+Startup and Inspector remain pending, as does EVID-023-002. No historical gap is closed.
 
 ## 9. Completion and handoff
 
-- [ ] Dedicated settings/policy implemented and documented.
+- [x] Dedicated settings/policy implemented and documented.
 - [ ] Defined ten-item fixtures and bounded failure cases pass.
 - [ ] Role refresh, receipts, reader limits and context restoration accepted.
 - [ ] Owned native state and cleanup verified after explicit authorization.
-- [ ] Final diff/task/dashboard synchronized.
+- [x] Final diff/task/dashboard synchronized.
 
-Final status: planned. Contract blockers: none. Next action: review, assign coding, and hand off
-BATCH-023-001..006 separately. Configuration rollout is not authorized by this document.
+Final status: blocked for acceptance. **Implementation finished; testing pending.**
+Next action: confirm the implementation commit, then separately authorize BATCH-023-001..006.
+Configuration rollout and live verification have not been performed.

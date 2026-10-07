@@ -5,7 +5,7 @@ import httpx
 from redmine_mcp.auth import WRITE_OPERATIONS, AuthenticationService
 from redmine_mcp.auth.capabilities import CapabilityService
 from redmine_mcp.auth.models import Principal
-from redmine_mcp.common.read_budget import ReadBudgetPolicy
+from redmine_mcp.common.read_budget import MEMBERSHIP_BATCH_DEFAULTS, ReadBudgetPolicy
 from redmine_mcp.config import Settings
 from redmine_mcp.features import (
     AttachmentService,
@@ -72,6 +72,16 @@ def read_budget_policy(settings: Settings) -> ReadBudgetPolicy:
         max_requests=settings.redmine_read_operation_max_requests,
         max_bytes=settings.redmine_read_operation_max_bytes,
         deadline_seconds=settings.redmine_read_operation_deadline_seconds,
+    )
+
+
+def membership_batch_policy(settings: Settings | None) -> ReadBudgetPolicy:
+    if settings is None:
+        return MEMBERSHIP_BATCH_DEFAULTS
+    return ReadBudgetPolicy(
+        max_requests=settings.redmine_membership_batch_max_requests,
+        max_bytes=settings.redmine_membership_batch_max_read_bytes,
+        deadline_seconds=settings.redmine_membership_batch_deadline_seconds,
     )
 
 
@@ -144,7 +154,7 @@ def build_container(
         ProjectMembershipService(
             RedmineProjectMemberships(client, writer),
             build_capabilities(http, api_key, settings, principal),
-            budget_policy=read_budget_policy(settings) if settings else ReadBudgetPolicy(),
+            budget_policy=membership_batch_policy(settings),
         ),
     )
 

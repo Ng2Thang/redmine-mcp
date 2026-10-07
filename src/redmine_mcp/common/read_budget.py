@@ -17,6 +17,11 @@ class ReadBudgetPolicy:
     deadline_seconds: float = 90
 
 
+MEMBERSHIP_BATCH_DEFAULTS = ReadBudgetPolicy(
+    max_requests=300, max_bytes=30 * 1024 * 1024, deadline_seconds=300
+)
+
+
 @dataclass
 class ReadBudget:
     policy: ReadBudgetPolicy

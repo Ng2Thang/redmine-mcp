@@ -94,8 +94,14 @@ membership projects, role ID validity, add duplicate absence and delete inherita
 Add reads the visible user's memberships first, falling back to a complete bounded project
 inventory only when the expansion is omitted. Existing memberships are reported with
 `membership_already_exists` and readable observed state; add never becomes update. Any known
-preflight error prevents every mutation. Budget exhaustion also fails preflight. Requests may
-need fewer than ten items to fit the configured read budget.
+preflight error prevents every mutation. Budget exhaustion also fails preflight. One dedicated
+batch scope defaults to 300 physical requests (including mutations), 30 MiB of GET response
+bytes and a 300-second cooperative deadline. Reader budgets remain independent. These defaults
+target small one-to-ten-item batches; large inventories, latency or custom caps can still
+require fewer items. PREP-023 verification of the defined ten-item manager fixture is pending.
+Preflight reuses successful project/user proofs only within that phase. Execution obtains
+fresh evidence before each mutation. An in-flight mutation retains its own timeout and may
+finish after the batch deadline; external cancellation propagates.
 
 After preflight, native writes run sequentially with refreshed permission and target evidence.
 There is one native POST, PUT or DELETE per attempted item. Independent native rejections

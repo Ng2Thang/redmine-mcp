@@ -28,6 +28,9 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_READ_OPERATION_MAX_REQUESTS` | `30` | Positive aggregate upstream-attempt ceiling for a reader, including nested auth and metadata probes. |
 | `REDMINE_READ_OPERATION_DEADLINE_SECONDS` | `90` | Positive finite deadline for a logical read operation, including admission, acquisition and conversion. |
 | `REDMINE_READ_OPERATION_MAX_BYTES` | `10485760` | Positive aggregate decoded-response byte ceiling for a logical reader. |
+| `REDMINE_MEMBERSHIP_BATCH_MAX_REQUESTS` | `300` | Positive ceiling for every physical request in one membership write batch, including mutations. |
+| `REDMINE_MEMBERSHIP_BATCH_MAX_READ_BYTES` | `31457280` | Positive aggregate GET response byte ceiling (30 MiB) for that batch; write responses retain per-response limits. |
+| `REDMINE_MEMBERSHIP_BATCH_DEADLINE_SECONDS` | `300` | Positive finite cooperative deadline for one entire membership write batch. |
 | `REDMINE_PUBLIC_URL` | Unset | Optional browser-reachable Redmine base URL, including a subpath, for validated attachment links. Empty means use the upstream origin. Credentials, query and fragment are rejected. |
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`, case insensitive. |
 
@@ -61,11 +64,17 @@ budgets; stream/session lifetimes are not aggregate operations. Writers do not r
 aggregate mutation deadline. Read request/byte exhaustion produces `422 scan_budget_exceeded`;
 aggregate deadline exhaustion produces `504 read_operation_timeout`.
 
-Membership write batches also use one shared read budget for preflight, permission/target
-rechecks and read-back. The budget starts at batch service entry after authentication; it does
-not install an outer cancellation timer over mutations. Deadline exhaustion is checked by
-bounded reads and before dispatch, preserving already accepted receipts. Each mutation retains
-its single-attempt upstream timeout. Smaller batches may be needed to fit the read budget.
+Membership write batches use a dedicated policy, separate from the reader defaults: 300
+physical requests, 30 MiB of GET response bytes and a 300-second cooperative deadline.
+Preflight, mutations, permission/target rechecks and read-back share one scope starting at
+batch service entry after authentication. No counter resets per item. The writer Compose
+service forwards the three batch environment settings; existing `.env` values override defaults.
+Preflight may reuse project/user proofs within that phase, but each mutation refreshes
+permissions and target evidence. There is no outer cancellation timer over mutations.
+Deadline exhaustion stops new dispatches and bounded reads, preserving already accepted
+receipts. An in-flight mutation may finish after 300 seconds within its existing timeout;
+external cancellation still propagates. Large inventories, slow responses or smaller configured
+caps can prevent a ten-item batch from completing. PREP-023 runtime acceptance is pending.
 The shared upstream transport also rechecks the active operation deadline after acquiring an
 admission permit, before forwarding the request. Expired queued requests fail without dispatch,
 leave `redmine_dispatched` false and release the permit. This applies to both direct and proxy

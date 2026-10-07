@@ -1,7 +1,12 @@
 """Ordered batch orchestration with whole-batch preflight before any mutation."""
 
 from redmine_mcp.common import ApplicationError, validated_query
-from redmine_mcp.common.read_budget import ReadBudget, ReadBudgetPolicy, current_budget
+from redmine_mcp.common.read_budget import (
+    MEMBERSHIP_BATCH_DEFAULTS,
+    ReadBudget,
+    ReadBudgetPolicy,
+    current_budget,
+)
 from redmine_mcp.features.projects.membership_models import (
     AddMembershipItem,
     AddProjectMembersRequest,
@@ -55,7 +60,7 @@ class ProjectMembershipService:
         gateway: MembershipGateway,
         authorizer: MembershipAuthorizer,
         *,
-        budget_policy: ReadBudgetPolicy = ReadBudgetPolicy(),
+        budget_policy: ReadBudgetPolicy = MEMBERSHIP_BATCH_DEFAULTS,
     ) -> None:
         self.gateway = gateway
         self.authorizer = authorizer
@@ -99,11 +104,23 @@ class ProjectMembershipService:
             raise ApplicationError("permission_denied", "Project member management denied", 403)
 
     async def _target(
-        self, action: MembershipAction, item: BatchItem, result: MembershipWriteResult
+        self,
+        action: MembershipAction,
+        item: BatchItem,
+        result: MembershipWriteResult,
+        *,
+        proved_projects: set[int] | None = None,
+        proved_users: set[int] | None = None,
     ) -> None:
-        await self.gateway.prove_project(item.project_id)
+        if proved_projects is None or item.project_id not in proved_projects:
+            await self.gateway.prove_project(item.project_id)
+            if proved_projects is not None:
+                proved_projects.add(item.project_id)
         if isinstance(item, AddMembershipItem):
-            await self.gateway.prove_user(item.user_id)
+            if proved_users is None or item.user_id not in proved_users:
+                await self.gateway.prove_user(item.user_id)
+                if proved_users is not None:
+                    proved_users.add(item.user_id)
             existing = await self.gateway.existing(item.project_id, item.user_id)
             if existing is not None:
                 result.membership_id = existing.id
@@ -161,6 +178,8 @@ class ProjectMembershipService:
             for index, item in enumerate(items)
         ]
         roles: set[int] | None = None
+        proved_projects: set[int] = set()
+        proved_users: set[int] = set()
         stopped = False
         failed = False
         for item, result in zip(items, results, strict=True):
@@ -169,7 +188,13 @@ class ProjectMembershipService:
                 continue
             try:
                 await self._permission(action, result)
-                await self._target(action, item, result)
+                await self._target(
+                    action,
+                    item,
+                    result,
+                    proved_projects=proved_projects,
+                    proved_users=proved_users,
+                )
                 if result.requested_role_ids is not None:
                     if roles is None:
                         roles = await self.gateway.role_ids()
@@ -185,6 +210,9 @@ class ProjectMembershipService:
                 if result.outcome == "not_executed" and result.error is None:
                     result.error = stopped_error("Another item failed whole-batch preflight")
             return MembershipBatchResult(phase="preflight_failed", results=results)
+        # Execution must obtain fresh proof even for targets already seen in preflight.
+        proved_projects.clear()
+        proved_users.clear()
         stopped = False
         for item, result in zip(items, results, strict=True):
             if stopped:

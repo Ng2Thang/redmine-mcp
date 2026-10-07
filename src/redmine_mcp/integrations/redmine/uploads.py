@@ -2,6 +2,8 @@
 
 import re
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.features.attachments.models import UploadResult
 from redmine_mcp.integrations.redmine.client import RedmineClient
@@ -18,7 +20,7 @@ class RedmineUploads:
         if receipt.outcome == "uncertain":
             return UploadResult(
                 outcome="uncertain",
-                upstream_accepted=True if receipt.status == 201 else None,
+                upstream_accepted=True if receipt.status == http_status.HTTP_201_CREATED else None,
             )
         upload = receipt.payload.get("upload") if receipt.payload is not None else None
         if not isinstance(upload, dict):

@@ -7,6 +7,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from time import monotonic
 
+from fastapi import status as http_status
 from redmine_mcp.common.errors import ApplicationError
 
 
@@ -36,14 +37,18 @@ class ReadBudget:
     def check_deadline(self) -> None:
         if monotonic() >= self.deadline:
             raise ApplicationError(
-                "read_operation_timeout", "Read operation timed out; narrow the scope", 504
+                "read_operation_timeout",
+                "Read operation timed out; narrow the scope",
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
             )
 
     def check_request_available(self) -> None:
         self.check_deadline()
         if self.requests >= self.policy.max_requests:
             raise ApplicationError(
-                "scan_budget_exceeded", "Read request budget exhausted; narrow the scope", 422
+                "scan_budget_exceeded",
+                "Read request budget exhausted; narrow the scope",
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
 
     def request(self) -> None:
@@ -55,7 +60,9 @@ class ReadBudget:
         self.response_bytes += size
         if self.response_bytes > self.policy.max_bytes:
             raise ApplicationError(
-                "scan_budget_exceeded", "Read byte budget exhausted; narrow the scope", 422
+                "scan_budget_exceeded",
+                "Read byte budget exhausted; narrow the scope",
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
 
 
@@ -109,7 +116,9 @@ async def read_operation(policy: ReadBudgetPolicy, *, fresh: bool = False) -> As
                 check_read_deadline()
         except TimeoutError:
             raise ApplicationError(
-                "read_operation_timeout", "Read operation timed out; narrow the scope", 504
+                "read_operation_timeout",
+                "Read operation timed out; narrow the scope",
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
             ) from None
     finally:
         current_budget.reset(token)

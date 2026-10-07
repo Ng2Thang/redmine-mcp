@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
@@ -42,7 +44,9 @@ class RedmineIssueNotes:
         before = await self._visible_journal(issue_id, journal_id)
         if before is None:
             raise ApplicationError(
-                codes_text.RESOURCE_NOT_FOUND, redmine_text.RESOURCE_UNAVAILABLE, 404
+                codes_text.RESOURCE_NOT_FOUND,
+                redmine_text.RESOURCE_UNAVAILABLE,
+                http_status.HTTP_404_NOT_FOUND,
             )
         # Validate the target before dispatch; default model values never prove field presence.
         visible_item(
@@ -50,11 +54,14 @@ class RedmineIssueNotes:
         )
         payload = request.model_dump(mode="json", exclude_unset=True)
         receipt = await self.writer.write_json(
-            "PUT", f"journals/{journal_id}.json", {"journal": payload}, accepted_statuses=(204,)
+            "PUT",
+            f"journals/{journal_id}.json",
+            {"journal": payload},
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = IssueNoteUpdateResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             issue_id=issue_id,
             resource_id=journal_id,
             field_verification={field: "unavailable" for field in payload},

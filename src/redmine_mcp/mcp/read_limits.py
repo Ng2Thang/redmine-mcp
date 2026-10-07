@@ -3,6 +3,7 @@
 import json
 from typing import Any
 
+from fastapi import status as http_status
 import httpx
 from fastapi_mcp import FastApiMCP
 from mcp import types
@@ -28,10 +29,10 @@ class MCPRestClient(httpx.AsyncClient):
                 # include those values in the SDK's exception text or logs.
                 error = {
                     "code": "invalid_parameters"
-                    if response.status_code == 422
+                    if response.status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
                     else "request_failed",
                     "message": "Invalid tool parameters"
-                    if response.status_code == 422
+                    if response.status_code == http_status.HTTP_422_UNPROCESSABLE_CONTENT
                     else "Tool request failed",
                 }
             raise RuntimeError(json.dumps({"error": error}, ensure_ascii=False))

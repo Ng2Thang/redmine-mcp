@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterator
 
+from fastapi import status as http_status
 import httpx
 from httpx._utils import get_environment_proxies
 
@@ -62,7 +63,9 @@ class AdmittedTransport(httpx.AsyncBaseTransport):
                 await self.semaphore.acquire()
         except TimeoutError:
             raise ApplicationError(
-                "upstream_busy", "Redmine request capacity is busy; retry later", 503
+                "upstream_busy",
+                "Redmine request capacity is busy; retry later",
+                http_status.HTTP_503_SERVICE_UNAVAILABLE,
             ) from None
         try:
             # Admission waiting may have consumed the remaining operation deadline.

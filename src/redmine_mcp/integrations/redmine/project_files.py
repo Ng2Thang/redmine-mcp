@@ -1,5 +1,7 @@
 """Attach one upload token to a project and inspect the resulting file."""
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.features.projects.models import AddProjectFileResult
 from redmine_mcp.integrations.redmine.projects import RedmineProjects
@@ -26,11 +28,14 @@ class RedmineProjectFiles:
         if version_id is not None:
             file["version_id"] = version_id
         receipt = await self.writer.write_json(
-            "POST", f"projects/{project_id}/files.json", {"file": file}, accepted_statuses=(204,)
+            "POST",
+            f"projects/{project_id}/files.json",
+            {"file": file},
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = AddProjectFileResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             attachment_id=attachment_id,
         )
         try:

@@ -9,11 +9,20 @@ from email.utils import parsedate_to_datetime
 from random import uniform
 from time import monotonic, time
 
+from fastapi import status as http_status
+
 import httpx
 
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
 
-RETRY_STATUSES = frozenset({429, 502, 503, 504})
+RETRY_STATUSES = frozenset(
+    {
+        http_status.HTTP_429_TOO_MANY_REQUESTS,
+        http_status.HTTP_502_BAD_GATEWAY,
+        http_status.HTTP_503_SERVICE_UNAVAILABLE,
+        http_status.HTTP_504_GATEWAY_TIMEOUT,
+    }
+)
 RETRY_ERRORS = (
     httpx.ConnectError,
     httpx.ConnectTimeout,

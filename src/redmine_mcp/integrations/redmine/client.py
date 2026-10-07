@@ -134,7 +134,9 @@ class RedmineClient:
                 attachment_id, url = data.get("id"), data["content_url"]
                 if type(attachment_id) is not int or not isinstance(url, str):
                     raise ApplicationError(
-                        "upstream_response", "Unexpected attachment metadata", 502
+                        "upstream_response",
+                        "Unexpected attachment metadata",
+                        http_status.HTTP_502_BAD_GATEWAY,
                     )
                 data["content_url"] = self.attachment_link(url, attachment_id)
             for value in data.values():
@@ -179,7 +181,9 @@ class RedmineClient:
     async def get_attachment_bytes(self, content_url: str, attachment_id: int) -> bytes:
         """Retired binary interface: no attachment content is dispatched."""
         raise ApplicationError(
-            "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
+            "attachment_download_disabled",
+            "Use attachment metadata and its Redmine link",
+            http_status.HTTP_403_FORBIDDEN,
         )
 
     async def _get_attempt(

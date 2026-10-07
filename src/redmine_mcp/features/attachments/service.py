@@ -1,6 +1,7 @@
 from base64 import b64decode
 from binascii import Error as Base64Error
-from http import HTTPStatus
+
+from fastapi import status as http_status
 
 from redmine_mcp.auth.capability_models import WriteIntent
 from redmine_mcp.auth.capability_ports import WriteAuthorizer
@@ -48,7 +49,9 @@ class AttachmentService:
     async def download_attachment(self, attachment_id: int) -> AttachmentDownload:
         require_positive_id(attachment_id, "attachment_id")
         raise ApplicationError(
-            "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
+            "attachment_download_disabled",
+            "Use attachment metadata and its Redmine link",
+            http_status.HTTP_403_FORBIDDEN,
         )
 
     async def update_attachment(
@@ -97,14 +100,14 @@ class AttachmentService:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.INVALID_FILENAME,
-                HTTPStatus.UNPROCESSABLE_ENTITY,
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
         maximum_encoded = 4 * ((self.max_binary_bytes + 2) // 3)
         if len(content_base64) > maximum_encoded:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.REQUEST_TOO_LARGE,
-                HTTPStatus.CONTENT_TOO_LARGE,
+                http_status.HTTP_413_CONTENT_TOO_LARGE,
             )
         try:
             content = b64decode(content_base64, validate=True)
@@ -112,13 +115,13 @@ class AttachmentService:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.INVALID_BASE64,
-                HTTPStatus.UNPROCESSABLE_ENTITY,
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             ) from None
         if len(content) > self.max_binary_bytes:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.REQUEST_TOO_LARGE,
-                HTTPStatus.CONTENT_TOO_LARGE,
+                http_status.HTTP_413_CONTENT_TOO_LARGE,
             )
         if self.writer is None:
             raise RuntimeError("Attachment writer is not configured")

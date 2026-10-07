@@ -3,6 +3,8 @@
 import asyncio
 from typing import Literal
 
+from fastapi import status as http_status
+
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS
 from redmine_mcp.auth.capabilities import CapabilityService
 from redmine_mcp.common import (
@@ -148,7 +150,9 @@ class ProjectCapabilityService:
         )
         if operation_id is not None and operation_id not in project_operations:
             raise ApplicationError(
-                codes_text.INVALID_PARAMETERS, "operation_id must name a project-scoped tool", 422
+                codes_text.INVALID_PARAMETERS,
+                "operation_id must name a project-scoped tool",
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
         try:
             async with asyncio.timeout(self.capabilities.deadline_seconds):
@@ -161,7 +165,7 @@ class ProjectCapabilityService:
                 )
         except TimeoutError:
             raise ApplicationError(
-                codes_text.UPSTREAM_TIMEOUT, redmine_text.TIMED_OUT, 504
+                codes_text.UPSTREAM_TIMEOUT, redmine_text.TIMED_OUT, http_status.HTTP_504_GATEWAY_TIMEOUT
             ) from None
 
     async def _project_page(
@@ -189,7 +193,9 @@ class ProjectCapabilityService:
                 or len(projects) + len(ids) > page.total
             ):
                 raise ApplicationError(
-                    codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
+                    codes_text.UPSTREAM_RESPONSE,
+                    redmine_text.UNEXPECTED_DATA,
+                    http_status.HTTP_502_BAD_GATEWAY,
                 )
             expected_total = page.total
             seen.update(ids)
@@ -201,7 +207,7 @@ class ProjectCapabilityService:
         raise ApplicationError(
             "scope_required",
             "Project inventory exceeds the capability filter limit; supply project_id",
-            422,
+            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
     async def _list_capabilities(

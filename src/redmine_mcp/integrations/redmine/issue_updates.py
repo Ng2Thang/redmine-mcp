@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
@@ -28,7 +30,11 @@ def journal_ids(issue: dict[str, Any]) -> set[int]:
     for journal in response_items(issue, "journals"):
         journal_id = item(Journal, journal).id
         if journal_id in ids:
-            raise ApplicationError(codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502)
+            raise ApplicationError(
+                codes_text.UPSTREAM_RESPONSE,
+                redmine_text.UNEXPECTED_DATA,
+                http_status.HTTP_502_BAD_GATEWAY,
+            )
         ids.add(journal_id)
     return ids
 
@@ -74,7 +80,11 @@ class RedmineIssueUpdates:
         user = response_object(data.get("user"))
         user_id = user.get("id")
         if type(user_id) is not int or user_id < 1:
-            raise ApplicationError(codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502)
+            raise ApplicationError(
+                codes_text.UPSTREAM_RESPONSE,
+                redmine_text.UNEXPECTED_DATA,
+                http_status.HTTP_502_BAD_GATEWAY,
+            )
         return user_id
 
     async def update_issue(self, issue_id: int, request: IssueUpdateRequest) -> IssueUpdateResult:
@@ -101,11 +111,14 @@ class RedmineIssueUpdates:
             # Redmine 7.0.2 ignores nil in safe_attributes=; an empty ID clears assignment.
             payload["assigned_to_id"] = ""
         receipt = await self.writer.write_json(
-            "PUT", f"issues/{issue_id}.json", {"issue": payload}, accepted_statuses=(204,)
+            "PUT",
+            f"issues/{issue_id}.json",
+            {"issue": payload},
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = IssueUpdateResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             resource_id=issue_id,
             field_verification={field: "unavailable" for field in payload},
         )

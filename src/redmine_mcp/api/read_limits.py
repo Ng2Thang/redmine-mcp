@@ -2,6 +2,7 @@
 
 import re
 
+from fastapi import status as http_status
 from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -26,7 +27,7 @@ class ReadLimitsMiddleware:
                 ApplicationError(
                     "attachment_download_disabled",
                     "Use attachment metadata and its Redmine link",
-                    403,
+                    http_status.HTTP_403_FORBIDDEN,
                 ),
             )
             await response(scope, receive, send)

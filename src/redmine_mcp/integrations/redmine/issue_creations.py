@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.features.issues.models import ISSUE_INCLUDES, IssueDetail
 from redmine_mcp.features.issues.write_models import (
@@ -144,13 +146,17 @@ class RedmineIssueCreations:
             # Preserve explicit clearing when copying an assigned issue on Redmine 7.0.2.
             payload["assigned_to_id"] = ""
         receipt = await self.writer.write_json(
-            "POST", "issues.json", {"issue": payload}, accepted_statuses=(201,), params=params
+            "POST",
+            "issues.json",
+            {"issue": payload},
+            accepted_statuses=(http_status.HTTP_201_CREATED,),
+            params=params,
         )
         issue = receipt.payload.get("issue") if receipt.payload is not None else None
         resource_id = issue.get("id") if isinstance(issue, dict) else None
         result = IssueCreateResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 201 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_201_CREATED else None,
             field_verification={field: "unavailable" for field in expected},
         )
         if type(resource_id) is not int or resource_id < 1:

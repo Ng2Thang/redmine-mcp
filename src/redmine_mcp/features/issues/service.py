@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from fastapi import status as http_status
+
 from redmine_mcp.auth.capability_models import WriteIntent
 from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import ApplicationError, Page, require_positive_id, validated_query
@@ -91,7 +93,9 @@ class IssueService:
         require_positive_id(request.issue_to_id, "issue_to_id")
         if issue_id == request.issue_to_id:
             raise ApplicationError(
-                codes_text.INVALID_PARAMETERS, "An issue cannot be related to itself", 422
+                codes_text.INVALID_PARAMETERS,
+                "An issue cannot be related to itself",
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
         if self.relation_creator is None:
             raise RuntimeError("Issue relation creator is not configured")

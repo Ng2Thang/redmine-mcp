@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
@@ -58,7 +60,9 @@ class RedmineIssueRelations:
             relation = item(RelationObservation, raw)
             if relation.id in seen or issue_id not in (relation.issue_id, relation.issue_to_id):
                 raise ApplicationError(
-                    codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
+                    codes_text.UPSTREAM_RESPONSE,
+                    redmine_text.UNEXPECTED_DATA,
+                    http_status.HTTP_502_BAD_GATEWAY,
                 )
             seen.add(relation.id)
         return relation_id in seen
@@ -72,18 +76,26 @@ class RedmineIssueRelations:
         )
         endpoints = (resolved.issue_id, resolved.issue_to_id)
         if endpoints[0] == endpoints[1]:
-            raise ApplicationError(codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502)
+            raise ApplicationError(
+                codes_text.UPSTREAM_RESPONSE,
+                redmine_text.UNEXPECTED_DATA,
+                http_status.HTTP_502_BAD_GATEWAY,
+            )
         for endpoint in endpoints:
             if not await self._contains_relation(endpoint, relation_id):
                 raise ApplicationError(
-                    codes_text.RESOURCE_NOT_FOUND, redmine_text.RESOURCE_UNAVAILABLE, 404
+                    codes_text.RESOURCE_NOT_FOUND,
+                    redmine_text.RESOURCE_UNAVAILABLE,
+                    http_status.HTTP_404_NOT_FOUND,
                 )
         receipt = await self.writer.write_json(
-            "DELETE", f"relations/{relation_id}.json", accepted_statuses=(204,)
+            "DELETE",
+            f"relations/{relation_id}.json",
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = IssueRelationDeleteResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             resource_id=relation_id,
             resolved_relation=resolved,
             endpoint_observations={str(endpoint): None for endpoint in endpoints},
@@ -117,11 +129,11 @@ class RedmineIssueRelations:
             "POST",
             f"issues/{issue_id}/relations.json",
             {"relation": payload},
-            accepted_statuses=(201,),
+            accepted_statuses=(http_status.HTTP_201_CREATED,),
         )
         result = IssueRelationCreateResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 201 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_201_CREATED else None,
             field_verification={field: "unavailable" for field in expected},
         )
         created = (receipt.payload or {}).get("relation")

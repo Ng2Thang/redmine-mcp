@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from fastapi import status as http_status
 from pydantic import ValidationError
 
 from redmine_mcp.common import ApplicationError
@@ -27,7 +28,9 @@ def observe_version(value: dict[str, Any]) -> ProjectVersionObservation:
         return ProjectVersionObservation.model_validate(value, strict=True)
     except ValidationError:
         raise ApplicationError(
-            codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
+            codes_text.UPSTREAM_RESPONSE,
+            redmine_text.UNEXPECTED_DATA,
+            http_status.HTTP_502_BAD_GATEWAY,
         ) from None
 
 
@@ -67,10 +70,10 @@ class RedmineProjectVersions:
                 "POST",
                 f"projects/{project_id}/versions.json",
                 {"version": expected},
-                accepted_statuses=(201,),
+                accepted_statuses=(http_status.HTTP_201_CREATED,),
             )
         except RedmineWriteRejected as exc:
-            if exc.upstream_status == 422:
+            if exc.upstream_status == http_status.HTTP_422_UNPROCESSABLE_CONTENT:
                 existing = await self._existing_version(project_id, request.name)
                 if existing is not None:
                     return CreateProjectVersionResult(
@@ -84,7 +87,7 @@ class RedmineProjectVersions:
 
         result = CreateProjectVersionResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 201 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_201_CREATED else None,
         )
         version = receipt.payload.get("version") if receipt.payload is not None else None
         version_id = version.get("id") if isinstance(version, dict) else None
@@ -97,7 +100,7 @@ class RedmineProjectVersions:
         except ApplicationError:
             result.outcome = "uncertain"
             return result
-        if created.project.id != project_id or receipt.status != 201:
+        if created.project.id != project_id or receipt.status != http_status.HTTP_201_CREATED:
             result.outcome = "uncertain"
             return result
         try:

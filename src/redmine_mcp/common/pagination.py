@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeVar
 
+from fastapi import status as http_status
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 from redmine_mcp.common.errors import ApplicationError
@@ -29,7 +30,9 @@ class PaginationGuard:
 
     def check_depth(self, limit: int, offset: int, guidance: str) -> None:
         if offset + limit > self.max_pages * limit:
-            raise ApplicationError("scope_required", guidance, 422)
+            raise ApplicationError(
+                "scope_required", guidance, http_status.HTTP_422_UNPROCESSABLE_CONTENT
+            )
 
     def describe(self, total: int, limit: int) -> PaginationPolicy:
         pages = (total + limit - 1) // limit
@@ -41,7 +44,9 @@ class PaginationGuard:
 
     def require_scope(self, total: int, limit: int, guidance: str) -> None:
         if self.describe(total, limit).requires_narrowing:
-            raise ApplicationError("scope_required", guidance, 422)
+            raise ApplicationError(
+                "scope_required", guidance, http_status.HTTP_422_UNPROCESSABLE_CONTENT
+            )
 
 
 class Page[T](BaseModel):

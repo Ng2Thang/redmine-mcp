@@ -30,7 +30,11 @@ class RedmineWriteRejected(ApplicationError):
     """Keep the original validation status without exposing the upstream response body."""
 
     def __init__(self, upstream_status: int) -> None:
-        super().__init__(codes_text.INVALID_PARAMETERS, redmine_text.WRITE_REJECTED, 422)
+        super().__init__(
+            codes_text.INVALID_PARAMETERS,
+            redmine_text.WRITE_REJECTED,
+            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
         self.upstream_status = upstream_status
 
 
@@ -46,7 +50,10 @@ class RedmineWriter:
         path: str,
         payload: dict[str, Any] | None = None,
         *,
-        accepted_statuses: tuple[int, ...] = (201, 204),
+        accepted_statuses: tuple[int, ...] = (
+            http_status.HTTP_201_CREATED,
+            http_status.HTTP_204_NO_CONTENT,
+        ),
         params: dict[str, str] | None = None,
         allow_empty_success: bool = False,
     ) -> WriteReceipt:
@@ -75,7 +82,12 @@ class RedmineWriter:
                 http_status.HTTP_413_CONTENT_TOO_LARGE,
             )
         return await self._write(
-            "POST", path, content, "application/octet-stream", (201,), params={"filename": filename}
+            "POST",
+            path,
+            content,
+            "application/octet-stream",
+            (http_status.HTTP_201_CREATED,),
+            params={"filename": filename},
         )
 
     async def _write(
@@ -127,7 +139,7 @@ class RedmineWriter:
                     raise_for_upstream_status(status)
                     if status not in accepted_statuses:
                         return WriteReceipt("uncertain", status)
-                    if status == 204:
+                    if status == http_status.HTTP_204_NO_CONTENT:
                         return WriteReceipt("accepted", status)
                     data = bytearray()
                     async for chunk in response.aiter_bytes(chunk_size=64 * 1024):

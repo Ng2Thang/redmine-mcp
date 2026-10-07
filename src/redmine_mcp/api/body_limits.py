@@ -2,6 +2,7 @@
 
 import re
 
+from fastapi import status as http_status
 from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -11,12 +12,16 @@ from redmine_mcp.common import ApplicationError
 
 def _too_large() -> ApplicationError:
     return ApplicationError(
-        "request_body_too_large", "Request body exceeds the configured limit", 413
+        "request_body_too_large",
+        "Request body exceeds the configured limit",
+        http_status.HTTP_413_CONTENT_TOO_LARGE,
     )
 
 
 def _invalid_framing() -> ApplicationError:
-    return ApplicationError("invalid_request_body", "Invalid request body framing", 400)
+    return ApplicationError(
+        "invalid_request_body", "Invalid request body framing", http_status.HTTP_400_BAD_REQUEST
+    )
 
 
 class RequestBodyLimitsMiddleware:
@@ -67,7 +72,7 @@ class RequestBodyLimitsMiddleware:
                     raise ApplicationError(
                         "request_encoding_unsupported",
                         "Encoded request bodies are not supported",
-                        415,
+                        http_status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                     )
             while True:
                 message = await receive()

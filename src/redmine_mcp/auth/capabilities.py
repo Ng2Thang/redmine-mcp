@@ -2,6 +2,8 @@
 
 import asyncio
 
+from fastapi import status as http_status
+
 from redmine_mcp.auth.capability_models import (
     CapabilityProfile,
     CapabilityState,
@@ -84,7 +86,9 @@ class CapabilityService:
             profile = await self.reader.profile()
             if self.expected_user_id is not None and profile.user_id != self.expected_user_id:
                 raise ApplicationError(
-                    codes_text.UPSTREAM_RESPONSE, redmine_text.INVALID_RESPONSE, 502
+                    codes_text.UPSTREAM_RESPONSE,
+                    redmine_text.INVALID_RESPONSE,
+                    http_status.HTTP_502_BAD_GATEWAY,
                 )
             self._profile = profile
         return self._profile
@@ -135,11 +139,15 @@ class CapabilityService:
                 expression = await self.reader.resolve(intent, profile.user_id)
                 if await self.evaluate(expression) == "denied":
                     raise ApplicationError(
-                        codes_text.PERMISSION_DENIED, auth_text.PERMISSION_DENIED, 403
+                        codes_text.PERMISSION_DENIED,
+                        auth_text.PERMISSION_DENIED,
+                        http_status.HTTP_403_FORBIDDEN,
                     )
         except TimeoutError:
             raise ApplicationError(
-                codes_text.UPSTREAM_TIMEOUT, redmine_text.TIMED_OUT, 504
+                codes_text.UPSTREAM_TIMEOUT,
+                redmine_text.TIMED_OUT,
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
             ) from None
 
     async def candidates(self, operations: tuple[str, ...]) -> frozenset[str]:
@@ -168,5 +176,7 @@ class CapabilityService:
                 return frozenset(candidates)
         except TimeoutError:
             raise ApplicationError(
-                codes_text.UPSTREAM_TIMEOUT, redmine_text.TIMED_OUT, 504
+                codes_text.UPSTREAM_TIMEOUT,
+                redmine_text.TIMED_OUT,
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
             ) from None

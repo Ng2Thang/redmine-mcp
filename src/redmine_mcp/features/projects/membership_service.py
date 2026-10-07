@@ -1,5 +1,7 @@
 """Ordered batch orchestration with whole-batch preflight before any mutation."""
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError, validated_query
 from redmine_mcp.common.read_budget import (
     MEMBERSHIP_BATCH_DEFAULTS,
@@ -50,7 +52,14 @@ def stopped_error(message: str) -> MembershipError:
 
 def stops_batch(error: MembershipError | None) -> bool:
     return error is not None and (
-        error.status == 401 or error.status in (502, 503, 504) or error.code in STOP_CODES
+        error.status == http_status.HTTP_401_UNAUTHORIZED
+        or error.status
+        in (
+            http_status.HTTP_502_BAD_GATEWAY,
+            http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            http_status.HTTP_504_GATEWAY_TIMEOUT,
+        )
+        or error.code in STOP_CODES
     )
 
 
@@ -101,7 +110,11 @@ class ProjectMembershipService:
             operation, result.project_id
         )
         if result.permission_state == "denied":
-            raise ApplicationError("permission_denied", "Project member management denied", 403)
+            raise ApplicationError(
+                "permission_denied",
+                "Project member management denied",
+                http_status.HTTP_403_FORBIDDEN,
+            )
 
     async def _target(
         self,
@@ -127,18 +140,30 @@ class ProjectMembershipService:
                 result.observed_membership = existing
                 result.observed_present = True
                 raise ApplicationError(
-                    "membership_already_exists", "Membership exists; use update explicitly", 422
+                    "membership_already_exists",
+                    "Membership exists; use update explicitly",
+                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
                 )
         else:
             member = await self.gateway.membership(item.membership_id)
             if member.project.id != item.project_id:
-                raise ApplicationError("invalid_parameters", "Membership project mismatch", 422)
+                raise ApplicationError(
+                    "invalid_parameters",
+                    "Membership project mismatch",
+                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                )
             if member.user is None:
-                raise ApplicationError("invalid_parameters", "Group writes are unsupported", 422)
+                raise ApplicationError(
+                    "invalid_parameters",
+                    "Group writes are unsupported",
+                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                )
             result.user_id = member.user.id
             if action == "delete" and any(role.inherited for role in member.roles):
                 raise ApplicationError(
-                    "inherited_membership", "Inherited memberships cannot be deleted", 422
+                    "inherited_membership",
+                    "Inherited memberships cannot be deleted",
+                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
                 )
 
     async def manage(
@@ -199,7 +224,11 @@ class ProjectMembershipService:
                     if roles is None:
                         roles = await self.gateway.role_ids()
                     if not set(result.requested_role_ids) <= roles:
-                        raise ApplicationError("invalid_parameters", "Unknown role ID", 422)
+                        raise ApplicationError(
+                            "invalid_parameters",
+                            "Unknown role ID",
+                            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                        )
             except ApplicationError as exc:
                 failed = True
                 result.outcome = "rejected"

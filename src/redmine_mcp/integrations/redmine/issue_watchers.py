@@ -1,5 +1,7 @@
 """Watcher acceptance is independent from visible membership verification."""
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
@@ -20,11 +22,13 @@ class RedmineIssueWatchers:
         data = await self.client.get(f"issues/{issue_id}.json", {})
         resource_object(data.get("issue"), issue_id)
         receipt = await self.writer.write_json(
-            "DELETE", f"issues/{issue_id}/watchers/{user_id}.json", accepted_statuses=(204,)
+            "DELETE",
+            f"issues/{issue_id}/watchers/{user_id}.json",
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = IssueWatcherResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             issue_id=issue_id,
             user_id=user_id,
         )
@@ -46,7 +50,9 @@ class RedmineIssueWatchers:
             watcher_id = item(Reference, watcher).id
             if watcher_id in seen:
                 raise ApplicationError(
-                    codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502
+                    codes_text.UPSTREAM_RESPONSE,
+                    redmine_text.UNEXPECTED_DATA,
+                    http_status.HTTP_502_BAD_GATEWAY,
                 )
             seen.add(watcher_id)
         return user_id in seen
@@ -58,11 +64,11 @@ class RedmineIssueWatchers:
             "POST",
             f"issues/{issue_id}/watchers.json",
             {"watcher": {"user_id": user_id}},
-            accepted_statuses=(204,),
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = IssueWatcherResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             issue_id=issue_id,
             user_id=user_id,
         )

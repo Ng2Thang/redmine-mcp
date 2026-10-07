@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, status as http_status
 
 from redmine_mcp.api import get_attachments, require_read_access
 from redmine_mcp.common import ApplicationError
@@ -44,5 +44,7 @@ async def download_attachment(
 ) -> AttachmentDownload:
     """Retired content route, also rejected by middleware before authentication."""
     raise ApplicationError(
-        "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
+        "attachment_download_disabled",
+        "Use attachment metadata and its Redmine link",
+        http_status.HTTP_403_FORBIDDEN,
     )

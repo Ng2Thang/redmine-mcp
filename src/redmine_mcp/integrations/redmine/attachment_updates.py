@@ -1,5 +1,7 @@
 """Prove container membership before updating attachment metadata."""
 
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import redmine as redmine_text
@@ -63,7 +65,9 @@ class RedmineAttachmentUpdates:
     ) -> None:
         if not await self.contains_attachment(attachment_id, request):
             raise ApplicationError(
-                codes_text.RESOURCE_NOT_FOUND, redmine_text.RESOURCE_UNAVAILABLE, 404
+                codes_text.RESOURCE_NOT_FOUND,
+                redmine_text.RESOURCE_UNAVAILABLE,
+                http_status.HTTP_404_NOT_FOUND,
             )
 
     async def update_attachment(
@@ -75,11 +79,11 @@ class RedmineAttachmentUpdates:
             "PATCH",
             f"attachments/{attachment_id}.json",
             {"attachment": changes},
-            accepted_statuses=(204,),
+            accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
         result = AttachmentUpdateResult(
             outcome=receipt.outcome,
-            upstream_accepted=True if receipt.status == 204 else None,
+            upstream_accepted=True if receipt.status == http_status.HTTP_204_NO_CONTENT else None,
             attachment_id=attachment_id,
         )
         try:

@@ -1,5 +1,7 @@
 import re
 
+from fastapi import status as http_status
+
 from redmine_mcp.auth.capability_models import WriteIntent
 from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import (
@@ -76,14 +78,14 @@ class ProjectService:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.INVALID_FILENAME,
-                422,
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
         match = re.fullmatch(r"([1-9][0-9]*)\.[0-9a-f]+", request.token)
         if match is None:
             raise ApplicationError(
                 codes_text.INVALID_PARAMETERS,
                 redmine_text.INVALID_UPLOAD_TOKEN,
-                422,
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
         if request.version_id is not None:
             versions = await self.reader.list_project_versions(project_id)
@@ -94,7 +96,7 @@ class ProjectService:
                 raise ApplicationError(
                     codes_text.INVALID_PARAMETERS,
                     redmine_text.INVALID_PROJECT_VERSION,
-                    422,
+                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
                 )
         if self.writer is None:
             raise RuntimeError("Project writer is not configured")

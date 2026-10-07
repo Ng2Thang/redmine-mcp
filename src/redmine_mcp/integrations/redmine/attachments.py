@@ -1,3 +1,5 @@
+from fastapi import status as http_status
+
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.features.attachments import AttachmentDetail, AttachmentDownload
 from redmine_mcp.integrations.redmine.client import RedmineClient
@@ -19,5 +21,7 @@ class RedmineAttachments:
 
     async def download_attachment(self, attachment_id: int) -> AttachmentDownload:
         raise ApplicationError(
-            "attachment_download_disabled", "Use attachment metadata and its Redmine link", 403
+            "attachment_download_disabled",
+            "Use attachment metadata and its Redmine link",
+            http_status.HTTP_403_FORBIDDEN,
         )

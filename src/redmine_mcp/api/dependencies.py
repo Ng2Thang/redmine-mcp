@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, status as http_status
 
 from redmine_mcp.api.runtime import get_settings, get_upstream
 from redmine_mcp.api.security import get_auth_context
@@ -37,7 +37,9 @@ def get_project_members(
 ) -> ProjectMembershipService:
     if container.project_members is None:
         raise ApplicationError(
-            codes_text.SERVICE_UNAVAILABLE, "Membership service unavailable", 503
+            codes_text.SERVICE_UNAVAILABLE,
+            "Membership service unavailable",
+            http_status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     return container.project_members
 
@@ -67,6 +69,8 @@ def get_project_capabilities(
 ) -> ProjectCapabilityService:
     if container.project_capabilities is None:
         raise ApplicationError(
-            codes_text.SERVICE_UNAVAILABLE, "Capability service unavailable", 503
+            codes_text.SERVICE_UNAVAILABLE,
+            "Capability service unavailable",
+            http_status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     return container.project_capabilities

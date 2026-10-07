@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from fastapi import status as http_status
+
 from redmine_mcp.auth.capabilities import (
     ISSUE_EDIT_PERMISSIONS,
     ISSUE_UPDATE_PERMISSIONS,
@@ -32,7 +34,9 @@ from redmine_mcp.integrations.redmine.responses import (
 
 
 def invalid_response() -> ApplicationError:
-    return ApplicationError(codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, 502)
+    return ApplicationError(
+        codes_text.UPSTREAM_RESPONSE, redmine_text.UNEXPECTED_DATA, http_status.HTTP_502_BAD_GATEWAY
+    )
 
 
 def positive_id(value: Any) -> int:
@@ -51,7 +55,11 @@ def optional_reference_id(record: dict[str, Any], field: str) -> int | None:
 
 def target_id(value: int | None) -> int:
     if value is None:
-        raise ApplicationError(codes_text.INVALID_PARAMETERS, "Missing authorization target", 422)
+        raise ApplicationError(
+            codes_text.INVALID_PARAMETERS,
+            "Missing authorization target",
+            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
     require_positive_id(value, "target_id")
     return value
 
@@ -104,7 +112,7 @@ class RedmineCapabilities:
         try:
             data = await self.client.get(f"roles/{role_id}.json", {})
         except ApplicationError as exc:
-            if exc.status in (403, 404):
+            if exc.status in (http_status.HTTP_403_FORBIDDEN, http_status.HTTP_404_NOT_FOUND):
                 return None
             raise
         role = resource_object(data.get("role"), role_id)
@@ -166,7 +174,9 @@ class RedmineCapabilities:
     async def _attachment_clause(self, intent: WriteIntent, user_id: int) -> PermissionClause:
         if intent.container_type is None:
             raise ApplicationError(
-                codes_text.INVALID_PARAMETERS, "Missing attachment container", 422
+                codes_text.INVALID_PARAMETERS,
+                "Missing attachment container",
+                http_status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
         container_id = target_id(intent.container_id)
         request = AttachmentContainerRequest(
@@ -250,7 +260,9 @@ class RedmineCapabilities:
             journal = next((item for item in journals if item["id"] == journal_id), None)
             if journal is None:
                 raise ApplicationError(
-                    codes_text.RESOURCE_NOT_FOUND, redmine_text.RESOURCE_UNAVAILABLE, 404
+                    codes_text.RESOURCE_NOT_FOUND,
+                    redmine_text.RESOURCE_UNAVAILABLE,
+                    http_status.HTTP_404_NOT_FOUND,
                 )
             permissions = own_alternatives(
                 frozenset({"edit_issue_notes", "edit_own_issue_notes"}),

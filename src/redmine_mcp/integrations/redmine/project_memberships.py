@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any
 
+from fastapi import status as http_status
 from pydantic import ValidationError
 
 from redmine_mcp.common import ApplicationError, Page
@@ -29,7 +30,9 @@ from redmine_mcp.integrations.redmine.write import RedmineWriter, RedmineWriteRe
 
 def malformed() -> ApplicationError:
     return ApplicationError(
-        codes_text.UPSTREAM_RESPONSE, "Invalid Redmine membership response", 502
+        codes_text.UPSTREAM_RESPONSE,
+        "Invalid Redmine membership response",
+        http_status.HTTP_502_BAD_GATEWAY,
     )
 
 
@@ -106,7 +109,9 @@ class RedmineProjectMemberships:
                 )
             if page.total != expected_total or any(member.id in seen for member in page.items):
                 raise ApplicationError(
-                    "membership_inventory_changed", "Membership inventory changed; reconcile", 422
+                    "membership_inventory_changed",
+                    "Membership inventory changed; reconcile",
+                    http_status.HTTP_422_UNPROCESSABLE_CONTENT,
                 )
             seen.update(member.id for member in page.items)
             members.extend(page.items)
@@ -114,7 +119,11 @@ class RedmineProjectMemberships:
                 return members
             if not page.items or len(members) > expected_total:
                 raise malformed()
-        raise ApplicationError("scope_required", "Complete membership inventory unavailable", 422)
+        raise ApplicationError(
+            "scope_required",
+            "Complete membership inventory unavailable",
+            http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
 
     async def existing(self, project_id: int, user_id: int) -> ProjectMembership | None:
         user = self._users.get(user_id)
@@ -171,7 +180,7 @@ class RedmineProjectMemberships:
                 "POST",
                 f"projects/{result.project_id}/memberships.json",
                 {"membership": {"user_id": result.user_id, "role_ids": result.requested_role_ids}},
-                accepted_statuses=(201,),
+                accepted_statuses=(http_status.HTTP_201_CREATED,),
             )
         except RedmineWriteRejected as exc:
             result.outcome = "rejected"
@@ -189,7 +198,7 @@ class RedmineProjectMemberships:
                     result.error = MembershipError(
                         code="membership_already_exists",
                         message="Membership already exists",
-                        status=422,
+                        status=http_status.HTTP_422_UNPROCESSABLE_CONTENT,
                     )
             except ApplicationError as observation_error:
                 result.error = MembershipError(
@@ -208,7 +217,7 @@ class RedmineProjectMemberships:
             "PUT" if action == "update" else "DELETE",
             f"memberships/{result.membership_id}.json",
             {"membership": {"role_ids": result.requested_role_ids}} if action == "update" else None,
-            accepted_statuses=(200, 204),
+            accepted_statuses=(http_status.HTTP_200_OK, http_status.HTTP_204_NO_CONTENT),
             allow_empty_success=True,
         )
 

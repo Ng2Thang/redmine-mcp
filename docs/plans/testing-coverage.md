@@ -7,6 +7,21 @@ not every possible workflow, role combination, Redmine version or infrastructure
 
 ## Current tools
 
+### Issue time-entry updates
+
+The user assigned TOOL-042 test implementation/execution on 2026-10-08. The task is complete
+within its documented evidence scope; [testing evidence](../testing/evidence/tool-042-testing.md)
+records full versus targeted execution, native current settings and exact fixture cleanup.
+
+| Operation | Unit coverage | Offline integration coverage | Owned native coverage |
+|---|---|---|---|
+| `update_time_entry` | `tests/unit/test_time_entry_updates.py`: 61 strict input/service/permission cases | `tests/integration/test_time_entry_updates.py`: 99 state/identity/own-all/auth/receipt/REST-MCP cases; extended current-writer matrix and all-reader argument map | `tests/e2e/test_time_entry_update_acceptance.py`: 10 native/Inspector state, role, activity, current-policy and fault/concurrency cases; task-owned setup/cleanup validates zero remaining resources |
+
+Full offline run: 1,755 passed and one older activity-reader argument failure. Corrected
+catalog rerun and seven additional late edge cases pass separately; no final clean full rerun
+is claimed. Required-comments/future/closed variants under different global settings and
+arbitrary plugins remain unverified. TOOL-041 creation and TOOL-043 deletion are separate tasks.
+
 ### Estimate and general spent-time acceptance
 
 The user separately authorized testing for [tool-034](tasks/tool-034-list-issue-estimates.md)

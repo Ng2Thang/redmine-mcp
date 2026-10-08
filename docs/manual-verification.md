@@ -66,6 +66,34 @@ Implement/execute TOOL-041-001..009 in a separately authorized testing assignmen
   writes and need this explicit verification authorization. Do not use the shared 6.0.5 instance
   as pinned 7.0.2 acceptance or reset it for this feature.
 
+## Time-entry update acceptance
+
+[TOOL-042](plans/tasks/tool-042-update-time-entry.md) implements `update_time_entry` at
+`PUT /api/v1/issues/{issue_id}/time-entries/{time_entry_id}`. The user subsequently authorized
+testing on 2026-10-08. [Recorded evidence](testing/evidence/tool-042-testing.md) covers 61 unit/99
+dedicated integration cases, 10 owned native/Inspector cases, exact cleanup and scoped checks.
+The full offline run had 1,755 passes and one old catalog argument failure corrected in a passing
+targeted rerun; seven late cases pass separately. No clean final full-suite rerun is claimed.
+Future authorized rechecks retain the following coverage:
+
+- Cover strict partial-update inputs, supplied null/empty/unknown body rejection, comments
+  clearing and date/hour/activity rules. Verify exact issue/entry/project/user preflight;
+  malformed/wrong-target responses must send no PUT. Omitted fields must not enter the payload.
+- Cover credited user versus submitting author, own/all/no-edit/log-only callers, pinned/personal
+  modes, writer gates, discovery, capability reports, explicit CSV and allowed_all. Role evidence
+  remains conditional/unknown; native visibility/editability is final.
+- Cover no-body 204, native hour rounding, matched/mismatch/unavailable observations, GET failure,
+  5xx and dispatched timeout with one PUT and preserved acceptance/uncertainty. Extend catalog
+  fixtures/operation maps without weakening existing reader or creation coverage.
+- In the owned marked 7.0.2 environment, use disposable exact-ID entries. Check native field
+  changes, stable identity, omitted fields, unrelated controls, role/settings rejection and
+  authorized concurrency/fault observations. Inspector update calls are live mutations and
+  require this separate assignment. Record resulting state and exact owned cleanup.
+
+Do not use reported entries #919–#924 as fixtures or modify the shared server merely to test.
+The operation is implemented and accepted within the documented owned environment and current
+native policy settings. No production deployment or exhaustive policy/plugin/race coverage is claimed.
+
 ## Bounded Redmine GET retries
 
 [PREP-027](plans/tasks/prep-027-redmine-read-retries.md) implements shared GET retry.

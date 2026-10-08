@@ -1,4 +1,4 @@
-"""Restricted own-time creation on a visible issue."""
+"""Restricted time-entry writes on visible issues."""
 
 from typing import Annotated
 
@@ -9,6 +9,8 @@ from redmine_mcp.features.time_entries.service import TimeEntryService
 from redmine_mcp.features.time_entries.write_models import (
     TimeEntryCreateRequest,
     TimeEntryCreateResult,
+    TimeEntryUpdateRequest,
+    TimeEntryUpdateResult,
 )
 
 router = APIRouter(
@@ -35,3 +37,26 @@ async def create_time_entry(
     issue_id: Annotated[int, Path(ge=1, description="ID of the visible issue")],
 ) -> TimeEntryCreateResult:
     return await service.create_time_entry(issue_id, request)
+
+
+@router.put(
+    "/{issue_id}/time-entries/{time_entry_id}",
+    operation_id="update_time_entry",
+    response_model=TimeEntryUpdateResult,
+    description=(
+        "Update supplied hours, spent_on date, activity_id or comments on one time entry "
+        "belonging to a visible issue. Supply issue_id, time_entry_id and at least one field; "
+        "omitted fields are unchanged and supplied nulls are rejected. Empty comments clear "
+        "comments subject to native validation. Requires the separate restricted writer, "
+        "visible spent time and native Edit spent time or eligible Edit own spent time "
+        "permission. Cannot move or recredit entries. Sends one update and reports acceptance "
+        "separately from independent read-back; reconcile uncertainty before retrying."
+    ),
+)
+async def update_time_entry(
+    request: TimeEntryUpdateRequest,
+    service: Annotated[TimeEntryService, Depends(get_time_entries)],
+    issue_id: Annotated[int, Path(ge=1, description="ID of the visible issue")],
+    time_entry_id: Annotated[int, Path(ge=1, description="ID of the entry on this issue")],
+) -> TimeEntryUpdateResult:
+    return await service.update_time_entry(issue_id, time_entry_id, request)

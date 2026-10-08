@@ -11,6 +11,7 @@ def annotate_read_tools(tools: list[Tool]) -> None:
             destructiveHint=tool.name
             in (
                 "delete_attachment",
+                "update_time_entry",
                 "update_issue_note",
                 "delete_issue_relation",
                 "remove_issue_watcher",

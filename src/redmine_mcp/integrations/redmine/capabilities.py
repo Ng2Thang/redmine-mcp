@@ -7,6 +7,7 @@ from fastapi import status as http_status
 from redmine_mcp.auth.capabilities import (
     ISSUE_EDIT_PERMISSIONS,
     ISSUE_UPDATE_PERMISSIONS,
+    TIME_ENTRY_EDIT_PERMISSIONS,
     UPLOAD_PERMISSIONS,
 )
 from redmine_mcp.auth.capability_models import (
@@ -31,6 +32,7 @@ from redmine_mcp.integrations.redmine.responses import (
     response_object,
     response_page,
 )
+from redmine_mcp.integrations.redmine.time_entry_updates import require_issue_time_entry
 
 
 def invalid_response() -> ApplicationError:
@@ -200,6 +202,21 @@ class RedmineCapabilities:
 
     async def resolve(self, intent: WriteIntent, user_id: int) -> PermissionExpression:
         operation = intent.operation
+        if operation == "update_time_entry":
+            entry = await require_issue_time_entry(
+                self.client, target_id(intent.issue_id), target_id(intent.time_entry_id)
+            )
+            permissions = own_alternatives(
+                TIME_ENTRY_EDIT_PERMISSIONS, "edit_own_time_entries", entry.user.id, user_id
+            )
+            return PermissionExpression(
+                (
+                    (
+                        PermissionClause(entry.project.id, frozenset({"view_time_entries"})),
+                        PermissionClause(entry.project.id, permissions),
+                    ),
+                )
+            )
         if operation == "upload_attachment":
             return PermissionExpression(((PermissionClause(None, UPLOAD_PERMISSIONS),),))
         if operation in ("update_attachment", "delete_attachment"):

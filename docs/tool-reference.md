@@ -2,7 +2,7 @@
 
 ## Catalog and support scope
 
-The current registered catalog contains 18 reads and 16 writes. The default reader exposes
+The current registered catalog contains 18 reads and 17 writes. The default reader exposes
 only reads; the separate writer exposes configured mutations alongside readers. Personal-key
 discovery is caller-specific, and conditional/unknown candidates are not permission grants.
 Use [configuration](configuration.md#separate-writer-deployment) for authentication, operation
@@ -18,7 +18,10 @@ The new `list_project_time_entry_activities` reader is implemented with static c
 in [TOOL-040](plans/tasks/tool-040-list-project-time-entry-activities.md); its testing was waived
 by the user and runtime acceptance is not established. The new `create_time_entry` writer is
 implemented in [TOOL-041](plans/tasks/tool-041-create-time-entry.md), with testing pending.
-Neither new operation is covered by the earlier ledger.
+The new `update_time_entry` writer is implemented in
+[TOOL-042](plans/tasks/tool-042-update-time-entry.md), with
+[offline/owned native acceptance](testing/evidence/tool-042-testing.md) recorded separately.
+These new operations are not covered by the earlier ledger.
 
 ## MCP input validation
 
@@ -604,6 +607,46 @@ the returned ID or use bounded `list_time_entries` filtered by issue, user_id="m
 date before manually retrying. Matching date/hours alone cannot identify an ambiguous creation;
 do not infer failure from absence on a partial or inaccessible page. No automatic retry,
 deduplication, rollback or atomic multi-issue guarantee is provided. Testing is pending.
+
+### Update a time entry
+
+`update_time_entry` is writer-only at
+`PUT /api/v1/issues/{issue_id}/time-entries/{time_entry_id}`. Supply both positive IDs and
+at least one of `hours`, `spent_on`, `activity_id` or `comments`. Hours are finite positive
+JSON numbers; dates use YYYY-MM-DD; activity IDs are positive integers. Comments are strict
+strings of at most 1024 characters; `""` clears them subject to native required-comments rules.
+Omitted fields are excluded from the PUT and retain their native values. Supplied nulls, empty
+updates and unknown body properties are rejected. Moving entries, changing the credited user,
+custom fields and bulk updates are excluded. REST body contains only mutable fields.
+
+```json
+{"issue_id":491,"time_entry_id":919,"hours":7.5,"comments":"Corrected hours"}
+```
+
+This is a synthetic documentation example, not authorization to edit the reported incident.
+Exact entry and issue reads establish their identity and matching issue/project before dispatch.
+Native `view_time_entries` and `edit_time_entries`, or eligible `edit_own_time_entries`, are
+required. Own-time editing follows the entry's credited user, not its submitting author.
+Issue visibility and all writer/caller/operation gates still apply. Conditional discovery and
+capability reports do not establish an effective grant. `log_time` alone cannot authorize editing.
+
+The public 200 receipt includes `outcome` (accepted/uncertain), nullable `upstream_accepted`
+(true after native 204), required `resource_id` and `issue_id`, `verification`
+(matched/mismatch/unavailable), per-field verification and nullable `observed_time_entry`.
+Independent read-back compares supplied fields and preflight issue/project/credited-user
+identities. Hours comparison follows native minute rounding and two-decimal API rounding.
+Accepted writes remain accepted if read-back fails; uncertain writes remain uncertain even
+when observed values match. Native settings and hooks can reject updates or affect observations.
+
+One PUT attempt is made. After a timeout/5xx or other uncertain response, reconcile the exact
+entry ID through bounded existing readers before manually retrying. A repeated call may run
+native hooks again. No retry, undo, locking, optimistic concurrency or atomic preflight/write
+guarantee is provided; a concurrent update can overwrite supplied fields or change linkage.
+TOOL-042 has offline/native/Inspector acceptance on the owned pinned environment; its
+[evidence record](testing/evidence/tool-042-testing.md) distinguishes current settings, native
+fault injection and targeted regression corrections from broader policy/plugin/race coverage.
+Native issue aggregates sum stored hours, while entry API values follow minute/display rounding;
+the two are not interchangeable. Spent-time deletion remains separately planned in TOOL-043.
 
 Example `get_issue` response:
 

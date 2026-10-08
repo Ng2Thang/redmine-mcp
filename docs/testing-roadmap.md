@@ -1,5 +1,14 @@
 # Testing roadmap
 
+The user assigned TOOL-042 testing on 2026-10-08.
+[Time-entry update evidence](testing/evidence/tool-042-testing.md) records 61 unit/99 dedicated
+integration cases, shared catalog fixture updates, 10 owned Redmine 7.0.2/Inspector cases and
+verified zero-resource cleanup. Full offline regressions had 1,755 passes and one older reader
+argument failure; its corrected rerun and seven later edge cases pass. The record does not
+claim a clean full-suite rerun after final small additions/corrections. Tests use current native
+settings without changing shared roles, global settings, plugins or the shared 6.0.5 server.
+Broader policy/plugin/race variants and unrelated repository Ruff debt remain disclosed.
+
 The user authorized testing for prep-022 through prep-026 on 2026-10-07.
 [Preparation regression testing](testing/evidence/prep-022-026-testing.md) records the new tests,
 runtime defects and corrections, owned live/Inspector results, cleanup and final offline evidence.

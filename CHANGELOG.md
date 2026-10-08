@@ -28,6 +28,16 @@ that a release has been published.
 
 ### Changed
 
+- Add writer-only `update_time_entry` for supplied hours/date/activity/comments on one
+  issue-bound entry. Validate exact issue/project linkage, use credited-user own/all edit
+  permission evidence, send one PUT and preserve acceptance independently of read-back.
+  Register destructive MCP metadata and explicit allowlist/allowed_all support. TOOL-042
+  has 61 unit/99 dedicated integration cases and 10 owned 7.0.2/Inspector cases with passing
+  evidence. Full regressions recorded 1,755 passes and one old catalog argument failure;
+  corrected rerun and seven late edge cases pass. [Evidence](docs/testing/evidence/tool-042-testing.md)
+  records current-policy limits and exact cleanup; no clean final full rerun is claimed.
+  Deletion is a separately planned tool.
+
 - Add writer-only `create_time_entry` for the authenticated caller on one visible issue,
   with explicit date, positive numeric hours, optional native activity default/comments,
   issue-derived `log_time` authorization, single-attempt POST and independent verification.

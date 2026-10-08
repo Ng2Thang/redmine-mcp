@@ -11,6 +11,13 @@ from tests.helpers import mcp_session
 
 WRITES = [
     (
+        "update_time_entry",
+        "PUT",
+        "/api/v1/issues/42/time-entries/1",
+        {"hours": 1.25},
+        "/time_entries/1.json",
+    ),
+    (
         "create_project_version",
         "POST",
         "/api/v1/projects/7/versions",
@@ -90,6 +97,7 @@ READ_ARGUMENTS = {
     "list_project_versions": {"project_id": 7},
     "list_project_issue_categories": {"project_id": 7},
     "list_project_files": {"project_id": 7},
+    "list_project_time_entry_activities": {"project_id": 7},
     "get_issue": {"issue_id": 42},
     "get_attachment": {"attachment_id": 9},
     "list_issue_time_entries": {"issue_id": 42},
@@ -113,6 +121,7 @@ def arguments(operation: Any, payload: Any) -> Any:
         if operation == "delete_attachment":
             result.update(container_type="project", container_id=7)
     if operation in (
+        "update_time_entry",
         "update_issue",
         "update_issue_note",
         "create_issue_relation",
@@ -120,6 +129,8 @@ def arguments(operation: Any, payload: Any) -> Any:
         "remove_issue_watcher",
     ):
         result["issue_id"] = 42
+    if operation == "update_time_entry":
+        result["time_entry_id"] = 1
     if operation == "update_issue_note":
         result["journal_id"] = 1
     if operation == "delete_issue_relation":

@@ -3,6 +3,7 @@
 import copy
 import json
 from contextlib import asynccontextmanager
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 import httpx
@@ -89,6 +90,8 @@ class SyntheticRedmine:
                 "issue": {"id": 42},
                 "hours": 0.1,
                 "spent_on": "2026-09-01",
+                "activity": {"id": 9, "name": "Development"},
+                "comments": "original time",
             },
             {
                 "id": 2,
@@ -167,6 +170,26 @@ class SyntheticRedmine:
                 if request.content and request.headers.get("content-type") == "application/json"
                 else {}
             )
+            if path.startswith("/time_entries/") and request.method == "PUT":
+                entry_id = int(path.split("/")[2].split(".")[0])
+                entry = next((row for row in self.time_entries if row["id"] == entry_id), None)
+                if entry is None:
+                    return httpx.Response(404)
+                changes = payload["time_entry"].copy()
+                if "activity_id" in changes:
+                    activity_id = changes.pop("activity_id")
+                    if activity_id not in (9, 10):
+                        return httpx.Response(422, json={"errors": ["must-not-leak"]})
+                    changes["activity"] = {"id": activity_id, "name": "Activity"}
+                if "hours" in changes:
+                    minutes = (Decimal(str(changes["hours"])) * 60).quantize(
+                        Decimal("1"), rounding=ROUND_HALF_UP
+                    )
+                    changes["hours"] = float(
+                        (minutes / 60).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    )
+                entry.update(changes)
+                return httpx.Response(204)
             if path == "/projects/7/memberships.json":
                 values = payload["membership"]
                 if any(
@@ -299,7 +322,13 @@ class SyntheticRedmine:
                 },
             )
         if path == "/projects/7.json":
-            return httpx.Response(200, json={"project": PROJECT})
+            project = copy.deepcopy(PROJECT)
+            if request.url.params.get("include") == "time_entry_activities":
+                project["time_entry_activities"] = [
+                    {"id": 9, "name": "Development", "active": True},
+                    {"id": 10, "name": "Review", "active": True},
+                ]
+            return httpx.Response(200, json={"project": project})
         if path.startswith("/versions/"):
             version_id = int(path.split("/")[2].split(".")[0])
             return (
@@ -320,6 +349,14 @@ class SyntheticRedmine:
             return httpx.Response(200, json={"attachment": self.attachment})
         if path == "/relations/1.json":
             return httpx.Response(200, json={"relation": self.relation})
+        if path.startswith("/time_entries/"):
+            entry_id = int(path.split("/")[2].split(".")[0])
+            entry = next((row for row in self.time_entries if row["id"] == entry_id), None)
+            if entry is None:
+                return httpx.Response(404)
+            if self.own_time_entries_only and entry["user"]["id"] != uid:
+                return httpx.Response(403)
+            return httpx.Response(200, json={"time_entry": copy.deepcopy(entry)})
         if path == "/time_entries.json":
             params = request.url.params
             rows = self.time_entries

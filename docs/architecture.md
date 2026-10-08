@@ -111,7 +111,7 @@ only the named read operations, configured write operations in `auth/policy.py`,
 `mcp:connect`; adding a route requires an explicit permission entry. MCP exposure remains
 separately controlled by `mcp/catalog.py` and the deployment's writer ceiling.
 Catalog validation rejects exposed tools lacking the corresponding authorization dependency.
-The current catalog contains 18 reads and 16 writes; reader registration excludes all mutations.
+The current catalog contains 18 reads and 17 writes; reader registration excludes all mutations.
 Project time-entry activity discovery reuses the project reader/service/adapter and the native
 project detail expansion, with `view_time_entries` as conditional capability evidence.
 TOOL-040 testing was waived by the user. Own-time creation has a dedicated time-entry creator

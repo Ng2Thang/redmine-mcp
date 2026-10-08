@@ -672,6 +672,7 @@ async def test_user_005_009_all_reader_mcp_invocation_and_sanitized_errors(
     )
     arguments = {
         "list_project_members": {"project_ids": [7]},
+        "list_project_time_entry_activities": {"project_id": 7},
         "list_project_files": {"project_id": 7},
         "get_attachment": {"attachment_id": 9},
         "get_project": {"project_id": 7},

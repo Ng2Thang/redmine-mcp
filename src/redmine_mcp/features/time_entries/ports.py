@@ -7,6 +7,8 @@ from redmine_mcp.features.time_entries.queries import TimeEntryUserId
 from redmine_mcp.features.time_entries.write_models import (
     TimeEntryCreateRequest,
     TimeEntryCreateResult,
+    TimeEntryUpdateRequest,
+    TimeEntryUpdateResult,
 )
 
 
@@ -32,3 +34,9 @@ class TimeEntryCreator(Protocol):
     async def create_time_entry(
         self, issue_id: int, request: TimeEntryCreateRequest, caller_id: int
     ) -> TimeEntryCreateResult: ...
+
+
+class TimeEntryUpdater(Protocol):
+    async def update_time_entry(
+        self, issue_id: int, time_entry_id: int, request: TimeEntryUpdateRequest
+    ) -> TimeEntryUpdateResult: ...

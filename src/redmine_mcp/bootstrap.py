@@ -36,6 +36,7 @@ from redmine_mcp.integrations.redmine import (
     RedmineReferenceData,
     RedmineTimeEntries,
     RedmineTimeEntryCreations,
+    RedmineTimeEntryUpdates,
     RedmineUploads,
     RedmineUsers,
     RedmineWriter,
@@ -150,6 +151,7 @@ def build_container(
         TimeEntryService(
             RedmineTimeEntries(client),
             creator=RedmineTimeEntryCreations(client, writer),
+            updater=RedmineTimeEntryUpdates(client, writer),
             authorizer=authorizer,
             caller_id=principal.redmine_user_id if principal is not None else None,
         ),

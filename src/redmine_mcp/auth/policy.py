@@ -28,6 +28,7 @@ READ_OPERATIONS = (
 
 WRITE_OPERATIONS: tuple[str, ...] = (
     "create_time_entry",
+    "update_time_entry",
     "upload_attachment",
     "add_project_file",
     "create_project_version",

@@ -1,5 +1,47 @@
 # MCP tool roadmap
 
+## Issue spent-time update and deletion plan
+
+On 2026-10-08, the user reported that spent-time entries #919–#924 remain on issues #491–#496
+because the current connection lacks deletion, and explicitly requested plans for both update
+and delete tools. The IDs are user-reported context, not verified live state or authorized
+deletion targets. Exact entry-to-issue pairings and credited users must be discovered before
+any future mutation. The plan adds one issue-scoped entry per call for each operation.
+
+Existing readers and the implemented TOOL-041 creation writer remain baseline. TOOL-041 testing
+is pending; these tools use existing entries and do not depend on its creation acceptance.
+Exact official Redmine 7.0.2 release source was inspected for native editability, permissions,
+204 no-body success and destruction behavior. Both task contracts are decision-complete.
+No runtime code, tests, configuration, server settings or Redmine entries were changed.
+
+| Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [tool-042-update-time-entry](tasks/tool-042-update-time-entry.md) | Correct supplied hours/date/activity/comments on one entry of a selected visible issue | Existing issue/time-entry readers, identity and restricted writer; PREP-019/020/027 baseline; PREP-002/016/017/018 testing | complete | 1,755 offline regression passes, sole old catalog argument failure corrected in passing rerun, seven additional edge cases and 10 owned 7.0.2/Inspector cases pass. Scoped checks pass; [evidence](../testing/evidence/tool-042-testing.md) distinguishes targeted corrections from final full rerun and records cleanup/policy limits |
+| 2 | [tool-043-delete-time-entry](tasks/tool-043-delete-time-entry.md) | Permanently remove one selected entry with exact target checks and truthful receipt | Same existing baseline; independent of TOOL-042 and TOOL-041 acceptance | planned | No contract blocker; review, then assign coding; may implement first if deletion is the priority |
+
+Each public behavior has one owner and neither new task depends on the other. Coordinate
+shared models/service/registration files without reverting existing work. Both require the
+separate restricted writer, admitted caller and native edit permissions. `allowed_all` includes
+them only after implementation/registration and a writer upgrade; it cannot create absent tools.
+Update does not move/recredit entries; delete has no undo or bulk transaction. Every mutation
+is single attempt; receipts distinguish native acceptance from later observations. A GET 404
+after an uncertain DELETE cannot prove deletion. Project-only entries, bulk writes, custom
+fields and server changes remain unassigned. Review, coding and testing are separate stages.
+
+The user subsequently assigned TOOL-042 implementation on 2026-10-08. Its code and public
+documentation are finished; static checks and the testing handoff are recorded in the task.
+The updated catalog has 18 reads and 17 writes. No tests, fixtures, startup, Inspector, live
+calls, deployment or environment changes were performed. TOOL-043 remains planned and has
+not been implemented; its independent deletion contract is preserved.
+
+The user subsequently assigned TOOL-042 tests on 2026-10-08. Test implementation and selected
+acceptance are finished: 61 unit/99 dedicated integration scenarios have passing evidence,
+native/Inspector verification has 10 passes, and all observed offline failures are resolved.
+Disposable owned roles/users/project/activities/entries were removed; the shared 6.0.5 instance
+and incident entries were untouched. Alternative global settings/plugin/race variants and
+unrelated repository Ruff debt remain disclosed. No final full regression rerun after the
+targeted argument correction/additional cases is claimed. TOOL-043 is unchanged.
+
 ## Issue time-entry creation plan
 
 On 2026-10-08, the user requested a task plan for the missing operation needed to log eight

@@ -362,7 +362,7 @@ This example does not change deployed configuration or enable writes on the read
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Every write route uses `require_write_access`, which checks its operation ID
 against the expanded configured list. Reader REST write attempts return 403. No public write
-operation is admitted on the reader. The current explicit catalog has 16 write operations;
+operation is admitted on the reader. The current explicit catalog has 17 write operations;
 see the [tool reference](tool-reference.md) for each native permission and outcome contract.
 
 `create_time_entry` requires the same separate writer gates, a visible issue and native
@@ -371,6 +371,16 @@ see the [tool reference](tool-reference.md) for each native permission and outco
 date; optional activity uses the native caller/project default. Time-entry read permission is
 only needed for discovery/read-back. This documentation does not alter deployed configuration;
 TOOL-041 runtime acceptance remains pending.
+
+`update_time_entry` uses the same writer gates at
+`PUT /api/v1/issues/{issue_id}/time-entries/{time_entry_id}`. Add its operation ID to a fixed
+CSV allowlist or retain standalone `allowed_all` after upgrading/restarting the writer.
+The caller needs a visible issue and entry, native `view_time_entries`, and `edit_time_entries`
+or `edit_own_time_entries` when the entry is credited to that caller. `log_time` alone does
+not authorize editing. Only supplied hours/date/activity/comments change; issue/project/user
+reassignment is excluded. [TOOL-042 acceptance](testing/evidence/tool-042-testing.md) records
+owned native state/permissions, offline cases, Inspector and exact cleanup. Alternative global
+policy settings remain unforced variants. No deployed configuration was changed.
 
 The write transport sends each mutation once, bounds JSON and binary requests and JSON responses,
 validates each operation's native success status/body, and returns an `uncertain` receipt when a

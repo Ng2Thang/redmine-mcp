@@ -6,6 +6,7 @@ from typing import Literal
 CapabilityState = Literal["denied", "conditional", "unknown"]
 WriteOperation = Literal[
     "create_time_entry",
+    "update_time_entry",
     "upload_attachment",
     "add_project_file",
     "create_project_version",
@@ -67,6 +68,7 @@ class WriteIntent:
     attachment_id: int | None = None
     container_type: Literal["project", "version", "issue"] | None = None
     container_id: int | None = None
+    time_entry_id: int | None = None
 
 
 @dataclass(frozen=True)

@@ -4,11 +4,17 @@ from redmine_mcp.auth.capability_models import WriteIntent
 from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import Page, PageRequest, require_positive_id, validated_query
 from redmine_mcp.features.time_entries.models import IssueTimeEntry, TimeEntry
-from redmine_mcp.features.time_entries.ports import TimeEntryCreator, TimeEntryReader
+from redmine_mcp.features.time_entries.ports import (
+    TimeEntryCreator,
+    TimeEntryReader,
+    TimeEntryUpdater,
+)
 from redmine_mcp.features.time_entries.queries import TimeEntrySearch, TimeEntryUserId
 from redmine_mcp.features.time_entries.write_models import (
     TimeEntryCreateRequest,
     TimeEntryCreateResult,
+    TimeEntryUpdateRequest,
+    TimeEntryUpdateResult,
 )
 
 
@@ -18,11 +24,13 @@ class TimeEntryService:
         reader: TimeEntryReader,
         *,
         creator: TimeEntryCreator | None = None,
+        updater: TimeEntryUpdater | None = None,
         authorizer: WriteAuthorizer | None = None,
         caller_id: int | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
+        self.updater = updater
         self.authorizer = authorizer
         self.caller_id = caller_id
 
@@ -36,6 +44,20 @@ class TimeEntryService:
         if self.authorizer is not None:
             await self.authorizer.authorize(WriteIntent("create_time_entry", issue_id=issue_id))
         return await self.creator.create_time_entry(issue_id, request, self.caller_id)
+
+    async def update_time_entry(
+        self, issue_id: int, time_entry_id: int, request: TimeEntryUpdateRequest
+    ) -> TimeEntryUpdateResult:
+        require_positive_id(issue_id, "issue_id")
+        require_positive_id(time_entry_id, "time_entry_id")
+        if self.updater is None or self.caller_id is None:
+            raise RuntimeError("Time-entry updater or authenticated caller is not configured")
+        require_positive_id(self.caller_id, "caller_id")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(
+                WriteIntent("update_time_entry", issue_id=issue_id, time_entry_id=time_entry_id)
+            )
+        return await self.updater.update_time_entry(issue_id, time_entry_id, request)
 
     async def list_time_entries(
         self,

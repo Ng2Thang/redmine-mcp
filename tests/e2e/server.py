@@ -63,3 +63,21 @@ def create_time_entry_update_app() -> Any:
             redmine_writer_operations="update_time_entry",
         )
     )
+
+
+def create_time_entry_delete_app() -> Any:
+    preflight()
+    path = Path(__file__).resolve().parents[2] / ".local/testing-e2e/tool043-fixtures.json"
+    fixture = json.loads(path.read_text())
+    if fixture.get("owner") != "tool-043" or fixture.get("version") != "7.0.2":
+        raise ValueError("Unexpected TOOL-043 fixture ownership")
+    return application(
+        Settings(
+            _env_file=None,
+            redmine_url="http://127.0.0.1:3001",
+            redmine_write_enabled=True,
+            redmine_writer_auth_mode="personal_key",
+            redmine_writer_user_ids=",".join(str(row["id"]) for row in fixture["users"].values()),
+            redmine_writer_operations="delete_time_entry",
+        )
+    )

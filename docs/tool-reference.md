@@ -2,7 +2,7 @@
 
 ## Catalog and support scope
 
-The current registered catalog contains 18 reads and 17 writes. The default reader exposes
+The current registered catalog contains 18 reads and 18 writes. The default reader exposes
 only reads; the separate writer exposes configured mutations alongside readers. Personal-key
 discovery is caller-specific, and conditional/unknown candidates are not permission grants.
 Use [configuration](configuration.md#separate-writer-deployment) for authentication, operation
@@ -21,6 +21,9 @@ implemented in [TOOL-041](plans/tasks/tool-041-create-time-entry.md), with testi
 The new `update_time_entry` writer is implemented in
 [TOOL-042](plans/tasks/tool-042-update-time-entry.md), with
 [offline/owned native acceptance](testing/evidence/tool-042-testing.md) recorded separately.
+The new `delete_time_entry` writer is implemented in
+[TOOL-043](plans/tasks/tool-043-delete-time-entry.md), with
+[offline/owned native acceptance](testing/evidence/tool-043-testing.md) recorded separately.
 These new operations are not covered by the earlier ledger.
 
 ## MCP input validation
@@ -646,7 +649,47 @@ TOOL-042 has offline/native/Inspector acceptance on the owned pinned environment
 [evidence record](testing/evidence/tool-042-testing.md) distinguishes current settings, native
 fault injection and targeted regression corrections from broader policy/plugin/race coverage.
 Native issue aggregates sum stored hours, while entry API values follow minute/display rounding;
-the two are not interchangeable. Spent-time deletion remains separately planned in TOOL-043.
+the two are not interchangeable.
+
+### Delete a time entry
+
+`delete_time_entry` is writer-only at
+`DELETE /api/v1/issues/{issue_id}/time-entries/{time_entry_id}`. Supply both positive IDs;
+there is no request body, confirmation flag, filter or bulk input. Extra MCP arguments are rejected. The tool permanently removes
+one entry and changes spent-time totals through native destruction hooks. Exact caller-key entry
+and issue reads must validate IDs, issue/project linkage and credited user before dispatch.
+Wrong linkage returns 422; missing/forbidden/malformed preflight returns the existing safe error
+without sending DELETE. Project-only entries are excluded.
+
+Native `view_time_entries` and `edit_time_entries`, or `edit_own_time_entries` for an entry credited
+to the caller, are required alongside issue visibility and all existing writer gates. Ownership
+uses the credited user rather than the submitting author. Discovery and capability reports use
+conditional edit alternatives; native permission remains final and `log_time` alone is insufficient.
+
+One no-body native DELETE is sent. Native 204 produces a public HTTP 200 receipt:
+
+```json
+{"outcome":"accepted","upstream_accepted":true,"resource_id":919,"issue_id":491,"verification":"not_found","observed_present":false}
+```
+
+This is a synthetic example, not authorization to delete reported incident entries. The required
+`resource_id` and `issue_id` retain the requested targets. Ambiguous dispatch gives
+`outcome=uncertain` and `upstream_accepted=null`. Independent bounded GET of the exact entry
+reports `verification=still_present`/`observed_present=true` for a valid same-ID entry,
+`not_found`/false for caller GET 404, or `unavailable`/null for denied, failed or malformed reads.
+These observations never rewrite acceptance or uncertainty. A caller 404 does not prove physical
+absence or that an uncertain DELETE committed.
+
+An already absent entry returns preflight 404 without DELETE; no idempotent success is invented.
+There is no automatic retry, undo, rollback or atomic multi-call guarantee. Each selected pair
+needs its own call and receipt. Reconcile uncertainty before retrying. Preflight and deletion are
+not atomic: linkage/permissions can change between reads and dispatch, with no lock or If-Match
+guard. Native callbacks may reject deletion. TOOL-043 offline, startup/Inspector and owned
+7.0.2 state/permission/cleanup acceptance is recorded in its
+[evidence](testing/evidence/tool-043-testing.md): 32 unit/82 dedicated integration cases and
+12 owned native cases pass. Controlled committed-receipt faults and a moved-entry race are
+covered; arbitrary plugins, TCP-loss experiments and live visibility-policy changes are not.
+
 
 Example `get_issue` response:
 

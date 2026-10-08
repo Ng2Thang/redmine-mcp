@@ -170,6 +170,13 @@ class SyntheticRedmine:
                 if request.content and request.headers.get("content-type") == "application/json"
                 else {}
             )
+            if path.startswith("/time_entries/") and request.method == "DELETE":
+                entry_id = int(path.split("/")[2].split(".")[0])
+                entry = next((row for row in self.time_entries if row["id"] == entry_id), None)
+                if entry is None:
+                    return httpx.Response(404)
+                self.time_entries.remove(entry)
+                return httpx.Response(204)
             if path.startswith("/time_entries/") and request.method == "PUT":
                 entry_id = int(path.split("/")[2].split(".")[0])
                 entry = next((row for row in self.time_entries if row["id"] == entry_id), None)

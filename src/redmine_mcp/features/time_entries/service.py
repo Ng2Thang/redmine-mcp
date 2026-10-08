@@ -6,6 +6,7 @@ from redmine_mcp.common import Page, PageRequest, require_positive_id, validated
 from redmine_mcp.features.time_entries.models import IssueTimeEntry, TimeEntry
 from redmine_mcp.features.time_entries.ports import (
     TimeEntryCreator,
+    TimeEntryDeleter,
     TimeEntryReader,
     TimeEntryUpdater,
 )
@@ -13,6 +14,7 @@ from redmine_mcp.features.time_entries.queries import TimeEntrySearch, TimeEntry
 from redmine_mcp.features.time_entries.write_models import (
     TimeEntryCreateRequest,
     TimeEntryCreateResult,
+    TimeEntryDeleteResult,
     TimeEntryUpdateRequest,
     TimeEntryUpdateResult,
 )
@@ -25,12 +27,14 @@ class TimeEntryService:
         *,
         creator: TimeEntryCreator | None = None,
         updater: TimeEntryUpdater | None = None,
+        deleter: TimeEntryDeleter | None = None,
         authorizer: WriteAuthorizer | None = None,
         caller_id: int | None = None,
     ) -> None:
         self.reader = reader
         self.creator = creator
         self.updater = updater
+        self.deleter = deleter
         self.authorizer = authorizer
         self.caller_id = caller_id
 
@@ -58,6 +62,18 @@ class TimeEntryService:
                 WriteIntent("update_time_entry", issue_id=issue_id, time_entry_id=time_entry_id)
             )
         return await self.updater.update_time_entry(issue_id, time_entry_id, request)
+
+    async def delete_time_entry(self, issue_id: int, time_entry_id: int) -> TimeEntryDeleteResult:
+        require_positive_id(issue_id, "issue_id")
+        require_positive_id(time_entry_id, "time_entry_id")
+        if self.deleter is None or self.caller_id is None:
+            raise RuntimeError("Time-entry deleter or authenticated caller is not configured")
+        require_positive_id(self.caller_id, "caller_id")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(
+                WriteIntent("delete_time_entry", issue_id=issue_id, time_entry_id=time_entry_id)
+            )
+        return await self.deleter.delete_time_entry(issue_id, time_entry_id)
 
     async def list_time_entries(
         self,

@@ -7,6 +7,7 @@ from redmine_mcp.features.time_entries.queries import TimeEntryUserId
 from redmine_mcp.features.time_entries.write_models import (
     TimeEntryCreateRequest,
     TimeEntryCreateResult,
+    TimeEntryDeleteResult,
     TimeEntryUpdateRequest,
     TimeEntryUpdateResult,
 )
@@ -40,3 +41,9 @@ class TimeEntryUpdater(Protocol):
     async def update_time_entry(
         self, issue_id: int, time_entry_id: int, request: TimeEntryUpdateRequest
     ) -> TimeEntryUpdateResult: ...
+
+
+class TimeEntryDeleter(Protocol):
+    async def delete_time_entry(
+        self, issue_id: int, time_entry_id: int
+    ) -> TimeEntryDeleteResult: ...

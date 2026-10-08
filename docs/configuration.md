@@ -362,7 +362,7 @@ This example does not change deployed configuration or enable writes on the read
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Every write route uses `require_write_access`, which checks its operation ID
 against the expanded configured list. Reader REST write attempts return 403. No public write
-operation is admitted on the reader. The current explicit catalog has 17 write operations;
+operation is admitted on the reader. The current explicit catalog has 18 write operations;
 see the [tool reference](tool-reference.md) for each native permission and outcome contract.
 
 `create_time_entry` requires the same separate writer gates, a visible issue and native
@@ -381,6 +381,16 @@ not authorize editing. Only supplied hours/date/activity/comments change; issue/
 reassignment is excluded. [TOOL-042 acceptance](testing/evidence/tool-042-testing.md) records
 owned native state/permissions, offline cases, Inspector and exact cleanup. Alternative global
 policy settings remain unforced variants. No deployed configuration was changed.
+
+`delete_time_entry` uses the same separate writer/caller gates at
+`DELETE /api/v1/issues/{issue_id}/time-entries/{time_entry_id}`. Add this operation ID to a fixed
+CSV allowlist or retain standalone `allowed_all` after upgrading/restarting the writer.
+The caller needs issue and entry visibility, `view_time_entries`, and `edit_time_entries` or
+eligible `edit_own_time_entries` based on the credited user. `log_time` alone is insufficient.
+Each call permanently removes one entry without undo; accepted/uncertain receipts remain separate
+from later caller-visible presence. GET 404 cannot prove an uncertain DELETE committed.
+[TOOL-043 acceptance](testing/evidence/tool-043-testing.md) records offline/native/Inspector
+verification, exact owned cleanup and fault/policy limits. No deployed configuration was changed.
 
 The write transport sends each mutation once, bounds JSON and binary requests and JSON responses,
 validates each operation's native success status/body, and returns an `uncertain` receipt when a

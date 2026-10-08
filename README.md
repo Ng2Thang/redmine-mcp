@@ -2,10 +2,10 @@
 
 Redmine tools using Python 3.13, FastAPI, and FastAPI-MCP. Read projects, issues, memberships,
 attachment metadata, and spent-time logs through REST or MCP as the requesting Redmine user.
-The default reader exposes 18 read operations. A separate opt-in writer can enable up to 17
+The default reader exposes 18 read operations. A separate opt-in writer can enable up to 18
 mutations for issues, attachments, project files, versions, memberships, relations, and watchers.
 The writer also supports logging the authenticated caller's time and updating existing entries
-on a visible issue.
+on a visible issue, plus permanently deleting one selected issue-bound entry per call.
 See the [tool reference](docs/tool-reference.md) for the maintained contracts.
 Project time-entry activity discovery is implemented in
 [TOOL-040](docs/plans/tasks/tool-040-list-project-time-entry-activities.md); the user waived its testing.
@@ -15,6 +15,9 @@ Time-entry updates are implemented in
 [TOOL-042](docs/plans/tasks/tool-042-update-time-entry.md), with offline and 10 owned native/Inspector
 cases verified. [Testing evidence](docs/testing/evidence/tool-042-testing.md) records exact scope,
 targeted regression corrections and remaining policy/plugin limits.
+Time-entry deletion is implemented and tested in [TOOL-043](docs/plans/tasks/tool-043-delete-time-entry.md):
+32 unit/82 dedicated integration cases and 12 owned native/Inspector cases pass. Its
+[evidence](docs/testing/evidence/tool-043-testing.md) records full regressions, cleanup and limits.
 
 This is a development implementation for pilot evaluation, with no production release or SLA.
 On 2026-10-07, PREP-020 recorded **1,086 offline tests and 21 owned live tests passing**,

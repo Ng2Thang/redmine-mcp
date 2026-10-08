@@ -11,6 +11,13 @@ from tests.helpers import mcp_session
 
 WRITES = [
     (
+        "delete_time_entry",
+        "DELETE",
+        "/api/v1/issues/42/time-entries/1",
+        None,
+        "/time_entries/1.json",
+    ),
+    (
         "update_time_entry",
         "PUT",
         "/api/v1/issues/42/time-entries/1",
@@ -122,6 +129,7 @@ def arguments(operation: Any, payload: Any) -> Any:
             result.update(container_type="project", container_id=7)
     if operation in (
         "update_time_entry",
+        "delete_time_entry",
         "update_issue",
         "update_issue_note",
         "create_issue_relation",
@@ -129,7 +137,7 @@ def arguments(operation: Any, payload: Any) -> Any:
         "remove_issue_watcher",
     ):
         result["issue_id"] = 42
-    if operation == "update_time_entry":
+    if operation in ("update_time_entry", "delete_time_entry"):
         result["time_entry_id"] = 1
     if operation == "update_issue_note":
         result["journal_id"] = 1
@@ -164,7 +172,9 @@ async def test_all_writer_success_and_single_dispatch(
             data = json.loads(result.content[0].text)
     assert data["outcome"] == "accepted"
     assert data["upstream_accepted"] is True
-    if operation != "upload_attachment":
+    if operation == "delete_time_entry":
+        assert data["verification"] == "not_found" and data["observed_present"] is False
+    elif operation != "upload_attachment":
         assert data["verification"] == "matched", data
     dispatched = [r for r in synthetic.requests if r.method != "GET"]
     assert len(dispatched) == 1

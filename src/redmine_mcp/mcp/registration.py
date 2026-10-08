@@ -43,7 +43,12 @@ def register_mcp(
     validate_generated_tools(mcp.tools, operations)
     repair_input_schemas(mcp.tools, app.openapi())
     for tool in mcp.tools:
-        if tool.name in {"add_project_members", "update_project_members", "delete_project_members"}:
+        if tool.name in {
+            "add_project_members",
+            "update_project_members",
+            "delete_project_members",
+            "delete_time_entry",
+        }:
             tool.inputSchema["additionalProperties"] = False
         if tool.name in {
             "list_projects",

@@ -18,6 +18,7 @@ from redmine_mcp.integrations.redmine.projects import RedmineProjects
 from redmine_mcp.integrations.redmine.reference_data import RedmineReferenceData
 from redmine_mcp.integrations.redmine.time_entries import RedmineTimeEntries
 from redmine_mcp.integrations.redmine.time_entry_creations import RedmineTimeEntryCreations
+from redmine_mcp.integrations.redmine.time_entry_deletions import RedmineTimeEntryDeletions
 from redmine_mcp.integrations.redmine.time_entry_updates import RedmineTimeEntryUpdates
 from redmine_mcp.integrations.redmine.transport import create_upstream_client
 from redmine_mcp.integrations.redmine.uploads import RedmineUploads
@@ -43,6 +44,7 @@ __all__ = [
     "RedmineReferenceData",
     "RedmineTimeEntries",
     "RedmineTimeEntryCreations",
+    "RedmineTimeEntryDeletions",
     "RedmineTimeEntryUpdates",
     "RedmineUsers",
     "RedmineUploads",

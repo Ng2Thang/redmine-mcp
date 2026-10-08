@@ -28,6 +28,16 @@ that a release has been published.
 
 ### Changed
 
+- Add writer-only `delete_time_entry` for one exact entry on a visible issue. Reuse strict
+  issue/project preflight and credited-user own/all edit permissions, send one no-body DELETE,
+  and preserve acceptance/uncertainty separately from caller-visible presence. Register
+  destructive, non-idempotent MCP hints and explicit allowlist/allowed_all support.
+  TOOL-043 acceptance: 32 unit/82 dedicated integration cases, 1889 clean full offline
+  passes, 12 owned native/Inspector cases and zero-resource cleanup. Testing fixed ignored
+  undeclared MCP arguments by setting additionalProperties=false for this tool.
+  [Evidence](docs/testing/evidence/tool-043-testing.md) records fault/policy limits.
+  No incident entries or deployed configuration were changed.
+
 - Add writer-only `update_time_entry` for supplied hours/date/activity/comments on one
   issue-bound entry. Validate exact issue/project linkage, use credited-user own/all edit
   permission evidence, send one PUT and preserve acceptance independently of read-back.
@@ -36,7 +46,7 @@ that a release has been published.
   evidence. Full regressions recorded 1,755 passes and one old catalog argument failure;
   corrected rerun and seven late edge cases pass. [Evidence](docs/testing/evidence/tool-042-testing.md)
   records current-policy limits and exact cleanup; no clean final full rerun is claimed.
-  Deletion is a separately planned tool.
+  Deletion is implemented and separately tested in TOOL-043.
 
 - Add writer-only `create_time_entry` for the authenticated caller on one visible issue,
   with explicit date, positive numeric hours, optional native activity default/comments,

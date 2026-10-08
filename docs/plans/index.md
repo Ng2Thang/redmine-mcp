@@ -17,7 +17,7 @@ No runtime code, tests, configuration, server settings or Redmine entries were c
 | Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
 |---|---|---|---|---|---|
 | 1 | [tool-042-update-time-entry](tasks/tool-042-update-time-entry.md) | Correct supplied hours/date/activity/comments on one entry of a selected visible issue | Existing issue/time-entry readers, identity and restricted writer; PREP-019/020/027 baseline; PREP-002/016/017/018 testing | complete | 1,755 offline regression passes, sole old catalog argument failure corrected in passing rerun, seven additional edge cases and 10 owned 7.0.2/Inspector cases pass. Scoped checks pass; [evidence](../testing/evidence/tool-042-testing.md) distinguishes targeted corrections from final full rerun and records cleanup/policy limits |
-| 2 | [tool-043-delete-time-entry](tasks/tool-043-delete-time-entry.md) | Permanently remove one selected entry with exact target checks and truthful receipt | Same existing baseline; independent of TOOL-042 and TOOL-041 acceptance | planned | No contract blocker; review, then assign coding; may implement first if deletion is the priority |
+| 2 | [tool-043-delete-time-entry](tasks/tool-043-delete-time-entry.md) | Permanently remove one selected entry with exact target checks and truthful receipt | Same existing baseline; independent of TOOL-042 and TOOL-041 acceptance | complete | 1889 full offline passes; 32 unit/82 dedicated integration and 12 owned native/Inspector cases pass. MCP extra-argument defect fixed; scoped checks and exact zero-resource cleanup pass. [Evidence](../testing/evidence/tool-043-testing.md) records native injection/policy limits |
 
 Each public behavior has one owner and neither new task depends on the other. Coordinate
 shared models/service/registration files without reverting existing work. Both require the
@@ -41,6 +41,24 @@ Disposable owned roles/users/project/activities/entries were removed; the shared
 and incident entries were untouched. Alternative global settings/plugin/race variants and
 unrelated repository Ruff debt remain disclosed. No final full regression rerun after the
 targeted argument correction/additional cases is claimed. TOOL-043 is unchanged.
+
+The user subsequently assigned TOOL-043 implementation on 2026-10-08. Code and public
+documentation are finished with a registered catalog of 18 reads and 18 writes. The dedicated
+deleter shares existing exact target/permission checks, sends one native DELETE and preserves
+receipt acceptance separately from caller-visible presence. Static-check results and the exact
+testing handoff are recorded in the task. No tests, fixtures, startup, Inspector, live calls,
+deployment or environment changes were performed in this coding stage. Status is blocked only
+on the outstanding separately assigned testing/acceptance stage.
+
+The user separately assigned TOOL-043 testing on 2026-10-08. Acceptance now includes 32 unit,
+82 dedicated integration cases, four additional current-writer matrix cases, and a clean final
+full offline run with 1889 passes. Native/Inspector acceptance has 11 passes plus one added
+no-issue-view permission case. Fixed undeclared MCP arguments being ignored by explicitly
+forbidding extra arguments for delete_time_entry. Verified native storage absence/control/totals,
+own/all/denied roles, duplicate and independent calls, committed fault receipts and moved-entry
+race. Task-owned resources and credential configs were removed; global policies/shared state
+and incident entries remain unchanged. Scoped checks pass. [Evidence](../testing/evidence/tool-043-testing.md)
+records exact executions, cleanup and limitations; no final single 12-case native rerun is claimed.
 
 ## Issue time-entry creation plan
 

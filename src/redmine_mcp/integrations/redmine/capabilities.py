@@ -202,7 +202,7 @@ class RedmineCapabilities:
 
     async def resolve(self, intent: WriteIntent, user_id: int) -> PermissionExpression:
         operation = intent.operation
-        if operation == "update_time_entry":
+        if operation in ("update_time_entry", "delete_time_entry"):
             entry = await require_issue_time_entry(
                 self.client, target_id(intent.issue_id), target_id(intent.time_entry_id)
             )

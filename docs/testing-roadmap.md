@@ -1,5 +1,20 @@
 # Testing roadmap
 
+### Issue time-entry deletion acceptance
+
+The user separately assigned TOOL-043 testing on 2026-10-08. [Deletion evidence](testing/evidence/tool-043-testing.md)
+records 32 unit cases in `tests/unit/test_time_entry_deletions.py`, 82 dedicated integration
+cases in `tests/integration/test_time_entry_deletions.py`, four current-writer matrix additions,
+and 1889 clean full offline regression passes. Tests exposed and fixed ignored undeclared
+MCP arguments; deletion now explicitly rejects them. Native acceptance in
+`tests/e2e/test_time_entry_delete_acceptance.py` passed 11 cases plus one added no-issue-view
+permission case, including Inspector 2.8.0. Owned storage absence/control/totals, role boundaries,
+duplicate/independent-call receipts, committed faults and moved-entry race have passing evidence.
+Exact cleanup reports zero projects/entries/users/roles/activities and no private task ledger or
+Inspector config remains. Scoped checks pass; injection/policy/plugin limits remain disclosed.
+No final single 12-case native rerun is claimed. TOOL-041 creation remains a separate task.
+
+
 The user assigned TOOL-042 testing on 2026-10-08.
 [Time-entry update evidence](testing/evidence/tool-042-testing.md) records 61 unit/99 dedicated
 integration cases, shared catalog fixture updates, 10 owned Redmine 7.0.2/Inspector cases and

@@ -8,14 +8,14 @@
 | Assigned capability | Remove one selected erroneous time entry from its visible issue |
 | Type / access | Add tool / destructive write |
 | Destructive effects | Permanently removes one time-entry record; changes spent-time totals and invokes native destruction hooks/webhooks |
-| Status | planned |
-| Dependencies | Existing issue/time-entry readers, caller identity and restricted writer; PREP-019/020/027 baseline; PREP-002/016/017/018 for later authorized testing |
+| Status | complete |
+| Dependencies | Existing issue/time-entry readers, caller identity and restricted writer; PREP-019/020/027 runtime baseline; PREP-002/016/017/018 testing baseline |
 | Related tasks | [TOOL-042](tool-042-update-time-entry.md), [TOOL-041](tool-041-create-time-entry.md), [TOOL-035](tool-035-list-time-entries.md) |
-| Target Redmine version | Pinned 7.0.2; release source inspected, runtime acceptance pending |
+| Target Redmine version | Pinned 7.0.2; owned native/Inspector acceptance recorded with limits |
 | Last updated | 2026-10-08, Codex |
-| Progress summary | Analysis and contract finished; implementation/testing pending |
-| Blocker | None for planning |
-| Next action | Review and assign coding; may implement independently of TOOL-042; separately authorize testing |
+| Progress summary | Implementation/tests finished; 1889 full offline passes, 12 owned native/Inspector cases pass; cleanup and scoped checks pass |
+| Blocker | None within the assigned evidence scope; broader policy/plugin variants remain disclosed |
+| Next action | No remaining assigned acceptance work; future authorized reruns use the evidence record and owned fixtures |
 
 ## 2. Discovery and evidence
 
@@ -226,12 +226,12 @@ must preserve the other task's edits. No dependencies/lockfile/runtime settings/
 
 | Requirement | Criteria | Verification method | Evidence/result |
 |---|---|---|---|
-| REQ-001 | AC-001 | TOOL-043-002/007 | Pending |
-| REQ-002 | AC-002 | TOOL-043-001/002/008 | Pending |
-| REQ-003 | AC-003 | TOOL-043-003/006/008 | Pending |
-| REQ-004 | AC-004 | TOOL-043-004/005/009 | Pending |
-| REQ-005 | AC-004/005 | TOOL-043-005/007/009 | Pending |
-| REQ-006 | AC-006 | TOOL-043-006/007 | Pending |
+| REQ-001 | AC-001 | TOOL-043-002/007 | Passed; scoped evidence below |
+| REQ-002 | AC-002 | TOOL-043-001/002/008 | Passed; scoped evidence below |
+| REQ-003 | AC-003 | TOOL-043-003/006/008 | Passed; scoped evidence below |
+| REQ-004 | AC-004 | TOOL-043-004/005/009 | Passed; scoped evidence below |
+| REQ-005 | AC-004/005 | TOOL-043-005/007/009 | Passed; scoped evidence below |
+| REQ-006 | AC-006 | TOOL-043-006/007 | Passed; scoped evidence below |
 
 ## 7. Test plan and execution record
 
@@ -260,35 +260,92 @@ explicitly authorized native fixture access, never adding a runtime database dep
 
 | Evidence ID | Planned command/procedure | Scenarios | Actual / status |
 |---|---|---|---|
-| TOOL-043-EVID-001 | `bash scripts/check.sh` within authorized coding/check scope | Static checks | Not run / pending |
-| TOOL-043-EVID-002 | `uv run --frozen pytest tests/unit tests/integration -q` after test assignment | 001..006 | Not run / pending |
-| TOOL-043-EVID-003 | Task-owned E2E file with `tests/e2e --run-e2e`, after fixtures/test creation and authorization | 007..009 | Not run / pending |
-| TOOL-043-EVID-004 | Isolated writer startup and Inspector discovery/delete on exact owned entry | 006/007 | Not run / pending |
+| TOOL-043-EVID-001 | Scoped `uv run --frozen --no-sync ruff check`, `ruff format --check`, full-source `mypy src`, `git diff --check` | Static checks | Results recorded in section 8 |
+| TOOL-043-EVID-002 | `uv run --frozen --no-sync pytest tests/unit tests/integration -q --tb=short` | 001..006 | 1889 passed; clean final full run after MCP correction; 32 unit/82 dedicated integration cases included |
+| TOOL-043-EVID-003 | `uv run --frozen --no-sync pytest tests/e2e/test_time_entry_delete_acceptance.py --run-e2e -q --tb=short`; added case with `-k time_no_issue` | 007..009 | 11 passed plus 1 added permission case passed; owned native absence/control/totals and zero remaining cleanup verified |
+| TOOL-043-EVID-004 | Isolated temporary writer startup and Inspector 2.8.0 tools/list + delete_time_entry on exact owned entry | 006/007 | Passed in native acceptance; server stopped and private credential config removed |
 
-No lint/type checks, build, tests, startup, Inspector or live Redmine calls. Build N/A unless
-future packaging/dependency changes. Source evidence is not functional acceptance. User-reported
+The coding stage ran only static checks, without tests, startup, Inspector or live calls.
+The separately authorized testing stage below records subsequent runtime acceptance. Build is
+N/A: no packaging/dependency changes. Source evidence alone is not functional acceptance. User-reported
 incident entries and older 6.0.5 observations do not establish 7.0.2 deletion acceptance.
 
 ## 8. Implementation and review record
 
-- Changes made: task and roadmap documents only.
-- Deviations: none; implementation not assigned.
-- Quality/tests/startup/Inspector: pending, none executed.
-- Documentation: planning records updated; public tool reference waits for coding.
-- Final review: source/contract/link/ID review only; no code/configuration changes.
-- Pre-existing failures: not assessed by checks; prior unrelated findings remain in TOOL-041.
-- Remaining work: review, coding and explicitly assigned testing/fixtures/native acceptance.
+Implementation assigned on 2026-10-08. Working-tree baseline was clean, including previously
+completed TOOL-042 code/tests/docs; existing test files remain unchanged.
+
+- Added `TimeEntryDeleteResult`, `TimeEntryDeleter`, optional service dependency, strict target
+  ID validation and caller-aware `WriteIntent`. Added issue-scoped writer DELETE route and wiring.
+- Added `RedmineTimeEntryDeletions`: reuse exact entry/issue/project/credited-user preflight,
+  one no-body native DELETE accepting only 204, and independent bounded same-ID GET observation.
+  Read-back 404 reports not_found only; unavailable and still_present never rewrite receipts.
+- Added explicit WRITE_OPERATIONS/typed intent registration, own/all permission alternatives,
+  shared native resolver branch and destructive/non-idempotent MCP hints. Discovery/reports and
+  standalone allowed_all use the existing registered operation policy. Catalog is 18 reads/18 writes.
+- Updated README, tool reference, configuration, architecture, manual verification, changelog
+  and dashboard. No runtime settings, dependencies, deployment or incident data changes.
+- Deviations: none. Reused TOOL-042 helper and intent field as planned; no shared helper refactor.
+- Review correction on 2026-10-08: a received native 204 now sets both `outcome=accepted`
+  and `upstream_accepted=true`, even when the shared writer reports uncertainty after response
+  cleanup fails or exceeds its deadline. Other receipt outcomes and read-back semantics are
+  unchanged. Scoped gateway Ruff lint/format, full-source mypy (129 files) and diff checks passed.
+  Add a regression case for `WriteReceipt("uncertain", 204)` during the separate testing stage;
+  no tests were added or executed for this correction.
+- Static checks passed on 2026-10-08 using installed locked tools from Git Bash:
+  `uv run --frozen --no-sync ruff check` on the 13 task runtime files passed;
+  `uv run --frozen --no-sync ruff format --check` reported all 13 formatted;
+  `uv run --frozen --no-sync mypy src` passed for 129 source files;
+  `git diff --check` passed. Ruff formatting was applied only to changed task files.
+  No repository-wide Ruff pass is claimed; unrelated lint debt was not modified.
+  Final diff inspection confirms no test/fixture/deployment/dependency changes.
+- Coding-stage tests, fixtures, startup, Inspector and live calls were not assigned or executed;
+  the later separately authorized testing stage below records their execution.
+- Final source/diff review: confirms router -> service -> Protocol -> gateway, one mutation
+  attempt, exact requested IDs and preservation of acceptance/uncertainty. No behavior decisions
+  remain unresolved; runtime compatibility is pending tests, particularly shared catalog fixtures.
+- Testing handoff: add unit/integration coverage for TOOL-043-001..006; update all-operation
+  maps and SyntheticRedmine DELETE support without weakening existing cases. Implement owned
+  7.0.2 deletion fixtures and TOOL-043-007..009 acceptance, isolated startup/Inspector, authorized
+  native absence/control/totals checks, permission/fault/race cases and exact owned cleanup.
+  Existing offline and live prerequisites are available; no new dependency installation assumed.
+
+### Separately assigned testing stage (2026-10-08)
+
+The user authorized test implementation and execution after review. Added 32 unit and 82
+dedicated offline integration cases, exact DELETE support in the shared synthetic fixture and
+four current-writer matrix cases. Added task-owned native fixture/inspection/cleanup helpers,
+isolated Inspector writer factory and native deletion/permission/fault/race checks.
+
+Initial focused execution: 305 passed, four MCP extra-argument/schema cases failed. They exposed
+undeclared arguments being ignored by the tool. Fixed `delete_time_entry` registration with
+`additionalProperties=false`; the four failures and two added receipt cases now pass together.
+This runtime correction is within the deletion contract and leaves other operations unchanged.
+Review cleanup regression coverage includes an actual HTTPX close error after receiving 204.
+
+Owned native/Inspector execution: 11 cases pass in 272.36 seconds, plus the added no-issue-view
+case passes in 20.82 seconds (11 deselected). Final full offline regression: 1889 passed in
+1035.05 seconds, including all final task cases and the MCP correction. Scoped Ruff lint/format
+on 21 runtime/test files, full-source mypy on 129 source files and staged/unstaged whitespace
+checks pass. Exact final owned cleanup reports zero projects/entries/users/roles/activities; no
+fixture ledger or Inspector credential config remains. Global settings/shared data are unchanged.
+Faults are application-level injections after native commit, not TCP-loss experiments. A real
+owned moved-entry race is covered; live visibility-policy changes and arbitrary plugins are not
+forced. See the evidence limits; no final single 12-case native rerun is claimed.
+See [testing evidence](../../testing/evidence/tool-043-testing.md) for exact commands, results,
+ownership, initial defect, fault-injection limits and final cleanup evidence.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
-- [ ] Every requirement has passing acceptance evidence.
-- [ ] Relevant tests and repository checks pass.
-- [ ] Owned live state/permission verification and cleanup completed.
-- [ ] Public documentation reflects implemented behavior.
-- [ ] Implementation reviewed with no unresolved behavior decisions.
-- [ ] Implementation evidence and dashboard synchronized.
+- [x] Required behavior implemented.
+- [x] Every requirement has passing acceptance evidence.
+- [x] Relevant tests and repository checks pass.
+- [x] Owned live state/permission verification and cleanup completed.
+- [x] Public documentation reflects implemented behavior.
+- [x] Implementation reviewed with no unresolved behavior decisions.
+- [x] Implementation evidence and dashboard synchronized.
 
-Final status: **planned**. Outcome: decision-complete single-entry deletion plan; no Redmine
-entry removed. Next action: review and assign TOOL-043 coding independently if deletion is the
-priority; then separately authorize TOOL-043-001..009 tests and owned pinned native acceptance.
+Final status: **complete** within the recorded offline and owned native evidence scope. Coding
+removed no Redmine entry; authorized testing deleted only recorded disposable owned entries.
+No further assigned work remains. Broader policy/plugin/infrastructure variants and production
+readiness are separate follow-ups. No build is required by unchanged packaging/dependencies.

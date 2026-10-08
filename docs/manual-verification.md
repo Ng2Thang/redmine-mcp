@@ -94,6 +94,35 @@ Do not use reported entries #919–#924 as fixtures or modify the shared server 
 The operation is implemented and accepted within the documented owned environment and current
 native policy settings. No production deployment or exhaustive policy/plugin/race coverage is claimed.
 
+## Time-entry deletion acceptance
+
+[TOOL-043](plans/tasks/tool-043-delete-time-entry.md) implements `delete_time_entry` at
+`DELETE /api/v1/issues/{issue_id}/time-entries/{time_entry_id}`. The user separately assigned
+testing on 2026-10-08. [Evidence](testing/evidence/tool-043-testing.md) records 32 unit/82 dedicated
+integration cases, 1889 clean full offline passes and 12 owned native/Inspector cases, plus
+scoped checks and exact cleanup. Future authorized rechecks retain TOOL-043-001..009 coverage:
+
+- Add unit/service and gateway tests for positive IDs, exact entry/issue/project/credited-user
+  preflight, missing/project-only/malformed targets and zero DELETE on rejection. Verify exactly
+  one native DELETE with no body/query and no retries.
+- Add permission and REST/MCP tests for own credited user versus author, all/no-edit/no-view,
+  pinned/personal modes, gates, explicit CSV/allowed_all, conditional capability reports and
+  destructive/non-idempotent hints. Update shared catalog operation maps and synthetic transport
+  fixtures to support this new operation while preserving reader/update/creation cases.
+- Cover native 204, dispatched timeout/5xx/unexpected 2xx, validation rejection and known
+  pre-dispatch failure. Verify independent not_found/still_present/unavailable observations,
+  unchanged receipt outcomes and duplicate preflight404 without a second mutation.
+- Use the owned marked pinned 7.0.2 environment for isolated writer startup and Inspector.
+  Delete only recorded disposable entry IDs; verify actual absence through authorized native
+  fixture evidence, spent-time totals and preservation of unrelated control entries. Caller 404
+  alone is insufficient. Cover own/all/denied roles, fault/visibility/race observations and
+  independent multi-call receipts. Reconcile uncertain outcomes and clean up remaining owned
+  resources, recording exact cleanup and limitations.
+
+Do not use reported entries #919–#924 or change shared/global settings merely to test this tool.
+Acceptance is scoped to the recorded owned environment and controlled faults/race; broader
+plugin/policy/infrastructure variants remain disclosed in the evidence record.
+
 ## Bounded Redmine GET retries
 
 [PREP-027](plans/tasks/prep-027-redmine-read-retries.md) implements shared GET retry.

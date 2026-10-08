@@ -9,6 +9,7 @@ from redmine_mcp.features.time_entries.service import TimeEntryService
 from redmine_mcp.features.time_entries.write_models import (
     TimeEntryCreateRequest,
     TimeEntryCreateResult,
+    TimeEntryDeleteResult,
     TimeEntryUpdateRequest,
     TimeEntryUpdateResult,
 )
@@ -60,3 +61,24 @@ async def update_time_entry(
     time_entry_id: Annotated[int, Path(ge=1, description="ID of the entry on this issue")],
 ) -> TimeEntryUpdateResult:
     return await service.update_time_entry(issue_id, time_entry_id, request)
+
+
+@router.delete(
+    "/{issue_id}/time-entries/{time_entry_id}",
+    operation_id="delete_time_entry",
+    response_model=TimeEntryDeleteResult,
+    description=(
+        "Permanently delete one time entry belonging to a visible issue. Requires the separate "
+        "restricted writer, visible spent time and native Edit spent time or eligible Edit own "
+        "spent time permission. Deletes one entry per call and changes spent-time totals. "
+        "Reports acceptance separately from later visibility; a read-back 404 is only a "
+        "not-found observation. Reconcile uncertain outcomes before retrying. No undo or "
+        "bulk transaction is provided."
+    ),
+)
+async def delete_time_entry(
+    service: Annotated[TimeEntryService, Depends(get_time_entries)],
+    issue_id: Annotated[int, Path(ge=1, description="ID of the visible issue")],
+    time_entry_id: Annotated[int, Path(ge=1, description="ID of the entry on this issue")],
+) -> TimeEntryDeleteResult:
+    return await service.delete_time_entry(issue_id, time_entry_id)

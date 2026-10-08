@@ -60,3 +60,12 @@ class TimeEntryUpdateResult(BaseModel):
     verification: TimeEntryVerification = "unavailable"
     field_verification: dict[str, TimeEntryVerification] = Field(default_factory=dict)
     observed_time_entry: TimeEntry | None = None
+
+
+class TimeEntryDeleteResult(BaseModel):
+    outcome: Literal["accepted", "uncertain"]
+    upstream_accepted: StrictBool | None
+    resource_id: PositiveID
+    issue_id: PositiveID
+    verification: Literal["not_found", "still_present", "unavailable"] = "unavailable"
+    observed_present: StrictBool | None = None

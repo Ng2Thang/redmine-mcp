@@ -41,6 +41,7 @@ UPLOAD_PERMISSIONS = frozenset(
 OPERATION_PERMISSIONS: dict[str, frozenset[str]] = {
     "create_time_entry": frozenset({"log_time"}),
     "update_time_entry": TIME_ENTRY_EDIT_PERMISSIONS,
+    "delete_time_entry": TIME_ENTRY_EDIT_PERMISSIONS,
     "upload_attachment": UPLOAD_PERMISSIONS,
     "add_project_file": frozenset({"manage_files"}),
     "create_project_version": frozenset({"manage_versions"}),

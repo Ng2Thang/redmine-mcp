@@ -111,13 +111,19 @@ only the named read operations, configured write operations in `auth/policy.py`,
 `mcp:connect`; adding a route requires an explicit permission entry. MCP exposure remains
 separately controlled by `mcp/catalog.py` and the deployment's writer ceiling.
 Catalog validation rejects exposed tools lacking the corresponding authorization dependency.
-The current catalog contains 18 reads and 17 writes; reader registration excludes all mutations.
+The current catalog contains 18 reads and 18 writes; reader registration excludes all mutations.
 Project time-entry activity discovery reuses the project reader/service/adapter and the native
 project detail expansion, with `view_time_entries` as conditional capability evidence.
 TOOL-040 testing was waived by the user. Own-time creation has a dedicated time-entry creator
 Protocol/gateway, authenticated caller identity from bootstrap, issue-derived `log_time` evidence
 and a single native POST followed by optional independent read-back. TOOL-041 testing remains
 pending; older acceptance records cover their dated source revisions.
+Issue-bound time-entry update and deletion share exact caller-key entry/issue/project preflight
+and credited-user own/all edit permission evidence. Each uses a dedicated Protocol/gateway,
+optional service dependency and writer route. Deletion sends one no-body DELETE and records
+caller-visible presence separately from write acceptance; GET 404 cannot settle uncertainty.
+TOOL-042 and TOOL-043 have separately recorded offline/native acceptance. Deletion rejects
+extra MCP arguments explicitly while preserving the existing policy of other operations.
 Standalone `allowed_all` expands to registered write IDs before catalog, REST and capability
 checks, including future registered writes after upgrade. It does not bypass other gates.
 

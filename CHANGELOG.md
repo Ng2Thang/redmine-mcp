@@ -28,6 +28,18 @@ that a release has been published.
 
 ### Changed
 
+- Add writer-only `create_time_entry` for the authenticated caller on one visible issue,
+  with explicit date, positive numeric hours, optional native activity default/comments,
+  issue-derived `log_time` authorization, single-attempt POST and independent verification.
+  Register the writer for explicit allowlists/allowed_all; preserve uncertainty after 5xx,
+  lost/unusable creation responses and failed read-back. TOOL-041 testing remains pending.
+  The user waived TOOL-040 testing and directed continuation; no runtime acceptance is claimed.
+
+- Add `list_project_time_entry_activities` through the project reader, with strict ID/name
+  validation, effective native activity choices, missing-expansion visibility and duplicate
+  rejection. Register the read-only REST/MCP operation and conditional `view_time_entries`
+  capability rule. Existing project schemas remain compatible; TOOL-040 testing was waived by the user.
+
 - Preserve assigned tags in `get_issue` when the existing Redmine REST response supplies a
   `tags` string array, with strict validation and honest unavailable-field evidence otherwise.
   Server changes and plugin installation are prohibited; remove the earlier companion approach,

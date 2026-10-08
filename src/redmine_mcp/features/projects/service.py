@@ -23,6 +23,7 @@ from redmine_mcp.features.projects.models import (
     Project,
     ProjectDetail,
     ProjectFile,
+    ProjectTimeEntryActivity,
     Version,
 )
 from redmine_mcp.features.projects.ports import (
@@ -65,6 +66,12 @@ class ProjectService:
     async def list_project_files(self, project_id: int) -> Collection[ProjectFile]:
         require_positive_id(project_id, "project_id")
         return await self.reader.list_project_files(project_id)
+
+    async def list_project_time_entry_activities(
+        self, project_id: int
+    ) -> Collection[ProjectTimeEntryActivity]:
+        require_positive_id(project_id, "project_id")
+        return await self.reader.list_project_time_entry_activities(project_id)
 
     async def add_project_file(
         self, project_id: int, request: AddProjectFileRequest

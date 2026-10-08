@@ -13,6 +13,7 @@ READ_OPERATIONS = (
     "list_project_versions",
     "list_project_issue_categories",
     "list_project_files",
+    "list_project_time_entry_activities",
     "list_project_members",
     "list_issues",
     "get_issue",
@@ -26,6 +27,7 @@ READ_OPERATIONS = (
 )
 
 WRITE_OPERATIONS: tuple[str, ...] = (
+    "create_time_entry",
     "upload_attachment",
     "add_project_file",
     "create_project_version",

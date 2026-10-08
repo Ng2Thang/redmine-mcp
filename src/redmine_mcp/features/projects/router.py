@@ -10,6 +10,7 @@ from redmine_mcp.features.projects.models import (
     Project,
     ProjectDetail,
     ProjectFile,
+    ProjectTimeEntryActivity,
     Version,
 )
 
@@ -126,3 +127,23 @@ async def list_project_files(
 ) -> Collection[ProjectFile]:
     """List project and version file metadata without downloading content."""
     return await service.list_project_files(project_id)
+
+
+@router.get(
+    "/{project_id}/time-entry-activities",
+    operation_id="list_project_time_entry_activities",
+    response_model=Collection[ProjectTimeEntryActivity],
+    description=(
+        "List active time-entry activity IDs and names available to one visible project. "
+        "Resolve the project from the issue or list_projects. Use a returned ID when logging "
+        "time. Requires native View spent time permission for the expansion. Missing items "
+        "are marked unavailable; a known empty list means no available activities. "
+        "This catalog does not identify the caller's default or grant permission to log time."
+    ),
+)
+async def list_project_time_entry_activities(
+    service: Annotated[ProjectService, Depends(get_projects)],
+    project_id: Annotated[int, Path(ge=1, description="ID of the project")],
+) -> Collection[ProjectTimeEntryActivity]:
+    """List available project activities, distinguishing omitted from known empty choices."""
+    return await service.list_project_time_entry_activities(project_id)

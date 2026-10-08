@@ -1,5 +1,40 @@
 # MCP tool roadmap
 
+## Issue time-entry creation plan
+
+On 2026-10-08, the user requested a task plan for the missing operation needed to log eight
+hours today on each selected issue. Existing time-entry readers remain the implemented baseline.
+This plan adds project activity discovery and own-time creation on one visible issue per call.
+Dates are explicit, activity defaults remain native, and separate calls retain independent
+receipts. Other-user logs, project-only creation, bulk writes, edit/delete and activity
+administration remain unassigned. `allowed_all` will include creation only after the new write
+operation is implemented and registered; it does not itself implement an absent tool.
+
+Exact 7.0.2 release source was inspected on 2026-10-08 for permissions, project activity
+expansions/defaults, creation validation and receipts. Both contracts are decision-complete;
+implementation and verification remain pending. No tests, fixtures, startup, Inspector, live
+mutations, configuration or Redmine server changes are authorized by this planning assignment.
+Review, coding and separately authorized testing are distinct next stages.
+
+The user subsequently assigned TOOL-040 coding on 2026-10-08. Its reader is implemented;
+scoped Ruff lint/format, full-source mypy and diff whitespace checks pass. Repository-wide Ruff
+reports seven existing lint findings and one existing unformatted file outside task scope.
+The user subsequently waived TOOL-040 testing and assigned TOOL-041 coding. TOOL-040 is closed
+under that explicit waiver, without claiming runtime acceptance. TOOL-041 implementation is
+finished; scoped Ruff lint/format, full-source mypy (127 files) and diff whitespace checks pass.
+The same unrelated whole-repository Ruff findings remain. TOOL-041 testing is a separate
+assignment. No tests, startup, Inspector or live calls ran; the writer is not deployed by this stage.
+
+| Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [tool-040-list-project-time-entry-activities](tasks/tool-040-list-project-time-entry-activities.md) | Resolve active project activity names to IDs without inventing defaults | Existing project reader and bounded GET client; prep-020 baseline; prep-002/016/017/018 for later verification | complete | User waived testing on 2026-10-08 and directed TOOL-041 continuation; static checks pass; native acceptance remains unverified |
+| 2 | [tool-041-create-time-entry](tasks/tool-041-create-time-entry.md) | Log own hours on one visible issue with an explicit date, restricted writer and truthful acceptance/read-back | Existing issue/identity/writer; prep-019/020/027 baseline; TOOL-040 for named activity choices (testing waived); prep-002/016/017/018 for later testing | blocked | Implementation finished; testing pending. Scoped Ruff lint/format, mypy and diff checks pass; unrelated repository Ruff findings recorded. Separately authorize TOOL-041-001..009, catalog/fixture updates and owned 7.0.2/Inspector/state/cleanup acceptance |
+
+Each public behavior has one owner. TOOL-040 is the client prerequisite for discovering activity
+names; creation can still use a known ID or a native default without activity-read permission.
+The new IDs preserve TOOL-037's retirement and the previous TOOL-038/039 tag-task mappings.
+The existing localhost:3000 6.0.5 observation is not acceptance of either new tool on pinned 7.0.2.
+
 ## Bug task plans
 
 Bug investigation and fix plans live in [bugs/](bugs/README.md).
@@ -167,7 +202,9 @@ remain deferred outside the current local-development roadmap.
 The original prep-009 final release review remains separate; completing
 this plan does not publish a release or silently close its historical prerequisites.
 
-Active task IDs are `prep-001` through `prep-028` and `tool-001` through `tool-036`.
+Active task IDs are `prep-001` through `prep-028`, `tool-001` through `tool-036`, and
+`tool-040`/`tool-041`. TOOL-037 remains retired; TOOL-038/039 retain historical tag-task mappings
+and are not reused.
 
 ## Issue estimates and general spent-time reporting
 

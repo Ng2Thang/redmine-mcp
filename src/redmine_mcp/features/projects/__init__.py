@@ -5,6 +5,7 @@ from redmine_mcp.features.projects.models import (
     Project,
     ProjectDetail,
     ProjectFile,
+    ProjectTimeEntryActivity,
     Reference,
     Version,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "ProjectFile",
     "ProjectReader",
     "ProjectService",
+    "ProjectTimeEntryActivity",
     "Reference",
     "Version",
 ]

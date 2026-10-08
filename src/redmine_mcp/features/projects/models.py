@@ -89,6 +89,11 @@ class IssueCategory(BaseModel):
     assigned_to: Reference | None = None
 
 
+class ProjectTimeEntryActivity(BaseModel):
+    id: PositiveID
+    name: str = Field(min_length=1, strict=True)
+
+
 class ProjectFile(BaseModel):
     id: PositiveID
     filename: str = Field(min_length=1)

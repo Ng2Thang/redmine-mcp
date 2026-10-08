@@ -5,6 +5,7 @@ from typing import Literal
 
 CapabilityState = Literal["denied", "conditional", "unknown"]
 WriteOperation = Literal[
+    "create_time_entry",
     "upload_attachment",
     "add_project_file",
     "create_project_version",

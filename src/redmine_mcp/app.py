@@ -24,6 +24,7 @@ from redmine_mcp.features.projects.write_router import router as project_writes_
 from redmine_mcp.features.reference_data.router import router as reference_data_router
 from redmine_mcp.features.time_entries.overview_router import router as time_overview_router
 from redmine_mcp.features.time_entries.router import router as time_entries_router
+from redmine_mcp.features.time_entries.write_router import router as time_entry_writes_router
 from redmine_mcp.features.users.router import router as users_router
 from redmine_mcp.lifecycle import RuntimeLifecycle
 from redmine_mcp.mcp import register_mcp
@@ -57,6 +58,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(relation_writes_router)
     app.include_router(time_entries_router)
     app.include_router(time_overview_router)
+    app.include_router(time_entry_writes_router)
     app.include_router(reference_data_router)
     app.include_router(users_router)
     internal = MCPRestClient(

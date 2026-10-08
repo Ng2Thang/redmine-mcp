@@ -9,6 +9,7 @@ from redmine_mcp.features.projects.models import (
     Project,
     ProjectDetail,
     ProjectFile,
+    ProjectTimeEntryActivity,
     Version,
 )
 
@@ -23,6 +24,10 @@ class ProjectReader(Protocol):
     async def list_project_issue_categories(self, project_id: int) -> Collection[IssueCategory]: ...
 
     async def list_project_files(self, project_id: int) -> Collection[ProjectFile]: ...
+
+    async def list_project_time_entry_activities(
+        self, project_id: int
+    ) -> Collection[ProjectTimeEntryActivity]: ...
 
 
 class ProjectWriter(Protocol):

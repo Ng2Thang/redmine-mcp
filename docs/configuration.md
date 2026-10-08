@@ -362,8 +362,15 @@ This example does not change deployed configuration or enable writes on the read
 An empty `REDMINE_WRITER_OPERATIONS` exposes no write tools or REST mutations; unknown IDs prevent
 startup. Every write route uses `require_write_access`, which checks its operation ID
 against the expanded configured list. Reader REST write attempts return 403. No public write
-operation is admitted on the reader. The current explicit catalog has 15 write operations;
+operation is admitted on the reader. The current explicit catalog has 16 write operations;
 see the [tool reference](tool-reference.md) for each native permission and outcome contract.
+
+`create_time_entry` requires the same separate writer gates, a visible issue and native
+`log_time` in its resolved project. Add that ID to a fixed CSV allowlist, or keep standalone
+`allowed_all` to include it after upgrading/restarting the writer. Supply an explicit spent_on
+date; optional activity uses the native caller/project default. Time-entry read permission is
+only needed for discovery/read-back. This documentation does not alter deployed configuration;
+TOOL-041 runtime acceptance remains pending.
 
 The write transport sends each mutation once, bounds JSON and binary requests and JSON responses,
 validates each operation's native success status/body, and returns an `uncertain` receipt when a

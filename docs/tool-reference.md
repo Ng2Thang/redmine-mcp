@@ -2,7 +2,7 @@
 
 ## Catalog and support scope
 
-The current registered catalog contains 17 reads and 15 writes. The default reader exposes
+The current registered catalog contains 18 reads and 16 writes. The default reader exposes
 only reads; the separate writer exposes configured mutations alongside readers. Personal-key
 discovery is caller-specific, and conditional/unknown candidates are not permission grants.
 Use [configuration](configuration.md#separate-writer-deployment) for authentication, operation
@@ -14,6 +14,11 @@ Current functional acceptance is recorded in the
 7.0.2 live cases passed. Its source revision, exact scenarios and H1..H6 limitations define
 the evidence boundary. Other versions, all historical variants and production readiness are
 not established. Direct attachment content download is retired; reads provide metadata/links.
+The new `list_project_time_entry_activities` reader is implemented with static checks recorded
+in [TOOL-040](plans/tasks/tool-040-list-project-time-entry-activities.md); its testing was waived
+by the user and runtime acceptance is not established. The new `create_time_entry` writer is
+implemented in [TOOL-041](plans/tasks/tool-041-create-time-entry.md), with testing pending.
+Neither new operation is covered by the earlier ledger.
 
 ## MCP input validation
 
@@ -280,6 +285,7 @@ Permissions may come from different readable roles, including partial permission
 | `list_project_versions` | `view_issues` | Issue tracking availability and shared-version visibility |
 | `list_project_issue_categories` | `view_issues` OR `manage_categories` | Issue tracking availability and project access |
 | `list_project_files` | `view_files` | Files module and project/version file visibility |
+| `list_project_time_entry_activities` | `view_time_entries` | Project access, time tracking availability and activity expansion visibility; no default or log-time grant |
 | `list_issue_time_entries` | `view_issues` AND `view_time_entries` | Issue preflight, time tracking module and role time-entry visibility |
 | `list_time_entries` | `view_time_entries` | Project access, time tracking module and role time-entry visibility; no issue preflight |
 | `get_attachment` | Any of `view_issues`, `view_files`, `view_documents`, `view_news`, `view_messages`, `view_wiki_pages` | Actual container type and visibility; metadata and browser link only |
@@ -377,6 +383,7 @@ data. The external Redmine data can change.
 | `list_project_versions` | `GET /api/v1/projects/{project_id}/versions` | Required positive integer `project_id` |
 | `list_project_issue_categories` | `GET /api/v1/projects/{project_id}/issue-categories` | Required positive integer `project_id` |
 | `list_project_files` | `GET /api/v1/projects/{project_id}/files` | Required positive integer `project_id` |
+| `list_project_time_entry_activities` | `GET /api/v1/projects/{project_id}/time-entry-activities` | Required positive integer `project_id`; no pagination inputs |
 | `list_project_members` | `GET /api/v1/projects/memberships` | Unique positive `project_ids` array (1–10), `limit=25`, `offset=0`; independent project pages |
 | `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include`, `tags_any` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
@@ -528,6 +535,75 @@ optional default assignee references. Its endpoint-specific documentation also d
 pagination controls. The tool requires `total_count` to equal the returned array length and
 returns a sanitized 502 if the count is absent or indicates a partial collection. Categories
 and assignees are limited to what Redmine returns for the requesting user.
+
+### Project time-entry activities
+
+`list_project_time_entry_activities` returns active activity IDs and names available to one
+visible project. Resolve `project_id` from an issue's project or `list_projects`. The reader
+requests native project detail with `include=time_entry_activities`; native View spent time
+permission (`view_time_entries`) controls that expansion. The catalog includes effective project
+overrides rather than substituting their global parent IDs. Returned order is Redmine's order,
+with no guaranteed sorting, total count or pagination.
+
+```json
+{
+  "items": [{"id": 9, "name": "Development"}],
+  "visibility": {"scope": "requesting_redmine_user", "observations": []}
+}
+```
+
+A present empty expansion returns `items=[]` with no missing-field observation. If Redmine omits
+the expansion, `items=[]` includes `{"path":"/items","state":"not_returned"}` in visibility
+observations; this means unavailable, not proof that there are no activities. Null/nonarray
+expansions, malformed or duplicate IDs, invalid names and a mismatched project ID fail with a
+sanitized `502 upstream_response`. Names and IDs are preserved without coercion.
+
+The catalog does not identify the caller's default or grant permission to log time. The existing
+`get_project` response remains unchanged. Use a returned activity ID with the separately enabled
+`create_time_entry` writer described below.
+
+### Create a time entry
+
+`create_time_entry` is writer-only at `POST /api/v1/issues/{issue_id}/time-entries`. It creates
+one entry credited to the authenticated caller. Required inputs are a positive issue ID,
+finite positive JSON numeric `hours`, and an explicit calendar date `spent_on` (`YYYY-MM-DD`).
+Resolve relative dates such as "today" in the user's timezone before calling; the server does
+not select a date. Booleans, numeric strings, zero/negative hours, invalid dates and supplied
+nulls are rejected. Optional `activity_id` is a positive integer; optional `comments` preserves
+the supplied string, including empty text, with a 1024-character limit on the pinned target.
+Other-user/project-only modes, custom fields, batch inputs and unknown body properties are
+rejected. REST takes issue_id in the path, not in the body.
+
+```json
+{"issue_id": 488, "hours": 8, "spent_on": "2026-10-08", "activity_id": 9}
+```
+
+The writer must allow `create_time_entry` explicitly or use standalone `allowed_all`. Existing
+writer identity/admission rules still apply. Issue read access and native `log_time` in the
+resolved project are needed; `view_time_entries` is required for activity discovery/read-back,
+not merely for creation. The native call initializes the resolved project before selecting
+caller-role/project/global activity defaults. Omitted activity uses that native selection;
+no default or an invalid project activity can cause native validation rejection.
+
+The tool does not invent a daily limit or bypass native required comments/custom fields,
+closed-issue, future-date or daily-hour policies. Hooks and plugins can impose further rules.
+Two eight-hour calls create separate entries totalling 16 hours if both succeed; a daily limit
+may reject the second without undoing the first. Identical repeated calls can create duplicates.
+
+The response includes `outcome` (accepted/uncertain), nullable `upstream_accepted` (true only after
+native 201), nullable `resource_id`, `verification` (matched/mismatch/unavailable),
+`field_verification` and nullable independently fetched `observed_time_entry`. A 201 body alone
+is not independent verification. Compare issue/project/caller, hours/date and supplied optional
+fields; missing comparisons are unavailable. Hours comparison follows the pinned native
+whole-minute rounding followed by two-decimal API rounding; submitted hours are unchanged.
+
+The tool sends one POST. Received native 5xx, dispatched timeout, malformed/empty creation data
+or inconsistent creation identity produce uncertainty; a failed/forbidden GET preserves write
+acceptance. An uncertain receipt remains uncertain even if independent fields match. Reconcile
+the returned ID or use bounded `list_time_entries` filtered by issue, user_id="me" and the spent
+date before manually retrying. Matching date/hours alone cannot identify an ambiguous creation;
+do not infer failure from absence on a partial or inaccessible page. No automatic retry,
+deduplication, rollback or atomic multi-issue guarantee is provided. Testing is pending.
 
 Example `get_issue` response:
 

@@ -9,6 +9,25 @@ from redmine_mcp.integrations.redmine.mapping import item
 from redmine_mcp.integrations.redmine.responses import resource_object, response_page
 
 
+def map_time_entry(entry: dict[str, object]) -> TimeEntry:
+    """Map native list/detail entries through the existing public reader contract."""
+    issue = entry.get("issue")
+    issue_id = item(TimeEntryIssueReference, issue).id if issue is not None else None
+    return item(
+        TimeEntry,
+        {
+            "id": entry.get("id"),
+            "project": entry.get("project"),
+            "user": entry.get("user"),
+            "issue_id": issue_id,
+            "hours": entry.get("hours"),
+            "spent_on": entry.get("spent_on"),
+            "activity": entry.get("activity"),
+            "comments": entry.get("comments"),
+        },
+    )
+
+
 class RedmineTimeEntries:
     def __init__(self, client: RedmineClient) -> None:
         self.client = client
@@ -58,21 +77,7 @@ class RedmineTimeEntries:
 
     @staticmethod
     def _map_time_entry(entry: dict[str, object]) -> TimeEntry:
-        issue = entry.get("issue")
-        issue_id = item(TimeEntryIssueReference, issue).id if issue is not None else None
-        return item(
-            TimeEntry,
-            {
-                "id": entry.get("id"),
-                "project": entry.get("project"),
-                "user": entry.get("user"),
-                "issue_id": issue_id,
-                "hours": entry.get("hours"),
-                "spent_on": entry.get("spent_on"),
-                "activity": entry.get("activity"),
-                "comments": entry.get("comments"),
-            },
-        )
+        return map_time_entry(entry)
 
     async def list_issue_time_entries(
         self, issue_id: int, limit: int, offset: int

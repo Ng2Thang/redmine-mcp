@@ -1,14 +1,41 @@
 from datetime import date
 
+from redmine_mcp.auth.capability_models import WriteIntent
+from redmine_mcp.auth.capability_ports import WriteAuthorizer
 from redmine_mcp.common import Page, PageRequest, require_positive_id, validated_query
 from redmine_mcp.features.time_entries.models import IssueTimeEntry, TimeEntry
-from redmine_mcp.features.time_entries.ports import TimeEntryReader
+from redmine_mcp.features.time_entries.ports import TimeEntryCreator, TimeEntryReader
 from redmine_mcp.features.time_entries.queries import TimeEntrySearch, TimeEntryUserId
+from redmine_mcp.features.time_entries.write_models import (
+    TimeEntryCreateRequest,
+    TimeEntryCreateResult,
+)
 
 
 class TimeEntryService:
-    def __init__(self, reader: TimeEntryReader) -> None:
+    def __init__(
+        self,
+        reader: TimeEntryReader,
+        *,
+        creator: TimeEntryCreator | None = None,
+        authorizer: WriteAuthorizer | None = None,
+        caller_id: int | None = None,
+    ) -> None:
         self.reader = reader
+        self.creator = creator
+        self.authorizer = authorizer
+        self.caller_id = caller_id
+
+    async def create_time_entry(
+        self, issue_id: int, request: TimeEntryCreateRequest
+    ) -> TimeEntryCreateResult:
+        require_positive_id(issue_id, "issue_id")
+        if self.creator is None or self.caller_id is None:
+            raise RuntimeError("Time-entry creator or authenticated caller is not configured")
+        require_positive_id(self.caller_id, "caller_id")
+        if self.authorizer is not None:
+            await self.authorizer.authorize(WriteIntent("create_time_entry", issue_id=issue_id))
+        return await self.creator.create_time_entry(issue_id, request, self.caller_id)
 
     async def list_time_entries(
         self,

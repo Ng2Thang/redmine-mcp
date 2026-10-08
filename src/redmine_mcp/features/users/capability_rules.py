@@ -56,6 +56,12 @@ PROJECT_READ_RULES: dict[str, ReadCapabilityRule] = {
         (frozenset({"view_files"}),),
         "Files module availability and project/version file visibility are checked on invocation.",
     ),
+    "list_project_time_entry_activities": ReadCapabilityRule(
+        (frozenset({"view_time_entries"}),),
+        "Project access, time tracking availability and activity expansion visibility "
+        "are checked by Redmine on invocation. The catalog does not establish permission "
+        "to log time or identify the caller's default activity.",
+    ),
     "list_issue_time_entries": ReadCapabilityRule(
         (frozenset({"view_issues", "view_time_entries"}),),
         "The tool reads the issue first; issue visibility, time tracking availability and "

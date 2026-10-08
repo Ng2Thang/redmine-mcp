@@ -270,6 +270,8 @@ class RedmineCapabilities:
                 optional_reference_id(journal, "user"),
                 user_id,
             )
+        elif operation == "create_time_entry":
+            permissions = frozenset({"log_time"})
         elif operation == "create_issue_relation":
             permissions = frozenset({"manage_issue_relations"})
         elif operation == "add_issue_watcher":

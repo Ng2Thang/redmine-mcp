@@ -13,6 +13,59 @@ passed. It includes version and membership acceptance, `allowed_all`, and Inspec
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 
+## Project time-entry activities (testing waived)
+
+[TOOL-040](plans/tasks/tool-040-list-project-time-entry-activities.md) implements
+`list_project_time_entry_activities` at
+`GET /api/v1/projects/{project_id}/time-entry-activities`. The user waived testing on 2026-10-08;
+runtime acceptance remains unverified. The procedures below are retained for future assignments;
+the earlier catalog ledger does not cover this operation. Execute TOOL-040-001..005 only in a
+separately authorized verification stage.
+
+- Add offline input, adapter, REST/MCP and capability cases for strict project/activity IDs,
+  names, exact project detail/include mapping, upstream errors and read-only annotations.
+  Update existing all-reader argument maps and project reader fakes for the new operation.
+- Distinguish a present empty activity expansion from an omitted one: only the latter adds
+  `/items` with `state=not_returned`. Reject null/nonarray expansions, malformed or duplicate
+  activity IDs, invalid names and wrong project identities.
+- On an owned marked Redmine 7.0.2 environment, compare populated/empty project activity lists
+  with the native expansion under permitted and no-view accounts. Include inactive activities,
+  project overrides and forbidden projects. Record the actual runtime version.
+- In Inspector, discover the reader and invoke it with the same project. Check ID/name output,
+  visibility observations and conditional `view_time_entries` capability evidence. Do not infer
+  a caller default or permission to log time from catalog membership.
+- If synthetic setup is separately authorized, track and restore only task-owned fixtures.
+  This reader does not log time or administer activities. The shared localhost:3000 6.0.5
+  instance is not a substitute for pinned 7.0.2 acceptance.
+
+## Own-time entry creation (testing pending)
+
+[TOOL-041](plans/tasks/tool-041-create-time-entry.md) adds writer-only `create_time_entry` at
+`POST /api/v1/issues/{issue_id}/time-entries`. Its coding stage runs static checks only.
+Implement/execute TOOL-041-001..009 in a separately authorized testing assignment:
+
+- Add request/service/gateway coverage for numeric/date validation, supplied nulls, unsupported
+  user/project/custom/batch fields, strict IDs, comments, exact POST body and resolved project
+  query parameter, caller attribution and native default selection.
+- Cover pinned/personal auth, disabled writer, account/operation gates, explicit CSV/allowed_all,
+  issue-derived `log_time`, conditional/unknown evidence, native denied targets, and callers who
+  can log own time but cannot view time entries.
+- Cover accepted/mismatching/unavailable independent GETs, native minute/two-decimal rounding,
+  invalid/empty 201 identity/body, 5xx, dispatched timeout and pre-dispatch failure. Assert one
+  POST and preserved acceptance/uncertainty, including when a later GET matches.
+- Extend catalog argument/payload maps and writer-only synthetic mocks for the new operation.
+  Verify REST/MCP schemas, discovery, annotations, allowed_all, capabilities and old-reader/writer
+  compatibility. Existing tests remain untouched until that testing assignment.
+- On an owned marked Redmine 7.0.2 writer, create two task-owned eight-hour logs on an explicit
+  date and compare exact native entries, IDs and caller/date/activity fields. Exercise native
+  role/project defaults, no-default rejection, invalid activities, required comments, daily-hour
+  partial success, closed/future policies and permission boundaries in authorized owned fixtures.
+- Use owned response-loss/500 injection and reconciliation for ambiguous commits, then delete
+  only exact task-created IDs using the authorized cleanup mechanism. Track failure/ambiguity;
+  deleting an entry cannot undo delivered webhook effects. Inspector creation calls are live
+  writes and need this explicit verification authorization. Do not use the shared 6.0.5 instance
+  as pinned 7.0.2 acceptance or reset it for this feature.
+
 ## Bounded Redmine GET retries
 
 [PREP-027](plans/tasks/prep-027-redmine-read-retries.md) implements shared GET retry.

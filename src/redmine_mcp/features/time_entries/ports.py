@@ -4,6 +4,10 @@ from typing import Protocol
 from redmine_mcp.common import Page
 from redmine_mcp.features.time_entries.models import IssueTimeEntry, TimeEntry
 from redmine_mcp.features.time_entries.queries import TimeEntryUserId
+from redmine_mcp.features.time_entries.write_models import (
+    TimeEntryCreateRequest,
+    TimeEntryCreateResult,
+)
 
 
 class TimeEntryReader(Protocol):
@@ -22,3 +26,9 @@ class TimeEntryReader(Protocol):
     async def list_issue_time_entries(
         self, issue_id: int, limit: int, offset: int
     ) -> Page[IssueTimeEntry]: ...
+
+
+class TimeEntryCreator(Protocol):
+    async def create_time_entry(
+        self, issue_id: int, request: TimeEntryCreateRequest, caller_id: int
+    ) -> TimeEntryCreateResult: ...

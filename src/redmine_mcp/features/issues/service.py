@@ -4,9 +4,14 @@ from fastapi import status as http_status
 
 from redmine_mcp.auth.capability_models import WriteIntent
 from redmine_mcp.auth.capability_ports import WriteAuthorizer
-from redmine_mcp.common import ApplicationError, Page, require_positive_id, validated_query
+from redmine_mcp.common import (
+    ApplicationError,
+    Page,
+    require_positive_id,
+    validated_query,
+)
 from redmine_mcp.constants import codes as codes_text
-from redmine_mcp.features.issues.models import Issue, IssueDetail
+from redmine_mcp.features.issues.models import Issue, IssueDetailWithTags
 from redmine_mcp.features.issues.ports import (
     IssueCreator,
     IssueNoteUpdater,
@@ -147,6 +152,7 @@ class IssueService:
         fixed_version_id: int | None = None,
         include_subprojects: bool = True,
         include: tuple[str, ...] | None = None,
+        tags_any: list[str] | None = None,
     ) -> Page[Issue]:
         query = validated_query(
             IssueSearch,
@@ -163,6 +169,7 @@ class IssueService:
                 "category_id": category_id,
                 "fixed_version_id": fixed_version_id,
                 "include_subprojects": include_subprojects,
+                **({"tags_any": tags_any} if tags_any is not None else {}),
             },
         )
         return await self.reader.list_issues(
@@ -179,8 +186,11 @@ class IssueService:
             fixed_version_id=query.fixed_version_id,
             include_subprojects=query.include_subprojects,
             include=validate_issue_list_includes(include),
+            **({"tags_any": query.tags_any} if query.tags_any is not None else {}),
         )
 
-    async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> IssueDetail:
+    async def get_issue(
+        self, issue_id: int, include: tuple[str, ...] | None = None
+    ) -> IssueDetailWithTags:
         require_positive_id(issue_id, "issue_id")
         return await self.reader.get_issue(issue_id, validate_issue_includes(include))

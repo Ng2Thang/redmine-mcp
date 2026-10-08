@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Protocol
 
 from redmine_mcp.common import Page
-from redmine_mcp.features.issues.models import Issue, IssueDetail
+from redmine_mcp.features.issues.models import Issue, IssueDetailWithTags
 from redmine_mcp.features.issues.write_models import (
     IssueCreateRequest,
     IssueCreateResult,
@@ -33,11 +33,12 @@ class IssueReader(Protocol):
         fixed_version_id: int | None,
         include_subprojects: bool,
         include: tuple[str, ...] | None,
+        tags_any: list[str] | None = None,
     ) -> Page[Issue]: ...
 
     async def get_issue(
         self, issue_id: int, include: tuple[str, ...] | None = None
-    ) -> IssueDetail: ...
+    ) -> IssueDetailWithTags: ...
 
 
 class IssueCreator(Protocol):

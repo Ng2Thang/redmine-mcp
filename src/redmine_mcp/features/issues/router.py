@@ -8,8 +8,8 @@ from redmine_mcp.api import get_issues, require_read_access
 from redmine_mcp.common import Page
 from redmine_mcp.constants import issues as issues_text
 from redmine_mcp.features import IssueService
-from redmine_mcp.features.issues.models import Issue, IssueDetail
-from redmine_mcp.features.issues.queries import IssueSort
+from redmine_mcp.features.issues.models import Issue, IssueDetailWithTags
+from redmine_mcp.features.issues.queries import IssueSort, TagsAny
 
 router = APIRouter(
     prefix="/api/v1/issues", tags=["issues"], dependencies=[Depends(require_read_access)]
@@ -66,7 +66,9 @@ def parse_issue_includes(value: str | None) -> tuple[str, ...] | None:
         "reports selected fields omitted by "
         "Redmine without asserting the cause. Select attachments or relations "
         "with a comma-separated include; omitted expansions remain empty with "
-        "not_requested visibility observations."
+        "not_requested visibility observations. tags_any "
+        "matches ANY supplied known tag and combines with the other filters. "
+        "Results do not contain complete assigned tag arrays."
     ),
 )
 async def list_issues(
@@ -118,6 +120,10 @@ async def list_issues(
         str | None,
         Query(description=("Comma-separated list expansions: attachments,relations")),
     ] = None,
+    tags_any: Annotated[
+        TagsAny,
+        Query(description="Match ANY of 1 to 20 known tag names; no %, _, backslash or controls"),
+    ] = None,
 ) -> Page[Issue]:
     """List visible issues. Status defaults to open; '*' means all.
     Assignee 'me' means the requesting Redmine user.
@@ -137,13 +143,14 @@ async def list_issues(
         fixed_version_id,
         include_subprojects,
         parse_issue_includes(include),
+        tags_any=tags_any,
     )
 
 
 @router.get(
     "/{issue_id}",
     operation_id="get_issue",
-    response_model=IssueDetail,
+    response_model=IssueDetailWithTags,
     description=(
         "Read one visible issue using its numeric ID; use list_issues to discover "
         "the ID. By default include journals and attachment metadata. Attachment "
@@ -156,7 +163,10 @@ async def list_issues(
         "descendant-inclusive total_spent_hours. Visibility metadata distinguishes "
         "fields not returned from expansions not requested. Estimated hours, "
         "attachment content URLs, and journal edit metadata are returned when "
-        "available; visible values do not establish permission to edit."
+        "available; visible values do not establish permission to edit. Assigned "
+        "tag names are preserved when the existing Redmine REST response supplies them. "
+        "tags=null means "
+        "unavailable; tags=[] means no assigned tags."
     ),
 )
 async def get_issue(
@@ -166,6 +176,6 @@ async def get_issue(
         str | None,
         Query(description=("Comma-separated issue expansions; empty string requests none")),
     ] = None,
-) -> IssueDetail:
+) -> IssueDetailWithTags:
     """Read an issue with selected related context."""
     return await service.get_issue(issue_id, parse_issue_includes(include))

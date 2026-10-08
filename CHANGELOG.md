@@ -28,6 +28,28 @@ that a release has been published.
 
 ### Changed
 
+- Preserve assigned tags in `get_issue` when the existing Redmine REST response supplies a
+  `tags` string array, with strict validation and honest unavailable-field evidence otherwise.
+  Server changes and plugin installation are prohibited; remove the earlier companion approach,
+  supplemental GET, configuration flag and installation instructions. The inspected native
+  API and user-supplied list/detail responses omit tags. User positive/negative controls confirm
+  native REST known-name filtering; TOOL-036 implementation is recorded below. Full-tag
+  reads and enumeration remain unavailable and their task plans were removed; effective write
+  preflight and MCP acceptance remain pending.
+
+- Remove the complete-tag read and catalogue task plans at the user's request. Renumber tag
+  filtering to TOOL-036 and assignment updates to TOOL-037, updating task/scenario/evidence IDs
+  and documentation together. Runtime operations and implementation remain unchanged.
+
+- Extend `list_issues` with bounded `tags_any` arrays, native ANY matching and complete structured
+  filter translation preserving existing filters, count and pagination. Tag filtering is always
+  available without an environment switch; reject wildcard/escape names rather than broadening
+  literal matches. No Redmine server modification or full-tag output is added. Testing pending.
+
+- Add TOOL-036 focused offline acceptance, read-only live controls on the user-selected port
+  3000 and Inspector discovery/invocation evidence. The observed target is Redmine 6.0.5;
+  complete 7.0.2, real two-tag overlap and tagged-private-role acceptance remain pending.
+
 - Add bounded Redmine GET retries for transient transport failures and HTTP 429/502/503/504.
   Default to three total attempts with configurable exponential backoff, jitter and Retry-After
   handling. All attempts share existing deadlines, physical request/byte budgets and per-user

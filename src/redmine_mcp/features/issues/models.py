@@ -9,6 +9,7 @@ from pydantic import (
     JsonValue,
     StrictBool,
     StrictInt,
+    StrictStr,
     WithJsonSchema,
     field_validator,
 )
@@ -183,3 +184,21 @@ class Issue(BaseModel):
 
 class IssueDetail(Issue):
     visibility: Visibility = Field(default_factory=Visibility)
+
+
+class IssueDetailWithTags(IssueDetail):
+    """Detail read output; writer observations retain the base IssueDetail contract."""
+
+    tags: list[StrictStr] | None = Field(
+        default=None,
+        description="Assigned tag names; null means unavailable, while [] means no assigned tags.",
+    )
+
+    @field_validator("tags")
+    @classmethod
+    def validate_tags(cls, value: list[str] | None) -> list[str] | None:
+        if value is not None:
+            if any(not name.strip() for name in value) or len(set(value)) != len(value):
+                raise ValueError("Tags must contain unique nonblank names")
+            return sorted(value)
+        return value

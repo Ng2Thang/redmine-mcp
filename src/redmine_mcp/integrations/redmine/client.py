@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from time import perf_counter
 from typing import Any, NoReturn
@@ -30,6 +31,8 @@ from redmine_mcp.integrations.redmine.retry import (
 )
 
 logger = logging.getLogger(__name__)
+
+QueryParams = Mapping[str, str | int | list[str]]
 
 
 @dataclass
@@ -99,7 +102,7 @@ class RedmineClient:
         self,
         path: str,
         key: str,
-        params: dict[str, str | int],
+        params: QueryParams,
         guidance: str,
         *,
         require_metadata: bool = False,
@@ -187,7 +190,7 @@ class RedmineClient:
         )
 
     async def _get_attempt(
-        self, path: str, params: dict[str, str | int], attempt: _ReadAttempt
+        self, path: str, params: QueryParams, attempt: _ReadAttempt
     ) -> bytearray | None:
         request = self.http.build_request(
             "GET", path, params=params, headers={"X-Redmine-API-Key": self.api_key}
@@ -241,7 +244,7 @@ class RedmineClient:
             raise_for_upstream_status(attempt.status)
         raise RuntimeError("GET attempt ended without content or failure")
 
-    async def get(self, path: str, params: dict[str, str | int]) -> dict[str, Any]:
+    async def get(self, path: str, params: QueryParams) -> dict[str, Any]:
         if (
             not path
             or path.startswith("/")

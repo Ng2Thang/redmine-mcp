@@ -10,6 +10,68 @@ bug tasks and their status here.
 |---|---|---|---|
 | [bug-001-get-issue-upstream-response](bugs/bug-001-get-issue-upstream-response.md) | `get_issue` | blocked | Fix authorized; source inspection cannot identify the cause from the generic error. Obtain the failing sanitized upstream response and exact arguments; testing remains pending. |
 
+## RedmineUP issue tags plan
+
+On 2026-10-08, the user requested task documents for Redmine 7.0.2 with RedmineUP Tags
+2.2.0 Light. The retained outcomes are filtering issues by ANY selected name within one
+exact project or across caller-visible projects, and
+adding/removing individual issue assignments with permission preflight. A new shared tag name
+may be created when assigned. Removing an assignment must retain the shared tag and other
+issues' assignments. Shared deletion/rename/merge, tags on project records, independent unused-tag
+creation, and changes to `create_issue` are outside the selected scope.
+
+The user prohibits all Redmine server changes. The companion approach, supplemental GET and
+configuration were removed. Existing PREP-028 code preserves native detail tags only if returned,
+otherwise null/not_returned, without changing list or writer output. User-supplied
+[TAGS-REST-001..003](../integrations/redmineup-tags.md) now establish native known-name filtering
+(positive and negative controls), while list/detail responses omit full tags. These are user
+observations, not agent tests or complete MCP acceptance. Exact source backs multi-name ANY and
+count/paging, which still need later acceptance. Existing core acceptance is baseline only.
+
+| Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-028-redmineup-tags-api-readiness](tasks/prep-028-redmineup-tags-api-readiness.md) | Record filter readiness and preserve truthful issue-detail tags | Existing reader; user REST evidence recorded | blocked | Implementation finished; testing pending (PREP-028-001..006). Detail fallback and public model export implemented; scoped Ruff and mypy pass. Full tags absent; filter evidence is usable independently |
+| 2 | [tool-036-filter-issues-by-tags](tasks/tool-036-filter-issues-by-tags.md) | Find issues matching ANY supplied known tag alongside existing filters | Existing list reader/budgets; PREP-028 evidence satisfied, no dependency on its mapper acceptance | blocked | 1,584 offline regressions, 82 focused + 2 cleanup cases and 3 selected port-3000 live tests pass; Inspector discovery/two calls pass. Observed target is 6.0.5; 7.0.2, real two-tag overlap/private fixtures remain pending. See [testing evidence](../testing/evidence/tool-036-tag-filter-testing.md) |
+| 3 | [tool-037-update-issue-tags](tasks/tool-037-update-issue-tags.md) | Later add/remove assignments with creation permission | Existing TOOL-025/PREP-019 writer baseline; effective preflight/concurrency/verification and explicit future write assignment | blocked | Permission identifiers known; effective new-name/preflight, atomicity, side effects and state proof unresolved; GET evidence does not authorize writes |
+
+Each public behavior has one owner. PREP-028 owns the existing truthful detail fallback;
+TOOL-036 owns filtering and TOOL-037 owns future assignment writes. Filtering uses
+PREP-028's already recorded upstream evidence; its
+dependency is that evidence, not completion of PREP-028 mapper acceptance. Writes
+need their own existing REST proof; filtering is not a write-permission or full-state proof.
+Keep implementation review, coding, and separately authorized testing as distinct stages.
+During the original coding stages, no tests, fixtures, dependency changes, startup, Inspector,
+plugin installation, mutations or deployment were performed. Following the documentation review,
+TOOL-036 coding implements
+`tags_any`; a subsequent user correction removed the enable flag and Compose/env passthrough.
+Tag filtering is always available. Future Tags
+tasks may use only already available REST support; no server plugin, library installation or
+server modification is permitted. Complete assignment reads and tag discovery are no longer
+assigned outcomes; their API limitations remain documented. Writes retain their blockers.
+
+The user subsequently authorized TOOL-036 testing and explicitly selected localhost:3000.
+Its existing marked synthetic container runs Redmine 6.0.5; selected live results are recorded
+with that version limit, without server/fixture changes. Existing known-name filtering and
+REST/MCP/Inspector parity pass; full target and role/overlap acceptance remains open.
+
+### Tags task removal and renumbering (2026-10-08)
+
+At the user's explicit request, remove the complete-assignment read and tag catalogue task
+documents and compact the retained tasks into implementation order. The IDs below describe
+the old mapping only; current references use the new IDs and capability filenames.
+
+| Previous task | Current disposition |
+|---|---|
+| TOOL-036: read complete assigned tags | Removed from the assigned roadmap |
+| TOOL-037: list caller-visible tag names | Removed from the assigned roadmap |
+| TOOL-038: filter issues by tags | [TOOL-036: filter issues by tags](tasks/tool-036-filter-issues-by-tags.md) |
+| TOOL-039: update issue tag assignments | [TOOL-037: update issue tag assignments](tasks/tool-037-update-issue-tags.md) |
+
+Task filenames, task/scenario/evidence IDs, dependencies, links and public documentation were
+updated together. Previously cited TOOL-038/039 evidence now uses TOOL-036/037 respectively;
+this renumbering runs no new verification. Retained implementation history and pending criteria
+are preserved. Runtime code, operation IDs and existing acceptance results are unchanged.
+
 ## Redmine read retry plan
 
 On 2026-10-07, the user requested an implementation task for retrying Redmine calls.
@@ -98,7 +160,7 @@ remain deferred outside the current local-development roadmap.
 The original prep-009 final release review remains separate; completing
 this plan does not publish a release or silently close its historical prerequisites.
 
-Active task IDs are `prep-001` through `prep-027` and `tool-001` through `tool-035`.
+Active task IDs are `prep-001` through `prep-028` and `tool-001` through `tool-037`.
 
 ## Issue estimates and general spent-time reporting
 
@@ -130,7 +192,7 @@ inherited roles and scoped permission revocation. Earlier static checks are reco
 This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
 evidence inside a task, not the unit of planning. The task document owns its detailed status;
 update this table in the same change when that status, blocker, or next action changes.
-Active task IDs are `tool-001` through `tool-035` and `prep-001` through `prep-027`.
+Active task IDs are `tool-001` through `tool-037` and `prep-001` through `prep-028`.
 The retained stabilization follow-up consists of prep-019 through prep-021. The five
 tool-quality plans are prep-022 through prep-026, added and renumbered at the user's request
 on 2026-10-07.

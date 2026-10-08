@@ -378,7 +378,7 @@ data. The external Redmine data can change.
 | `list_project_issue_categories` | `GET /api/v1/projects/{project_id}/issue-categories` | Required positive integer `project_id` |
 | `list_project_files` | `GET /api/v1/projects/{project_id}/files` | Required positive integer `project_id` |
 | `list_project_members` | `GET /api/v1/projects/memberships` | Unique positive `project_ids` array (1–10), `limit=25`, `offset=0`; independent project pages |
-| `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include` |
+| `list_issues` | `GET /api/v1/issues` | `project_id`, `category_id`, `fixed_version_id`, `include_subprojects`, `status_id`, `assigned_to_id`, `tracker_id`, `parent_id`, `updated_since`, `sort`, `limit`, `offset`, `include`, `tags_any` |
 | `get_issue` | `GET /api/v1/issues/{issue_id}` | Required positive integer `issue_id`; optional comma-separated `include` |
 | `get_attachment` | `GET /api/v1/attachments/{attachment_id}` | Required positive integer `attachment_id` |
 | `list_issue_time_entries` | `GET /api/v1/issues/{issue_id}/time-entries` | Required positive integer `issue_id`; optional `limit`, `offset` |
@@ -681,6 +681,33 @@ The issue must be visible and Redmine must allow this user to view time entries.
 issue schedule does not restrict the entry dates returned by this tool.
 
 Illustrative input: `{"issue_id":181,"limit":25,"offset":0}`.
+
+`get_issue` also returns nullable `tags`: assigned tag names when available, `[]` when known
+empty, and null when unavailable. Names are preserved only if the existing Redmine issue REST
+response supplies a `tags` string array. An absent field is marked `/tags` `not_returned`.
+No additional endpoint, server installation or configuration flag is required. The inspected
+core 7.0.2 + Tags 2.2.0 Light API omits this field, so its output remains unavailable unless
+the existing server already exposes tags. See [REST-only tags](integrations/redmineup-tags.md).
+List rows and writer observations do not include tags. User positive/negative controls establish
+that the existing Redmine REST API accepts structured `issue_tags` filters, despite omitting
+tags in its output. **Filtering by tag name works even though the response does not contain
+the list of assigned tags.** Native filter matches must not be represented as complete arrays.
+
+`list_issues.tags_any` accepts an optional array of 1..20 unique names, each 1..255 characters.
+For example, MCP input `{"project_id":2,"tags_any":["notification","urgent"]}` matches ANY
+selected name, AND-combined with other filters; default status remains open. REST repeats
+`tags_any=notification&tags_any=urgent`. Names preserve case, commas and pipes; explicit null,
+empty arrays, blank/duplicate names, edge whitespace, control characters, `%`, `_` and backslash
+are rejected. Wildcard/escape characters are excluded because native matching uses SQL LIKE.
+Case behavior follows the native database. Unknown valid names yield an empty match set.
+
+Tag filtering is always available in MCP; no environment switch is required. It uses the
+existing server's native `issue_tags` REST support established by the supplied responses.
+No automatic capability probe or Redmine installation/server modification is performed.
+Native pagination, count, visibility and ordering remain in use. Implementation is finished;
+TOOL-036 focused offline and selected live/Inspector checks pass; complete 7.0.2 and real
+overlap/private-role acceptance remains pending. The user-selected live target on port 3000
+runs 6.0.5; see [testing evidence](testing/evidence/tool-036-tag-filter-testing.md).
 
 Use `get_issue` for visible journals and attachment metadata by default. Its `include` accepts
 `children`, `attachments`, `relations`, `changesets`, `journals`, `watchers`, and

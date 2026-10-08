@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from redmine_mcp.common import Page
-from redmine_mcp.features.issues import ISSUE_INCLUDES, Issue, IssueDetail
+from redmine_mcp.features.issues import ISSUE_INCLUDES, Issue, IssueDetailWithTags
 from redmine_mcp.features.issues.models import ISSUE_LIST_INCLUDES
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import page, visible_item
@@ -30,8 +30,9 @@ class RedmineIssues:
         fixed_version_id: int | None,
         include_subprojects: bool,
         include: tuple[str, ...] | None,
+        tags_any: list[str] | None = None,
     ) -> Page[Issue]:
-        params: dict[str, str | int] = {
+        params: dict[str, str | int | list[str]] = {
             "limit": limit,
             "offset": offset,
             "status_id": status_id,
@@ -56,6 +57,37 @@ class RedmineIssues:
             params["updated_on"] = f">={utc_timestamp}"
         if include is not None:
             params["include"] = ",".join(include)
+        if tags_any is not None:
+            # fields[] selects Redmine's structured branch and replaces short filters.
+            fields: list[str] = []
+            structured: dict[str, str | int | list[str]] = {"set_filter": 1, "fields[]": fields}
+
+            def add_filter(field: str, operator: str, values: list[str]) -> None:
+                fields.append(field)
+                structured[f"operators[{field}]"] = operator
+                structured[f"values[{field}][]"] = values
+
+            add_filter("issue_tags", "=", list(tags_any))
+            status_operator = {"open": "o", "closed": "c", "*": "*"}.get(status_id)
+            add_filter("status_id", status_operator or "=", ["" if status_operator else status_id])
+            for field in (
+                "assigned_to_id",
+                "tracker_id",
+                "parent_id",
+                "category_id",
+                "fixed_version_id",
+            ):
+                value = params.pop(field, None)
+                if value is not None:
+                    add_filter(field, "=", [str(value)])
+            params.pop("status_id")
+            if updated_since is not None:
+                params.pop("updated_on")
+                add_filter("updated_on", ">=", [utc_timestamp])
+            if not include_subprojects:
+                params.pop("subproject_id")
+                add_filter("subproject_id", "!*", [""])
+            params.update(structured)
         data = await self.client.get_page(
             "issues.json",
             "issues",
@@ -77,14 +109,17 @@ class RedmineIssues:
         result.pagination_policy = self.client.pagination.describe(result.total, limit)
         return result
 
-    async def get_issue(self, issue_id: int, include: tuple[str, ...] | None = None) -> IssueDetail:
+    async def get_issue(
+        self, issue_id: int, include: tuple[str, ...] | None = None
+    ) -> IssueDetailWithTags:
         selected = ("journals", "attachments") if include is None else include
         params: dict[str, str | int] = {"include": ",".join(selected)} if selected else {}
         data = await self.client.get(f"issues/{issue_id}.json", params)
+        raw_issue = resource_object(data.get("issue"), issue_id)
         return visible_item(
-            IssueDetail,
-            resource_object(data.get("issue"), issue_id),
-            observed_fields=(*ISSUE_HOUR_FIELDS, *ISSUE_ESTIMATE_FIELDS),
+            IssueDetailWithTags,
+            raw_issue,
+            observed_fields=(*ISSUE_HOUR_FIELDS, *ISSUE_ESTIMATE_FIELDS, "tags"),
             requested_fields=selected,
             unrequested_fields=sorted(ISSUE_INCLUDES.difference(selected)),
         )

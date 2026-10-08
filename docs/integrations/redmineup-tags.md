@@ -78,6 +78,11 @@ is pending.
 
 ## Availability limitation
 
+Issue assignment writes and creation of tag names were removed from the roadmap at the user's
+request on 2026-10-08. Tags 2.2.0 source defines `edit_tags` and `create_tags`, but the inspected
+REST contract does not establish effective permission preflight or concurrent assignment
+preservation. No MCP tag writer is implemented. Known-name filtering remains supported.
+
 The inspected Redmine 7.0.2 serializer and Tags 2.2.0 Light package do not expose tags in native
 issue detail JSON. Therefore this mapper alone cannot supply tags on that native API. It can
 preserve them if an existing response supplies a compatible field. The user-supplied detail

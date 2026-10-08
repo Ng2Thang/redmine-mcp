@@ -9,7 +9,7 @@
 | Type / access / destructive effects | Extend detail read output / read-only / none |
 | Status | blocked |
 | Dependencies | Existing caller-key REST issue reader; user-supplied evidence now recorded |
-| Related tasks | [filter issues](tool-036-filter-issues-by-tags.md), [update assignments](tool-037-update-issue-tags.md), [dashboard](../index.md) |
+| Related tasks | [filter issues](tool-036-filter-issues-by-tags.md), [dashboard](../index.md) |
 | Target | User's existing Redmine 7.0.2 with Tags 2.2.0 Light; server changes prohibited |
 | Last updated | 2026-10-08, Codex |
 | Progress summary | REST-only implementation finished; mapper testing pending; full tags unavailable in demonstrated API |
@@ -167,7 +167,7 @@ rerun or changed.
 | TAGS-REV-002 | major | Tag filtering depended on blocked full-name read/discovery output | Remove those dependencies; PREP-028 evidence is satisfied independently of mapper acceptance; resolved |
 | TAGS-REV-003 | blocking | Structured tag query could silently drop existing short filters | Require complete structured translation in TOOL-036, repeated-value transport and unchanged top-level project/paging; resolved in specification |
 | TAGS-REV-004 | blocking | Full tags and visible-name enumeration were treated as pending source access | Record actual missing fields and absence of a proven enumeration route; those outcomes were subsequently removed from the assigned roadmap |
-| TAGS-REV-005 | blocking | Read controls could be mistaken for write permission/atomicity proof | Record known `edit_tags`/`create_tags` source facts but retain independent write/authorization/verification blockers in TOOL-037 |
+| TAGS-REV-005 | historical; write scope removed | Read controls could be mistaken for write permission/atomicity proof | Source defines `edit_tags`/`create_tags`, but reads do not prove effective write authorization; the user subsequently removed the assignment-write task |
 | TAGS-REV-006 | minor | Plans still requested already supplied REST responses | Link redacted user evidence and update next actions; resolved |
 
 Current implementation review: detail reader consumes only the existing native JSON, observes
@@ -187,8 +187,8 @@ existing strict detail-only tag model, native request and visibility mapping. Ex
 `IssueDetailWithTags` from the issues feature package and used that public export in the
 gateway, consistent with its existing feature imports. No new upstream request, input,
 configuration, dependency, server artifact or MCP operation was introduced. Existing list
-rows and writer receipt models retain their contracts. Filtering and assignment writes remain
-separate tasks; full-assignment reads and discovery were subsequently removed from the roadmap.
+rows and writer receipt models retain their contracts. Filtering remains a separate task;
+full-assignment reads, discovery and assignment writes were subsequently removed from the roadmap.
 
 Working-tree baseline included the six staged planning documents, their unstaged revisions,
 existing PREP-028 runtime edits and related documentation. Those changes were preserved;

@@ -34,12 +34,16 @@ that a release has been published.
   supplemental GET, configuration flag and installation instructions. The inspected native
   API and user-supplied list/detail responses omit tags. User positive/negative controls confirm
   native REST known-name filtering; TOOL-036 implementation is recorded below. Full-tag
-  reads and enumeration remain unavailable and their task plans were removed; effective write
-  preflight and MCP acceptance remain pending.
+  reads and enumeration remain unavailable and their task plans were removed. Tag assignment
+  writes were subsequently removed from scope; remaining reader acceptance is recorded below.
 
 - Remove the complete-tag read and catalogue task plans at the user's request. Renumber tag
   filtering to TOOL-036 and assignment updates to TOOL-037, updating task/scenario/evidence IDs
   and documentation together. Runtime operations and implementation remain unchanged.
+
+- Remove TOOL-037 issue-tag assignment writes at the user's request and update the roadmap,
+  related task links and supported scope. Preserve TOOL-036 filtering and historical renumbering;
+  retire TOOL-037 without reuse. No tag writer had been implemented; runtime and tests are unchanged.
 
 - Extend `list_issues` with bounded `tags_any` arrays, native ANY matching and complete structured
   filter translation preserving existing filters, count and pagination. Tag filtering is always

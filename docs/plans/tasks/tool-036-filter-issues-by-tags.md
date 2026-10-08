@@ -272,5 +272,5 @@ Final status: **blocked** for complete target runtime acceptance. Implementation
 offline testing are finished; selected live/Inspector checks pass on the user-selected Redmine
 6.0.5 target. Provide an existing supported 7.0.2 environment and known two-real-tag overlap/
 private-role fixtures for the remaining TOOL-036-005 cases. Full-assignment reads
-and catalogue discovery are no longer assigned tasks. Assignment writes remain blocked under
-TOOL-037 and were not implemented by this assignment.
+and catalogue discovery are no longer assigned tasks. The user also removed the assignment-write
+task on 2026-10-08; no tag writer was implemented. This does not affect tag filtering.

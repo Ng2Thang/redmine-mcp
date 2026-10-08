@@ -692,6 +692,8 @@ List rows and writer observations do not include tags. User positive/negative co
 that the existing Redmine REST API accepts structured `issue_tags` filters, despite omitting
 tags in its output. **Filtering by tag name works even though the response does not contain
 the list of assigned tags.** Native filter matches must not be represented as complete arrays.
+Adding/removing tag assignments and creating tag names are not supported by MCP; the user
+removed that planned writer capability. Existing non-tag writes retain their contracts.
 
 `list_issues.tags_any` accepts an optional array of 1..20 unique names, each 1..255 characters.
 For example, MCP input `{"project_id":2,"tags_any":["notification","urgent"]}` matches ANY

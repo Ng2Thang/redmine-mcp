@@ -53,7 +53,7 @@ for this workflow or mix real-server configuration into it. Keep `.env` and `.lo
 | Service | Address |
 |---|---|
 | Redmine | `http://localhost:3000` |
-| Swagger | `http://localhost:8000/docs` |
+| Swagger (Schemas section hidden) | `http://localhost:8000/docs` |
 | MCP Streamable HTTP | `http://localhost:8000/mcp` |
 | Liveness | `http://localhost:8000/health` |
 

@@ -36,7 +36,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = Settings() if settings is None else settings
     configure_logging(settings.log_level)
 
-    app = FastAPI(title="Redmine MCP", version="0.1.0")
+    app = FastAPI(
+        title="Redmine MCP",
+        version="0.1.0",
+        swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+    )
     app.state.settings = settings
     app.state.upstream = None
     app.add_middleware(ReadLimitsMiddleware, policy=read_budget_policy(settings))

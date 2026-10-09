@@ -8,10 +8,12 @@ review uses manual source/prose/example/link inspection without executing the ex
 Reader smoke checks do not authorize mutations, fixture creation or permission changes.
 
 The [2026-10-07 acceptance ledger](testing/evidence/current-catalog-acceptance.md) supersedes older pending
-summaries for the current functional catalog: 1,086 offline and 21 owned Redmine 7.0.2 live cases
+summaries for its dated 17-read/15-write catalog: 1,086 offline and 21 owned Redmine 7.0.2 live cases
 passed. It includes version and membership acceptance, `allowed_all`, and Inspector discovery
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
+Later preparation and time-entry acceptance, waivers and remaining gaps are recorded in the
+[current roadmap summary](plans/index.md#current-status-2026-10-09) and the sections below.
 
 ## Project time-entry activities (testing waived)
 

@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
+from typing import Literal
 from http import HTTPMethod
 from time import perf_counter
 from typing import Any

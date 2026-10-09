@@ -7,7 +7,8 @@ to the [security policy](SECURITY.md).
 ## Development rules
 
 - Preserve router -> service -> port -> gateway dependencies. Services must not import FastAPI
-  or HTTPX; MCP must never access PostgreSQL directly.
+  APIs or HTTPX. Only `from fastapi import status as http_status` is allowed for HTTP status
+  constants; MCP must never access PostgreSQL directly.
 - Use explicit type hints, four-space Python indentation, and a 100-character line limit.
   Keep Ruff and strict mypy configuration centralized in `pyproject.toml`.
 - Use async, lifespan-managed HTTP clients. Keep credentials and network access out of imports.
@@ -39,8 +40,10 @@ automated baseline, now organized into unit, offline integration and opt-in live
 Execute tests only within an explicitly authorized testing assignment. Coding-only work excludes
 test dependencies, fixtures and execution; follow the [testing roadmap](docs/testing-roadmap.md)
 and [coverage matrix](docs/plans/testing-coverage.md). The
-[2026-10-07 ledger](docs/testing/evidence/current-catalog-acceptance.md) records passing current functional
-acceptance for 17 reads and 15 writes, including 1,086 offline and 21 owned live cases.
+[2026-10-07 ledger](docs/testing/evidence/current-catalog-acceptance.md) records functional
+acceptance for its dated 17-read/15-write catalog, including 1,086 offline and 21 owned live cases.
+The registered catalog now contains 18 reads and 18 writes. Later preparation and time-entry
+evidence, waivers and pending acceptance are summarized in the [roadmap](docs/plans/index.md).
 Broader historical variants and operational/recovery acceptance remain separate follow-ups.
 
 Use concise imperative commit subjects, such as `Add issue status filtering`. Review descriptions

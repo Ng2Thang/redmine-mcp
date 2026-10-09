@@ -23,7 +23,11 @@ This is a development implementation for pilot evaluation, with no production re
 On 2026-10-07, PREP-020 recorded **1,086 offline tests and 21 owned live tests passing**,
 including authentication, writer gates, and selected native state checks. The
 [acceptance ledger](docs/testing/evidence/current-catalog-acceptance.md) records the exact revision, scenarios,
-and broader historical gaps. Full restore validation, operational readiness, and testing CI
+and broader historical gaps for its earlier 17-read/15-write catalog. Later runtime hardening
+has separate [PREP-022–026 evidence](docs/testing/evidence/prep-022-026-testing.md); the time-entry
+update/deletion evidence is linked above. These dated records do not verify new working-tree edits.
+See the [current roadmap summary](docs/plans/index.md#current-status-2026-10-09) for remaining
+acceptance gaps and waivers. Full restore validation, operational readiness, and testing CI
 remain outstanding; these results do not certify a production deployment.
 
 The project targets **Redmine 7.0.2**. The synthetic Compose deployment pins its official
@@ -125,3 +129,5 @@ dependency updates, and adding tools. Stop Docker MCP before running locally on 
   [testing roadmap](docs/testing-roadmap.md).
 - [Contributing](CONTRIBUTING.md), [security policy](SECURITY.md),
   [code of conduct](CODE_OF_CONDUCT.md), and [changelog](CHANGELOG.md).
+- [Documentation audit and release checklist](docs/reviews/documentation-state-audit-2026-10-09.md):
+  source comparison, Markdown corrections and remaining release decisions.

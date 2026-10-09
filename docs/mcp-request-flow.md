@@ -18,7 +18,9 @@ schemas from the REST contract, adds annotations, seeds the deployment schema ca
 personal-writer discovery and budget wrappers, then mounts Streamable HTTP at `/mcp` and checks
 transport shapes. Descriptions and parameter schemas come from the feature routers.
 Only allowlisted operations are published as tools. Identified vendor-private integration is
-owned by `mcp/compatibility.py`; this refactor's runtime acceptance remains pending in PREP-026.
+owned by `mcp/compatibility.py`; PREP-026 functional acceptance is recorded in the
+[preparation regression evidence](testing/evidence/prep-022-026-testing.md), including owned
+lifecycle, schema and Inspector checks.
 
 `RuntimeLifecycle.lifespan()` then creates the shared Redmine HTTP client and registers cleanup
 for both clients and the MCP transport. It starts the MCP manager and waits until the SDK's
@@ -31,7 +33,11 @@ manager readiness.
 The MCP client connects to `/mcp` with `X-Redmine-API-Key`. MCP initialization negotiates
 protocol capabilities; `tools/list` returns the generated tool definitions, including
 names, descriptions, input schemas, and annotations. The client can use this information
-to choose a tool. Discovery does not call a feature service to fetch project or issue data.
+to choose a tool. Reader and pinned-key writer discovery return the deployment catalog without
+project inventory reads; endpoint authentication still contacts Redmine. Personal-key writer
+discovery can inventory caller-visible projects and read memberships/role permissions to select
+write candidates. Evidence is request-local and bounded. Conditional or unknown candidates
+remain subject to target authorization on invocation; discovery does not grant permission.
 
 The HTTP endpoint is protected by `require_mcp_access`, including initialization and
 discovery requests. Each incoming HTTP request runs the endpoint's authentication
@@ -123,9 +129,11 @@ sequenceDiagram
 | REST serialization | FastAPI response model | Validate and serialize the returned model according to the route's response contract. |
 | MCP serialization | Installed FastAPI-MCP | Convert successful REST JSON to JSON text inside MCP `content`. |
 
-For a normal successful `get_issue` call, the current implementation makes **three Redmine
-requests**: identity verification for `/mcp`, identity verification for the internal REST
-request, and the issue lookup. There is no identity cache shared between those two requests.
+For a successful `get_issue` call with each GET succeeding on its first attempt, the current
+implementation makes **three Redmine requests**: identity verification for `/mcp`, identity
+verification for the internal REST request, and the issue lookup. Eligible transient failures
+can add physical GET attempts under the configured retry and budget limits. There is no
+identity cache shared between those two requests.
 Objects holding a user's key are request-scoped; the credential-free connection pool is
 shared. MCP does not access PostgreSQL directly.
 
@@ -221,7 +229,11 @@ It replaces the outgoing `X-Request-ID` header. The installed adapter does not c
 internal REST response headers into the MCP result content.
 
 The upstream request strips cookie and authorization headers, sends the request's API key,
-does not follow redirects, and always closes streamed responses. There is no retry loop.
+does not follow redirects, and always closes streamed responses. `RedmineClient.get` owns
+bounded retries for eligible transient GET failures, with shared deadlines and physical
+request/byte accounting. Responses close before retry waits. Internal MCP-to-REST dispatch,
+whole tools and mutations are not retried; each mutation has one upstream attempt. See
+[configuration](configuration.md) and [PREP-027 evidence](testing/evidence/prep-027-testing.md).
 Application-owned logging avoids keys and raw upstream error bodies. Third-party adapter
 logging can include its generated tool exception and the internal REST error body.
 

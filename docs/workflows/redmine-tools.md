@@ -64,8 +64,9 @@ limits the assignment accordingly.
 
 ## Runtime architecture and access
 
-Keep router → service → Protocol port → Redmine gateway. Services import neither FastAPI nor
-HTTPX. Register REST routes before MCP creation and add each stable `operation_id` explicitly to
+Keep router → service → Protocol port → Redmine gateway. Services do not import FastAPI APIs or
+HTTPX; the narrow exception is `from fastapi import status as http_status` for HTTP status
+constants. Register REST routes before MCP creation and add each stable `operation_id` explicitly to
 the MCP allowlist. MCP reuses REST routes; it never queries PostgreSQL. Use typed models,
 validated inputs, async HTTP, lifespan-managed clients, sanitized errors, and per-user Redmine
 key authentication. Keep existing names/defaults compatible unless a task explicitly changes them.

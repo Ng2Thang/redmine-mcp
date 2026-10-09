@@ -44,8 +44,9 @@ requests in worker threads to achieve concurrency.
 ## Quality checks
 
 `scripts/check.sh` can be invoked by its path from any working directory. It checks the whole
-repository with Ruff and runtime code with mypy, runs all three checks even when one fails,
-and exits nonzero if any fails. It does not rewrite source or require Docker or credentials.
+repository with Ruff, runtime code with mypy, and import boundaries with the architecture checker.
+It runs all four checks even when one fails and exits nonzero if any fails. It does not rewrite
+source or require Docker or credentials.
 Frozen uv commands may install missing locked dependencies into the local environment.
 
 Equivalent individual commands:
@@ -54,6 +55,7 @@ Equivalent individual commands:
 uv run --frozen ruff check .
 uv run --frozen ruff format --check .
 uv run --frozen mypy src
+uv run --frozen python scripts/check_architecture.py
 ```
 
 Ruff is the primary linter and formatter; its rules and strict mypy settings live in
@@ -78,7 +80,8 @@ uv run --frozen pre-commit install
 uv run --frozen pre-commit run --all-files
 ```
 
-Hooks run the same three commands for Python or tooling-configuration changes. Each command runs
+Hooks run Ruff lint, Ruff format check and mypy for Python or tooling-configuration changes.
+The architecture check is run by `scripts/check.sh` and is not an installed hook. Each hook runs
 once over its full scope and receives no staged filenames. Hooks check formatting without fixing
 it and require `uv` on PATH. They are an optional local convenience, not mandatory CI enforcement.
 Pre-commit checks staged content by temporarily stashing unstaged tracked changes.
@@ -150,8 +153,9 @@ from redmine_mcp.mcp import register_mcp
 ```
 
 1. Define the feature's typed request/response models and Protocol port under `features/`.
-2. Implement business behavior in a service depending on the port. Keep FastAPI and HTTPX out
-   of services; preserve the router -> service -> port -> gateway flow.
+2. Implement business behavior in a service depending on the port. Keep FastAPI APIs and HTTPX
+   out of services, except the HTTP status constants namespace described below; preserve the
+   router -> service -> port -> gateway flow.
 3. Implement Redmine access in `integrations/redmine/` using the shared credential-free async client and sanitized
    error mapping. MCP must never access PostgreSQL directly.
 4. Wire concrete dependencies in `bootstrap.py` and expose service dependencies to the router.
@@ -182,7 +186,7 @@ Services should remain small and feature-focused. Start a new tool from the clie
 the [tool dashboard](plans/index.md), using Redmine REST only as implementation evidence. Avoid
 introducing a generic CRUD or connector framework. Administrative seed/restore functionality stays
 separate from runtime tools. The reader remains read-only; the separate opt-in writer implements
-15 mutations. New writes require the [tool workflow](workflows/redmine-tools.md) prerequisites,
+18 mutations. New writes require the [tool workflow](workflows/redmine-tools.md) prerequisites,
 typed inputs, configured operation gates and native permission checks. Register the operation
 in `auth/policy.py` and use `require_write_access` on its versioned POST/PUT/PATCH/DELETE route.
 Document exact effects, single-attempt uncertainty, independent read-back and owned cleanup.

@@ -64,7 +64,9 @@ Discovery returns caller-selected copies without replacing the invocation schema
 Manager readiness is published only after `run()` enters; startup failure/cancellation settles
 the future and cancels/awaits the owned task. Shutdown consumes owned task failures without
 logging their contents, clears readiness and propagates external cancellation. Client cleanup
-remains owned by the existing lifespan exit stack. PREP-026 runtime acceptance is pending.
+remains owned by the existing lifespan exit stack. PREP-026 functional acceptance is recorded
+in the [preparation regression evidence](testing/evidence/prep-022-026-testing.md), including
+owned lifecycle and Inspector checks; production readiness remains outside that evidence.
 
 Register routes before MCP creation. Feature routes own stable operation IDs, descriptions, and
 schemas; `mcp/catalog.py` explicitly selects which routes become MCP tools. Startup rejects a

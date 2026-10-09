@@ -151,7 +151,7 @@ Use ordinary users with the least native permissions for the intended projects.
 Choose the needed IDs from the [tool reference](tool-reference.md), for example
 `create_project_version` with `manage_versions` or membership writers with `manage_members`.
 An empty `REDMINE_WRITER_OPERATIONS` permits no mutations. Standalone `allowed_all` expands to
-all 15 registered writes and future registered writes after upgrade; use explicit CSV IDs for
+all 18 registered writes and future registered writes after upgrade; use explicit CSV IDs for
 a fixed ceiling. No configuration choice bypasses native permissions or per-request gates.
 
 Once the configuration and intended write scope have been reviewed, start only the writer

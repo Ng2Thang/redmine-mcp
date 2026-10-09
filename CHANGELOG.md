@@ -5,6 +5,19 @@ that a release has been published.
 
 ## Unreleased
 
+### Documentation state correction (2026-10-09)
+
+- Align contributor instructions and development/operations guides with the registered
+  18-read/18-write catalog, personal API-key writer modes, the HTTP status constants exception,
+  and the four checks in `scripts/check.sh`. Optional pre-commit hooks still run three checks.
+- Correct GET retry and caller-specific discovery descriptions. Replace obsolete PREP-022–026
+  pending summaries with links to their recorded functional acceptance and retained limitations.
+- Document that base Compose does not forward `REDMINE_MAX_REQUEST_BODY_BYTES`. Add a current
+  roadmap summary and distinguish dated baseline evidence from later time-entry acceptance.
+- Record the [audit and correction scope](docs/reviews/documentation-state-audit-2026-10-09.md).
+  Markdown changes only; no tests, static checks, builds, startup, Inspector, live calls or
+  deployment were performed. Waivers, pending acceptance and Unreleased status remain explicit.
+
 ### Acceptance and documentation (2026-10-07)
 
 - PREP-022 through PREP-026 regression acceptance: 1395 offline tests, 23 owned

@@ -1,5 +1,29 @@
 # MCP tool roadmap
 
+## Current status (2026-10-09)
+
+The registered catalog contains **18 reads and 18 writes**. The default reader exposes only
+reads; the separate opt-in writer enables configured writes with caller and native permission
+checks. Registration is an implementation fact, not acceptance of every scenario.
+
+| Area | Current state | Evidence / next action |
+|---|---|---|
+| PREP-020 baseline | Functional acceptance recorded for the earlier 17-read/15-write catalog | [Dated ledger](../testing/evidence/current-catalog-acceptance.md); retain its exact revision and historical gaps |
+| PREP-022–026 | Accepted for the defined functional scope | [Preparation regression evidence](../testing/evidence/prep-022-026-testing.md); 1,395 offline and 23 owned live cases recorded |
+| PREP-027 GET retries | Implemented and accepted within recorded scope | [Retry evidence](../testing/evidence/prep-027-testing.md); preserve full-run versus targeted-rerun limits |
+| TOOL-040 activity discovery | Implemented; testing waived | User waiver recorded in [task](tasks/tool-040-list-project-time-entry-activities.md); runtime acceptance remains unverified |
+| TOOL-041 creation | Implemented; defined acceptance pending | [Task](tasks/tool-041-create-time-entry.md); separately authorize remaining testing |
+| TOOL-042 / TOOL-043 | Implemented with separate offline/native acceptance | [Update evidence](../testing/evidence/tool-042-testing.md), [deletion evidence](../testing/evidence/tool-043-testing.md); the later deletion record includes 1,889 clean full offline passes |
+| PREP-028 / TOOL-036 tags | Implemented; acceptance gaps remain | Detail-mapping acceptance and 7.0.2 overlap/private-role filtering remain open; selected filtering live evidence used 6.0.5 |
+| BUG-001 | Investigation blocked on sanitized failing data and exact arguments | [Bug task](bugs/bug-001-get-issue-upstream-response.md); no resolution is claimed |
+| Release | Unreleased pilot implementation; final release review remains open | [PREP-009](tasks/prep-009-release-acceptance.md), [documentation audit and corrections](../reviews/documentation-state-audit-2026-10-09.md); packaging, CI, operational and recovery work remain separate |
+
+The sections below retain task histories in planning, coding and verification order. Earlier
+catalog counts, planned/blocked statements and no-tests records describe their stated stages;
+later entries record subsequent work. Dated evidence does not verify new working-tree edits.
+The 2026-10-09 documentation correction performed no tests, startup, Inspector or live calls
+and does not close acceptance gaps or publish a release.
+
 ## Issue spent-time update and deletion plan
 
 On 2026-10-08, the user reported that spent-time entries #919–#924 remain on issues #491–#496

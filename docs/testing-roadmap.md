@@ -41,10 +41,13 @@ operation and common runtime scenario to its task and selected evidence.
 
 On 2026-10-07, [PREP-020](plans/tasks/prep-020-current-catalog-acceptance.md) reconciled the
 32-operation functional catalog: **1,086 offline and 21 owned Redmine 7.0.2 live tests passed**.
-The [current ledger](testing/evidence/current-catalog-acceptance.md) records the source revision and exact
+The [PREP-020 ledger](testing/evidence/current-catalog-acceptance.md) records the source revision and exact
 evidence, including versions, memberships, `allowed_all`, shared write uncertainty and Inspector
 catalog/read compatibility. Broader historical variants remain in H1..H6; counts do not close
 them automatically. No tests or runtime checks were rerun for the PREP-021 documentation update.
+The registered catalog now contains 18 reads and 18 writes; consult the
+[current roadmap summary](plans/index.md#current-status-2026-10-09) for later evidence and
+the still-pending or waived acceptance stages. Test counts do not automatically close those gaps.
 
 ## Three-phase implementation
 

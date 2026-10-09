@@ -9,7 +9,7 @@ Use [configuration](configuration.md#separate-writer-deployment) for authenticat
 lists and `allowed_all`. Authoritative input/output schemas remain in the feature routes/models
 and generated OpenAPI/MCP definitions; this reference explains their intended use.
 
-Current functional acceptance is recorded in the
+Functional acceptance for the earlier 17-read/15-write catalog is recorded in the
 [2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md): 1,086 offline and 21 owned Redmine
 7.0.2 live cases passed. Its source revision, exact scenarios and H1..H6 limitations define
 the evidence boundary. Other versions, all historical variants and production readiness are
@@ -36,8 +36,10 @@ retain their route-defined alternatives, defaults and bounds.
 
 REST model validators still enforce rules that OpenAPI cannot fully express. For example,
 a supplied null issue subject remains invalid. Existing unknown-property policies and
-response field handling are unchanged. PREP-022 runtime acceptance is pending; the dated
-baseline ledger above predates this adapter correction.
+response field handling are unchanged. PREP-022 functional acceptance is recorded in the
+[preparation regression evidence](testing/evidence/prep-022-026-testing.md), including nullable
+and union inputs through the SDK and owned Inspector/native checks. The earlier baseline
+ledger predates this adapter correction.
 
 ## Declared response field validation
 
@@ -57,7 +59,9 @@ observations leave the original accepted/uncertain receipt intact with verificat
 and a safe error where the existing result supports one. Unusable creation identities retain
 existing uncertain-outcome handling; never infer an ID or automatically retry.
 No operation, input, field, upstream call or unknown-response-field policy is added.
-PREP-025 runtime acceptance is pending; the dated catalog ledger predates this hardening.
+PREP-025 functional acceptance is recorded in the
+[preparation regression evidence](testing/evidence/prep-022-026-testing.md), including malformed
+preflight and accepted-write read-back cases. The earlier catalog ledger predates this hardening.
 
 ## Project membership management
 
@@ -129,7 +133,9 @@ preflight error prevents every mutation. Budget exhaustion also fails preflight.
 batch scope defaults to 300 physical requests (including mutations), 30 MiB of GET response
 bytes and a 300-second cooperative deadline. Reader budgets remain independent. These defaults
 target small one-to-ten-item batches; large inventories, latency or custom caps can still
-require fewer items. PREP-023 verification of the defined ten-item manager fixture is pending.
+require fewer items. PREP-023 acceptance of the defined ten-item manager fixture is recorded
+in the [preparation regression evidence](testing/evidence/prep-022-026-testing.md), including
+SDK add/update/delete, native role-state comparison and owned cleanup.
 Preflight reuses successful project/user proofs only within that phase. Execution obtains
 fresh evidence before each mutation. An in-flight mutation retains its own timeout and may
 finish after the batch deadline; external cancellation propagates.

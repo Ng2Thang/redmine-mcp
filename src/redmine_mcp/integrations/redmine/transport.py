@@ -1,15 +1,20 @@
 """Shared, credential-free HTTP transport configuration."""
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
+from time import perf_counter
 
-from fastapi import status as http_status
 import httpx
+from fastapi import status as http_status
 from httpx._utils import get_environment_proxies
 
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.common.read_budget import charge_request, check_read_deadline
 from redmine_mcp.config import Settings
+from redmine_mcp.constants import logs as logs_text
+
+logger = logging.getLogger(__name__)
 
 
 class AdmittedStream(httpx.AsyncByteStream):
@@ -58,20 +63,35 @@ class AdmittedTransport(httpx.AsyncBaseTransport):
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         request.extensions["redmine_dispatched"] = False
         charge_request()
+        started = perf_counter()
         try:
             async with asyncio.timeout(self.admission_seconds):
                 await self.semaphore.acquire()
         except TimeoutError:
+            logger.debug(
+                logs_text.UPSTREAM_ADMISSION, "timeout", (perf_counter() - started) * 1000, False
+            )
             raise ApplicationError(
                 "upstream_busy",
                 "Redmine request capacity is busy; retry later",
                 http_status.HTTP_503_SERVICE_UNAVAILABLE,
             ) from None
+        except BaseException:
+            logger.debug(
+                logs_text.UPSTREAM_ADMISSION,
+                "interrupted",
+                (perf_counter() - started) * 1000,
+                False,
+            )
+            raise
         try:
             # Admission waiting may have consumed the remaining operation deadline.
             # Fail before dispatch; the exception path releases the acquired permit.
             check_read_deadline()
             request.extensions["redmine_dispatched"] = True
+            logger.debug(
+                logs_text.UPSTREAM_ADMISSION, "admitted", (perf_counter() - started) * 1000, True
+            )
             response = await self.inner.handle_async_request(request)
             if not isinstance(response.stream, httpx.AsyncByteStream):
                 raise RuntimeError("Unexpected upstream stream")
@@ -79,6 +99,10 @@ class AdmittedTransport(httpx.AsyncBaseTransport):
             return response
         except BaseException:
             self.semaphore.release()
+            if not request.extensions["redmine_dispatched"]:
+                logger.debug(
+                    logs_text.UPSTREAM_ADMISSION, "denied", (perf_counter() - started) * 1000, False
+                )
             raise
 
     async def aclose(self) -> None:

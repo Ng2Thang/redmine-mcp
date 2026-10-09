@@ -16,6 +16,7 @@ checks. Registration is an implementation fact, not acceptance of every scenario
 | TOOL-042 / TOOL-043 | Implemented with separate offline/native acceptance | [Update evidence](../testing/evidence/tool-042-testing.md), [deletion evidence](../testing/evidence/tool-043-testing.md); the later deletion record includes 1,889 clean full offline passes |
 | PREP-028 / TOOL-036 tags | Implemented; acceptance gaps remain | Detail-mapping acceptance and 7.0.2 overlap/private-role filtering remain open; selected filtering live evidence used 6.0.5 |
 | BUG-001 | Investigation blocked on sanitized failing data and exact arguments | [Bug task](bugs/bug-001-get-issue-upstream-response.md); no resolution is claimed |
+| Detailed DEBUG logging | Implemented; runtime verification pending | [Implementation and verification handoff](debug-logging.md); static checks are recorded separately from functional acceptance |
 | Release | Unreleased pilot implementation; final release review remains open | [PREP-009](tasks/prep-009-release-acceptance.md), [documentation audit and corrections](../reviews/documentation-state-audit-2026-10-09.md); packaging, CI, operational and recovery work remain separate |
 
 The sections below retain task histories in planning, coding and verification order. Earlier

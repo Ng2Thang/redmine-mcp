@@ -1,4 +1,5 @@
 import logging
+from http import HTTPMethod
 from time import perf_counter
 from uuid import uuid4
 
@@ -9,7 +10,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from redmine_mcp.api.error_handlers import unexpected_error
 from redmine_mcp.constants import api as api_text
 from redmine_mcp.constants import logs as logs_text
-from redmine_mcp.observability import request_id
+from redmine_mcp.observability import request_id, safe_operation
 
 logger = logging.getLogger("redmine_mcp.requests")
 
@@ -49,6 +50,8 @@ class RequestContextMiddleware:
             await send(message)
 
         try:
+            method = scope.get("method", "")
+            logger.debug(logs_text.REQUEST_STARTED, method if method in HTTPMethod else "unknown")
             await self.app(scope, receive, send_response)
         except Exception as exc:
             response = await unexpected_error(Request(scope), exc)
@@ -58,11 +61,16 @@ class RequestContextMiddleware:
             await response(scope, receive, send_response)
         finally:
             route = scope.get("route")
-            operation = getattr(route, "operation_id", None) or "transport"
-            logger.info(
-                logs_text.REQUEST_COMPLETED,
-                operation,
-                status,
-                (perf_counter() - started) * 1000,
-            )
-            request_id.reset(token)
+            operation = safe_operation(getattr(route, "operation_id", None))
+            if operation == "unknown":
+                operation = "transport"
+            try:
+                logger.debug(logs_text.REQUEST_OPERATION, operation)
+                logger.info(
+                    logs_text.REQUEST_COMPLETED,
+                    operation,
+                    status,
+                    (perf_counter() - started) * 1000,
+                )
+            finally:
+                request_id.reset(token)

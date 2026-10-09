@@ -1,17 +1,24 @@
 """Keep MCP admission, safe error conversion and logical budget policy here."""
 
 import json
+import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Any
 
-from fastapi import status as http_status
 import httpx
+from fastapi import status as http_status
 from fastapi_mcp import FastApiMCP
 from mcp import types
 
 from redmine_mcp.auth import READ_OPERATIONS
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.common.read_budget import ReadBudgetPolicy, current_budget, read_operation
+from redmine_mcp.constants import logs as logs_text
 from redmine_mcp.mcp.compatibility import MCPCompatibility
+from redmine_mcp.observability import CallOutcome, debug_exception, logical_call, safe_operation
+
+logger = logging.getLogger(__name__)
 
 
 class MCPRestClient(httpx.AsyncClient):
@@ -66,14 +73,26 @@ def install_read_limits(
     original_list = compatibility.list_tools_handler()
     operations = frozenset(tool.name for tool in compatibility.snapshot_tools())
 
-    async def call_tool(request: types.CallToolRequest) -> types.ServerResult:
+    @contextmanager
+    def call_context(operation: str) -> Iterator[CallOutcome]:
+        original = compatibility.original_request()
+        correlation = getattr(original.state, "request_id", None) if original is not None else None
+        with logical_call(operation, correlation) as outcome:
+            yield outcome
+
+    async def execute_tool(request: types.CallToolRequest) -> types.ServerResult:
         name = request.params.name
         if name == "download_attachment":
+            logger.debug(logs_text.AUTHORIZATION, "unknown", "denied", "download_disabled")
             return tool_error(
                 "attachment_download_disabled", "Use attachment metadata and its Redmine link"
             )
         if name not in operations:
+            logger.debug(logs_text.AUTHORIZATION, "unknown", "denied", "deployment_catalog")
             return tool_error("permission_denied", "Tool is not available in this deployment")
+        logger.debug(
+            logs_text.AUTHORIZATION, safe_operation(name), "admitted", "deployment_catalog"
+        )
         if name not in READ_OPERATIONS:
             # A session task may have inherited transport authentication's context.
             # Writers must never inherit its expired budget or aggregate deadline.
@@ -86,15 +105,17 @@ def install_read_limits(
             async with read_operation(policy, fresh=True):
                 return await original_call(request)
         except ApplicationError as exc:
+            debug_exception(logger, exc)
             return tool_error(exc.code, exc.message)
 
-    async def list_tools(request: types.ListToolsRequest | None) -> types.ServerResult:
+    async def execute_list(request: types.ListToolsRequest | None) -> types.ServerResult:
         from mcp.shared.exceptions import McpError
 
         try:
             async with read_operation(policy, fresh=True):
                 return await original_list(request)
         except ApplicationError as exc:
+            debug_exception(logger, exc)
             raise McpError(
                 types.ErrorData(
                     code=types.INTERNAL_ERROR,
@@ -102,6 +123,17 @@ def install_read_limits(
                     data={"status": exc.status, "code": exc.code},
                 )
             ) from None
+
+    async def call_tool(request: types.CallToolRequest) -> types.ServerResult:
+        with call_context(safe_operation(request.params.name)) as outcome:
+            result = await execute_tool(request)
+            if isinstance(result.root, types.CallToolResult) and result.root.isError:
+                outcome.value = "tool_error"
+            return result
+
+    async def list_tools(request: types.ListToolsRequest | None) -> types.ServerResult:
+        with call_context("list_tools"):
+            return await execute_list(request)
 
     compatibility.install_call_tool_handler(call_tool)
     compatibility.install_list_tools_handler(list_tools)

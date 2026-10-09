@@ -1,6 +1,7 @@
 """Request-local necessary permission checks with explicit partial-evidence handling."""
 
 import asyncio
+import logging
 
 from fastapi import status as http_status
 
@@ -16,7 +17,10 @@ from redmine_mcp.auth.capability_ports import CapabilityReader
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import auth as auth_text
 from redmine_mcp.constants import codes as codes_text
+from redmine_mcp.constants import logs as logs_text
 from redmine_mcp.constants import redmine as redmine_text
+
+logger = logging.getLogger(__name__)
 
 ISSUE_EDIT_PERMISSIONS = frozenset({"edit_issues", "edit_own_issues"})
 ISSUE_UPDATE_PERMISSIONS = ISSUE_EDIT_PERMISSIONS | {"add_issue_notes"}
@@ -127,7 +131,9 @@ class CapabilityService:
 
     async def project_operation(self, operation: str, project_id: int | None) -> CapabilityState:
         """Necessary permission evidence, shared by discovery and capability reports."""
-        return await self.clause(PermissionClause(project_id, OPERATION_PERMISSIONS[operation]))
+        state = await self.clause(PermissionClause(project_id, OPERATION_PERMISSIONS[operation]))
+        logger.debug(logs_text.CAPABILITY, state)
+        return state
 
     async def evaluate(self, expression: PermissionExpression) -> CapabilityState:
         branches: list[CapabilityState] = []
@@ -141,7 +147,9 @@ class CapabilityService:
             async with asyncio.timeout(self.deadline_seconds):
                 profile = await self.profile()
                 expression = await self.reader.resolve(intent, profile.user_id)
-                if await self.evaluate(expression) == "denied":
+                state = await self.evaluate(expression)
+                logger.debug(logs_text.CAPABILITY, state)
+                if state == "denied":
                     raise ApplicationError(
                         codes_text.PERMISSION_DENIED,
                         auth_text.PERMISSION_DENIED,

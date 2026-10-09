@@ -1,9 +1,14 @@
+import logging
+
 from fastapi import status as http_status
 
 from redmine_mcp.auth.models import Principal
 from redmine_mcp.common import ApplicationError
 from redmine_mcp.constants import auth as auth_text
 from redmine_mcp.constants import codes as codes_text
+from redmine_mcp.constants import logs as logs_text
+
+logger = logging.getLogger(__name__)
 
 READ_OPERATIONS = (
     "get_current_user",
@@ -62,13 +67,20 @@ class AuthorizationPolicy:
         )
 
     def authorize(self, principal: Principal, permission: str) -> None:
+        operation = (
+            permission
+            if permission in self.permissions or permission == "mcp:connect"
+            else "unknown"
+        )
         if (
             type(principal.redmine_user_id) is not int
             or principal.redmine_user_id < 1
             or (permission != "mcp:connect" and permission not in self.permissions)
         ):
+            logger.debug(logs_text.AUTHORIZATION, operation, "denied", "application_policy")
             raise ApplicationError(
                 codes_text.PERMISSION_DENIED,
                 auth_text.PERMISSION_DENIED,
                 http_status.HTTP_403_FORBIDDEN,
             )
+        logger.debug(logs_text.AUTHORIZATION, operation, "admitted", "application_policy")

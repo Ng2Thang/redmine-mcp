@@ -1,6 +1,7 @@
 """An operation-local read budget, never a user quota or persistent query state."""
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
@@ -8,7 +9,11 @@ from dataclasses import dataclass, field
 from time import monotonic
 
 from fastapi import status as http_status
+
 from redmine_mcp.common.errors import ApplicationError
+from redmine_mcp.constants import logs as logs_text
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -36,6 +41,7 @@ class ReadBudget:
 
     def check_deadline(self) -> None:
         if monotonic() >= self.deadline:
+            logger.debug(logs_text.BUDGET_EXHAUSTED, "deadline", self.requests, self.response_bytes)
             raise ApplicationError(
                 "read_operation_timeout",
                 "Read operation timed out; narrow the scope",
@@ -45,6 +51,7 @@ class ReadBudget:
     def check_request_available(self) -> None:
         self.check_deadline()
         if self.requests >= self.policy.max_requests:
+            logger.debug(logs_text.BUDGET_EXHAUSTED, "requests", self.requests, self.response_bytes)
             raise ApplicationError(
                 "scan_budget_exceeded",
                 "Read request budget exhausted; narrow the scope",
@@ -59,6 +66,7 @@ class ReadBudget:
         self.check_deadline()
         self.response_bytes += size
         if self.response_bytes > self.policy.max_bytes:
+            logger.debug(logs_text.BUDGET_EXHAUSTED, "bytes", self.requests, self.response_bytes)
             raise ApplicationError(
                 "scan_budget_exceeded",
                 "Read byte budget exhausted; narrow the scope",
@@ -108,17 +116,32 @@ async def read_operation(policy: ReadBudgetPolicy, *, fresh: bool = False) -> As
     if not fresh and current_budget.get() is not None:
         yield
         return
-    token = current_budget.set(ReadBudget(policy))
+    budget = ReadBudget(policy)
+    token = current_budget.set(budget)
     try:
+        logger.debug(
+            logs_text.BUDGET_STARTED, policy.max_requests, policy.max_bytes, policy.deadline_seconds
+        )
         try:
             async with asyncio.timeout(policy.deadline_seconds):
                 yield
                 check_read_deadline()
         except TimeoutError:
+            logger.debug(
+                logs_text.BUDGET_EXHAUSTED, "deadline", budget.requests, budget.response_bytes
+            )
             raise ApplicationError(
                 "read_operation_timeout",
                 "Read operation timed out; narrow the scope",
                 http_status.HTTP_504_GATEWAY_TIMEOUT,
             ) from None
     finally:
-        current_budget.reset(token)
+        try:
+            logger.debug(
+                logs_text.BUDGET_COMPLETED,
+                budget.requests,
+                budget.response_bytes,
+                (monotonic() - budget.started) * 1000,
+            )
+        finally:
+            current_budget.reset(token)

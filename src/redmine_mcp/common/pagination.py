@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -7,6 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool
 from redmine_mcp.common.errors import ApplicationError
 from redmine_mcp.common.validation import NonnegativeInt, PositiveID
 from redmine_mcp.common.visibility import Visibility
+from redmine_mcp.constants import logs as logs_text
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -30,9 +34,11 @@ class PaginationGuard:
 
     def check_depth(self, limit: int, offset: int, guidance: str) -> None:
         if offset + limit > self.max_pages * limit:
+            logger.debug(logs_text.PAGINATION, limit, offset, self.max_pages, "depth_exceeded")
             raise ApplicationError(
                 "scope_required", guidance, http_status.HTTP_422_UNPROCESSABLE_CONTENT
             )
+        logger.debug(logs_text.PAGINATION, limit, offset, self.max_pages, "within_depth")
 
     def describe(self, total: int, limit: int) -> PaginationPolicy:
         pages = (total + limit - 1) // limit
@@ -44,9 +50,11 @@ class PaginationGuard:
 
     def require_scope(self, total: int, limit: int, guidance: str) -> None:
         if self.describe(total, limit).requires_narrowing:
+            logger.debug(logs_text.PAGINATION, limit, "-", self.max_pages, "scope_required")
             raise ApplicationError(
                 "scope_required", guidance, http_status.HTTP_422_UNPROCESSABLE_CONTENT
             )
+        logger.debug(logs_text.PAGINATION, limit, "-", self.max_pages, "within_scope")
 
 
 class Page[T](BaseModel):

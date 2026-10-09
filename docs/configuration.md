@@ -36,12 +36,13 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 | `REDMINE_MEMBERSHIP_BATCH_MAX_READ_BYTES` | `31457280` | Positive aggregate GET response byte ceiling (30 MiB) for that batch; write responses retain per-response limits. |
 | `REDMINE_MEMBERSHIP_BATCH_DEADLINE_SECONDS` | `300` | Positive finite cooperative deadline for one entire membership write batch. |
 | `REDMINE_PUBLIC_URL` | Unset | Optional browser-reachable Redmine base URL, including a subpath, for validated attachment links. Empty means use the upstream origin. Credentials, query and fragment are rejected. |
-| `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`, case insensitive. |
+| `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`, case insensitive. DEBUG enables application diagnostics; restart/recreate the process to apply changes. |
 
 Values in `.env.example` are placeholders and must be replaced for external use. Invalid
 required settings prevent application startup. `REDMINE_API_KEY` and `MCP_API_TOKEN` are retired
 runtime settings; remove them from existing external environment files. The synthetic setup
 helper removes them from its marked `.env`.
+
 The internal MCP-to-REST client configures the HTTPX inactivity timeout plus five seconds,
 but its in-process ASGI transport does not enforce that setting as a whole-tool timer.
 The application's explicit GET, reader, capability and batch deadlines enforce work limits.
@@ -194,6 +195,40 @@ Read results report `visibility.scope=requesting_redmine_user`. A field observat
 that Redmine omitted a selected field; it cannot identify the reason or detect hidden records.
 If a workflow requires complete project data, give each requesting user the necessary Redmine
 read permissions and visibility on relevant projects, then verify with that user's key.
+
+## Detailed DEBUG logs
+
+`LOG_LEVEL=DEBUG` enables console text diagnostics for the application. It is the only
+logging switch; `INFO` remains the default. Output includes timestamp, level, logger,
+`request_id`, and `call_id`, followed by an event name and selected metadata. There is no
+application-managed log file or runtime toggle endpoint. The default console handler writes
+to stderr, which Docker captures with other container output.
+
+`request_id` correlates an HTTP request with its internal REST and Redmine work and is returned
+as `X-Request-ID`. Each MCP tool invocation and discovery request receives a fresh `call_id`,
+including calls rejected by the deployment catalog. The original HTTP request is recovered
+through the MCP compatibility facade rather than inherited session context. Calls share an
+HTTP correlation when applicable but have distinct call IDs; work outside a logical MCP call
+uses `call_id=-`. Both contexts are restored after completion, failure, or cancellation.
+
+DEBUG events cover request operations, authentication and deployment gates, capability states,
+upstream attempts and admission waits, retries, pagination, read budgets, and write receipts.
+`conditional` and `unknown` capability evidence do not guarantee native permission. Request
+and response byte fields are counts only. Budget logs summarize operations and exhaustion,
+without logging each response chunk. Endpoint templates replace numeric resource IDs with
+`{id}`; unrecognized endpoints and operation names use fixed placeholders.
+
+Exception diagnostics contain at most 20 code locations: file basename, function, and line.
+They exclude exception messages, source code, locals, raw tracebacks, credentials/hashes,
+headers, cookies, raw URLs/query strings, tool arguments, bodies, business text, filenames,
+and attachment content. HTTPX, HTTP Core, FastAPI-MCP, and MCP vendor loggers remain at
+WARNING; their records reaching the application console retain level/logger/correlation
+but use `vendor_diagnostic details_omitted=true` instead of vendor text or tracebacks.
+
+See [development instructions](development.md#debug-logging) for Git Bash activation and
+filtering, and the [implementation and verification handoff](plans/debug-logging.md) for
+pending acceptance scenarios. Changing the level does not change tool responses or enable
+writer access.
 
 ## Synthetic environment
 

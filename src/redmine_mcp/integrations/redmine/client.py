@@ -30,6 +30,7 @@ from redmine_mcp.integrations.redmine.retry import (
     RetryRuntime,
     retry_reason,
 )
+from redmine_mcp.observability import debug_exception, endpoint_template
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,9 @@ QueryParams = Mapping[str, str | int | list[str]]
 
 @dataclass
 class _ReadAttempt:
+    number: int = 1
+    response_bytes: int = 0
+    dispatched: bool = False
     status: int | None = None
     retry_after: tuple[str, ...] = ()
     failure: httpx.RequestError | None = None
@@ -193,6 +197,35 @@ class RedmineClient:
     async def _get_attempt(
         self, path: str, params: QueryParams, attempt: _ReadAttempt
     ) -> bytearray | None:
+        started = perf_counter()
+        endpoint = endpoint_template(path) if logger.isEnabledFor(logging.DEBUG) else "unknown"
+        outcome = "failed"
+        logger.debug(logs_text.UPSTREAM_STARTED, "GET", endpoint, attempt.number, 0)
+        try:
+            content = await self._read_attempt(path, params, attempt)
+            outcome = "acquired" if content is not None else "retryable"
+            return content
+        except BaseException as exc:
+            if not isinstance(exc, Exception):
+                outcome = "interrupted"
+            debug_exception(logger, exc)
+            raise
+        finally:
+            logger.debug(
+                logs_text.UPSTREAM_ATTEMPT,
+                "GET",
+                endpoint,
+                attempt.number,
+                attempt.status,
+                (perf_counter() - started) * 1000,
+                attempt.response_bytes,
+                attempt.dispatched,
+                outcome,
+            )
+
+    async def _read_attempt(
+        self, path: str, params: QueryParams, attempt: _ReadAttempt
+    ) -> bytearray | None:
         request = self.http.build_request(
             HTTPMethod.GET,
             path,
@@ -205,8 +238,11 @@ class RedmineClient:
         try:
             response = await self.http.send(request, auth=None, follow_redirects=False, stream=True)
         except RETRY_ERRORS as exc:
+            debug_exception(logger, exc)
             attempt.failure = exc
             return None
+        finally:
+            attempt.dispatched = bool(request.extensions.get("redmine_dispatched", True))
         try:
             attempt.status = response.status_code
             if response.status_code in RETRY_STATUSES:
@@ -219,6 +255,7 @@ class RedmineClient:
                 # Fixed-size chunking hides a buffered tail if the stream fails before EOF.
                 # Charge each decoded chunk immediately, including failed attempts' tails.
                 async for chunk in response.aiter_bytes():
+                    attempt.response_bytes += len(chunk)
                     charge_bytes(len(chunk))
                     if len(content) + len(chunk) > self.policy.max_response_bytes:
                         raise ApplicationError(
@@ -228,6 +265,7 @@ class RedmineClient:
                         )
                     content.extend(chunk)
             except RETRY_ERRORS as exc:
+                debug_exception(logger, exc)
                 if response.is_closed:
                     # HTTPX closes at iterator EOF. A failure there is cleanup, not a
                     # broken read, and must not cause another dispatch.
@@ -272,20 +310,26 @@ class RedmineClient:
                     check_read_request_available()
                     if runtime.monotonic() >= deadline:
                         raise TimeoutError
-                    attempt = _ReadAttempt()
+                    attempt = _ReadAttempt(number=number)
                     content = await self._get_attempt(path, params, attempt)
                     if content is not None:
                         break
                     if number >= self.policy.retry_max_attempts:
+                        logger.debug(logs_text.RETRY_DECISION, number, "stop", "attempt_limit")
                         self._raise_attempt_failure(attempt)
                     check_read_request_available()
                     delay = runtime.delay(self.policy, number, attempt.retry_after)
                     available = deadline - runtime.monotonic()
                     if available <= 0:
+                        logger.debug(logs_text.RETRY_DECISION, number, "stop", "deadline")
                         check_read_deadline()
                         raise TimeoutError
                     if delay is None or delay >= available:
+                        logger.debug(logs_text.RETRY_DECISION, number, "stop", "delay_unavailable")
                         self._raise_attempt_failure(attempt)
+                    logger.debug(
+                        logs_text.RETRY_DECISION, number, "retry", retry_reason(attempt.failure)
+                    )
                     logger.info(
                         logs_text.UPSTREAM_READ_RETRY,
                         number,
@@ -303,7 +347,8 @@ class RedmineClient:
                     raise ValueError
                 self.map_attachment_links(result)
                 return result
-            except (ValueError, RecursionError):
+            except (ValueError, RecursionError) as exc:
+                debug_exception(logger, exc)
                 raise ApplicationError(
                     codes_text.UPSTREAM_RESPONSE,
                     redmine_text.INVALID_RESPONSE,

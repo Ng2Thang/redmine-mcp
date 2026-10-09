@@ -32,6 +32,68 @@ uv run --frozen uvicorn redmine_mcp.app:create_app --factory --host 127.0.0.1 --
 Settings load at app creation. HTTP clients are managed by application lifespan; imports must not
 read credentials or contact upstream services. See the [architecture](architecture.md).
 
+## DEBUG logging
+
+Run from the repository root in Git Bash. Stop the Docker MCP service before using local
+port 8000. The following starts the local application with detailed diagnostics and disables
+Uvicorn access logs, which otherwise include raw request URLs:
+
+```bash
+LOG_LEVEL=DEBUG uv run uvicorn redmine_mcp.app:create_app \
+  --factory --reload --no-access-log
+```
+
+For an existing synthetic Docker deployment, recreate only the selected MCP service so the
+updated environment reaches its process. This does not reset or seed Redmine:
+
+```bash
+source scripts/common.sh
+LOG_LEVEL=DEBUG compose up -d --no-deps --force-recreate mcp-server
+compose logs --follow --tail=200 mcp-server
+```
+
+Use `mcp-writer` instead of `mcp-server` for an already configured writer deployment; retain
+its existing writer credentials, admission mode and operation gates. For external Redmine
+using the base Compose file:
+
+```bash
+LOG_LEVEL=DEBUG docker compose --env-file .env -f deploy/compose.yaml \
+  up -d --no-deps --force-recreate mcp-server
+docker compose --env-file .env -f deploy/compose.yaml logs --follow --tail=200 mcp-server
+```
+
+Use `--build` when the image does not yet contain the logging implementation. Set `LOG_LEVEL`
+back to `INFO` and restart the local process, or rerun the selected recreation command with
+`LOG_LEVEL=INFO`, to turn detailed events off. Editing `.env` alone does not update a running
+process. Ordinary `docker compose restart` does not apply changed container environment.
+
+To inspect a completed incident, copy its server-generated correlation from the console or
+the `X-Request-ID` response header. Filter a bounded log snapshot, for example:
+
+```bash
+compose logs --no-color --tail=2000 mcp-server | rg 'request_id=<request-id>'
+compose logs --no-color --tail=2000 mcp-server | rg 'call_id=<call-id>'
+```
+
+Replace the placeholders with actual IDs. `request_id` links HTTP and upstream events;
+`call_id` separates concurrent tool invocations and discovery within an MCP session. A tool
+error returned as a result uses `mcp_call_completed outcome=tool_error`; raised failures use
+`failed`, and cancellations use `interrupted`. Upstream `acquired` means bytes were obtained,
+not that parsing or the entire tool succeeded. Write `accepted` is the transport receipt;
+subsequent tool verification still determines the public result. `response_bytes` counts only
+decoded bytes actually consumed, including a chunk that triggers a limit; error bodies are
+not read for diagnostics.
+
+Keep diagnostics in lazy `%s` templates under `constants/logs.py`. Use only known operation
+names, endpoint templates, numeric timings/counts, fixed reasons, and capability states.
+Guard stack inspection and endpoint normalization with `logger.isEnabledFor(logging.DEBUG)`.
+Do not use `logger.exception`, `exc_info`, or request/model serialization for application
+diagnostics. Vendor records reaching the application console are reduced to a fixed event
+because even WARNING/ERROR messages may contain values or raw exceptions.
+
+See [configuration](configuration.md#detailed-debug-logs) for the logging contract and the
+[verification handoff](plans/debug-logging.md) for scenarios requiring separate authorization.
+
 ## Request concurrency
 
 REST routes and Redmine gateway calls are async. While one request awaits Redmine through the

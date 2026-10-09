@@ -3,6 +3,15 @@
   'use strict';
 
   const base = new URL('./', window.location.href.split('#')[0]);
+  const locale = window.portalLocale;
+  const messages = locale.messages;
+  const translatedAliases = {};
+  locale.translatedPages.forEach(function (page) {
+    const pattern = page.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Exact aliases precede the English fallback. Their output also matches them,
+    // so Docsify's recursive alias resolution stops at the local translated file.
+    translatedAliases['/vi/' + pattern + '(?:\\.md)?'] = '/vi/' + page + '.md';
+  });
   let diagramId = 0;
   let rendering = Promise.resolve();
   const diagramSources = new WeakMap();
@@ -60,9 +69,9 @@
     handle.tabIndex = 0;
     handle.setAttribute('role', 'separator');
     handle.setAttribute('aria-orientation', 'vertical');
-    handle.setAttribute('aria-label', 'Resize navigation sidebar');
+    handle.setAttribute('aria-label', messages.resize);
     handle.setAttribute('aria-controls', sidebar.id);
-    handle.title = 'Drag to resize. Use Left/Right arrows, Home/End, or double-click to reset.';
+    handle.title = messages.resizeHelp;
     document.body.appendChild(handle);
 
     function bounds() {
@@ -75,7 +84,7 @@
       handle.setAttribute('aria-valuemin', String(limits.min));
       handle.setAttribute('aria-valuemax', String(limits.max));
       handle.setAttribute('aria-valuenow', String(width));
-      handle.setAttribute('aria-valuetext', width + ' pixels');
+      handle.setAttribute('aria-valuetext', width + ' ' + messages.pixels);
       if (save) {
         preferredWidth = width;
         try { localStorage.setItem(storageKey, String(width)); } catch (_) { /* Optional storage. */ }
@@ -153,7 +162,7 @@
           element.classList.add('diagram-fallback');
           element.replaceChildren();
           const message = document.createElement('p');
-          message.textContent = 'Diagram could not be rendered. Mermaid source:';
+          message.textContent = messages.diagramError;
           const pre = document.createElement('pre');
           pre.textContent = source;
           element.append(message, pre);
@@ -168,7 +177,7 @@
 
   window.$docsify = {
     name: 'Redmine MCP',
-    nameLink: '#/',
+    nameLink: locale.vi ? '#/vi/' : '#/',
     homepage: 'home.md',
     basePath: base.pathname,
     routerMode: 'hash',
@@ -184,10 +193,17 @@
     auto2top: true,
     noEmoji: true,
     executeScript: false,
-    notFoundPage: '404.md',
+    notFoundPage: locale.vi ? 'vi/404.md' : '404.md',
     alias: {
-      '/.*/_sidebar.md': '/_sidebar.md',
-      '/.*/_navbar.md': '/_navbar.md',
+      '/vi/': '/vi/home.md',
+      '/vi': '/vi/home.md',
+      '/vi/.*/_sidebar.md': '/vi/_sidebar.md',
+      '/vi/.*/_navbar.md': '/vi/_navbar.md',
+      ...translatedAliases,
+      '/vi/docs/(.*)': '/docs/$1',
+      '/vi/(repository|CONTRIBUTING|CHANGELOG|SECURITY|CODE_OF_CONDUCT)(?:\\.md)?': '/$1.md',
+      '/.*/_sidebar.md': locale.vi ? '/vi/_sidebar.md' : '/_sidebar.md',
+      '/.*/_navbar.md': locale.vi ? '/vi/_navbar.md' : '/_navbar.md',
     },
     noCompileLinks: [
       '.*\\.(py|sh|toml|ya?ml|json|rb|lock)([?#].*)?$',
@@ -195,10 +211,10 @@
     ],
     search: {
       paths: 'auto',
-      namespace: 'redmine-mcp-docs-' + base.pathname,
+      namespace: 'redmine-mcp-docs-' + base.pathname + (locale.vi ? '-vi' : '-en'),
       maxAge: 60000,
-      placeholder: 'Search documentation',
-      noData: 'No matching documentation',
+      placeholder: messages.search,
+      noData: messages.noData,
       depth: 4,
       hideOtherSidebarContent: false,
     },
@@ -207,13 +223,14 @@
       const originalLink = renderer.link.bind(renderer);
       renderer.code = function (code, language) {
         if ((language || '').trim() === 'mermaid') {
-          return '<div class="diagram-caption">Scroll to explore the diagram.</div>' +
-            '<div class="diagram-block" role="region" aria-label="Scrollable diagram" tabindex="0"><div class="mermaid">' +
+          return '<div class="diagram-caption">' + escapeHtml(messages.diagram) + '</div>' +
+            '<div class="diagram-block" role="region" aria-label="' + escapeHtml(messages.diagramLabel) + '" tabindex="0"><div class="mermaid">' +
             escapeHtml(code) + '</div></div>';
         }
         return originalCode(code, language);
       };
       renderer.link = function (href, title, text) {
+        if (locale.vi && href === '/') href = '/vi/';
         if (!/^(?:[a-z][a-z\d+.-]*:|\/\/|#)/i.test(href)) {
           const target = new URL(href, activeDocument);
           if (target.pathname === base.pathname + 'README.md') {
@@ -226,6 +243,16 @@
           const destination = new URL(href, activeDocument);
           if (destination.pathname.startsWith(base.pathname)) href = destination.href;
         }
+        if (locale.vi && /^\/(?:docs\/|guides\/|repository\.md|CONTRIBUTING\.md|CHANGELOG\.md|SECURITY\.md|CODE_OF_CONDUCT\.md)/.test(href)) {
+          href = '/vi' + href;
+        }
+        if (locale.vi && !/^(?:[a-z][a-z\d+.-]*:|\/\/|#)/i.test(href) && /\.md(?:[?#]|$)/.test(href)) {
+          const target = new URL(href.startsWith('/') ? href.slice(1) : href, href.startsWith('/') ? base : activeDocument);
+          if (target.pathname.startsWith(base.pathname)) {
+            const relative = target.pathname.slice(base.pathname.length);
+            href = '/' + (relative.startsWith('vi/') ? relative : 'vi/' + relative) + target.search + target.hash;
+          }
+        }
         return originalLink(href, title, text);
       };
       marked.setOptions({ renderer: renderer });
@@ -234,9 +261,16 @@
     plugins: [function (hook, vm) {
       hook.ready(setupSidebarResize);
       hook.ready(window.portalTheme.setupControl);
+      hook.ready(locale.setupControl);
       hook.beforeEach(function (markdown) {
-        const route = vm.route.path.replace(/^\//, '') || 'home';
-        activeDocument = new URL(route.replace(/\.md$/, '') + '.md', base);
+        let route = vm.route.path.replace(/^\//, '').replace(/\.md$/, '').replace(/\/$/, '') || 'home';
+        if (route === 'vi') route = 'vi/home';
+        const originalRoute = route.replace(/^vi\/(?=docs\/|repository$|CONTRIBUTING$|CHANGELOG$|SECURITY$|CODE_OF_CONDUCT$)/, '');
+        activeDocument = new URL(originalRoute.replace(/\.md$/, '') + '.md', base);
+        const translated = locale.translatedPages.includes(route.replace(/^vi\//, ''));
+        if (locale.vi && !translated && !route.startsWith('vi/guides/') && !/^vi\/(?:home|404)$/.test(route)) {
+          return '> ' + messages.englishNotice + '\n\n' + markdown;
+        }
         return markdown;
       });
       // Docsify routes use ?id= for headings. Normalize GitHub-style #heading links
@@ -260,13 +294,13 @@
           const button = document.createElement('button');
           button.type = 'button';
           button.className = 'copy-code';
-          button.textContent = 'Copy';
-          button.setAttribute('aria-label', 'Copy code block');
+          button.textContent = messages.copy;
+          button.setAttribute('aria-label', messages.copyLabel);
           button.setAttribute('aria-live', 'polite');
           button.addEventListener('click', async function () {
             try {
               await copyText(code.textContent);
-              button.textContent = 'Copied';
+              button.textContent = messages.copied;
             } catch (_) {
               const selection = window.getSelection();
               if (selection) {
@@ -275,9 +309,9 @@
                 selection.removeAllRanges();
                 selection.addRange(range);
               }
-              button.textContent = 'Select and copy';
+              button.textContent = messages.selectCopy;
             }
-            window.setTimeout(function () { button.textContent = 'Copy'; }, 2000);
+            window.setTimeout(function () { button.textContent = messages.copy; }, 2000);
           });
           pre.appendChild(button);
         });

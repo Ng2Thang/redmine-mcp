@@ -11,6 +11,16 @@ choice for this portal; theme colors use local Themeable variable overrides in
 `assets/portal.css`, with the preference applied by `assets/theme.js` before styles load.
 Diagrams render again with the selected appearance when it changes.
 
+The **Language** selector switches between English and Vietnamese. Open `#/vi/` for the
+Vietnamese edition. Its interface, homepage, guides, checklist, and 24 main reference pages
+are maintained in `vi/`. Longer reference editions are reorganized summaries with links to
+authoritative English originals; untranslated task records show an English notice. Maintain
+the local translation registry in `assets/language.js` so exact aliases precede fallback.
+The explicit request for a Vietnamese edition permits
+Vietnamese Markdown inside this dedicated translation tree; other Markdown stays English.
+Update translations alongside their English source. Locale is carried in shared hash URLs;
+search indexes are separated by language, while appearance and sidebar width are shared.
+
 On desktop, drag the sidebar's right edge to resize it. The browser remembers the width
 for this portal. Focus the edge and use Left/Right arrows (Shift for larger steps) or
 Home/End to reach the limits; double-click to restore the default width. Mobile uses

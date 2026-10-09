@@ -27,6 +27,13 @@ documentation solely to exercise a check without restoring the intended contents
 - [ ] Select Auto and change system appearance; confirm the page and diagrams follow it.
       Reload and navigate to confirm the selected mode persists. Check the mobile drawer
       and keyboard access to the selector; confirm themes work without Internet access.
+- [ ] Switch English/Vietnamese using Language; open a shared `#/vi/` deep link and reload.
+      Check Vietnamese navigation, interface messages, guides, and search results.
+      Open all 24 main Vietnamese reference pages, especially `#/vi/docs/tool-reference`
+      and `#/vi/docs/manual-verification`; they must load local translations without an English fallback notice.
+      Follow an untranslated task link and confirm it displays the English-source notice.
+      Check original-English links on translated reference pages and preserved heading anchors;
+      check switching language at a domain root and under a hosting subdirectory.
 - [ ] Search for `mutation uncertainty` and `bootstrap`; open results on their correct pages.
 - [ ] Check Python, Bash, JSON, YAML, TOML, Docker, and diff highlighting where examples exist.
 - [ ] Copy a code block and compare its text, including newlines; check the clipboard fallback

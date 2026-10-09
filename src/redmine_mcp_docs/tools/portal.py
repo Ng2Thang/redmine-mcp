@@ -107,9 +107,14 @@ def export() -> Path:
     for source in sorted((SOURCE / "guides").glob("*.md")):
         if not source.name.startswith("."):
             copy_file(source, staging / source.relative_to(SOURCE))
+    # Only the dedicated translated Markdown tree is exported for the Vietnamese edition.
+    for source in sorted((SOURCE / "vi").rglob("*.md")):
+        if not any(part.startswith(".") for part in source.relative_to(SOURCE / "vi").parts):
+            copy_file(source, staging / source.relative_to(SOURCE))
     # An explicit asset inventory prevents stray private files in assets from being published.
     asset_paths = {
-        "assets/portal.css", "assets/portal.js", "assets/theme.js", "assets/favicon.svg",
+        "assets/portal.css", "assets/portal.js", "assets/theme.js", "assets/language.js",
+        "assets/favicon.svg",
         "assets/vendor/manifest.json", "assets/vendor/THIRD_PARTY_NOTICES.md",
     }
     vendor_manifest = safe_path(SOURCE / "assets" / "vendor" / "manifest.json")

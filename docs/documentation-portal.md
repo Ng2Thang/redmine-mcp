@@ -39,6 +39,8 @@ a reference to HEAD and does not certify uncommitted content or test acceptance.
 | Portal homepage, sidebar, and navbar | `src/redmine_mcp_docs/home.md`, `_sidebar.md`, `_navbar.md` |
 | Styling and Docsify/Mermaid integration | `src/redmine_mcp_docs/assets/portal.css` and `portal.js` |
 | Appearance preference and startup theme | `src/redmine_mcp_docs/assets/theme.js` |
+| Vietnamese pages and navigation | `src/redmine_mcp_docs/vi/` |
+| Language selection and interface messages | `src/redmine_mcp_docs/assets/language.js` |
 | Export allowlists and local server | `src/redmine_mcp_docs/tools/portal.py` |
 
 Do not edit generated documentation in `.local/`. The exporter preserves canonical documents
@@ -50,6 +52,24 @@ reference roots or root-file allowlist. These references open directly rather th
 Add new main pages to the sidebar for navigation and local search discovery. Evidence and task
 records remain reachable through canonical document links. Preserve dates, exact verification
 scope, waived stages, and pending acceptance; do not describe historical results as fresh checks.
+
+## Vietnamese edition
+
+Choose **Language → Tiếng Việt** in the sidebar or open `http://127.0.0.1:8080/#/vi/`.
+The Vietnamese edition translates the interface, navigation, homepage, introductory guides,
+portal checklist, and all 24 main reference pages linked from its sidebar. Detailed Vietnamese
+editions reorganize or summarize longer material; the English originals remain authoritative
+for complete contracts, scenario tables, commit histories, and evidence ledgers. Each local
+reference edition links to its original. Dates, pending acceptance, waivers, and verification
+limits remain explicit. Untranslated task records still use English source with a notice.
+
+Vietnamese Markdown is confined to `src/redmine_mcp_docs/vi/`, as explicitly requested by
+the user; other Markdown remains English. Update translations alongside their English
+counterparts, and maintain the translated-page registry in `assets/language.js`. Exact local
+aliases precede the English fallback. Switching language preserves page routes and drops heading
+queries because translated headings differ. Language is encoded in the hash URL, with
+separate search caches; themes and the saved sidebar width remain shared. Export includes
+only Markdown from the dedicated translation tree, using the existing path boundary checks.
 
 ## Offline browser assets
 

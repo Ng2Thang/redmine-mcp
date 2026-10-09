@@ -6,5 +6,12 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 dist/
+!src/redmine_mcp_docs/assets/vendor/mermaid/dist/
+!src/redmine_mcp_docs/assets/vendor/mermaid/dist/mermaid.min.js
+!src/redmine_mcp_docs/assets/vendor/docsify-themeable/dist/
+!src/redmine_mcp_docs/assets/vendor/docsify-themeable/dist/css/
+!src/redmine_mcp_docs/assets/vendor/docsify-themeable/dist/css/theme-simple.css
+!src/redmine_mcp_docs/assets/vendor/docsify-themeable/dist/js/
+!src/redmine_mcp_docs/assets/vendor/docsify-themeable/dist/js/docsify-themeable.min.js
 *.egg-info/
 

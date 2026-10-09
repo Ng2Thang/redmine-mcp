@@ -1,0 +1,4 @@
+- [Overview](/)
+- [Install](/guides/installation.md)
+- [Tools](/docs/tool-reference.md)
+- [Repository](https://github.com/Ng2Thang/redmine-mcp)

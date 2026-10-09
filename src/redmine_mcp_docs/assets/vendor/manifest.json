@@ -1,0 +1,105 @@
+{
+  "packages": [
+    {
+      "package": "docsify",
+      "version": "4.13.1",
+      "tarball": "https://registry.npmjs.org/docsify/-/docsify-4.13.1.tgz",
+      "integrity": "sha512-BsDypTBhw0mfslw9kZgAspCMZSM+sUIIDg5K/t1hNLkvbem9h64ZQc71e1IpY+iWsi/KdeqfazDfg52y2Lmm0A==",
+      "files": [
+        {
+          "path": "docsify/LICENSE",
+          "sha256": "65a671d4b5bda281aac624bc6901d8a8c494c15dc3e329760e8652aa0d76519a"
+        },
+        {
+          "path": "docsify/lib/docsify.min.js",
+          "sha256": "9123f808d3f6ad736b4a8f99944a611f87c5d4f9328030080a5c029ed5f450a5"
+        },
+        {
+          "path": "docsify/lib/plugins/search.min.js",
+          "sha256": "ab20792dc69dfd9cdb19479f716f69a619e577dec452739196770134dd71f297"
+        }
+      ]
+    },
+    {
+      "package": "docsify-themeable",
+      "version": "0.9.0",
+      "tarball": "https://registry.npmjs.org/docsify-themeable/-/docsify-themeable-0.9.0.tgz",
+      "integrity": "sha512-nXDk/A6lvVIDjbzT6zJ1ukDV8c6EqFip/YFEucJcSI6i6NNpgF5ke8owP6Kc7tjcM/EugbQ/IMeP2WYSljmFhg==",
+      "files": [
+        {
+          "path": "docsify-themeable/LICENSE",
+          "sha256": "dbf52617a6da37e56cd592924261137612b7ad5fa3f0e268e2392fc82e7f2ede"
+        },
+        {
+          "path": "docsify-themeable/dist/css/theme-simple.css",
+          "sha256": "3002232108e34a975b9713cd45fc242c8de71db3de57fcef003e8f6d0a39fac2"
+        },
+        {
+          "path": "docsify-themeable/dist/js/docsify-themeable.min.js",
+          "sha256": "6d59e3ed8216f9efef11d8c823a8919d5d83ed27460f2f0dbe0ecde241fd4d12"
+        }
+      ]
+    },
+    {
+      "package": "mermaid",
+      "version": "11.12.0",
+      "tarball": "https://registry.npmjs.org/mermaid/-/mermaid-11.12.0.tgz",
+      "integrity": "sha512-ZudVx73BwrMJfCFmSSJT84y6u5brEoV8DOItdHomNLz32uBjNrelm7mg95X7g+C6UoQH/W6mBLGDEDv73JdxBg==",
+      "files": [
+        {
+          "path": "mermaid/LICENSE",
+          "sha256": "ec9fb67dcb25eccc416ed56e1aab819222c805a2a4bfe4cb19e7556bf2ffde80"
+        },
+        {
+          "path": "mermaid/dist/mermaid.min.js",
+          "sha256": "07e37dfa97b337ccc85365d57eddf99b9706f09db3b59b260d0333b23b343c4b"
+        }
+      ]
+    },
+    {
+      "package": "prismjs",
+      "version": "1.29.0",
+      "tarball": "https://registry.npmjs.org/prismjs/-/prismjs-1.29.0.tgz",
+      "integrity": "sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==",
+      "files": [
+        {
+          "path": "prismjs/LICENSE",
+          "sha256": "2b947f0901a7ffcf08a89957da9783c0e9c6e72cb6ce8e959f501ab5409e4d2b"
+        },
+        {
+          "path": "prismjs/components/prism-bash.min.js",
+          "sha256": "6260814110e5182f2956e3bd257429548d9dbf2a9b66a63719b26cf9fac966a7"
+        },
+        {
+          "path": "prismjs/components/prism-diff.min.js",
+          "sha256": "f16816fb2242a84c6ff6715a48c6d0a3e469e3250912cb9f1b755ca537d02f48"
+        },
+        {
+          "path": "prismjs/components/prism-docker.min.js",
+          "sha256": "a6cc0faa5977a40652f62798a692a5ae171e0380480df3ed056e117597ec52dd"
+        },
+        {
+          "path": "prismjs/components/prism-ini.min.js",
+          "sha256": "cf1b61f4a67f0101005c5133e22113e2f3a74f1c7917034e084df688f1735381"
+        },
+        {
+          "path": "prismjs/components/prism-json.min.js",
+          "sha256": "956d86baa5ae7ec4106758f354ac2d140bdcd7fc103dece02f73ed12b8d663e4"
+        },
+        {
+          "path": "prismjs/components/prism-python.min.js",
+          "sha256": "ed4385685bcf2d4935c8dbbab4bde16603da1329e092d2bf36c3dadd67e9a85c"
+        },
+        {
+          "path": "prismjs/components/prism-toml.min.js",
+          "sha256": "bc71428fec2670d59cda5ad3359615c91892f914f526cf6bfe316fc2ad55aff2"
+        },
+        {
+          "path": "prismjs/components/prism-yaml.min.js",
+          "sha256": "719c8e8b8c344dc9de510c729f65ba840b1502a0a8e7e25e2ad19ee715f65c02"
+        }
+      ]
+    }
+  ],
+  "modifications": []
+}

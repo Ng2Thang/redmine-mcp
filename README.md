@@ -119,6 +119,10 @@ dependency updates, and adding tools. Stop Docker MCP before running locally on 
 
 ## Documentation
 
+- [Offline documentation portal](docs/documentation-portal.md): run
+  `bash scripts/docs-portal.sh serve` and open `http://127.0.0.1:8080/` for installation,
+  usage, execution diagrams, development, testing, and operations. Browser assets are bundled;
+  canonical documentation remains in `docs/`.
 - [Configuration](docs/configuration.md): environment variables and local/Docker differences.
 - [Tool reference](docs/tool-reference.md): inputs, responses, pagination, permissions, and errors.
 - [MCP tool roadmap](docs/plans/index.md): tool-focused task status, dependencies, and next actions.

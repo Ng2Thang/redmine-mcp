@@ -3,7 +3,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.20 /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 COPY pyproject.toml uv.lock ./
-COPY src ./src
+COPY src/redmine_mcp ./src/redmine_mcp
 RUN uv sync --frozen --no-dev && useradd --uid 10001 --create-home app
 USER app
 EXPOSE 8000

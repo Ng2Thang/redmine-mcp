@@ -226,6 +226,22 @@ and empty defaults stay with their contracts. Framework-generated validation mes
 still managed by FastAPI and Pydantic. Changing a constant changes all of its consumers;
 review public wording and stable error codes accordingly.
 
+## Documentation portal maintenance
+
+The standalone portal source is `src/redmine_mcp_docs/`; detailed documentation remains in
+canonical `docs/` files. Edit portal introductions/navigation in that source, then regenerate
+the ignored static export and restart the local server:
+
+```bash
+bash scripts/docs-portal.sh export
+bash scripts/docs-portal.sh serve
+```
+
+The portal uses bundled browser libraries and Python's standard-library server, independent of
+MCP runtime settings. See [portal maintenance and hosting](documentation-portal.md) for asset
+licenses, export boundaries, and the manual verification handoff. Only `src/redmine_mcp` enters
+the runtime wheel and MCP Docker image.
+
 ## Dependencies and packaging
 
 Use uv to update dependency metadata and resolution together, for example:

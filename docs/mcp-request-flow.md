@@ -86,7 +86,7 @@ sequenceDiagram
     A-->>MCP: Authenticated request
     MCP->>MCP: Validate arguments against inputSchema
     MCP->>M: Internal ASGI GET /api/v1/issues/123
-    Note over MCP,M: Forward allowed API key header; include becomes query parameter
+    Note over MCP,M: Forward allowed API key header, include becomes query parameter
     M->>R: Apply middleware to internal request
     R->>A: get_auth_context + require_read_access
     A->>H: Verify identity again for REST request
@@ -102,13 +102,13 @@ sequenceDiagram
     RM-->>H: HTTP status and streamed JSON body
     H->>H: Check status, body limit, deadline, and JSON
     H-->>G: Parsed upstream object
-    G->>G: Validate resource ID and IssueDetail; build visibility
+    G->>G: Validate resource ID and IssueDetail, build visibility
     G-->>S: IssueDetail
     S-->>R: IssueDetail
     R-->>MCP: Validated REST JSON response
     MCP->>MCP: Encode JSON into MCP TextContent
     MCP-->>C: CallToolResult: content + isError=false
-    Note over M,H: Completion logs record durations/status; middleware adds X-Request-ID
+    Note over M,H: Completion logs record durations/status, middleware adds X-Request-ID
 ```
 
 ### Responsibilities at each step

@@ -1,5 +1,7 @@
 """Prove container membership before updating attachment metadata."""
 
+from http import HTTPMethod
+
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
@@ -76,7 +78,7 @@ class RedmineAttachmentUpdates:
         await self.require_container(attachment_id, request)
         changes = request.model_dump(include={"filename", "description"}, exclude_unset=True)
         receipt = await self.writer.write_json(
-            "PATCH",
+            HTTPMethod.PATCH,
             f"attachments/{attachment_id}.json",
             {"attachment": changes},
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),

@@ -1,5 +1,7 @@
 """Watcher acceptance is independent from visible membership verification."""
 
+from http import HTTPMethod
+
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
@@ -22,7 +24,7 @@ class RedmineIssueWatchers:
         data = await self.client.get(f"issues/{issue_id}.json", {})
         resource_object(data.get("issue"), issue_id)
         receipt = await self.writer.write_json(
-            "DELETE",
+            HTTPMethod.DELETE,
             f"issues/{issue_id}/watchers/{user_id}.json",
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
@@ -61,7 +63,7 @@ class RedmineIssueWatchers:
         data = await self.client.get(f"issues/{issue_id}.json", {})
         resource_object(data.get("issue"), issue_id)
         receipt = await self.writer.write_json(
-            "POST",
+            HTTPMethod.POST,
             f"issues/{issue_id}/watchers.json",
             {"watcher": {"user_id": user_id}},
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),

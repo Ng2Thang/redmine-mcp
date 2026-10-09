@@ -1,6 +1,7 @@
 """Explicit MCP exposure policy for the REST-backed tool catalog."""
 
 from collections import Counter
+from http import HTTPMethod
 
 from fastapi import FastAPI
 from fastapi.dependencies.models import Dependant
@@ -72,16 +73,16 @@ def validate_operation_catalog(app: FastAPI, operations: tuple[str, ...] = OPERA
             raise ValueError(mcp_text.UNIQUE_ROUTE_REQUIRED.format(operation=name))
         route = matches[0]
         if name in OPERATIONS:
-            if not route.path.startswith("/api/v1/") or route.methods != {"GET"}:
+            if not route.path.startswith("/api/v1/") or route.methods != {HTTPMethod.GET}:
                 raise ValueError(mcp_text.GET_ROUTE_REQUIRED.format(operation=name))
             if not has_read_dependency(route.dependant):
                 raise ValueError(mcp_text.READ_AUTHORIZATION_REQUIRED.format(operation=name))
         elif name in WRITE_OPERATIONS:
             if not route.path.startswith("/api/v1/") or route.methods not in (
-                {"POST"},
-                {"PUT"},
-                {"PATCH"},
-                {"DELETE"},
+                {HTTPMethod.POST},
+                {HTTPMethod.PUT},
+                {HTTPMethod.PATCH},
+                {HTTPMethod.DELETE},
             ):
                 raise ValueError(mcp_text.WRITE_ROUTE_REQUIRED.format(operation=name))
             if not has_write_dependency(route.dependant):

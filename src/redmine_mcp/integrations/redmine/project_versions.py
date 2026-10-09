@@ -1,5 +1,6 @@
 """Create one version, preserving validation errors and uncertain write outcomes."""
 
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -67,7 +68,7 @@ class RedmineProjectVersions:
         expected.update(status="open", sharing="none")
         try:
             receipt = await self.writer.write_json(
-                "POST",
+                HTTPMethod.POST,
                 f"projects/{project_id}/versions.json",
                 {"version": expected},
                 accepted_statuses=(http_status.HTTP_201_CREATED,),

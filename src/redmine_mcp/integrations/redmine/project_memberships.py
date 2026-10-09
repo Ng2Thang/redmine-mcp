@@ -1,6 +1,7 @@
 """Native membership APIs; bounded proofs and single-attempt writes."""
 
 import asyncio
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -177,7 +178,7 @@ class RedmineProjectMemberships:
     async def _add(self, result: MembershipWriteResult) -> WriteReceipt | None:
         try:
             return await self.writer.write_json(
-                "POST",
+                HTTPMethod.POST,
                 f"projects/{result.project_id}/memberships.json",
                 {"membership": {"user_id": result.user_id, "role_ids": result.requested_role_ids}},
                 accepted_statuses=(http_status.HTTP_201_CREATED,),
@@ -214,7 +215,7 @@ class RedmineProjectMemberships:
         if action == "add":
             return await self._add(result)
         return await self.writer.write_json(
-            "PUT" if action == "update" else "DELETE",
+            HTTPMethod.PUT if action == "update" else HTTPMethod.DELETE,
             f"memberships/{result.membership_id}.json",
             {"membership": {"role_ids": result.requested_role_ids}} if action == "update" else None,
             accepted_statuses=(http_status.HTTP_200_OK, http_status.HTTP_204_NO_CONTENT),

@@ -1,5 +1,6 @@
 """Delegate creation/copy to Redmine and independently inspect supplied fields."""
 
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -146,7 +147,7 @@ class RedmineIssueCreations:
             # Preserve explicit clearing when copying an assigned issue on Redmine 7.0.2.
             payload["assigned_to_id"] = ""
         receipt = await self.writer.write_json(
-            "POST",
+            HTTPMethod.POST,
             "issues.json",
             {"issue": payload},
             accepted_statuses=(http_status.HTTP_201_CREATED,),

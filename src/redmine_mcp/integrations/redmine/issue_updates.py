@@ -1,5 +1,6 @@
 """Update supplied issue attributes and observe fields and newly added notes."""
 
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -111,7 +112,7 @@ class RedmineIssueUpdates:
             # Redmine 7.0.2 ignores nil in safe_attributes=; an empty ID clears assignment.
             payload["assigned_to_id"] = ""
         receipt = await self.writer.write_json(
-            "PUT",
+            HTTPMethod.PUT,
             f"issues/{issue_id}.json",
             {"issue": payload},
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),

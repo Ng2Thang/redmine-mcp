@@ -1,5 +1,6 @@
 """Edit a visible issue journal without bypassing its declared issue membership."""
 
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -54,7 +55,7 @@ class RedmineIssueNotes:
         )
         payload = request.model_dump(mode="json", exclude_unset=True)
         receipt = await self.writer.write_json(
-            "PUT",
+            HTTPMethod.PUT,
             f"journals/{journal_id}.json",
             {"journal": payload},
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),

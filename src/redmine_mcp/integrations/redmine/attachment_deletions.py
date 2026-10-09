@@ -1,5 +1,7 @@
 """Delete an attachment only after proving its declared container membership."""
 
+from http import HTTPMethod
+
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
@@ -21,7 +23,7 @@ class RedmineAttachmentDeletions:
     ) -> AttachmentDeleteResult:
         await self.containers.require_container(attachment_id, request)
         receipt = await self.writer.write_json(
-            "DELETE",
+            HTTPMethod.DELETE,
             f"attachments/{attachment_id}.json",
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )

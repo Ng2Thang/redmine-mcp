@@ -3,6 +3,7 @@ import json
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
+from http import HTTPMethod
 from time import perf_counter
 from typing import Any, NoReturn
 from urllib.parse import unquote
@@ -193,7 +194,10 @@ class RedmineClient:
         self, path: str, params: QueryParams, attempt: _ReadAttempt
     ) -> bytearray | None:
         request = self.http.build_request(
-            "GET", path, params=params, headers={"X-Redmine-API-Key": self.api_key}
+            HTTPMethod.GET,
+            path,
+            params=params,
+            headers={"X-Redmine-API-Key": self.api_key},
         )
         # Rebuild each request: the shared pool must never supply authentication or cookies.
         request.headers.pop("cookie", None)

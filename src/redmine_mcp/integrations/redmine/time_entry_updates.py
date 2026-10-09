@@ -1,5 +1,7 @@
 """Update one issue-bound entry with a single PUT and independent verification."""
 
+from http import HTTPMethod
+
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError, InvalidInputError
@@ -49,7 +51,7 @@ class RedmineTimeEntryUpdates:
         if request.hours is not None:
             expected["hours"] = normalized_hours(request.hours)
         receipt = await self.writer.write_json(
-            "PUT",
+            HTTPMethod.PUT,
             f"time_entries/{time_entry_id}.json",
             {"time_entry": payload},
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),

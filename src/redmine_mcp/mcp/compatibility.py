@@ -3,6 +3,7 @@
 import asyncio
 import inspect
 from collections.abc import Awaitable, Callable
+from http import HTTPMethod
 from importlib.metadata import version
 from typing import Any, cast
 
@@ -146,9 +147,12 @@ class MCPCompatibility:
             headers: dict[str, str],
             body: Any | None,
         ) -> Any:
-            if method.lower() == "delete" and path == "/api/v1/projects/memberships/batch":
+            if (
+                method.upper() == HTTPMethod.DELETE
+                and path == "/api/v1/projects/memberships/batch"
+            ):
                 return await client.request(
-                    "DELETE", path, params=query, headers=headers, json=body
+                    HTTPMethod.DELETE, path, params=query, headers=headers, json=body
                 )
             return await original(client, method, path, query, headers, body)
 

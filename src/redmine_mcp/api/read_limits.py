@@ -1,6 +1,7 @@
 """Budget REST readers before authentication, including internal MCP requests."""
 
 import re
+from http import HTTPMethod
 
 from fastapi import status as http_status
 from starlette.requests import Request
@@ -32,7 +33,7 @@ class ReadLimitsMiddleware:
             )
             await response(scope, receive, send)
             return
-        if scope["method"] != "GET" or not path.startswith("/api/v1/"):
+        if scope["method"] != HTTPMethod.GET or not path.startswith("/api/v1/"):
             await self.app(scope, receive, send)
             return
         started = False

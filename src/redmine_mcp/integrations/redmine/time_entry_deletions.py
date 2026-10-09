@@ -1,5 +1,7 @@
 """Delete one issue-bound entry and report caller-visible presence independently."""
 
+from http import HTTPMethod
+
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
@@ -19,7 +21,7 @@ class RedmineTimeEntryDeletions:
     async def delete_time_entry(self, issue_id: int, time_entry_id: int) -> TimeEntryDeleteResult:
         await require_issue_time_entry(self.client, issue_id, time_entry_id)
         receipt = await self.writer.write_json(
-            "DELETE",
+            HTTPMethod.DELETE,
             f"time_entries/{time_entry_id}.json",
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )

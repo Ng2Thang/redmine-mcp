@@ -1,11 +1,21 @@
 """Restore canonical REST validation before MCP discovery and SDK caching."""
 
 from copy import deepcopy
+from http import HTTPMethod
 from typing import Any
 
 from mcp.types import Tool
 
 SCHEMA_CONTRACT_ERROR = "MCP input schema does not match the REST contract"
+SUPPORTED_HTTP_METHODS = frozenset(
+    {
+        HTTPMethod.GET,
+        HTTPMethod.POST,
+        HTTPMethod.PUT,
+        HTTPMethod.PATCH,
+        HTTPMethod.DELETE,
+    }
+)
 
 
 def _object(value: Any) -> dict[str, Any]:
@@ -104,7 +114,13 @@ def repair_input_schemas(tools: list[Tool], document: dict[str, Any]) -> None:
     operations: dict[str, dict[str, Any]] = {}
     for path in _object(document.get("paths")).values():
         for method, operation in _object(path).items():
-            if method not in {"get", "post", "put", "patch", "delete"}:
+            if not isinstance(method, str):
+                continue
+            try:
+                http_method = HTTPMethod(method.upper())
+            except ValueError:
+                continue
+            if http_method not in SUPPORTED_HTTP_METHODS:
                 continue
             operation = _object(operation)
             name = operation.get("operationId")

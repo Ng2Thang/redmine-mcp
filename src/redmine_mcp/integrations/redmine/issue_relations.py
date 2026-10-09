@@ -1,5 +1,6 @@
 """Create a single relation and verify Redmine's normalized stored direction."""
 
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -89,7 +90,7 @@ class RedmineIssueRelations:
                     http_status.HTTP_404_NOT_FOUND,
                 )
         receipt = await self.writer.write_json(
-            "DELETE",
+            HTTPMethod.DELETE,
             f"relations/{relation_id}.json",
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),
         )
@@ -126,7 +127,7 @@ class RedmineIssueRelations:
         payload = request.model_dump(mode="json", exclude_unset=True)
         payload["relation_type"] = request.relation_type
         receipt = await self.writer.write_json(
-            "POST",
+            HTTPMethod.POST,
             f"issues/{issue_id}/relations.json",
             {"relation": payload},
             accepted_statuses=(http_status.HTTP_201_CREATED,),

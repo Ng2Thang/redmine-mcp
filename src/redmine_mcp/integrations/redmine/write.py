@@ -4,8 +4,9 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
+from http import HTTPMethod
 from time import perf_counter
-from typing import Any, Literal
+from typing import Any
 
 import httpx
 from fastapi import status as http_status
@@ -46,7 +47,7 @@ class RedmineWriter:
 
     async def write_json(
         self,
-        method: Literal["POST", "PUT", "PATCH", "DELETE"],
+        method: HTTPMethod,
         path: str,
         payload: dict[str, Any] | None = None,
         *,
@@ -82,7 +83,7 @@ class RedmineWriter:
                 http_status.HTTP_413_CONTENT_TOO_LARGE,
             )
         return await self._write(
-            "POST",
+            HTTPMethod.POST,
             path,
             content,
             "application/octet-stream",
@@ -92,7 +93,7 @@ class RedmineWriter:
 
     async def _write(
         self,
-        method: Literal["POST", "PUT", "PATCH", "DELETE"],
+        method: HTTPMethod,
         path: str,
         content: bytes | None,
         content_type: str,

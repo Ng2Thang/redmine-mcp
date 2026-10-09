@@ -1,6 +1,7 @@
 """Admit bounded REST/MCP request bytes before parsing or authentication."""
 
 import re
+from http import HTTPMethod
 
 from fastapi import status as http_status
 from starlette.requests import Request
@@ -57,8 +58,11 @@ class RequestBodyLimitsMiddleware:
             return
         path = scope["path"]
         method = scope["method"]
-        limited = (method == "POST" and (path == "/mcp" or path.startswith("/mcp/"))) or (
-            method in {"POST", "PUT", "PATCH", "DELETE"} and path.startswith("/api/v1/")
+        limited = (
+            method == HTTPMethod.POST and (path == "/mcp" or path.startswith("/mcp/"))
+        ) or (
+            method in {HTTPMethod.POST, HTTPMethod.PUT, HTTPMethod.PATCH, HTTPMethod.DELETE}
+            and path.startswith("/api/v1/")
         )
         if not limited:
             await self.app(scope, receive, send)

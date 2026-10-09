@@ -1,6 +1,7 @@
 """Create one caller-credited entry with a single POST and independent verification."""
 
 from decimal import ROUND_HALF_UP, Decimal, localcontext
+from http import HTTPMethod
 from typing import Any
 
 from fastapi import status as http_status
@@ -70,7 +71,7 @@ class RedmineTimeEntryCreations:
         payload.update(project_id=project_id, issue_id=issue_id)
         expected = {**payload, "user_id": caller_id, "hours": normalized_hours(request.hours)}
         receipt = await self.writer.write_json(
-            "POST",
+            HTTPMethod.POST,
             "time_entries.json",
             {"time_entry": payload},
             accepted_statuses=(http_status.HTTP_201_CREATED,),

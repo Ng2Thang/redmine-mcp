@@ -1,5 +1,7 @@
 """Attach one upload token to a project and inspect the resulting file."""
 
+from http import HTTPMethod
+
 from fastapi import status as http_status
 
 from redmine_mcp.common import ApplicationError
@@ -28,7 +30,7 @@ class RedmineProjectFiles:
         if version_id is not None:
             file["version_id"] = version_id
         receipt = await self.writer.write_json(
-            "POST",
+            HTTPMethod.POST,
             f"projects/{project_id}/files.json",
             {"file": file},
             accepted_statuses=(http_status.HTTP_204_NO_CONTENT,),

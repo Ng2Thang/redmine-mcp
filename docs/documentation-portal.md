@@ -36,7 +36,8 @@ a reference to HEAD and does not certify uncommitted content or test acceptance.
 | --- | --- |
 | Detailed installation/configuration/architecture/tool/testing/operations contracts | Canonical `docs/` files and root README |
 | Introductory installation, first-call, access, module-map, and testing guides | `src/redmine_mcp_docs/guides/` |
-| Portal homepage, sidebar, and navbar | `src/redmine_mcp_docs/home.md`, `_sidebar.md`, `_navbar.md` |
+| Portal cover, homepage, sidebar, and navbar | `src/redmine_mcp_docs/_coverpage.md`, `home.md`, `_sidebar.md`, `_navbar.md` |
+| Visual tool examples and replacement media | `src/redmine_mcp_docs/guides/visual-examples.md` and `assets/examples/` |
 | Styling and Docsify/Mermaid integration | `src/redmine_mcp_docs/assets/portal.css` and `portal.js` |
 | Appearance preference and startup theme | `src/redmine_mcp_docs/assets/theme.js` |
 | Vietnamese pages and navigation | `src/redmine_mcp_docs/vi/` |
@@ -52,6 +53,22 @@ reference roots or root-file allowlist. These references open directly rather th
 Add new main pages to the sidebar for navigation and local search discovery. Evidence and task
 records remain reachable through canonical document links. Preserve dates, exact verification
 scope, waived stages, and pending acceptance; do not describe historical results as fresh checks.
+
+## Cover page
+
+The [Docsify cover page](https://docsify.js.org/#/cover) uses `_coverpage.md`, included by the
+exporter. The English cover is shared by the `/`, `/vi`, and `/vi/` landing routes through the
+`coverpage` setting and a Vietnamese cover alias in `assets/portal.js`. Other pages open directly.
+`onlyCover: false` keeps the existing homepage below the cover. The cover links to installation
+and GitHub, uses the local project logo, and follows the portal's light and dark themes.
+An inline showcase plays `assets/examples/issue-flow.gif` with a short prompt and result
+caption. Visitors who prefer reduced motion see `issue-flow.png` instead. Replace these
+files to update both the cover showcase and the visual examples guide.
+Two additional inline showcases use `assets/examples/my-issues.svg` for assigned open issues
+and `assets/examples/project-discovery.svg` for accessible projects. They appear side by side
+on wider screens and stack on mobile. All showcase media uses clearly labeled synthetic data.
+Edit cover content in `src/redmine_mcp_docs/_coverpage.md` and appearance through the
+`--cover-*` variables in `assets/portal.css`. Re-export or restart the portal after edits.
 
 ## Vietnamese edition
 

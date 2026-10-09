@@ -46,6 +46,9 @@ for concrete inputs and expected behavior.
 
 ## Understand the call and result
 
+See the [visual walkthrough](visual-examples.md) for illustrative screenshots and a looping
+animation of a `get_issue` call.
+
 An illustrative `tools/call` request has this shape:
 
 ```json

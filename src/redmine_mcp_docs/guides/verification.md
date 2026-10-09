@@ -44,7 +44,21 @@ documentation solely to exercise a check without restoring the intended contents
 
 ## Navigation and content
 
+- [ ] Open `/`, `#/vi`, and `#/vi/`; confirm the cover shows the local logo and readable text
+      in light and dark themes on desktop and mobile. Scroll to the existing homepage and
+      confirm the sidebar resize handle appears only with the navigation.
+- [ ] Follow the cover's Get started and GitHub links; confirm installation stays in the
+      selected language. Open an installation deep link directly and confirm no cover appears.
+- [ ] Confirm the cover shows the animated tool example inline with its caption; enable
+      reduced motion in the system or browser and confirm the static overview appears instead.
+- [ ] Confirm the open-issues and project showcases appear below the animated example,
+      show their captions, and stack on mobile. Check that both SVG assets are exported.
+- [ ] Confirm exported output includes `_coverpage.md`; repeat cover navigation under a hosting
+      subdirectory and check that printing includes the documentation without the cover.
 - [ ] Open every top-level sidebar group and navbar destination.
+- [ ] Open Visual tool examples; confirm all four SVG mockups and the static PNG load locally.
+      Expand the GIF example and check its three stages. Repeat under a hosting subdirectory
+      and on a narrow screen; confirm captions explain that the media uses synthetic data.
 - [ ] Open a nested page directly through its hash URL, then reload.
 - [ ] Follow cross-page heading links, especially configuration writer setup and mutation uncertainty.
 - [ ] Open linked source/configuration files from a nested task or audit page.

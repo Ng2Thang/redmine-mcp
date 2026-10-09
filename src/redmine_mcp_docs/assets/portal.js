@@ -179,6 +179,8 @@
     name: 'Redmine MCP',
     nameLink: locale.vi ? '#/vi/' : '#/',
     homepage: 'home.md',
+    coverpage: ['/', '/vi', '/vi/'],
+    onlyCover: false,
     basePath: base.pathname,
     routerMode: 'hash',
     relativePath: true,
@@ -197,6 +199,7 @@
     alias: {
       '/vi/': '/vi/home.md',
       '/vi': '/vi/home.md',
+      '/vi/_coverpage(?:\\.md)?': '/_coverpage.md',
       '/vi/.*/_sidebar.md': '/vi/_sidebar.md',
       '/vi/.*/_navbar.md': '/vi/_navbar.md',
       ...translatedAliases,

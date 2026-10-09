@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-labelledby="title desc">
+  <title id="title">Example: turn an issue response into a short summary</title>
+  <desc id="desc">Illustrative response fields show issue 123, Fix login redirect, with status In Progress. A sample client summary explains these fields. This is a mockup, not a real tool response.</desc>
+  <rect width="960" height="440" rx="20" fill="#f4f6fa"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="36" y="42" fill="#a52a38" font-size="13" font-weight="700">ILLUSTRATIVE EXAMPLE / 02</text>
+    <text x="36" y="84" fill="#243247" font-size="28" font-weight="700">Read the result. Get a useful summary.</text>
+    <rect x="36" y="116" width="426" height="254" rx="12" fill="#1b2535"/>
+    <text x="60" y="151" fill="#aebbd0" font-size="14">SELECTED RESPONSE FIELDS</text>
+    <g fill="#e3e9f3" font-family="Consolas, monospace" font-size="17">
+      <text x="60" y="191">id: 123</text>
+      <text x="60" y="229">subject: Fix login redirect</text>
+      <text x="60" y="267">status.name: In Progress</text>
+    </g>
+    <rect x="486" y="116" width="438" height="254" rx="12" fill="#fff" stroke="#e4e8ee"/>
+    <text x="510" y="151" fill="#596779" font-size="14">EXAMPLE CLIENT SUMMARY</text>
+    <text x="510" y="198" fill="#243247" font-size="23" font-weight="700">#123: Fix login redirect</text>
+    <rect x="510" y="221" width="130" height="34" rx="17" fill="#fbf4f5"/>
+    <text x="526" y="244" fill="#a52a38" font-size="16">In Progress</text>
+    <text x="510" y="293" fill="#596779" font-size="17">The login redirect fix is in progress.</text>
+    <text x="36" y="413" fill="#596779" font-size="13">Synthetic data and a simplified field view. Your client's display and wording may differ.</text>
+  </g>
+</svg>

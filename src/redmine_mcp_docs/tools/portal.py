@@ -101,7 +101,9 @@ def export() -> Path:
     (staging / MARKER).write_text(OWNER, encoding="utf-8")
     (staging / ".nojekyll").touch()
 
-    shell_files = ("index.html", "home.md", "404.md", "_sidebar.md", "_navbar.md")
+    shell_files = (
+        "index.html", "home.md", "404.md", "_sidebar.md", "_navbar.md", "_coverpage.md",
+    )
     for name in shell_files:
         copy_file(SOURCE / name, staging / name)
     for source in sorted((SOURCE / "guides").glob("*.md")):
@@ -115,6 +117,9 @@ def export() -> Path:
     asset_paths = {
         "assets/portal.css", "assets/portal.js", "assets/theme.js", "assets/language.js",
         "assets/favicon.svg",
+        "assets/examples/issue-request.svg", "assets/examples/issue-result.svg",
+        "assets/examples/issue-flow.png", "assets/examples/issue-flow.gif",
+        "assets/examples/my-issues.svg", "assets/examples/project-discovery.svg",
         "assets/vendor/manifest.json", "assets/vendor/THIRD_PARTY_NOTICES.md",
     }
     vendor_manifest = safe_path(SOURCE / "assets" / "vendor" / "manifest.json")

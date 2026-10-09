@@ -11,6 +11,7 @@
   - [RedmineUP tags](/docs/integrations/redmineup-tags.md)
 
 - Usage and Tools
+  - [Visual tool examples](/guides/visual-examples.md)
   - [Tool reference](/docs/tool-reference.md)
   - [Manual tool verification](/docs/manual-verification.md)
 

@@ -12,6 +12,9 @@ Start with installation, connect a client, then explore the architecture and dev
   <a class="portal-card" href="#/guides/testing"><strong>Understand testing</strong><span>Explore the three testing layers, evidence, and authorization rules.</span></a>
 </div>
 
+See [visual tool examples](guides/visual-examples.md) for a sample prompt, tool call, result,
+and a short animated walkthrough.
+
 ## Choose your reading path
 
 | Your task | Start here | Continue with |

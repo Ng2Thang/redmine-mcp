@@ -50,6 +50,50 @@
     if (!copied) throw new Error('Clipboard unavailable');
   }
 
+  function setupCoverNavigation() {
+    const cover = document.querySelector('section.cover');
+    if (!cover) return function () {};
+    const landingHashes = ['#/', '#/vi', '#/vi/'];
+
+    function syncCover() {
+      const hash = window.location.hash.split('?')[0] || '#/';
+      const content = cover.querySelector('.cover-main');
+      const visible = landingHashes.includes(hash) && Boolean(content && content.hasChildNodes());
+      // Cover requests finish independently of page rendering. Reconcile their result
+      // with the current route, including late responses after navigating away.
+      if (cover.classList.contains('show') !== visible) cover.classList.toggle('show', visible);
+      document.body.classList.toggle('sticky', !visible || cover.getBoundingClientRect().bottom <= 0);
+    }
+
+    const observer = new MutationObserver(syncCover);
+    observer.observe(cover, {
+      attributes: true,
+      attributeFilter: ['class'],
+      childList: true,
+      subtree: true,
+    });
+    window.addEventListener('hashchange', syncCover);
+    window.addEventListener('scroll', syncCover, { passive: true });
+    window.addEventListener('resize', syncCover);
+    document.addEventListener('click', function (event) {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+      const destination = new URL(link.href, window.location.href);
+      if (destination.origin !== window.location.origin ||
+          destination.pathname !== window.location.pathname ||
+          destination.search !== window.location.search ||
+          !landingHashes.includes(destination.hash) ||
+          destination.hash !== window.location.hash) return;
+      // An already active Overview link does not trigger Docsify's hash router.
+      event.preventDefault();
+      window.scrollTo(0, 0);
+      syncCover();
+    });
+    syncCover();
+    return syncCover;
+  }
+
   function setupSidebarResize() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar || document.querySelector('.sidebar-resizer')) return;
@@ -197,6 +241,10 @@
     executeScript: false,
     notFoundPage: locale.vi ? 'vi/404.md' : '404.md',
     alias: {
+      '/guides/project-backlog(?:\\.md)?': '/guides/my-issues.md',
+      '/guides/progress-update(?:\\.md)?': '/guides/my-issues.md',
+      '/guides/update-issue(?:\\.md)?': '/guides/issue-summary.md',
+      '/guides/log-time(?:\\.md)?': '/guides/time-report.md',
       '/vi/': '/vi/home.md',
       '/vi': '/vi/home.md',
       '/vi/_coverpage(?:\\.md)?': '/_coverpage.md',
@@ -262,6 +310,9 @@
       return marked;
     },
     plugins: [function (hook, vm) {
+      let syncCover = function () {};
+      hook.mounted(function () { syncCover = setupCoverNavigation(); });
+      hook.doneEach(function () { syncCover(); });
       hook.ready(setupSidebarResize);
       hook.ready(window.portalTheme.setupControl);
       hook.ready(locale.setupControl);

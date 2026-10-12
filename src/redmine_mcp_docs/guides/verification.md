@@ -7,6 +7,55 @@ or accepted by the user. Record the source revision, browser, hosting path, resu
 See the [2026-10-09 layout review](layout-review.md) for the checks performed after the
 user requested a portal review. The remaining checklist items still require verification.
 
+## User-guide refresh handoff (2026-10-12)
+
+The following checks are proposed, not executed. Export/serve and browser access are
+required for portal review; Redmine and personal keys are needed only for separately
+authorized tool execution. Reading synthetic examples does not require live tool calls.
+
+- [ ] Follow both homepage paths: connect to an existing server and set up a server.
+- [ ] Confirm Get started has two entries: MCP client installation and MCP server installation.
+      REST and Inspector examples should appear under Help and reference.
+- [ ] Follow MCP client installation from connection settings to identity, projects, and assigned issues.
+- [ ] Confirm the client submenu lists Codex, VS Code Copilot, Cursor, other clients, and First request;
+      the server submenu lists Local Python, Docker with sample data, and Docker with existing Redmine.
+      Shared prerequisites and individual actions should not become submenu entries. Follow each
+      setup choice and the combined identity/project prompt, then the linked workflow guide.
+- [ ] Review the Codex extension, VS Code Copilot, Cursor, and other-client instructions with their supported
+      client versions. Check secret prompts/substitution, existing-server merging, tool discovery,
+      and the VS Code extension-host versus Agent Host distinction. Actual client connections
+      and identity calls need separate authorization; none are claimed by the guide examples.
+- [ ] Confirm the Codex setup screenshot loads from the exported `assets/imgs/` directory,
+      including under a hosting subdirectory, and its caption identifies the existing-server
+      update screen. Check that the credential remains obscured.
+- [ ] Open all four workflow pages from the sidebar and workflow index; check prompt copying,
+      JSON formatting, synthetic-result notices, prerequisites, and related links.
+- [ ] Confirm Everyday workflows opens the overview directly, without a duplicate Choose a workflow
+      entry. Each core workflow should show only three task-focused submenu headings; goals,
+      prerequisites, steps, example results, and related tools remain readable within the page.
+- [ ] Confirm write guides identify the writer requirement and explain uncertain outcomes.
+- [ ] Confirm Access and write actions has Choose your connection and Make and review changes.
+      The access submenu should have two sections; the write submenu should have three:
+      Check your access, Make a change, and Read the outcome. Follow candidate-action discovery,
+      administrator setup, and walkthrough links; check that writer gates and retry guidance remain.
+- [ ] Confirm time logging retains its pending acceptance and activity-discovery waiver.
+- [ ] Search for `open issues`, `logged time`, and `cannot connect`; open the intended guides.
+- [ ] Open Troubleshooting, Reference, and the contributor hub; follow nested canonical links.
+- [ ] Confirm Help and reference has two entries and troubleshooting has three submenu groups:
+      Connection and access, Inputs and results, and Frequently asked questions. Follow existing
+      symptom links, including client connection and incomplete results, to their individual headings.
+- [ ] Confirm REST and Inspector examples has three submenu sections, with connection values
+      in its introduction. Confirm Contributors opens the hub directly and shows Develop tools,
+      Testing and evidence, and Operate and maintain the server. Follow Runtime settings and
+      Security policy from its operations table and expand the recorded evidence list.
+- [ ] Open earlier technical URLs directly to confirm they remain available after navigation changes.
+- [ ] Open the retired `project-backlog`, `progress-update`, `update-issue`, and `log-time`
+      guide routes, with and without `.md`; confirm they resolve to the consolidated guides.
+- [ ] Check homepage installation links, 404 recovery links, and narrow-screen navigation.
+- [ ] Switch language from a new untranslated guide; confirm it goes to the Vietnamese homepage.
+      Note that the Vietnamese edition has not been synchronized with the English refresh.
+- [ ] Repeat key navigation and search under a hosting subdirectory.
+
 ## Prerequisites
 
 Use Git Bash, Python 3.13, Git, and a modern browser. No API key, Docker service, Node installation,
@@ -47,15 +96,20 @@ documentation solely to exercise a check without restoring the intended contents
 - [ ] Open `/`, `#/vi`, and `#/vi/`; confirm the cover shows the local logo and readable text
       in light and dark themes on desktop and mobile. Scroll to the existing homepage and
       confirm the sidebar resize handle appears only with the navigation.
-- [ ] Follow the cover's Get started and GitHub links; confirm installation stays in the
-      selected language. Open an installation deep link directly and confirm no cover appears.
-- [ ] Confirm the cover shows the animated tool example inline with its caption; enable
-      reduced motion in the system or browser and confirm the static overview appears instead.
-- [ ] Confirm the open-issues and project showcases appear below the animated example,
-      show their captions, and stack on mobile. Check that both SVG assets are exported.
+- [ ] Scroll below the cover, open a guide, and return with Overview and the sidebar title.
+      Confirm the cover reappears and scrolling up reaches it. Click Overview again while
+      already on the scrolled homepage; confirm it returns to the cover. Repeat rapid
+      guide/home navigation with delayed requests, browser Back/Forward, heading links,
+      and the Vietnamese landing route. Guide pages should not show a late-arriving cover.
+- [ ] Follow the homepage's MCP client installation and MCP server installation links; both target
+      English user guides. Open an installation deep link directly and confirm no cover appears.
+- [ ] Confirm the cover contains only the logo, product name, and short description,
+      without buttons, example images, animations, or captions.
 - [ ] Confirm exported output includes `_coverpage.md`; repeat cover navigation under a hosting
       subdirectory and check that printing includes the documentation without the cover.
 - [ ] Open every top-level sidebar group and navbar destination.
+- [ ] Open the navbar's Install dropdown and follow both MCP client installation and
+      MCP server installation links, including from the mobile navigation drawer.
 - [ ] Open Visual tool examples; confirm all four SVG mockups and the static PNG load locally.
       Expand the GIF example and check its three stages. Repeat under a hosting subdirectory
       and on a narrow screen; confirm captions explain that the media uses synthetic data.
@@ -101,3 +155,21 @@ documentation solely to exercise a check without restoring the intended contents
 
 Report checks performed, checks deferred, observed failures, and remaining limitations.
 Portal verification does not establish MCP tool acceptance or production readiness.
+
+## Homepage example screenshot review
+
+Manual browser review remains pending; no automated tests were run for this change.
+
+- Open Overview at `#/?id=explore-a-feature-plan-in-redmine`; confirm the heading still resolves
+  and the example contains the stock feature screenshot rather than the conversation reader.
+- Confirm the image stands separately without the Example session badge or enclosing card.
+  Check that the full-size action is above the image and its caption row wraps on small screens.
+- Confirm the Redmine result screenshot appears immediately below the conversation screenshot
+  and before the product introduction; check its full-size link and exported asset as well.
+- Check the bounded image region on desktop and mobile in both themes. Scroll to the bottom
+  with pointer, touch, and keyboard; confirm the full image is available without stretching.
+- Open the full-size link in a new tab and use browser zoom to read the original image.
+  Confirm keyboard focus is visible and the screenshot has descriptive alt text.
+- When export is authorized, confirm the screenshot is included under `assets/imgs/`, loads
+  under a hosting subdirectory, and only the current screenshot assets are requested.
+

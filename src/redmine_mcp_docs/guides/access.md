@@ -1,50 +1,44 @@
 # Reader and writer access
 
-Every caller uses a personal Redmine API key. Redmine remains responsible for native project,
-issue, attachment, membership, and time-entry permissions.
+Your personal Redmine API key determines which account is used. You can only read or
+change what that account is allowed to access in Redmine. Connecting an AI client does
+not grant extra Redmine permissions.
 
-## Deployment comparison
+## Choose reader or writer
 
-| Behavior | Default reader | Separate opt-in writer |
+| Your task | Connection | Example |
 | --- | --- | --- |
-| Default local port | `8000` | `8001` |
-| Read operations | 18 registered reads | Read catalog plus configured writes |
-| Mutation admission | Disabled | Requires explicit enablement and operation gates |
-| Caller identity | Personal Redmine key | Pinned-key or personal-key admission |
-| Target permissions | Native Redmine visibility | Native permissions plus writer checks |
+| Read projects, issues, or time logs | Reader | Show my open issues. |
+| Create an issue or add a note | Enabled writer | Add this progress note to issue #123. |
+| Log or correct time | Enabled writer | Log 1.5 hours on issue #123 for the specified date. |
 
-The complete registered write catalog has 18 operations. A particular writer may expose fewer,
-depending on configured operations and caller-specific discovery.
+The local reader normally uses port `8000`; the separate writer normally uses `8001`.
+Use the actual URL supplied by your administrator. The writer also offers reads, but
+available write actions depend on deployment configuration and caller discovery.
 
-## Configure a writer
+Connect using [MCP client installation](get-started.md), then follow
+[Make and review changes](write-actions.md) to check your account's candidate actions,
+select a target, and interpret the result. If an action is missing, check the connection
+and ask your administrator whether it is enabled for your account. A visible tool is a
+candidate, not a guarantee of permission on every target.
 
-Follow [separate writer deployment](../docs/configuration.md#separate-writer-deployment) and
-[writer operations](../docs/operations.md#separate-writer). Use a separate private environment
-file and listener. Enabling the reader is not part of the writer workflow.
+## Administrator setup
 
-Writer admission requires `REDMINE_WRITE_ENABLED=true` and a configured operation list.
-`pinned_key` mode additionally requires a private key digest and admitted user IDs.
-`personal_key` mode authenticates each caller independently and can restrict admission by user ID.
-An empty operation setting admits no mutations.
+Keep the default reader read-only. Deploy the writer separately using
+[writer configuration](../docs/configuration.md#separate-writer-deployment) and
+[writer operations](../docs/operations.md#separate-writer).
 
-An explicit operation list fixes the allowed ceiling. Standalone `allowed_all` permits every
-registered write, including new registrations after an upgrade. Choose intentionally and
-recreate or restart the writer as documented when changing configuration.
+Writer setup requires all of the following:
 
-## Discovery is not permission
+- `REDMINE_WRITE_ENABLED=true` in the writer runtime.
+- A nonempty `REDMINE_WRITER_OPERATIONS` list containing the intended actions.
+- Caller admission through `pinned_key` or explicitly configured `personal_key` mode.
+- Native Redmine permissions for the actual target.
 
-Personal-key discovery considers visible projects and bounded request-local membership/role
-evidence. A listed operation can remain conditional or unknown for a specific target. The
-capability report is advisory; invocation rechecks deployment gates, caller admission, target
-visibility, and native permissions.
+Pinned-key mode requires a private key digest and admitted user IDs. Personal-key mode
+authenticates each caller separately, requires an empty digest, and can restrict admitted
+user IDs. Follow the linked configuration for exact values and commands.
 
-## Handle mutation outcomes
-
-Writes are dispatched once. The receipt distinguishes acceptance, uncertainty, and subsequent
-read-back observations. A successful transport response does not automatically establish that
-every requested field changed. A missing read-back resource does not prove an uncertain delete
-committed. Inspect native state before deciding whether another attempt is appropriate.
-
-Read [mutation uncertainty](../docs/tool-reference.md#mutation-uncertainty) and each operation's
-contract before performing changes. Synthetic administration, fixture cleanup, and database
-access remain separate from MCP tools.
+An explicit operation list limits scope. Standalone `allowed_all` permits every registered
+write, including new registrations after an upgrade. Restart or recreate the writer as
+documented after changing configuration.

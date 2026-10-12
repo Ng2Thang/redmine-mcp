@@ -1,48 +1,76 @@
-<p class="portal-eyebrow">Documentation / Redmine MCP</p>
+## Explore a feature plan in Redmine
 
-# Understand the server. Use the tools. Follow the flow.
+An example of using Redmine MCP to plan and implement stock features.
+This is a recorded example; available actions depend on your access and server configuration.
 
-Redmine MCP exposes personal-key-authenticated Redmine operations through REST and MCP.
-Start with installation, connect a client, then explore the architecture and development workflow.
+<figure class="portal-feature-image">
+  <figcaption>
+    <span>Planning stock features · Scroll to explore</span>
+    <a class="portal-image-action" href="assets/imgs/implement-stock-feature-example.png" target="_blank" rel="noopener noreferrer">Open full-size image (new tab)</a>
+  </figcaption>
+  <div class="portal-feature-image-scroll" role="region" aria-label="Stock feature example screenshot; scroll to read" tabindex="0">
+    <img src="assets/imgs/implement-stock-feature-example.png" alt="Recorded AI conversation using Redmine MCP to organize stock features, with issue tables, estimates, and follow-up requests." width="1920" height="13212" loading="lazy" decoding="async">
+  </div>
+</figure>
+
+<figure class="portal-feature-image">
+  <figcaption>
+    <span>Result in Redmine · Created development and test issues</span>
+    <a class="portal-image-action" href="assets/imgs/example_redmine_tool.png" target="_blank" rel="noopener noreferrer">Open full-size image (new tab)</a>
+  </figcaption>
+  <div class="portal-feature-image-scroll" role="region" aria-label="Redmine result screenshot; scroll if needed" tabindex="0">
+    <img src="assets/imgs/example_redmine_tool.png" alt="Redmine issue list for target version 2.0.0, showing development and test tasks with categories, start dates, due dates, and logged time." loading="lazy" decoding="async">
+  </div>
+</figure>
+
+<p class="portal-eyebrow">Redmine MCP / User guide</p>
+
+# Work with Redmine from your AI client
+
+Find your tasks, understand an issue, and prepare a progress update without copying data
+between Redmine and your AI client. Redmine MCP gives a compatible client tools to read
+Redmine using your personal account. A separately enabled writer can also make changes.
 
 <div class="portal-grid">
-  <a class="portal-card" href="#/guides/installation"><strong>Get started</strong><span>Choose Docker or local Python and prepare your environment.</span></a>
-  <a class="portal-card" href="#/guides/first-calls"><strong>Use the tools</strong><span>Make your first REST request and connect MCP Inspector.</span></a>
-  <a class="portal-card" href="#/docs/mcp-request-flow"><strong>Trace execution</strong><span>Follow authentication, dispatch, Redmine access, and the response.</span></a>
-  <a class="portal-card" href="#/guides/testing"><strong>Understand testing</strong><span>Explore the three testing layers, evidence, and authorization rules.</span></a>
+  <a class="portal-card portal-card-featured" href="#/guides/reference"><strong>Supported tools and capabilities</strong><span>See what you can do with Redmine MCP, which actions need writer access, and the limits to expect.</span></a>
+  <a class="portal-card" href="#/guides/get-started"><strong>MCP client installation</strong><span>Set up your AI app or extension and connect it to an existing server.</span></a>
+  <a class="portal-card" href="#/guides/installation"><strong>MCP server installation</strong><span>Install and run the Redmine MCP server with Python or Docker.</span></a>
+  <a class="portal-card" href="#/guides/workflows"><strong>Explore everyday workflows</strong><span>Copy prompts for issues, progress updates, and time reports.</span></a>
+  <a class="portal-card" href="#/guides/troubleshooting"><strong>Get help</strong><span>Resolve connection problems, missing results, and unavailable actions.</span></a>
 </div>
 
-See [visual tool examples](guides/visual-examples.md) for a sample prompt, tool call, result,
-and a short animated walkthrough.
+## Try a question
 
-## Choose your reading path
-
-| Your task | Start here | Continue with |
+| What you want to do | Example prompt | Walkthrough |
 | --- | --- | --- |
-| Install and connect | [Installation](guides/installation.md) | [First calls](guides/first-calls.md) |
-| Configure access | [Reader and writer](guides/access.md) | [Configuration](docs/configuration.md) |
-| Find inputs and results | [Tool reference](docs/tool-reference.md) | [Manual verification](docs/manual-verification.md) |
-| Understand the implementation | [Module map](guides/module-map.md) | [Architecture](docs/architecture.md), [execution flow](docs/mcp-request-flow.md) |
-| Add or change a tool | [Development](docs/development.md) | [Tool workflow](docs/workflows/redmine-tools.md) |
-| Operate an environment | [Operations](docs/operations.md) | [Synthetic data](docs/test-data.md) |
-| Review acceptance | [Testing overview](guides/testing.md) | [Coverage matrix](docs/plans/testing-coverage.md), [roadmap](docs/plans/index.md) |
+| Find your next task | Show my open issues in the Website project, grouped by priority. | [My open issues](guides/my-issues.md) |
+| Catch up on a discussion | Summarize issue #123 and its recent notes. | [Understand an issue](guides/issue-summary.md) |
+| Review your time | Summarize my logged hours from 2026-10-05 through 2026-10-09 by project. | [Time reports](guides/time-report.md) |
 
-## Current boundaries
+Names, IDs, dates, and sample results are illustrative. Replace them with your own scope.
+Your client chooses tools and formats its answer; prompts are examples, not built-in commands.
+[See an illustrated example](guides/visual-examples.md).
 
-The registered catalog contains **18 reads and 18 writes**. The default reader remains read-only;
-writes require a separately enabled writer, configured operation gates, personal Redmine keys,
-caller admission, and native permissions. The target Redmine version is **7.0.2**.
+## What you can expect
 
-This is a development implementation for pilot evaluation. Dated testing records establish only
-their recorded revisions and scenarios. Consult the [current roadmap](docs/plans/index.md) for
-pending acceptance and waivers; the portal does not add production certification.
+- Results reflect the account associated with your personal Redmine API key.
+- Reading works on the default server. Changes require a writer connection, enabled actions,
+  and your normal Redmine permissions.
+- Large queries may return a preview. Ask for a smaller project or date range before
+  treating a summary as complete.
+- Attachment tools provide metadata and browser links. Open the links in Redmine to read files.
 
-## About this portal
+The target is Redmine **7.0.2**. This is an unreleased pilot implementation; support and
+acceptance vary by operation. The [reference guide](guides/reference.md) links to exact
+contracts and recorded limitations.
 
-Detailed pages are exported from the repository's canonical `docs/` files. The introductory guides
-and navigation live in `src/redmine_mcp_docs/`. Rendering, diagrams, and search use bundled local
-assets. External links and commands that install packages or contact Redmine still need their own
-network access.
+## Where to go next
 
-See [portal maintenance and static deployment](docs/documentation-portal.md) and the
-[manual portal checklist](guides/verification.md).
+Start with [MCP client installation](guides/get-started.md), then choose an
+[everyday workflow](guides/workflows.md). Administrators can use
+[MCP server installation](guides/installation.md) and [access setup](guides/access.md).
+Contributors can find architecture, development, and testing material in the
+[contributor documentation](guides/contributors.md).
+
+This refreshed user guide is maintained in English. The existing Vietnamese edition has
+not yet been synchronized with these workflows.

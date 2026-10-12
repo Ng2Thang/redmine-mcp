@@ -57,15 +57,14 @@ the projects returned for that caller. Larger results may require pagination.
 | Show the projects I can access. | `list_projects` |
 | Summarize issue #123. | `get_issue` with `issue_id: 123` |
 
-Use [First REST and MCP calls](first-calls.md) for connection instructions and request examples.
+Use [MCP client installation](get-started.md) to connect your client, or
+[REST and Inspector examples](first-calls.md) for explicit request examples.
 
-## Replace these examples later
+## Try it with your own work
 
-Media files live in `src/redmine_mcp_docs/assets/examples/`. Replace the SVG mockups with your
-screenshots, and replace `issue-flow.gif` with a short recording of the workflow. Update
-`issue-flow.png` with a matching still image. Keep the filenames or update the image paths here
-and the explicit `asset_paths` inventory in `src/redmine_mcp_docs/tools/portal.py` if names change.
+Follow [Find my open issues](my-issues.md) for a project-specific task list, or
+[Understand an issue](issue-summary.md) for discussion context and suggested follow-up.
+For a progress update or time report, choose an [everyday workflow](workflows.md).
 
-Update the captions, alt text, and animation transcript to match your replacements, and remove
-the placeholder notice once the examples show real captures. Use synthetic data in captures
-and hide API keys and session tokens. Re-export or restart the portal to publish local changes.
+Your results depend on your account, filters, and available pages. Ask the client to explain
+missing data and incomplete collection before relying on a summary.

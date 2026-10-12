@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import argparse
 import functools
+import io
 import json
 import os
 import re
 import shutil
 import subprocess
+import threading
+import time
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import IO
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -120,6 +124,9 @@ def export() -> Path:
         "assets/examples/issue-request.svg", "assets/examples/issue-result.svg",
         "assets/examples/issue-flow.png", "assets/examples/issue-flow.gif",
         "assets/examples/my-issues.svg", "assets/examples/project-discovery.svg",
+        "assets/imgs/install_mcp_codex_vscode_ext.png",
+        "assets/imgs/implement-stock-feature-example.png",
+        "assets/imgs/example_redmine_tool.png",
         "assets/vendor/manifest.json", "assets/vendor/THIRD_PARTY_NOTICES.md",
     }
     vendor_manifest = safe_path(SOURCE / "assets" / "vendor" / "manifest.json")
@@ -184,8 +191,115 @@ def export() -> Path:
 class PortalHandler(SimpleHTTPRequestHandler):
     """Serve exported files without directory listings."""
 
+    server: PortalServer
+
     def list_directory(self, path: str) -> None:
         self.send_error(404, "Directory listing is disabled")
+
+    def end_headers(self) -> None:
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
+    def do_GET(self) -> None:
+        with self.server.reload_lock:
+            super().do_GET()
+
+    def do_HEAD(self) -> None:
+        with self.server.reload_lock:
+            super().do_HEAD()
+
+    def send_head(self) -> IO[bytes] | None:
+        path = urlsplit(self.path).path
+        if path == "/__portal_revision":
+            content = self.server.revision.encode("utf-8")
+            content_type = "text/plain; charset=utf-8"
+        elif path in {"/", "/index.html"}:
+            content = safe_path(OUTPUT_PARENT / "site" / "index.html").read_bytes()
+            # Inject only in the development server; static exports remain standalone.
+            script = """<script>
+(function () {
+  const revision = REVISION;
+  async function poll() {
+    try {
+      const response = await fetch('/__portal_revision', { cache: 'no-store' });
+      if (response.ok && (await response.text()) !== revision) {
+        window.location.reload();
+        return;
+      }
+    } catch (_) { /* Retry while the development server is unavailable. */ }
+    window.setTimeout(poll, 1000);
+  }
+  window.setTimeout(poll, 1000);
+}());
+</script>""".replace("REVISION", json.dumps(self.server.revision))
+            content = content.replace(b"</body>", script.encode("utf-8") + b"\n</body>")
+            content_type = "text/html; charset=utf-8"
+        else:
+            return super().send_head()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        return io.BytesIO(content)
+
+    def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
+        if urlsplit(self.path).path != "/__portal_revision":
+            super().log_request(code, size)
+
+
+def source_snapshot() -> dict[str, tuple[int, int]]:
+    """Watch export inputs, including new guides, using portable filesystem polling."""
+    manifest = json.loads(
+        safe_path(OUTPUT_PARENT / "site" / "export-manifest.json").read_text(encoding="utf-8")
+    )
+    paths = {ROOT / name for name in manifest["documents"] + manifest["references"]}
+    paths.update(ROOT / name for name in tracked_files() if name.startswith("docs/"))
+    paths.update(
+        SOURCE / name for name in
+        ("index.html", "home.md", "404.md", "_sidebar.md", "_navbar.md", "_coverpage.md")
+    )
+    for directory, pattern in (("guides", "*.md"), ("vi", "*.md"), ("assets", "*")):
+        paths.update((SOURCE / directory).rglob(pattern))
+    snapshot = {}
+    for path in sorted(paths):
+        safe_path(path)
+        try:
+            if path.is_file():
+                stat = path.stat()
+                snapshot[path.relative_to(ROOT).as_posix()] = (stat.st_mtime_ns, stat.st_size)
+        except FileNotFoundError:
+            # Editors can briefly replace a file while saving it.
+            continue
+    return snapshot
+
+
+class PortalServer(ThreadingHTTPServer):
+    """Re-export changed inputs while serializing exports with file requests."""
+
+    def __init__(
+        self, address: tuple[str, int], handler: functools.partial[PortalHandler],
+    ) -> None:
+        self.reload_lock = threading.RLock()
+        self.revision = str(time.time_ns())
+        self.snapshot = source_snapshot()
+        self.next_scan = time.monotonic() + 1
+        super().__init__(address, handler)
+
+    def service_actions(self) -> None:
+        if time.monotonic() < self.next_scan:
+            return
+        self.next_scan = time.monotonic() + 1
+        try:
+            snapshot = source_snapshot()
+            if snapshot == self.snapshot:
+                return
+            with self.reload_lock:
+                export()
+                self.snapshot = snapshot
+                self.revision = str(time.time_ns())
+            print("Documentation changed; browser reload requested.", flush=True)
+        except (OSError, ValueError, subprocess.SubprocessError) as error:
+            print(f"Documentation reload failed; retrying: {error}", flush=True)
 
 
 def main() -> None:
@@ -198,8 +312,9 @@ def main() -> None:
     site = export()
     if arguments.command == "serve":
         handler = functools.partial(PortalHandler, directory=str(site))
-        with ThreadingHTTPServer(("127.0.0.1", arguments.port), handler) as server:
+        with PortalServer(("127.0.0.1", arguments.port), handler) as server:
             print(f"Documentation: http://127.0.0.1:{arguments.port}/ (Ctrl+C to stop)")
+            print("Watching documentation and assets for changes (automatic browser reload).")
             try:
                 server.serve_forever()
             except KeyboardInterrupt:

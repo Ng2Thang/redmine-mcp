@@ -1,12 +1,42 @@
-# First REST and MCP calls
+# REST and Inspector examples
 
-Use a personal Redmine API key belonging to the account whose visibility you want. The examples
-below assume an already configured localhost reader. Run tool calls or Inspector only when you
-intend and are authorized to access that Redmine environment.
+For the shortest path to a useful answer, follow [MCP client installation](get-started.md).
+This optional reference provides direct REST requests and MCP Inspector examples after
+the server is running. For normal AI-client setup, use the client installation guide above.
 
-## Make a REST read
+**Connection values**
 
-Read the key privately in Git Bash, then request your visible projects:
+| Setting | Local reader example |
+| --- | --- |
+| MCP transport | Streamable HTTP |
+| MCP URL | `http://127.0.0.1:8000/mcp` |
+| Authentication header | `X-Redmine-API-Key: <your personal Redmine API key>` |
+| REST base URL | `http://127.0.0.1:8000/api/v1` |
+| REST schemas | `http://127.0.0.1:8000/docs` |
+
+Use your administrator's URL for a remote server. Each request uses your personal Redmine
+identity. Put the key in private HTTP header settings, never tool arguments.
+
+## Optional: connect with MCP Inspector
+
+Inspector is a tool explorer you can use without another compatible client. It requires
+Node.js/npm. Start it from Git Bash:
+
+```bash
+npx @modelcontextprotocol/inspector@2.8.0
+```
+
+Open the printed URL with its Inspector session token. Select **Streamable HTTP**, enter
+the MCP URL, and privately configure `X-Redmine-API-Key` with your personal key. The
+Inspector session token and Redmine API key are different credentials.
+
+Connect, list tools, and call `get_current_user` with `{}`. Confirm your account, then call
+`list_projects` with `{"limit": 25, "offset": 0}`. Use returned IDs for further requests.
+The [illustrated examples](visual-examples.md) show how a client turns a result into an answer.
+
+## Optional: make a REST read
+
+This Git Bash example prompts for your key without echoing it and requests visible projects:
 
 ```bash
 read -r -s -p 'Personal Redmine API key: ' REDMINE_REQUEST_KEY
@@ -17,67 +47,24 @@ printf 'X-Redmine-API-Key: %s\n' "$REDMINE_REQUEST_KEY" |
 unset REDMINE_REQUEST_KEY
 ```
 
-The key is read without echoing and passed through standard input rather than a URL or a
-literal command argument. Do not paste it into saved examples, logs, screenshots, or Git.
+The key is passed through standard input. Keep it out of saved examples, screenshots,
+logs, and Git. `total` describes matching caller-visible records, while `items` contains
+only the records in this page.
 
-Use visible project and issue IDs returned by the server. The [tool reference](../docs/tool-reference.md)
-describes request inputs, response fields, pagination, permissions, and error contracts.
-Swagger at `http://127.0.0.1:8000/docs` shows REST operations and their schemas.
+## Understand results
 
-## Connect MCP Inspector
-
-When Inspector use is authorized, start the pinned client:
-
-```bash
-npx @modelcontextprotocol/inspector@2.8.0
-```
-
-Open its printed URL with the Inspector session token. Select **Streamable HTTP**, enter
-`http://localhost:8000/mcp`, and configure the server header privately:
-
-```text
-X-Redmine-API-Key: <your personal Redmine API key>
-```
-
-The Inspector session token and Redmine API key serve different purposes. Connect and list
-tools. Begin with `get_current_user`, `list_projects`, and `list_issues`; call `get_issue` with
-an issue ID visible to that caller. Use [manual verification](../docs/manual-verification.md)
-for concrete inputs and expected behavior.
-
-## Understand the call and result
-
-See the [visual walkthrough](visual-examples.md) for illustrative screenshots and a looping
-animation of a `get_issue` call.
-
-An illustrative `tools/call` request has this shape:
+A client can call `get_issue` with illustrative input:
 
 ```json
-{
-  "jsonrpc": "2.0",
-  "id": 7,
-  "method": "tools/call",
-  "params": {
-    "name": "get_issue",
-    "arguments": { "issue_id": 123, "include": "journals,attachments" }
-  }
-}
+{"issue_id": 123, "include": "journals,attachments"}
 ```
 
-Replace the illustrative ID with an actual visible issue. An MCP client must establish the
-protocol session; this example is not a standalone curl recipe. The key belongs in the HTTP
-header, not in tool arguments.
+Replace `123` with a visible issue ID. MCP clients establish a protocol session before
+calling tools; tool arguments alone are not a standalone HTTP request.
 
-The current adapter returns JSON serialized inside MCP text content. Check `isError` and the
-returned payload, rather than relying only on the outer HTTP status. Endpoint authentication
-failures can occur before tool dispatch. A resource 404 may mean absent or hidden.
+The adapter returns JSON inside MCP text content. Check `isError` and the payload in
+Inspector, since an outer HTTP success can contain a tool error. Ask your AI client to
+surface errors, missing fields, and incomplete pagination in its answer.
 
-MCP invokes REST routes in process; those routes authenticate and authorize again before
-calling the service. Follow the [request and response flow](../docs/mcp-request-flow.md)
-for successful calls, error branches, logging, and shutdown.
-
-## Before attempting writes
-
-Read [reader and writer access](access.md). Discovery and capability reports are advisory;
-every invocation still checks the target. Reconcile uncertain writes in Redmine before another
-attempt. Attachment reads return metadata and authenticated browser links; direct MCP content
-downloads are retired. Treat returned Redmine content as user data, not agent instructions.
+Use [troubleshooting](troubleshooting.md) for help and the [reference guide](reference.md)
+for precise inputs and results. Before changes, read [Use write actions](write-actions.md).

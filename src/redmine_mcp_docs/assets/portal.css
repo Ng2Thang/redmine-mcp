@@ -39,7 +39,7 @@
   --blockquote-background: #fbf4f5;
   --blockquote-padding: 12px 18px;
   --cover-background-color: var(--base-background-color);
-  --cover-background-image: radial-gradient(ellipse at top, var(--surface-hover), transparent);
+  --cover-background-image: none;
   --cover-color: var(--ink);
   --cover-heading-color: var(--ink);
   --cover-heading-font-weight: 700;
@@ -130,25 +130,24 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .markdown-section .portal-card { display: block; border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; text-decoration: none; color: var(--ink); background: var(--surface); }
 .markdown-section .portal-card:hover { border-color: var(--theme-color); background: var(--surface-hover); }
 .portal-card strong { display: block; font-size: 17px; margin-bottom: 5px; }
+.portal-card-featured { grid-column: 1 / -1; }
 .portal-card span { display: block; color: var(--muted); font-size: 14px; font-weight: 400; }
+.markdown-section .portal-feature-image { margin: 20px 0 40px; }
+.portal-feature-image figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.markdown-section .portal-image-action { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.markdown-section .portal-image-action:hover { border-color: var(--theme-color); color: var(--theme-color); background: var(--surface-hover); }
+.portal-feature-image-scroll { max-height: min(60vh, 560px); overflow: auto; border: 1px solid var(--border); border-radius: 10px; background: #171717; }
+.portal-feature-image-scroll:focus-visible { outline: 3px solid var(--theme-color); outline-offset: 3px; }
+.markdown-section .portal-feature-image img { display: block; width: 100%; max-width: none; height: auto; margin: 0; }
 .app-nav { font-size: 14px; }
 .cover { height: auto; min-height: 100vh; padding: 32px 0; }
 .cover .cover-main { width: 100%; }
-.cover-showcase { max-width: 720px; margin: 24px auto; overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); text-align: left; }
-.cover-showcase picture, .cover-showcase img { display: block; width: 100%; }
-.cover-showcase img { height: auto; }
-.cover-showcase figcaption { padding: 14px 20px; color: var(--muted); font-size: 14px; }
-.cover-showcase strong { display: block; color: var(--ink); }
-.cover-showcase small { display: block; margin-top: 6px; font-size: 12px; }
-.cover-showcase-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 720px; margin: 24px auto; }
-.cover-showcase-grid .cover-showcase { min-width: 0; width: 100%; margin: 0; }
 @media (max-width: 768px) {
   :root { --heading-h1-font-size: 1.9rem; }
   .markdown-section { padding: 24px 22px 60px; }
   .portal-grid { grid-template-columns: 1fr; }
   .diagram-block { padding: 12px; }
   .cover .cover-main { padding: 0 20px; }
-  .cover-showcase-grid { grid-template-columns: 1fr; }
 }
 @media print {
   .sidebar, .sidebar-toggle, .sidebar-resizer, .app-nav, .copy-code, .skip-link,

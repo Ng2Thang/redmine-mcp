@@ -25,6 +25,27 @@ later entries record subsequent work. Dated evidence does not verify new working
 The 2026-10-09 documentation correction performed no tests, startup, Inspector or live calls
 and does not close acceptance gaps or publish a release.
 
+## User documentation refresh (2026-10-12)
+
+The user authorized implementation of a user-oriented English portal refresh. The source
+now prioritizes connection, installation, first useful requests, four core everyday workflows,
+write guidance, and troubleshooting. Architecture, development, testing, and evidence remain
+accessible through a contributor hub at their existing URLs. No public MCP operation or
+runtime configuration contract changes. See the
+[content migration map](../documentation-portal.md#user-guide-content-map-2026-10-12).
+
+At the user's request, the original eight workflow pages were consolidated into four:
+assigned issues, issue summaries, time reports, and issue creation. Backlog filtering,
+progress drafts, notes, and time logging remain as short variations. The four removed
+standalone routes resolve to their consolidated guides; navigation and handoff were updated.
+
+Documentation edits are implemented; rendered review remains pending. New Markdown is English,
+and documented commands remain Bash. The existing Vietnamese edition is retained without
+synchronization. No tests, quality-check tools, link-check tools, export/serve, browser checks,
+Inspector, live Redmine calls, or deployment were performed. The
+[manual portal handoff](../documentation-portal.md#verification-handoff) describes proposed
+checks requiring separate authorization. Existing operation acceptance gaps remain unchanged.
+
 ## Issue spent-time update and deletion plan
 
 On 2026-10-08, the user reported that spent-time entries #919–#924 remain on issues #491–#496

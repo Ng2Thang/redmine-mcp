@@ -1,7 +1,9 @@
 # Documentation portal
 
-The standalone Docsify portal combines introductory pages from `src/redmine_mcp_docs/` with
-canonical repository documentation from `docs/`. It runs separately from MCP and Swagger.
+The standalone Docsify portal combines user guides from `src/redmine_mcp_docs/` with
+canonical repository documentation from `docs/`. English navigation prioritizes connection,
+installation, everyday workflows, write access, and troubleshooting. Technical material
+remains available through the contributor hub. It runs separately from MCP and Swagger.
 The default portal address is `http://127.0.0.1:8080/`; Swagger remains at `/docs` on the MCP server.
 
 ## Export and serve
@@ -14,14 +16,18 @@ bash scripts/docs-portal.sh export
 bash scripts/docs-portal.sh serve
 ```
 
-`export` creates `.local/docs-portal/site/`. `serve` exports first and starts a foreground static
-server bound to `127.0.0.1:8080`. An optional port changes the listener:
+`export` creates `.local/docs-portal/site/`. `serve` exports first and starts a foreground
+server bound to `127.0.0.1:8080`, polling documentation and assets for changes every second.
+After a successful re-export, open browser pages reload automatically, preserving the current
+route. Responses disable browser caching during local serving. An optional port changes the listener:
 
 ```bash
 bash scripts/docs-portal.sh serve 8088
 ```
 
-Press Ctrl+C to stop. Restart after editing documentation. If export is interrupted, the next
+Press Ctrl+C to stop. Source edits do not require a restart; changes to the exporter Python code
+or launcher script still require restarting the command. Live reload is injected only by `serve`
+and is not included in static exports. If export is interrupted, the next
 export replaces only marked staging/output directories under `.local/docs-portal/`. An existing
 unmarked directory is refused rather than deleted. Symlink/junction paths are refused.
 
@@ -35,7 +41,7 @@ a reference to HEAD and does not certify uncommitted content or test acceptance.
 | Content | Edit here |
 | --- | --- |
 | Detailed installation/configuration/architecture/tool/testing/operations contracts | Canonical `docs/` files and root README |
-| Introductory installation, first-call, access, module-map, and testing guides | `src/redmine_mcp_docs/guides/` |
+| User onboarding, workflows, access, troubleshooting, and contributor hub | `src/redmine_mcp_docs/guides/` |
 | Portal cover, homepage, sidebar, and navbar | `src/redmine_mcp_docs/_coverpage.md`, `home.md`, `_sidebar.md`, `_navbar.md` |
 | Visual tool examples and replacement media | `src/redmine_mcp_docs/guides/visual-examples.md` and `assets/examples/` |
 | Styling and Docsify/Mermaid integration | `src/redmine_mcp_docs/assets/portal.css` and `portal.js` |
@@ -54,21 +60,83 @@ Add new main pages to the sidebar for navigation and local search discovery. Evi
 records remain reachable through canonical document links. Preserve dates, exact verification
 scope, waived stages, and pending acceptance; do not describe historical results as fresh checks.
 
+## User-guide content map (2026-10-12)
+
+| Earlier entry point | Updated destination or treatment |
+| --- | --- |
+| Homepage focused on installation, execution flow, and testing | User overview with connect/setup paths, three prompts, workflows, and help |
+| Installation as the only starting path | `guides/get-started.md` for existing-server users; installation retains its URL for server setup |
+| First REST and MCP calls | Same `guides/first-calls.md` URL, with optional REST/Inspector examples after client onboarding |
+| Access configuration | Same `guides/access.md` URL, with user guidance followed by administrator prerequisites |
+| Visual examples and media replacement instructions | Existing visual guide remains a walkthrough; media maintenance moves to the source README |
+| Detailed tool reference as the primary usage entry | `guides/workflows.md` and four core task guides, plus `guides/reference.md` for exact-contract links |
+| Architecture, development, testing, evidence, operations, and maintenance sidebar groups | `guides/contributors.md` links to existing pages without moving or deleting routes |
+| Error handling spread across technical references | `guides/troubleshooting.md` with symptoms, fixes, and FAQ |
+
+The four core guides cover assigned issues, issue summaries, time reports, and issue creation.
+Installation submenus now lead directly to client types (Codex, VS Code Copilot, Cursor, and
+other clients) or server setups (local Python, sample Docker, and Docker with existing Redmine).
+Shared prerequisites stay in each introduction; client identity and project discovery use
+one first request. Workflow instructions and portal serving remain in their dedicated guides.
+Backlog filters and progress drafts are variations in the issue-list guide; notes and time
+logging are short follow-ups in the issue-summary and time-report guides. The standalone
+`project-backlog`, `progress-update`, `update-issue`, and `log-time` pages were removed;
+their old routes resolve to consolidated guides through Docsify aliases. The Everyday workflows
+sidebar label opens the overview directly, replacing the separate Choose a workflow entry.
+Each core guide introduces its goal and prerequisites, then uses three task-focused submenu
+headings for the main action, variations or follow-ups, and troubleshooting. Prompts, steps,
+illustrative results, and related tools remain within those sections as content rather than
+separate submenu entries. New guides live directly under `guides/` so the existing export glob
+includes them without changing the exporter. New Markdown is English, and documented
+commands remain Bash.
+
+Access and write actions keeps two destinations at their existing URLs: Choose your connection
+and Make and review changes. The access page has two submenu sections for reader/writer choice
+and administrator setup. The write page has three for checking access, making a change, and
+reading the outcome. Candidate-action discovery appears once, and walkthrough links remain
+within the action section. Writer admission, operation gates, native permissions, and uncertain
+outcomes retain their existing contracts. This navigation change has not been browser-verified.
+
+Help and reference now has two entries: Fix problems and find answers, and REST and Inspector
+examples. Troubleshooting groups symptoms under Connection and access, Inputs and results,
+and Frequently asked questions. Individual symptom anchors remain available as level-three
+headings. REST/Inspector connection values stay in the introduction, leaving three sections
+for Inspector, REST, and understanding results. Contributors opens the hub directly with
+three sections for development, testing/evidence, and operations. Runtime settings and
+Security policy move from the help menu to the contributor operations table; their canonical
+URLs remain unchanged. Historical evidence remains linked in a collapsible list. These menu
+changes have not been browser-verified.
+
+The refresh changes documentation only. It does not establish new operation acceptance or
+resolve existing waivers. Export, serving, browser checks, link-check tooling, tests, Inspector,
+and live calls were not run for this change. The updated manual checklist is a verification
+handoff requiring separate authorization. The existing Vietnamese edition is retained but
+has not been synchronized with this English refresh.
+
 ## Cover page
 
 The [Docsify cover page](https://docsify.js.org/#/cover) uses `_coverpage.md`, included by the
 exporter. The English cover is shared by the `/`, `/vi`, and `/vi/` landing routes through the
 `coverpage` setting and a Vietnamese cover alias in `assets/portal.js`. Other pages open directly.
-`onlyCover: false` keeps the existing homepage below the cover. The cover links to installation
-and GitHub, uses the local project logo, and follows the portal's light and dark themes.
-An inline showcase plays `assets/examples/issue-flow.gif` with a short prompt and result
-caption. Visitors who prefer reduced motion see `issue-flow.png` instead. Replace these
-files to update both the cover showcase and the visual examples guide.
-Two additional inline showcases use `assets/examples/my-issues.svg` for assigned open issues
-and `assets/examples/project-discovery.svg` for accessible projects. They appear side by side
-on wider screens and stack on mobile. All showcase media uses clearly labeled synthetic data.
+`onlyCover: false` keeps the homepage below the cover. The cover uses the local logo and
+follows the portal's light and dark themes.
+The portal reconciles cover visibility with the current landing route after navigation and
+asynchronous cover rendering. Clicking an already active Overview link returns to the cover
+at the top; heading links retain their section destinations. Browser back/forward navigation
+keeps its normal scroll restoration. Browser verification of this fix remains pending.
+The cover contains only the logo, product name, and short description, without buttons.
+Installation links remain on the homepage and in the sidebar.
+Examples, screenshots, and animations belong in the user guides rather than on the cover.
+Their assets remain exported for those guides.
+The homepage feature-plan example uses `assets/imgs/implement-stock-feature-example.png`
+as a standalone figure without the Example session card or badge. A bounded scroll region
+and a full-size link above the image support browsing and zooming. It replaces
+the conversation reader; the unused reader script, transcript, and viewer-specific styles
+have been removed from the source tree. Its existing heading link remains unchanged.
+Browser review is still deferred.
 Edit cover content in `src/redmine_mcp_docs/_coverpage.md` and appearance through the
-`--cover-*` variables in `assets/portal.css`. Re-export or restart the portal after edits.
+`--cover-*` variables in `assets/portal.css`. Local serving reloads edits automatically;
+run `export` again before publishing a static copy.
 
 ## Vietnamese edition
 
@@ -80,10 +148,12 @@ for complete contracts, scenario tables, commit histories, and evidence ledgers.
 reference edition links to its original. Dates, pending acceptance, waivers, and verification
 limits remain explicit. Untranslated task records still use English source with a notice.
 
-Vietnamese Markdown is confined to `src/redmine_mcp_docs/vi/`, as explicitly requested by
-the user; other Markdown remains English. Update translations alongside their English
-counterparts, and maintain the translated-page registry in `assets/language.js`. Exact local
-aliases precede the English fallback. Switching language preserves page routes and drops heading
+The existing Vietnamese edition predates the English user-guide refresh of 2026-10-12.
+It is retained without changes; its navigation and content are not synchronized with the
+new workflows. New Markdown remains English under the current repository instructions.
+Any separately authorized translation update must maintain the registry in `assets/language.js`.
+Exact local aliases precede the English fallback. Switching language preserves translated
+page routes and drops heading
 queries because translated headings differ. Language is encoded in the hash URL, with
 separate search caches; themes and the saved sidebar width remain shared. Export includes
 only Markdown from the dedicated translation tree, using the existing path boundary checks.
@@ -146,10 +216,12 @@ Review documentation for inappropriate content before publishing publicly.
 
 ## Verification handoff
 
-The source contains a manual checklist at `src/redmine_mcp_docs/guides/verification.md`, shown
-under Testing in the portal. It covers offline loading, clipboard behavior, highlighting,
-diagrams, navigation, heading links, export refresh/removal, boundaries, mobile layout, and
-root/subdirectory hosting. Portal-only checks need no Redmine fixtures or test dependencies.
+The source contains a manual checklist at `src/redmine_mcp_docs/guides/verification.md`, linked
+from the contributor hub. Its 2026-10-12 handoff covers both onboarding paths, four core workflow
+pages, prompts, navigation/search, retained technical routes, and the existing locale boundary.
+The broader checklist covers offline loading, clipboard behavior, highlighting, diagrams,
+heading links, export refresh/removal, boundaries, mobile layout, and root/subdirectory hosting.
+Portal-only checks need no Redmine fixtures or test dependencies.
 
 Tests, browser checks, Inspector, live calls, and quality/testing tools are not automatically
 executed by export or serve. Run them only within a separately authorized assignment and record

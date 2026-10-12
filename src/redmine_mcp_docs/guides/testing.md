@@ -45,7 +45,8 @@ passing count does not verify a new working tree or close pending acceptance aut
 Use the [current task summary](../docs/plans/index.md),
 [coverage matrix](../docs/plans/testing-coverage.md), and
 [catalog acceptance ledger](../docs/testing/evidence/current-catalog-acceptance.md) together.
-Later preparation, retry, and time-entry changes have their own evidence linked from the sidebar.
+Later preparation, retry, and time-entry changes have their own evidence linked from
+[Contributors](contributors.md#testing-and-evidence).
 Time-entry creation acceptance remains pending, and activity discovery testing was waived in
 the documented baseline. Follow the canonical roadmap for subsequent updates.
 

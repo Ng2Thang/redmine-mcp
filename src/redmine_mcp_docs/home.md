@@ -49,7 +49,7 @@ Redmine using your personal account. A separately enabled writer can also make c
 
 Names, IDs, dates, and sample results are illustrative. Replace them with your own scope.
 Your client chooses tools and formats its answer; prompts are examples, not built-in commands.
-[See an illustrated example](guides/visual-examples.md).
+[See REST and Inspector examples](guides/first-calls.md).
 
 ## What you can expect
 
@@ -72,5 +72,18 @@ Start with [MCP client installation](guides/get-started.md), then choose an
 Contributors can find architecture, development, and testing material in the
 [contributor documentation](guides/contributors.md).
 
-This refreshed user guide is maintained in English. The existing Vietnamese edition has
-not yet been synchronized with these workflows.
+Documentation is maintained in English only. Example screenshots retain their original text.
+
+## Technical references
+
+Pages linked from the earlier Overview remain available here.
+
+| Topic | Pages |
+| --- | --- |
+| Configuration | [Runtime settings](docs/configuration.md) |
+| Tool contracts | [Tool reference](docs/tool-reference.md), [manual verification](docs/manual-verification.md) |
+| Implementation | [Module map](guides/module-map.md), [architecture](docs/architecture.md), [execution flow](docs/mcp-request-flow.md) |
+| Development | [Development](docs/development.md), [tool workflow](docs/workflows/redmine-tools.md) |
+| Operations | [Operations](docs/operations.md), [synthetic data](docs/test-data.md) |
+| Testing | [Testing overview](guides/testing.md), [coverage matrix](docs/plans/testing-coverage.md), [roadmap](docs/plans/index.md) |
+| Portal | [Visual examples](guides/visual-examples.md), [maintenance](docs/documentation-portal.md), [manual checklist](guides/verification.md) |

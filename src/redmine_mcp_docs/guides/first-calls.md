@@ -32,7 +32,7 @@ Inspector session token and Redmine API key are different credentials.
 
 Connect, list tools, and call `get_current_user` with `{}`. Confirm your account, then call
 `list_projects` with `{"limit": 25, "offset": 0}`. Use returned IDs for further requests.
-The [illustrated examples](visual-examples.md) show how a client turns a result into an answer.
+Use the workflow guides to turn tool results into issue summaries and reports.
 
 ## Optional: make a REST read
 

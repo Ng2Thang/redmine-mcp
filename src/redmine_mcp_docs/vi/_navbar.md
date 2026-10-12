@@ -1,4 +1,0 @@
-- [Tổng quan](/vi/)
-- [Cài đặt](/vi/guides/installation.md)
-- [Danh mục công cụ](/vi/docs/tool-reference.md)
-- [Kho mã nguồn](https://github.com/Ng2Thang/redmine-mcp)

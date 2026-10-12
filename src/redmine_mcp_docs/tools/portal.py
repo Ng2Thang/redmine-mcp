@@ -6,7 +6,7 @@ import argparse
 import functools
 import io
 import json
-import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -15,25 +15,22 @@ import time
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import IO
-from urllib.parse import unquote, urlsplit
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[3]
 SOURCE = ROOT / "src" / "redmine_mcp_docs"
 OUTPUT_PARENT = ROOT / ".local" / "docs-portal"
 MARKER = ".docs-portal-output"
 OWNER = "redmine-mcp-docs-portal-v1\n"
-ROOT_DOCUMENTS = (
-    "README.md", "CONTRIBUTING.md", "SECURITY.md", "CODE_OF_CONDUCT.md", "CHANGELOG.md",
+SIDEBAR_LINK = re.compile(r"\]\((/[^)]*)\)")
+OVERVIEW_GUIDES = ("module-map", "testing", "verification", "visual-examples")
+OVERVIEW_REFERENCES = (
+    "configuration", "tool-reference", "manual-verification", "architecture",
+    "mcp-request-flow", "development", "workflows/redmine-tools", "operations",
+    "test-data", "plans/testing-coverage", "plans/index", "documentation-portal",
 )
-ROOT_REFERENCES = {"pyproject.toml", "uv.lock", ".python-version", ".env.example", "LICENSE"}
-REFERENCE_ROOTS = ("src/redmine_mcp/", "scripts/", "deploy/", "tests/", "tools/seed/")
-REFERENCE_SUFFIXES = {".py", ".sh", ".toml", ".yaml", ".yml", ".json", ".rb"}
-DOCUMENT_SUFFIXES = {".md", ".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif"}
-NEW_DOCUMENTS = {"docs/documentation-portal.md"}
-NEW_REFERENCES = {"scripts/docs-portal.sh"}
-LINK = re.compile(
-    r"\]\(<?([^\s)>]+)>?(?:\s+[^)]*)?\)|^\s*\[[^]]+\]:\s*<?([^\s>]+)>?", re.M,
-)
+MARKDOWN_LINK = re.compile(r"(?<!!)\[([^\]]+)\]\(([^\s)]+)\)")
+REPOSITORY_FILES = "https://github.com/Ng2Thang/redmine-mcp/blob/master/"
 
 
 def safe_path(path: Path) -> Path:
@@ -72,54 +69,102 @@ def copy_file(source: Path, destination: Path) -> None:
     shutil.copyfile(source, destination)
 
 
-def tracked_files() -> set[str]:
-    result = subprocess.run(
-        ["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True,
-    )
-    return set(result.stdout.decode("utf-8").rstrip("\0").split("\0"))
+def sidebar_pages() -> dict[str, str]:
+    """Use the visible sidebar as the publication and search inventory."""
+    pages: dict[str, str] = {}
+    sidebar = safe_path(SOURCE / "_sidebar.md")
+    for route in SIDEBAR_LINK.findall(sidebar.read_text(encoding="utf-8")):
+        relative = route.lstrip("/")
+        if route == "/":
+            relative = "home.md"
+        path = Path(relative)
+        if path.is_absolute() or ".." in path.parts or path.suffix != ".md":
+            raise ValueError(f"Invalid sidebar page: {route}")
+        safe_path(SOURCE / relative)
+        pages[route] = relative
+    if not pages:
+        raise ValueError("The sidebar must list at least one page")
+    return pages
 
 
-def reference_allowed(relative: str, tracked: set[str]) -> bool:
-    if relative not in tracked and relative not in NEW_REFERENCES:
-        return False
-    if relative in ROOT_REFERENCES:
-        return True
-    return relative.startswith(REFERENCE_ROOTS) and Path(relative).suffix in REFERENCE_SUFFIXES
+def publication_pages() -> dict[str, str]:
+    """Publish the sidebar and the pages linked directly from the earlier Overview."""
+    pages = sidebar_pages()
+    for directory, names in (("guides", OVERVIEW_GUIDES), ("docs", OVERVIEW_REFERENCES)):
+        for name in names:
+            relative = (Path(directory) / (name + ".md")).as_posix()
+            pages["/" + relative] = relative
+    return pages
+
+
+def rewrite_unpublished_links(content: str, document: str, published: set[str]) -> str:
+    """Send references outside the retained page inventory to repository files."""
+    def rewrite(match: re.Match[str]) -> str:
+        label, href = match.groups()
+        url = urlsplit(href)
+        if url.scheme or url.netloc or not url.path:
+            return match.group(0)
+        target = posixpath.normpath(
+            url.path.lstrip("/") if url.path.startswith("/")
+            else posixpath.join(posixpath.dirname(document), url.path)
+        )
+        if target in published or target.startswith("assets/"):
+            return match.group(0)
+        if not target.endswith(".md") and not (ROOT / target).is_file():
+            return match.group(0)
+        if target == "repository.md":
+            target = "README.md"
+        if target.startswith(("guides/", "../")):
+            return label
+        suffix = "#" + url.fragment if url.fragment else ""
+        return f"[{label}]({REPOSITORY_FILES}{target}{suffix})"
+
+    return MARKDOWN_LINK.sub(rewrite, content)
 
 
 def export() -> Path:
-    tracked = tracked_files()
     safe_path(OUTPUT_PARENT)
     OUTPUT_PARENT.mkdir(parents=True, exist_ok=True)
     site = OUTPUT_PARENT / "site"
     staging = OUTPUT_PARENT / "staging"
-    # Check ownership of existing output before making any replacements.
+    # Preserve unmarked output instead of deleting contents we cannot identify as ours.
     for path in (site, staging):
         safe_path(path)
         if path.exists():
+            if not path.is_dir():
+                raise ValueError(f"Output path is not a directory: {path}")
             marker = safe_path(path / MARKER)
             if not marker.is_file() or marker.read_text() != OWNER:
-                raise ValueError(f"Output directory has no portal ownership marker: {path}")
+                backup = OUTPUT_PARENT / f"preserved-{path.name}-{time.time_ns()}"
+                safe_path(backup)
+                if backup.exists():
+                    raise ValueError(f"Output backup already exists: {backup}")
+                path.rename(backup)
+                print(
+                    "Preserved unmarked output at "
+                    f"{backup.relative_to(ROOT).as_posix()}/", flush=True,
+                )
     remove_output(staging)
     staging.mkdir()
     (staging / MARKER).write_text(OWNER, encoding="utf-8")
     (staging / ".nojekyll").touch()
 
-    shell_files = (
-        "index.html", "home.md", "404.md", "_sidebar.md", "_navbar.md", "_coverpage.md",
-    )
-    for name in shell_files:
-        copy_file(SOURCE / name, staging / name)
-    for source in sorted((SOURCE / "guides").glob("*.md")):
-        if not source.name.startswith("."):
-            copy_file(source, staging / source.relative_to(SOURCE))
-    # Only the dedicated translated Markdown tree is exported for the Vietnamese edition.
-    for source in sorted((SOURCE / "vi").rglob("*.md")):
-        if not any(part.startswith(".") for part in source.relative_to(SOURCE / "vi").parts):
-            copy_file(source, staging / source.relative_to(SOURCE))
+    pages = publication_pages()
+    documents = set(pages.values())
+    shell_files = {"index.html", "home.md", "404.md", "_sidebar.md", "_navbar.md", "_coverpage.md"}
+    for name in sorted(documents | shell_files):
+        origin = ROOT if name.startswith("docs/") else SOURCE
+        copy_file(origin / name, staging / name)
+        if name.endswith(".md"):
+            destination = staging / name
+            destination.write_text(
+                rewrite_unpublished_links(
+                    destination.read_text(encoding="utf-8"), name, documents | shell_files,
+                ), encoding="utf-8",
+            )
     # An explicit asset inventory prevents stray private files in assets from being published.
     asset_paths = {
-        "assets/portal.css", "assets/portal.js", "assets/theme.js", "assets/language.js",
+        "assets/portal.css", "assets/portal.js", "assets/theme.js",
         "assets/favicon.svg",
         "assets/examples/issue-request.svg", "assets/examples/issue-result.svg",
         "assets/examples/issue-flow.png", "assets/examples/issue-flow.gif",
@@ -139,32 +184,11 @@ def export() -> Path:
     for relative in sorted(asset_paths):
         copy_file(SOURCE / relative, staging / relative)
 
-    documents = set(ROOT_DOCUMENTS) | NEW_DOCUMENTS
-    documents.update(
-        name for name in tracked
-        if name.startswith("docs/") and Path(name).suffix.lower() in DOCUMENT_SUFFIXES
-        and (ROOT / name).exists()
+    search_paths = {"en": list(pages)}
+    (staging / "assets" / "search-paths.js").write_text(
+        "window.portalSearchPaths = " + json.dumps(search_paths, indent=2) + ";\n",
+        encoding="utf-8",
     )
-    for relative in sorted(documents):
-        copy_file(ROOT / relative, staging / relative)
-    # Docsify reserves root README for its homepage, so publish a distinct quick-start route.
-    copy_file(ROOT / "README.md", staging / "repository.md")
-
-    # Preserve linked source/configuration references, never copy the repository wholesale.
-    references: set[str] = set()
-    for document in sorted(staging.rglob("*.md")):
-        original = ROOT / document.relative_to(staging)
-        for match in LINK.finditer(document.read_text(encoding="utf-8")):
-            url = urlsplit(match.group(1) or match.group(2))
-            if url.scheme or url.netloc or not url.path or url.path.startswith("/"):
-                continue
-            target = Path(os.path.abspath(original.parent / unquote(url.path)))
-            if not target.is_relative_to(ROOT):
-                continue
-            relative = target.relative_to(ROOT).as_posix()
-            if reference_allowed(relative, tracked) and target.exists():
-                copy_file(ROOT / relative, staging / relative)
-                references.add(relative)
 
     revision = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True,
@@ -173,7 +197,10 @@ def export() -> Path:
         json.dumps({
             "revision": revision,
             "content": "Current working-tree contents; revision is a reference, not acceptance.",
-            "documents": sorted(documents), "references": sorted(references),
+            "documents": sorted(
+                name if name.startswith("docs/") else "src/redmine_mcp_docs/" + name
+                for name in documents
+            ), "references": [],
             "files": sorted(
                 path.relative_to(staging).as_posix()
                 for path in staging.rglob("*") if path.is_file()
@@ -252,13 +279,12 @@ def source_snapshot() -> dict[str, tuple[int, int]]:
     manifest = json.loads(
         safe_path(OUTPUT_PARENT / "site" / "export-manifest.json").read_text(encoding="utf-8")
     )
-    paths = {ROOT / name for name in manifest["documents"] + manifest["references"]}
-    paths.update(ROOT / name for name in tracked_files() if name.startswith("docs/"))
+    paths = {ROOT / name for name in manifest["documents"]}
     paths.update(
         SOURCE / name for name in
         ("index.html", "home.md", "404.md", "_sidebar.md", "_navbar.md", "_coverpage.md")
     )
-    for directory, pattern in (("guides", "*.md"), ("vi", "*.md"), ("assets", "*")):
+    for directory, pattern in (("guides", "*.md"), ("assets", "*")):
         paths.update((SOURCE / directory).rglob(pattern))
     snapshot = {}
     for path in sorted(paths):

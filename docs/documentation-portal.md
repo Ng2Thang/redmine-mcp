@@ -1,10 +1,10 @@
 # Documentation portal
 
-The standalone Docsify portal combines user guides from `src/redmine_mcp_docs/` with
-canonical repository documentation from `docs/`. English navigation prioritizes connection,
-installation, everyday workflows, write access, and troubleshooting. Technical material
-remains available through the contributor hub. It runs separately from MCP and Swagger.
-The default portal address is `http://127.0.0.1:8080/`; Swagger remains at `/docs` on the MCP server.
+The standalone Docsify portal publishes sidebar pages and pages linked from the earlier
+Overview: one homepage, 17 guides, and 12 technical references in English. The sidebar
+still lists 13 guides. Selected canonical `docs/` pages are
+exported; other references open repository files on GitHub. The portal runs separately from
+MCP and Swagger at `http://127.0.0.1:8080/`.
 
 ## Export and serve
 
@@ -29,134 +29,72 @@ Press Ctrl+C to stop. Source edits do not require a restart; changes to the expo
 or launcher script still require restarting the command. Live reload is injected only by `serve`
 and is not included in static exports. If export is interrupted, the next
 export replaces only marked staging/output directories under `.local/docs-portal/`. An existing
-unmarked directory is refused rather than deleted. Symlink/junction paths are refused.
+unmarked directory is preserved as a uniquely named `preserved-site-*` or
+`preserved-staging-*` backup under `.local/docs-portal/`, then fresh output is created.
+Backups are not served or automatically deleted. Symlink/junction paths are refused.
 
-The export reads current working-tree contents of selected tracked documentation and explicitly
-included new portal files. Other new canonical files under `docs/` should be added to Git before
-export. `export-manifest.json` lists documents and linked repository references; its revision is
-a reference to HEAD and does not certify uncommitted content or test acceptance.
+## Content ownership and publication
 
-## Content ownership
+Edit website pages in `src/redmine_mcp_docs/guides/`; edit the homepage,
+navigation, and cover alongside them. Sidebar links plus `OVERVIEW_GUIDES` and
+`OVERVIEW_REFERENCES` in the exporter define the publication inventory.
+Adding a Markdown file alone does not publish it. Remove source pages and update links
+when removing entries. Required shell files, vendor notices, and the source maintenance
+README remain; the README is not a website page.
 
-| Content | Edit here |
-| --- | --- |
-| Detailed installation/configuration/architecture/tool/testing/operations contracts | Canonical `docs/` files and root README |
-| User onboarding, workflows, access, troubleshooting, and contributor hub | `src/redmine_mcp_docs/guides/` |
-| Portal cover, homepage, sidebar, and navbar | `src/redmine_mcp_docs/_coverpage.md`, `home.md`, `_sidebar.md`, `_navbar.md` |
-| Visual tool examples and replacement media | `src/redmine_mcp_docs/guides/visual-examples.md` and `assets/examples/` |
-| Styling and Docsify/Mermaid integration | `src/redmine_mcp_docs/assets/portal.css` and `portal.js` |
-| Appearance preference and startup theme | `src/redmine_mcp_docs/assets/theme.js` |
-| Vietnamese pages and navigation | `src/redmine_mcp_docs/vi/` |
-| Language selection and interface messages | `src/redmine_mcp_docs/assets/language.js` |
-| Export allowlists and local server | `src/redmine_mcp_docs/tools/portal.py` |
+The 2026-10-12 cleanup initially removed off-menu pages. At the user's follow-up request,
+the pages directly linked from the earlier Overview were restored: module map, testing,
+verification, visual examples, and 12 technical references. The
+homepage's Technical references section provides access. The layout review remains removed.
+Repository originals remain intact. The portal now publishes English only; all Vietnamese
+source pages and language-switching support have been removed at the user's request.
+Unpublished routes, including retired Vietnamese routes, resolve to the English 404 page.
 
-Do not edit generated documentation in `.local/`. The exporter preserves canonical documents
-at their repository-relative paths, so relative links between documentation pages remain valid.
-The browser adapts heading links and source/configuration references for portal navigation.
-Linked source/configuration files are copied only when tracked and within the explicit safe
-reference roots or root-file allowlist. These references open directly rather than as Markdown.
+The exporter copies current source contents, not only tracked files. Its manifest lists
+the retained source documents relative to the repository root, with no copied code files.
+The HEAD revision is informational and does not certify uncommitted content or acceptance.
+Search inventories use the combined English publication inventory.
+Export replaces the owned output directory to remove stale pages.
 
-Add new main pages to the sidebar for navigation and local search discovery. Evidence and task
-records remain reachable through canonical document links. Preserve dates, exact verification
-scope, waived stages, and pending acceptance; do not describe historical results as fresh checks.
-
-## User-guide content map (2026-10-12)
-
-| Earlier entry point | Updated destination or treatment |
-| --- | --- |
-| Homepage focused on installation, execution flow, and testing | User overview with connect/setup paths, three prompts, workflows, and help |
-| Installation as the only starting path | `guides/get-started.md` for existing-server users; installation retains its URL for server setup |
-| First REST and MCP calls | Same `guides/first-calls.md` URL, with optional REST/Inspector examples after client onboarding |
-| Access configuration | Same `guides/access.md` URL, with user guidance followed by administrator prerequisites |
-| Visual examples and media replacement instructions | Existing visual guide remains a walkthrough; media maintenance moves to the source README |
-| Detailed tool reference as the primary usage entry | `guides/workflows.md` and four core task guides, plus `guides/reference.md` for exact-contract links |
-| Architecture, development, testing, evidence, operations, and maintenance sidebar groups | `guides/contributors.md` links to existing pages without moving or deleting routes |
-| Error handling spread across technical references | `guides/troubleshooting.md` with symptoms, fixes, and FAQ |
-
-The four core guides cover assigned issues, issue summaries, time reports, and issue creation.
-Installation submenus now lead directly to client types (Codex, VS Code Copilot, Cursor, and
-other clients) or server setups (local Python, sample Docker, and Docker with existing Redmine).
-Shared prerequisites stay in each introduction; client identity and project discovery use
-one first request. Workflow instructions and portal serving remain in their dedicated guides.
-Backlog filters and progress drafts are variations in the issue-list guide; notes and time
-logging are short follow-ups in the issue-summary and time-report guides. The standalone
-`project-backlog`, `progress-update`, `update-issue`, and `log-time` pages were removed;
-their old routes resolve to consolidated guides through Docsify aliases. The Everyday workflows
-sidebar label opens the overview directly, replacing the separate Choose a workflow entry.
-Each core guide introduces its goal and prerequisites, then uses three task-focused submenu
-headings for the main action, variations or follow-ups, and troubleshooting. Prompts, steps,
-illustrative results, and related tools remain within those sections as content rather than
-separate submenu entries. New guides live directly under `guides/` so the existing export glob
-includes them without changing the exporter. New Markdown is English, and documented
-commands remain Bash.
-
-Access and write actions keeps two destinations at their existing URLs: Choose your connection
-and Make and review changes. The access page has two submenu sections for reader/writer choice
-and administrator setup. The write page has three for checking access, making a change, and
-reading the outcome. Candidate-action discovery appears once, and walkthrough links remain
-within the action section. Writer admission, operation gates, native permissions, and uncertain
-outcomes retain their existing contracts. This navigation change has not been browser-verified.
-
-Help and reference now has two entries: Fix problems and find answers, and REST and Inspector
-examples. Troubleshooting groups symptoms under Connection and access, Inputs and results,
-and Frequently asked questions. Individual symptom anchors remain available as level-three
-headings. REST/Inspector connection values stay in the introduction, leaving three sections
-for Inspector, REST, and understanding results. Contributors opens the hub directly with
-three sections for development, testing/evidence, and operations. Runtime settings and
-Security policy move from the help menu to the contributor operations table; their canonical
-URLs remain unchanged. Historical evidence remains linked in a collapsible list. These menu
-changes have not been browser-verified.
-
-The refresh changes documentation only. It does not establish new operation acceptance or
-resolve existing waivers. Export, serving, browser checks, link-check tooling, tests, Inspector,
-and live calls were not run for this change. The updated manual checklist is a verification
-handoff requiring separate authorization. The existing Vietnamese edition is retained but
-has not been synchronized with this English refresh.
+The portal source README documents navigation, media, local serving, and review handoff.
+Keep canonical technical documentation in `docs/`. Retained references open locally;
+other repository references open GitHub. Unpublished edits are not reflected on GitHub.
 
 ## Cover page
 
 The [Docsify cover page](https://docsify.js.org/#/cover) uses `_coverpage.md`, included by the
-exporter. The English cover is shared by the `/`, `/vi`, and `/vi/` landing routes through the
-`coverpage` setting and a Vietnamese cover alias in `assets/portal.js`. Other pages open directly.
+exporter. The `/` landing route uses the cover through the `coverpage` setting in
+`assets/portal.js`.
+Other pages open directly.
+Overview links in the sidebar and navbar use `/home.md`, opening
+the homepage content directly. The landing route `/` retains the cover.
 `onlyCover: false` keeps the homepage below the cover. The cover uses the local logo and
 follows the portal's light and dark themes.
 The portal reconciles cover visibility with the current landing route after navigation and
 asynchronous cover rendering. Clicking an already active Overview link returns to the cover
-at the top; heading links retain their section destinations. Browser back/forward navigation
+at the top when its target is a landing route (for example the sidebar title); heading
+links retain their section destinations. Browser back/forward navigation
 keeps its normal scroll restoration. Browser verification of this fix remains pending.
 The cover contains only the logo, product name, and short description, without buttons.
 Installation links remain on the homepage and in the sidebar.
-Examples, screenshots, and animations belong in the user guides rather than on the cover.
-Their assets remain exported for those guides.
+Shared screenshots remain in the homepage and client installation guide.
 The homepage feature-plan example uses `assets/imgs/implement-stock-feature-example.png`
 as a standalone figure without the Example session card or badge. A bounded scroll region
 and a full-size link above the image support browsing and zooming. It replaces
 the conversation reader; the unused reader script, transcript, and viewer-specific styles
 have been removed from the source tree. Its existing heading link remains unchanged.
 Browser review is still deferred.
-Edit cover content in `src/redmine_mcp_docs/_coverpage.md` and appearance through the
+Edit cover content in `src/redmine_mcp_docs/_coverpage.md`, and appearance through the
 `--cover-*` variables in `assets/portal.css`. Local serving reloads edits automatically;
 run `export` again before publishing a static copy.
 
-## Vietnamese edition
+## Documentation language
 
-Choose **Language → Tiếng Việt** in the sidebar or open `http://127.0.0.1:8080/#/vi/`.
-The Vietnamese edition translates the interface, navigation, homepage, introductory guides,
-portal checklist, and all 24 main reference pages linked from its sidebar. Detailed Vietnamese
-editions reorganize or summarize longer material; the English originals remain authoritative
-for complete contracts, scenario tables, commit histories, and evidence ledgers. Each local
-reference edition links to its original. Dates, pending acceptance, waivers, and verification
-limits remain explicit. Untranslated task records still use English source with a notice.
-
-The existing Vietnamese edition predates the English user-guide refresh of 2026-10-12.
-It is retained without changes; its navigation and content are not synchronized with the
-new workflows. New Markdown remains English under the current repository instructions.
-Any separately authorized translation update must maintain the registry in `assets/language.js`.
-Exact local aliases precede the English fallback. Switching language preserves translated
-page routes and drops heading
-queries because translated headings differ. Language is encoded in the hash URL, with
-separate search caches; themes and the saved sidebar width remain shared. Export includes
-only Markdown from the dedicated translation tree, using the existing path boundary checks.
+English is the only supported documentation language. Keep all Markdown and interface
+messages in English. The exporter includes one homepage, 13 sidebar guides, four earlier
+Overview guides, 12 technical references, and the required cover, navigation, and 404 files.
+There is no language selector or translated route mapping. Export again and replace the
+published output to remove previously generated Vietnamese pages and assets.
 
 ## Offline browser assets
 
@@ -208,22 +146,16 @@ derived from the HTML location. Use a trailing slash for a subdirectory URL, for
 `https://example.test/redmine-mcp-docs/`. External publication is a separate action; this helper
 does not deploy, create hosting resources, or contact a public service.
 
-Never serve or upload the repository root. The export includes selected Markdown/image files,
-portal assets, selected root documents, and allowed linked tracked text references. Credentials,
-`.env`, snapshots, Git metadata, and unrelated private files are excluded. The shipped
-`.env.example` can be included only when explicitly linked; it is a tracked template, not `.env`.
-Review documentation for inappropriate content before publishing publicly.
+Never serve or upload the repository root. Export includes retained pages, required shell
+files, and explicitly selected browser assets. Root documents, unlisted `docs/`, source code,
+configuration templates, credentials, snapshots, and Git metadata are excluded.
+Replace the deployed output directory when publishing so obsolete pages are removed.
 
 ## Verification handoff
 
-The source contains a manual checklist at `src/redmine_mcp_docs/guides/verification.md`, linked
-from the contributor hub. Its 2026-10-12 handoff covers both onboarding paths, four core workflow
-pages, prompts, navigation/search, retained technical routes, and the existing locale boundary.
-The broader checklist covers offline loading, clipboard behavior, highlighting, diagrams,
-heading links, export refresh/removal, boundaries, mobile layout, and root/subdirectory hosting.
-Portal-only checks need no Redmine fixtures or test dependencies.
-
-Tests, browser checks, Inspector, live calls, and quality/testing tools are not automatically
-executed by export or serve. Run them only within a separately authorized assignment and record
-checks performed, deferred checks, failures, and limitations. MCP acceptance continues to use
-the canonical [testing roadmap](testing-roadmap.md) and [coverage matrix](plans/testing-coverage.md).
+The source README provides the maintenance handoff. When separately authorized, review
+navigation, language switching, search, removed-route 404 behavior, stale-output removal,
+offline assets, clipboard controls, themes, mobile layout, and subdirectory hosting.
+No tests, browser checks, Inspector, or live calls are run automatically by export or serve.
+MCP acceptance remains governed by the canonical [testing roadmap](testing-roadmap.md)
+and [coverage matrix](plans/testing-coverage.md).

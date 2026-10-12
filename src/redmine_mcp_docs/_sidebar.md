@@ -1,4 +1,4 @@
-- [Overview](/)
+- [Overview](/home.md)
 - [Supported tools](/guides/reference.md)
 
 - Get started

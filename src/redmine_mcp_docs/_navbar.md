@@ -1,4 +1,4 @@
-- [Overview](/)
+- [Overview](/home.md)
 - Install
   - [MCP client installation](/guides/get-started.md)
   - [MCP server installation](/guides/installation.md)

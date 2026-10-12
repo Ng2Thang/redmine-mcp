@@ -4,7 +4,7 @@ This is a handoff checklist. No test runner, browser automation, Inspector sessi
 request, or portal runtime check is implied by its inclusion. Execute checks only when assigned
 or accepted by the user. Record the source revision, browser, hosting path, results, and limits.
 
-See the [2026-10-09 layout review](layout-review.md) for the checks performed after the
+See the [2026-10-09 layout review](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md) for the checks performed after the
 user requested a portal review. The remaining checklist items still require verification.
 
 ## User-guide refresh handoff (2026-10-12)
@@ -52,8 +52,7 @@ authorized tool execution. Reading synthetic examples does not require live tool
 - [ ] Open the retired `project-backlog`, `progress-update`, `update-issue`, and `log-time`
       guide routes, with and without `.md`; confirm they resolve to the consolidated guides.
 - [ ] Check homepage installation links, 404 recovery links, and narrow-screen navigation.
-- [ ] Switch language from a new untranslated guide; confirm it goes to the Vietnamese homepage.
-      Note that the Vietnamese edition has not been synchronized with the English refresh.
+- [ ] Confirm all documentation and interface controls are English and no language selector appears.
 - [ ] Repeat key navigation and search under a hosting subdirectory.
 
 ## Prerequisites
@@ -76,13 +75,8 @@ documentation solely to exercise a check without restoring the intended contents
 - [ ] Select Auto and change system appearance; confirm the page and diagrams follow it.
       Reload and navigate to confirm the selected mode persists. Check the mobile drawer
       and keyboard access to the selector; confirm themes work without Internet access.
-- [ ] Switch English/Vietnamese using Language; open a shared `#/vi/` deep link and reload.
-      Check Vietnamese navigation, interface messages, guides, and search results.
-      Open all 24 main Vietnamese reference pages, especially `#/vi/docs/tool-reference`
-      and `#/vi/docs/manual-verification`; they must load local translations without an English fallback notice.
-      Follow an untranslated task link and confirm it displays the English-source notice.
-      Check original-English links on translated reference pages and preserved heading anchors;
-      check switching language at a domain root and under a hosting subdirectory.
+- [ ] Open retired `#/vi/` and `#/vi/docs/tool-reference` links; confirm the English 404 page
+      appears and its recovery navigation works. Confirm search results contain English pages only.
 - [ ] Search for `mutation uncertainty` and `bootstrap`; open results on their correct pages.
 - [ ] Check Python, Bash, JSON, YAML, TOML, Docker, and diff highlighting where examples exist.
 - [ ] Copy a code block and compare its text, including newlines; check the clipboard fallback
@@ -93,14 +87,14 @@ documentation solely to exercise a check without restoring the intended contents
 
 ## Navigation and content
 
-- [ ] Open `/`, `#/vi`, and `#/vi/`; confirm the cover shows the local logo and readable text
+- [ ] Open `/`; confirm the cover shows the local logo and readable text
       in light and dark themes on desktop and mobile. Scroll to the existing homepage and
       confirm the sidebar resize handle appears only with the navigation.
-- [ ] Scroll below the cover, open a guide, and return with Overview and the sidebar title.
-      Confirm the cover reappears and scrolling up reaches it. Click Overview again while
-      already on the scrolled homepage; confirm it returns to the cover. Repeat rapid
-      guide/home navigation with delayed requests, browser Back/Forward, heading links,
-      and the Vietnamese landing route. Guide pages should not show a late-arriving cover.
+- [ ] Open a guide and click Overview in the sidebar or navbar; confirm it opens
+      `#/home` at the homepage content with the cover hidden. Repeat while
+      already on the scrolled homepage; confirm it returns to the top of the content.
+      The sidebar title still opens the landing route with its cover. Repeat rapid
+      navigation, browser Back/Forward, and heading links.
 - [ ] Follow the homepage's MCP client installation and MCP server installation links; both target
       English user guides. Open an installation deep link directly and confirm no cover appears.
 - [ ] Confirm the cover contains only the logo, product name, and short description,
@@ -133,7 +127,8 @@ documentation solely to exercise a check without restoring the intended contents
 - [ ] Confirm output contains only portal assets, canonical documents, selected root documents,
       and allowed linked tracked source/configuration references.
 - [ ] Confirm `.env`, `.git/`, snapshots, dumps, credentials, and unrelated `.local/` files are absent.
-- [ ] After an intended documentation edit, re-export/restart and refresh; confirm updated content.
+- [ ] After an intended documentation edit, confirm automatic export and browser reload.
+      Restart only after changing exporter or launcher code.
 - [ ] Remove a disposable generated file, re-export, and confirm the output is rebuilt as expected.
 - [ ] Remove a disposable source page from the selected inputs and confirm its old output disappears.
 - [ ] Check that an unmarked existing output directory or redirected output path is refused;

@@ -27,11 +27,10 @@
     control.className = 'theme-control';
     const label = document.createElement('label');
     label.htmlFor = 'portal-theme';
-    const messages = window.portalLocale.messages;
-    label.textContent = messages.appearance;
+    label.textContent = 'Appearance';
     const select = document.createElement('select');
     select.id = 'portal-theme';
-    [['auto', messages.auto], ['light', messages.light], ['dark', messages.dark]].forEach(function (choice) {
+    [['auto', 'Auto (system)'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (choice) {
       const option = document.createElement('option');
       option.value = choice[0];
       option.textContent = choice[1];

@@ -30,19 +30,33 @@ and does not close acceptance gaps or publish a release.
 The user authorized implementation of a user-oriented English portal refresh. The source
 now prioritizes connection, installation, first useful requests, four core everyday workflows,
 write guidance, and troubleshooting. Architecture, development, testing, and evidence remain
-accessible through a contributor hub at their existing URLs. No public MCP operation or
+accessible through repository links in the contributor hub. No public MCP operation or
 runtime configuration contract changes. See the
-[content migration map](../documentation-portal.md#user-guide-content-map-2026-10-12).
+[publication boundaries](../documentation-portal.md#content-ownership-and-publication).
 
 At the user's request, the original eight workflow pages were consolidated into four:
 assigned issues, issue summaries, time reports, and issue creation. Backlog filtering,
 progress drafts, notes, and time logging remain as short variations. The four removed
-standalone routes resolve to their consolidated guides; navigation and handoff were updated.
+standalone routes were initially redirected; the later sidebar-only cleanup removes those
+legacy redirects. Navigation and handoff were updated.
 
-Documentation edits are implemented; rendered review remains pending. New Markdown is English,
-and documented commands remain Bash. The existing Vietnamese edition is retained without
-synchronization. No tests, quality-check tools, link-check tools, export/serve, browser checks,
-Inspector, live Redmine calls, or deployment were performed. The
+The initial English refresh was implemented without synchronizing Vietnamese or running tests,
+quality-check tools, link-check tools, export/serve, browser checks, Inspector, live Redmine
+calls, or deployment. The user subsequently authorized Vietnamese synchronization, followed
+by deletion of off-menu pages only inside `src/redmine_mcp_docs/`.
+The user then requested retention of the earlier Overview's pages: four additional guides
+and 12 technical references per language were restored and linked from the current homepage.
+Publication and search now combine sidebar entries with that explicit Overview inventory.
+Layout review and other excluded reference translations remain removed. Canonical documents
+remain in the repository; only retained references are exported. Other technical links open
+repository files on GitHub. Legacy aliases and English reference fallbacks remain removed.
+The user's latest request removes all Vietnamese pages and support. The current source
+retains one English homepage, 13 sidebar guides, four additional Overview guides, and 12
+technical references, plus required shell and maintenance files. The language selector,
+translated routing, and Vietnamese export and search inventory have been removed. All
+Markdown must now be English; commands remain Bash. No tests, quality-check tools, export,
+serve, or browser verification were run for this removal. Existing generated or deployed
+output needs to be replaced with a fresh export. Rendered review is pending. The
 [manual portal handoff](../documentation-portal.md#verification-handoff) describes proposed
 checks requiring separate authorization. Existing operation acceptance gaps remain unchanged.
 

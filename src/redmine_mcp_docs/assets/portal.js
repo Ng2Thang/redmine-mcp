@@ -3,15 +3,15 @@
   'use strict';
 
   const base = new URL('./', window.location.href.split('#')[0]);
-  const locale = window.portalLocale;
-  const messages = locale.messages;
-  const translatedAliases = {};
-  locale.translatedPages.forEach(function (page) {
-    const pattern = page.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Exact aliases precede the English fallback. Their output also matches them,
-    // so Docsify's recursive alias resolution stops at the local translated file.
-    translatedAliases['/vi/' + pattern + '(?:\\.md)?'] = '/vi/' + page + '.md';
-  });
+  const messages = {
+    search: 'Search documentation', noData: 'No matching documentation',
+    copy: 'Copy', copied: 'Copied', copyLabel: 'Copy code block', selectCopy: 'Select and copy',
+    diagram: 'Scroll to explore the diagram.', diagramLabel: 'Scrollable diagram',
+    diagramError: 'Diagram could not be rendered. Mermaid source:',
+    resize: 'Resize navigation sidebar',
+    resizeHelp: 'Drag to resize. Use Left/Right arrows, Home/End, or double-click to reset.',
+    pixels: 'pixels',
+  };
   let diagramId = 0;
   let rendering = Promise.resolve();
   const diagramSources = new WeakMap();
@@ -53,7 +53,8 @@
   function setupCoverNavigation() {
     const cover = document.querySelector('section.cover');
     if (!cover) return function () {};
-    const landingHashes = ['#/', '#/vi', '#/vi/'];
+    const landingHashes = ['#/'];
+    const overviewHashes = ['#/home', '#/home.md'];
 
     function syncCover() {
       const hash = window.location.hash.split('?')[0] || '#/';
@@ -83,9 +84,9 @@
       if (destination.origin !== window.location.origin ||
           destination.pathname !== window.location.pathname ||
           destination.search !== window.location.search ||
-          !landingHashes.includes(destination.hash) ||
+          !landingHashes.concat(overviewHashes).includes(destination.hash) ||
           destination.hash !== window.location.hash) return;
-      // An already active Overview link does not trigger Docsify's hash router.
+      // An active homepage link needs an explicit scroll reset; its route controls the cover.
       event.preventDefault();
       window.scrollTo(0, 0);
       syncCover();
@@ -221,9 +222,9 @@
 
   window.$docsify = {
     name: 'Redmine MCP',
-    nameLink: locale.vi ? '#/vi/' : '#/',
+    nameLink: '#/',
     homepage: 'home.md',
-    coverpage: ['/', '/vi', '/vi/'],
+    coverpage: ['/'],
     onlyCover: false,
     basePath: base.pathname,
     routerMode: 'hash',
@@ -239,30 +240,18 @@
     auto2top: true,
     noEmoji: true,
     executeScript: false,
-    notFoundPage: locale.vi ? 'vi/404.md' : '404.md',
+    notFoundPage: '404.md',
     alias: {
-      '/guides/project-backlog(?:\\.md)?': '/guides/my-issues.md',
-      '/guides/progress-update(?:\\.md)?': '/guides/my-issues.md',
-      '/guides/update-issue(?:\\.md)?': '/guides/issue-summary.md',
-      '/guides/log-time(?:\\.md)?': '/guides/time-report.md',
-      '/vi/': '/vi/home.md',
-      '/vi': '/vi/home.md',
-      '/vi/_coverpage(?:\\.md)?': '/_coverpage.md',
-      '/vi/.*/_sidebar.md': '/vi/_sidebar.md',
-      '/vi/.*/_navbar.md': '/vi/_navbar.md',
-      ...translatedAliases,
-      '/vi/docs/(.*)': '/docs/$1',
-      '/vi/(repository|CONTRIBUTING|CHANGELOG|SECURITY|CODE_OF_CONDUCT)(?:\\.md)?': '/$1.md',
-      '/.*/_sidebar.md': locale.vi ? '/vi/_sidebar.md' : '/_sidebar.md',
-      '/.*/_navbar.md': locale.vi ? '/vi/_navbar.md' : '/_navbar.md',
+      '/.*/_sidebar.md': '/_sidebar.md',
+      '/.*/_navbar.md': '/_navbar.md',
     },
     noCompileLinks: [
       '.*\\.(py|sh|toml|ya?ml|json|rb|lock)([?#].*)?$',
       '(^|.*/)(LICENSE|\\.python-version|\\.env\\.example)([?#].*)?$',
     ],
     search: {
-      paths: 'auto',
-      namespace: 'redmine-mcp-docs-' + base.pathname + (locale.vi ? '-vi' : '-en'),
+      paths: window.portalSearchPaths.en,
+      namespace: 'redmine-mcp-docs-' + base.pathname + '-en-only-v5',
       maxAge: 60000,
       placeholder: messages.search,
       noData: messages.noData,
@@ -281,28 +270,11 @@
         return originalCode(code, language);
       };
       renderer.link = function (href, title, text) {
-        if (locale.vi && href === '/') href = '/vi/';
-        if (!/^(?:[a-z][a-z\d+.-]*:|\/\/|#)/i.test(href)) {
-          const target = new URL(href, activeDocument);
-          if (target.pathname === base.pathname + 'README.md') {
-            href = '/repository.md' + target.hash;
-          }
-        }
         const isReference = /\.(py|sh|toml|ya?ml|json|rb|lock)([?#].*)?$/.test(href) ||
           /(^|\/)(LICENSE|\.python-version|\.env\.example)([?#].*)?$/.test(href);
         if (isReference && !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) {
           const destination = new URL(href, activeDocument);
           if (destination.pathname.startsWith(base.pathname)) href = destination.href;
-        }
-        if (locale.vi && /^\/(?:docs\/|guides\/|repository\.md|CONTRIBUTING\.md|CHANGELOG\.md|SECURITY\.md|CODE_OF_CONDUCT\.md)/.test(href)) {
-          href = '/vi' + href;
-        }
-        if (locale.vi && !/^(?:[a-z][a-z\d+.-]*:|\/\/|#)/i.test(href) && /\.md(?:[?#]|$)/.test(href)) {
-          const target = new URL(href.startsWith('/') ? href.slice(1) : href, href.startsWith('/') ? base : activeDocument);
-          if (target.pathname.startsWith(base.pathname)) {
-            const relative = target.pathname.slice(base.pathname.length);
-            href = '/' + (relative.startsWith('vi/') ? relative : 'vi/' + relative) + target.search + target.hash;
-          }
         }
         return originalLink(href, title, text);
       };
@@ -315,16 +287,9 @@
       hook.doneEach(function () { syncCover(); });
       hook.ready(setupSidebarResize);
       hook.ready(window.portalTheme.setupControl);
-      hook.ready(locale.setupControl);
       hook.beforeEach(function (markdown) {
         let route = vm.route.path.replace(/^\//, '').replace(/\.md$/, '').replace(/\/$/, '') || 'home';
-        if (route === 'vi') route = 'vi/home';
-        const originalRoute = route.replace(/^vi\/(?=docs\/|repository$|CONTRIBUTING$|CHANGELOG$|SECURITY$|CODE_OF_CONDUCT$)/, '');
-        activeDocument = new URL(originalRoute.replace(/\.md$/, '') + '.md', base);
-        const translated = locale.translatedPages.includes(route.replace(/^vi\//, ''));
-        if (locale.vi && !translated && !route.startsWith('vi/guides/') && !/^vi\/(?:home|404)$/.test(route)) {
-          return '> ' + messages.englishNotice + '\n\n' + markdown;
-        }
+        activeDocument = new URL(route + '.md', base);
         return markdown;
       });
       // Docsify routes use ?id= for headings. Normalize GitHub-style #heading links

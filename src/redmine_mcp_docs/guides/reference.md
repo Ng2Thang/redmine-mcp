@@ -35,8 +35,8 @@ Do not invent tool names or arguments from examples.
 | Which server settings can I change? | [Runtime configuration](../docs/configuration.md) |
 | How do I deploy a writer? | [Writer configuration](../docs/configuration.md#separate-writer-deployment) |
 | How do I operate Docker or connect external Redmine? | [Operations](../docs/operations.md) |
-| How do issue tags depend on plugins? | [RedmineUP tags](../docs/integrations/redmineup-tags.md) |
-| How should credentials be handled? | [Security policy](../SECURITY.md) |
+| How do issue tags depend on plugins? | [RedmineUP tags](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/integrations/redmineup-tags.md) |
+| How should credentials be handled? | [Security policy](https://github.com/Ng2Thang/redmine-mcp/blob/master/SECURITY.md) |
 
 ## Result boundaries
 

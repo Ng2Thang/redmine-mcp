@@ -30,4 +30,4 @@ visible to your account, and records can change while pages are collected.
 Do not treat unavailable values as zero or assume an empty result describes all of Redmine.
 If collection stops with `scope_required` or `scan_budget_exceeded`, label the answer partial
 or unavailable. See [troubleshooting](troubleshooting.md) and
-[illustrated examples](visual-examples.md).
+[REST and Inspector examples](first-calls.md).

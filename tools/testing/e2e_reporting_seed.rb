@@ -3,9 +3,10 @@
 # Additive fixture for tasks 034/035; never changes existing role visibility.
 require 'json'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
-raise 'Wrong Redmine version' unless [Redmine::VERSION::MAJOR, Redmine::VERSION::MINOR, Redmine::VERSION::TINY] == [7, 0, 2]
+require_relative 'e2e_guard'
 path = '/seed-state/fixtures.json'
 manifest = JSON.parse(File.read(path))
+E2EGuard.manifest!(manifest)
 raise 'Wrong ownership' unless manifest['owner'] == 'prep-018' && manifest['kind'] == ENV['REDMINE_TEST_MARKER']
 project = Project.find_by(identifier: 'mcp-e2e-reporting')
 if project

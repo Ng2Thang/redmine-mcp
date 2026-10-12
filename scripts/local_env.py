@@ -1,13 +1,17 @@
 """Local credential management for Git Bash scripts; never print credentials."""
 
 import json
+import os
 import secrets
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ENV = ROOT / ".env"
-STATE = ROOT / ".local"
+VERSION = os.environ.get("REDMINE_TEST_VERSION", "7.0.2")
+if VERSION not in {"7.0.2", "6.0.1"}:
+    raise SystemExit("Unsupported synthetic Redmine version.")
+STATE = ROOT / ".local" / "redmine-6.0.1" if VERSION == "6.0.1" else ROOT / ".local"
+ENV = STATE / ".env" if VERSION == "6.0.1" else ROOT / ".env"
 KIND = "redmine-mcp-synthetic-v1"
 
 
@@ -27,11 +31,11 @@ def write_env(values: dict[str, str]) -> None:
 
 def main() -> None:
     action = sys.argv[1]
-    STATE.mkdir(exist_ok=True)
+    STATE.mkdir(parents=True, exist_ok=True)
     if action == "init" and not ENV.exists():
         write_env(
             {
-                "REDMINE_URL": "http://localhost:3000",
+                "REDMINE_URL": f"http://localhost:{3001 if VERSION == '6.0.1' else 3000}",
                 "POSTGRES_PASSWORD": secrets.token_hex(32),
                 "TEST_USER_PASSWORD": secrets.token_hex(24),
                 "REDMINE_SECRET_KEY_BASE": secrets.token_hex(64),

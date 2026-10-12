@@ -12,12 +12,14 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+
 from redmine_mcp.auth import READ_OPERATIONS  # noqa: E402
 from tests.e2e.conftest import preflight  # noqa: E402
+from tools.testing.e2e_config import STATE, URL, VERSION  # noqa: E402
 
 
 def _verify(state: Path, config: Path, headers: dict[str, str]) -> None:
-    with httpx.Client(base_url="http://127.0.0.1:3001", headers=headers, trust_env=False) as native:
+    with httpx.Client(base_url=URL, headers=headers, trust_env=False) as native:
         response = native.get("/issues.json", params={"limit": 1, "status_id": "*"})
         assert response.status_code == 200, "Owned native issue lookup failed"
         issues = response.json()["issues"]
@@ -116,7 +118,7 @@ def _verify(state: Path, config: Path, headers: dict[str, str]) -> None:
                 json.dumps(
                     {
                         "owner": "prep-027",
-                        "redmine_version": "7.0.2",
+                        "redmine_version": VERSION,
                         "inspector_version": "2.8.0",
                         "reader_startup": "passed",
                         "discovery": "passed",
@@ -141,7 +143,7 @@ def _verify(state: Path, config: Path, headers: dict[str, str]) -> None:
 
 def main() -> None:
     manifest = preflight()
-    state = ROOT / ".local/testing-e2e/prep-027"
+    state = STATE / "prep-027"
     state.mkdir(parents=True, exist_ok=True)
     config = state / "inspector.json"
     headers = {"X-Redmine-API-Key": manifest["users"]["a"]["key"]}

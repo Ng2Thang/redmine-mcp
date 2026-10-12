@@ -10,6 +10,7 @@ from redmine_mcp.app import create_app
 from redmine_mcp.auth import READ_OPERATIONS
 from redmine_mcp.config import Settings
 from tests.helpers import mcp_session
+from tools.testing.e2e_config import URL
 
 
 @pytest.mark.parametrize("boundary", ["rest", "mcp"])
@@ -19,7 +20,7 @@ async def test_retry_reader_preserves_native_issue_and_identity(
 ) -> None:
     key = live_manifest["users"]["a"]["key"]
     async with httpx.AsyncClient(
-        base_url="http://127.0.0.1:3001/",
+        base_url=URL + "/",
         headers={"X-Redmine-API-Key": key},
         trust_env=False,
     ) as native:
@@ -32,7 +33,7 @@ async def test_retry_reader_preserves_native_issue_and_identity(
             f"issues/{issue_id}.json", params={"include": "journals,attachments"}
         )
         assert expected.status_code == 200
-    app = create_app(Settings(_env_file=None, redmine_url="http://127.0.0.1:3001"))
+    app = create_app(Settings(_env_file=None, redmine_url=URL))
     async with app.router.lifespan_context(app):
         if boundary == "rest":
             async with httpx.AsyncClient(

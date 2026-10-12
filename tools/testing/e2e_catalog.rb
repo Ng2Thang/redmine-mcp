@@ -4,8 +4,9 @@
 require 'json'
 require 'fileutils'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
-raise 'Wrong Redmine version' unless [Redmine::VERSION::MAJOR, Redmine::VERSION::MINOR, Redmine::VERSION::TINY] == [7, 0, 2]
+require_relative 'e2e_guard'
 base = JSON.parse(File.read('/seed-state/fixtures.json'))
+E2EGuard.manifest!(base)
 raise 'Wrong owner' unless base['owner'] == 'prep-018'
 action, run = ARGV
 raise 'Invalid run identifier' unless run&.match?(/\A[0-9a-f]{32}\z/)

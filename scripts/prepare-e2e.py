@@ -1,24 +1,66 @@
-"""Provision an isolated, owned Redmine 7.0.2 fixture environment; never reset shared data."""
+"""Provision isolated, version-selected Redmine fixtures; never reset shared data."""
 
 import json
 import os
 import re
 import secrets
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-STATE = ROOT / ".local" / "testing-e2e"
+sys.path.insert(0, str(ROOT))
+
+from tools.testing.e2e_config import (  # noqa: E402
+    PORT,
+    PROJECT,
+    STATE,
+    VERSION,
+    validate_image,
+)
+
 OWNER = "prep-018"
 KIND = "redmine-mcp-synthetic-v1"
+
+
+def selected_image() -> str:
+    supplied = os.environ.get("REDMINE_E2E_IMAGE")
+    if supplied:
+        return validate_image(supplied)
+    # Reuse an existing immutable selection instead of following a changed tag.
+    saved = STATE / "compose.json"
+    if saved.exists():
+        return validate_image(json.loads(saved.read_text())["services"]["redmine"]["image"])
+    template = ROOT / "deploy" / f"compose.test.{VERSION}.yaml"
+    if template.exists():
+        target = re.search(r"image: (redmine:[^\s]+)", template.read_text())
+        if target:
+            return validate_image(target.group(1))
+    # Other 6.x releases resolve the official exact tag once, then persist its digest.
+    tag = f"redmine:{VERSION}"
+    subprocess.run(["docker", "pull", tag], check=True)
+    inspected = subprocess.run(
+        ["docker", "image", "inspect", tag], capture_output=True, text=True, check=True
+    )
+    for digest in json.loads(inspected.stdout)[0].get("RepoDigests", []):
+        if digest.startswith("redmine@sha256:"):
+            return validate_image(tag + "@" + digest.split("@", 1)[1])
+    raise SystemExit("Official Redmine image has no immutable repository digest")
 
 
 def main() -> None:
     STATE.mkdir(parents=True, exist_ok=True)
     environment = os.environ | {"MSYS_NO_PATHCONV": "1", "MSYS2_ARG_CONV_EXCL": "*"}
-    target = re.search(r"image: (redmine:[^\s]+)", (ROOT / "deploy/compose.test.yaml").read_text())
-    if target is None:
-        raise SystemExit("Missing pinned Redmine image")
+    target = selected_image()
+    manifest_path = STATE / "fixtures.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+        if (manifest.get("kind"), manifest.get("owner"), manifest.get("version")) != (
+            KIND,
+            OWNER,
+            VERSION,
+        ):
+            raise SystemExit("Refusing to reuse an unowned or incompatible fixture manifest")
     env_path = STATE / "compose.env"
     if not env_path.exists():
         env_path.write_text(
@@ -29,10 +71,10 @@ def main() -> None:
     label = {
         "redmine-mcp.environment": "synthetic-test",
         "redmine-mcp.owner": OWNER,
-        "redmine-mcp.redmine-version": "7.0.2",
+        "redmine-mcp.redmine-version": VERSION,
     }
     compose = {
-        "name": "redmine-mcp-e2e",
+        "name": PROJECT,
         "services": {
             "postgres": {
                 "image": "postgres:16.8-bookworm",
@@ -50,7 +92,7 @@ def main() -> None:
                 },
             },
             "redmine": {
-                "image": target.group(1),
+                "image": target,
                 "environment": {
                     "REDMINE_DB_POSTGRES": "postgres",
                     "REDMINE_DB_DATABASE": "redmine",
@@ -61,8 +103,9 @@ def main() -> None:
                     "RAILS_ENV": "production",
                     "REDMINE_TEST_MARKER": KIND,
                     "REDMINE_E2E_OWNER": OWNER,
+                    "REDMINE_E2E_VERSION": VERSION,
                 },
-                "ports": ["127.0.0.1:3001:3000"],
+                "ports": [f"127.0.0.1:{PORT}:3000"],
                 "volumes": [
                     "files:/usr/src/redmine/files",
                     f"{(ROOT / 'tools/testing').as_posix()}:/opt/testing:ro",
@@ -88,7 +131,7 @@ def main() -> None:
         "volumes": {"database": {"labels": label}, "files": {"labels": label}},
     }
     path = STATE / "compose.json"
-    for name in ("redmine-mcp-e2e_database", "redmine-mcp-e2e_files"):
+    for name in (f"{PROJECT}_database", f"{PROJECT}_files"):
         inspected = subprocess.run(
             ["docker", "volume", "inspect", name], capture_output=True, text=True
         )
@@ -96,7 +139,7 @@ def main() -> None:
             labels = json.loads(inspected.stdout)[0].get("Labels", {})
             if (
                 labels.get("redmine-mcp.owner") != OWNER
-                or labels.get("redmine-mcp.redmine-version") != "7.0.2"
+                or labels.get("redmine-mcp.redmine-version") != VERSION
             ):
                 raise SystemExit("Refusing to reuse an unowned or incompatible E2E volume")
     path.write_text(json.dumps(compose, indent=2), encoding="utf-8")
@@ -126,7 +169,9 @@ def main() -> None:
         raise SystemExit("Owned fixture preparation failed; inspect ignored seed.log")
     if not (STATE / "fixtures.json").exists():
         raise SystemExit("Fixture preparation did not produce its private manifest")
-    print("Owned Redmine 7.0.2 fixtures ready; credentials remain in ignored .local/testing-e2e.")
+    print(
+        f"Owned Redmine {VERSION} fixtures ready; credentials remain in {STATE.relative_to(ROOT)}."
+    )
 
 
 if __name__ == "__main__":

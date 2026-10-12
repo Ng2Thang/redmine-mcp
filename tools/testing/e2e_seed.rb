@@ -4,7 +4,7 @@ require 'json'
 require 'securerandom'
 
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
-raise 'Wrong Redmine version' unless Redmine::VERSION::MAJOR == 7 && Redmine::VERSION::MINOR == 0 && Redmine::VERSION::TINY == 2
+require_relative 'e2e_guard'
 path = '/seed-state/fixtures.json'
 def ensure_inherited_members(child, parent)
   raise 'Unowned inheritance fixture' unless child.identifier == 'mcp-e2e-child' && parent.identifier == 'mcp-e2e-parent' && child.parent_id == parent.id
@@ -29,6 +29,7 @@ end
 
 if File.exist?(path)
   previous = JSON.parse(File.read(path))
+  E2EGuard.manifest!(previous)
   raise 'Invalid existing ownership' unless previous['owner'] == 'prep-018' && previous['kind'] == ENV['REDMINE_TEST_MARKER']
   ensure_inherited_members(Project.find(previous['projects']['child']), Project.find(previous['projects']['parent']))
   issue = Issue.find(previous['issues']['a'])
@@ -109,7 +110,7 @@ projects['closed'].close
 projects['archived'].archive
 projects['disabled'].enabled_module_names = %w[files]
 
-File.write(path, JSON.pretty_generate({kind: ENV['REDMINE_TEST_MARKER'], owner: 'prep-018', version: '7.0.2',
+File.write(path, JSON.pretty_generate({kind: ENV['REDMINE_TEST_MARKER'], owner: 'prep-018', version: E2EGuard::VERSION,
   users: users.transform_values { |user| {id: user.id, key: user.api_key} },
   roles: roles.transform_values(&:id), projects: projects.transform_values(&:id),
   issues: issues.transform_values(&:id), journals: issues['a'].journals.pluck(:id),

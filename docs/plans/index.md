@@ -25,6 +25,56 @@ later entries record subsequent work. Dated evidence does not verify new working
 The 2026-10-09 documentation correction performed no tests, startup, Inspector or live calls
 and does not close acceptance gaps or publish a release.
 
+## Existing-stack E2E reuse plan (2026-10-12)
+
+The user wants E2E to use the two existing versioned Compose stacks: Redmine 6.0.1 on
+localhost:3001 and Redmine 7.0.2 on localhost:3002. Their existing data is disposable.
+This new plan supersedes separate-stack provisioning for future normal preparation;
+the earlier implementation descriptions below remain historical and are still the current
+code behavior until the planned changes are implemented.
+
+| Task | Client outcome | Dependencies | Status | Blocker | Next action |
+|---|---|---|---|---|---|
+| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | planned | None for implementation; all execution evidence pending | Implement shared profiles, Compose/lifecycle alignment, guarded preparation/reset, isolated fixture state, and consumer updates in task order; verify separately when authorized |
+
+The plan retains exact 6.x.x and 7.0.2 validation, uses dedicated fixture manifests inside
+each existing stack, and permits an explicit selected-stack reset without resetting on every
+pytest invocation. No implementation, tests, check tools, Docker mutations, or seed/reset
+execution were performed for this planning assignment.
+
+## E2E release selection (2026-10-12)
+
+Implemented user-requested E2E configuration for exact 6.x.x releases and 7.0.2 as the
+maximum accepted 7.x release. Shared configuration selects release-specific projects,
+volumes, private state, and a localhost port. Preparation persists an immutable official
+image digest; Python preflight and native Ruby guards check the selected version and
+fixture ownership. Pytest and supplemental Inspector/browser consumers use the same target.
+Legacy tag controls now use the selected owned instance and explicitly skip missing native
+tag capabilities or positive fixtures. Public MCP runtime contracts are unchanged.
+
+Implementation is complete; compatibility acceptance is pending. Changed Python files were
+formatted with Ruff. No tests, lint/type checks, Docker setup, seed execution, Inspector,
+browser checks, or live calls were run for this change. Required follow-up is a separately
+authorized preparation and E2E run on
+6.0.1, the intended additional 6.x releases, and 7.0.2, including cleanup inspection.
+Unsupported versions, mismatched manifests/volumes, image pins, and actual server versions
+also require negative verification. See the
+[commands and configuration contract](../testing-roadmap.md#selecting-a-redmine-release).
+
+## Automatic E2E preparation (2026-10-12)
+
+Implemented the user's request to run `uv run --frozen python scripts/prepare-e2e.py`
+automatically before E2E tests. An E2E-only autouse session fixture prepares once before
+live fixtures and tests, preserving the selected release, image, and port environment.
+Preparation failures abort the session. Output stays in the selected ignored state
+directory's `pytest-prepare.log`; native seed output remains in `seed.log`.
+
+The `--run-e2e` opt-in remains required. Offline runs, collection-only runs, and empty
+E2E selections do not trigger preparation. Standalone preparation and supplemental
+scripts remain available. No tests, Docker preparation, live calls, or check tools were
+run for this change. Verification remains pending: first preparation, reuse, failure
+before test execution, and absence of preparation for offline/collection-only runs.
+
 ## User documentation refresh (2026-10-12)
 
 The user authorized implementation of a user-oriented English portal refresh. The source

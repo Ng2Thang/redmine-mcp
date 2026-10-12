@@ -1,13 +1,14 @@
 """Localhost application factory for supplemental Inspector and browser checks."""
 
 import json
-from pathlib import Path
 from typing import Any
+
 
 from redmine_mcp.app import create_app as application
 from redmine_mcp.auth import WRITE_OPERATIONS
 from redmine_mcp.config import Settings
 from tests.e2e.conftest import preflight
+from tools.testing.e2e_config import STATE, URL, VERSION
 
 
 def create_app() -> Any:
@@ -15,7 +16,7 @@ def create_app() -> Any:
     return application(
         Settings(
             _env_file=None,
-            redmine_url="http://127.0.0.1:3001",
+            redmine_url=URL,
             redmine_write_enabled=True,
             redmine_writer_auth_mode="personal_key",
             redmine_writer_user_ids=",".join(
@@ -28,7 +29,7 @@ def create_app() -> Any:
 
 def create_reader_app() -> Any:
     preflight()
-    return application(Settings(_env_file=None, redmine_url="http://127.0.0.1:3001"))
+    return application(Settings(_env_file=None, redmine_url=URL))
 
 
 def create_allowed_all_app() -> Any:
@@ -36,7 +37,7 @@ def create_allowed_all_app() -> Any:
     return application(
         Settings(
             _env_file=None,
-            redmine_url="http://127.0.0.1:3001",
+            redmine_url=URL,
             redmine_write_enabled=True,
             redmine_writer_auth_mode="personal_key",
             redmine_writer_user_ids=",".join(
@@ -49,14 +50,14 @@ def create_allowed_all_app() -> Any:
 
 def create_time_entry_update_app() -> Any:
     preflight()
-    path = Path(__file__).resolve().parents[2] / ".local/testing-e2e/tool042-fixtures.json"
+    path = STATE / "tool042-fixtures.json"
     fixture = json.loads(path.read_text())
-    if fixture.get("owner") != "tool-042" or fixture.get("version") != "7.0.2":
+    if fixture.get("owner") != "tool-042" or fixture.get("version") != VERSION:
         raise ValueError("Unexpected TOOL-042 fixture ownership")
     return application(
         Settings(
             _env_file=None,
-            redmine_url="http://127.0.0.1:3001",
+            redmine_url=URL,
             redmine_write_enabled=True,
             redmine_writer_auth_mode="personal_key",
             redmine_writer_user_ids=",".join(str(row["id"]) for row in fixture["users"].values()),
@@ -67,14 +68,14 @@ def create_time_entry_update_app() -> Any:
 
 def create_time_entry_delete_app() -> Any:
     preflight()
-    path = Path(__file__).resolve().parents[2] / ".local/testing-e2e/tool043-fixtures.json"
+    path = STATE / "tool043-fixtures.json"
     fixture = json.loads(path.read_text())
-    if fixture.get("owner") != "tool-043" or fixture.get("version") != "7.0.2":
+    if fixture.get("owner") != "tool-043" or fixture.get("version") != VERSION:
         raise ValueError("Unexpected TOOL-043 fixture ownership")
     return application(
         Settings(
             _env_file=None,
-            redmine_url="http://127.0.0.1:3001",
+            redmine_url=URL,
             redmine_write_enabled=True,
             redmine_writer_auth_mode="personal_key",
             redmine_writer_user_ids=",".join(str(row["id"]) for row in fixture["users"].values()),

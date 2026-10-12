@@ -1,0 +1,31 @@
+<h2><%= link_to l(:setting_issue_tags), controller: 'settings', action: 'plugin', id: 'redmineup_tags', tab: 'manage_tags' %> &#187; <%=h (l(:issue_tags_tag) + ": " + @tag.name) %></h2>
+
+<%= form_tag(tag_path(@tag, :tab => 'tags'), :class => "tabular", :method => :put) do %>
+  <%= error_messages_for 'tag' %>
+  <div class="box">
+  <!--[form:optvalue]-->
+    <p>
+      <label for="tag_name"><%=l(:field_name)%></label>
+      <%= text_field 'tag', 'name' %>
+    </p>
+    <p>
+      <label for="tag_color"><%=l(:field_color)%></label>
+      <%= text_field 'tag', 'color', class: "colorpicker"  %>
+    </p>
+  </div>
+  <%= submit_tag l(:button_save) %>
+<% end %>
+
+<script>
+    $(function() {
+        //use this method to add new colors to pallete
+        //$.fn.colorPicker.addColors(['000', '000', 'fff', 'fff']);
+
+        $('#tag_color').colorPicker();
+    });
+
+</script>
+
+<% content_for :header_tags do %>
+  <%= redmineup_assets %>
+<% end %>

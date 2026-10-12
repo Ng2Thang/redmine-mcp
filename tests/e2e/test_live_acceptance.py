@@ -2,7 +2,6 @@
 
 import json
 import subprocess
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -11,6 +10,7 @@ import pytest
 
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS
 from tests.helpers import mcp_session
+from tools.testing.e2e_config import CONTAINER, PORT, STATE, VERSION
 
 pytestmark = [pytest.mark.e2e, pytest.mark.asyncio]
 
@@ -246,7 +246,7 @@ def permission_action(action: Any) -> None:
         [
             "docker",
             "exec",
-            "redmine-mcp-e2e-redmine-1",
+            CONTAINER,
             "bundle",
             "exec",
             "rails",
@@ -339,7 +339,7 @@ async def test_received_500_after_real_commit_is_uncertain_without_retry(
     await assert_ownership(live)
     project_id = live.manifest["projects"]["a"]
     subject = f"E2E prep-019 {uuid4().hex}"
-    state = Path(__file__).resolve().parents[2] / ".local/testing-e2e"
+    state = STATE
     evidence_dir = state / "prep-019" / uuid4().hex
     evidence_dir.mkdir(parents=True)
     cleanup_path = state / "last-cleanup.json"
@@ -347,7 +347,7 @@ async def test_received_500_after_real_commit_is_uncertain_without_retry(
         (evidence_dir / "previous-cleanup.json").write_bytes(cleanup_path.read_bytes())
     original = httpx.AsyncHTTPTransport.handle_async_request
     dispatched = 0
-    evidence = {"owner": "prep-019", "version": "7.0.2", "scenario": "STAB-019-006"}
+    evidence = {"owner": "prep-019", "version": VERSION, "scenario": "STAB-019-006"}
 
     async def matching_owned_ids() -> list[int]:
         matches = []
@@ -377,7 +377,7 @@ async def test_received_500_after_real_commit_is_uncertain_without_retry(
         target = (
             request.method == "POST"
             and request.url.host == "127.0.0.1"
-            and request.url.port == 3001
+            and request.url.port == PORT
             and request.url.path == "/issues.json"
         )
         if target:

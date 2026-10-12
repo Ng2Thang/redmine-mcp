@@ -12,6 +12,7 @@ import pytest
 
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS
 from tests.helpers import mcp_session
+from tools.testing.e2e_config import CONTAINER, STATE, VERSION
 
 pytestmark = pytest.mark.asyncio
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,7 +23,7 @@ def fixture_action(action: str, run: str) -> Any:
         [
             "docker",
             "exec",
-            "redmine-mcp-e2e-redmine-1",
+            CONTAINER,
             "bundle",
             "exec",
             "rails",
@@ -35,7 +36,7 @@ def fixture_action(action: str, run: str) -> Any:
         text=True,
         env=os.environ | {"MSYS_NO_PATHCONV": "1", "MSYS2_ARG_CONV_EXCL": "*"},
     )
-    directory = ROOT / ".local/testing-e2e/prep-020" / run
+    directory = STATE / "prep-020" / run
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{action}-{uuid4().hex}.log").write_text(result.stdout + result.stderr)
     assert result.returncode == 0, "Owned prep-020 fixture action failed; inspect private evidence"
@@ -48,7 +49,7 @@ def fixture_action(action: str, run: str) -> Any:
 @pytest.fixture(scope="module")
 def catalog_fixture(live_manifest: Any) -> Any:
     # live_manifest runs image/container/volume/version/manifest guards first.
-    assert live_manifest["version"] == "7.0.2"
+    assert live_manifest["version"] == VERSION
     run = uuid4().hex
     try:
         data = fixture_action("prepare", run)
@@ -272,7 +273,7 @@ async def test_live_allowed_all_inspector_catalog_and_native_parity(catalog_fixt
         text=True,
         timeout=300,
     )
-    directory = ROOT / ".local/testing-e2e/prep-020" / catalog_fixture["run"]
+    directory = STATE / "prep-020" / catalog_fixture["run"]
     (directory / "inspector-run.log").write_text(result.stdout + result.stderr)
     assert result.returncode == 0, "Owned Inspector check failed; inspect private evidence"
 
@@ -282,9 +283,7 @@ async def test_live_historical_read_variants_with_populated_owned_state(
 ) -> None:
     projects = catalog_fixture["projects"]
     parent, child = projects["parent"], projects["child"]
-    private = json.loads(
-        (ROOT / ".local/testing-e2e/prep-020" / catalog_fixture["run"] / "fixture.json").read_text()
-    )
+    private = json.loads((STATE / "prep-020" / catalog_fixture["run"] / "fixture.json").read_text())
     issue_id, category_id = private["issue_id"], private["category_id"]
     versions = (await live.redmine("GET", f"projects/{parent}/versions.json"))["versions"]
     version_id = versions[0]["id"]

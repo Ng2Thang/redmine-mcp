@@ -11,8 +11,10 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS  # noqa: E402
 from redmine_mcp.mcp.catalog import OPERATIONS, writer_catalog  # noqa: E402
+from tools.testing.e2e_config import STATE  # noqa: E402
 
 
 def main() -> None:
@@ -46,7 +48,7 @@ def main() -> None:
         ).hexdigest()
         for path in sorted(sources)
     }
-    state = ROOT / ".local/testing-e2e/prep-020" / ("audit-" + uuid4().hex)
+    state = STATE / "prep-020" / ("audit-" + uuid4().hex)
     state.mkdir(parents=True)
     (state / "evidence.json").write_text(
         json.dumps(

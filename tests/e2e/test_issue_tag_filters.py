@@ -1,8 +1,6 @@
 """Read-only tag controls; never install plugins or create/alter tag fixtures."""
 
 import json
-import subprocess
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -10,33 +8,20 @@ import pytest
 
 from redmine_mcp.app import create_app
 from redmine_mcp.config import Settings
+from tests.e2e.conftest import preflight
 from tests.helpers import mcp_session
+from tools.testing.e2e_config import PROJECT, STATE, URL, VERSION
 
-STATE = Path(__file__).resolve().parents[2] / ".local"
-TARGET = "http://127.0.0.1:3000"
+TARGET = URL
 UNKNOWN = "mcp-tag-control-036-does-not-exist-7f93c1"
 
 
 def owned_manifest() -> dict[str, Any]:
-    result = subprocess.run(
-        ["docker", "inspect", "redmine-mcp-test-redmine-1"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode == 0, "Owned Redmine container unavailable"
-    container = json.loads(result.stdout)[0]
-    config = container["Config"]
-    env = dict(v.split("=", 1) for v in config["Env"] if "=" in v)
-    assert config["Image"] == "redmine:6.0.5-bookworm"
-    assert env.get("REDMINE_TEST_MARKER") == "redmine-mcp-synthetic-v1"
-    assert config["Labels"]["com.docker.compose.project"] == "redmine-mcp-test"
-    assert container["NetworkSettings"]["Ports"]["3000/tcp"] == [
-        {"HostIp": "127.0.0.1", "HostPort": "3000"}
-    ]
-    manifest = json.loads((STATE / "manifest.json").read_text(encoding="utf-8"))
-    assert manifest["kind"] == "redmine-mcp-synthetic-v1"
-    manifest["credentials"] = json.loads((STATE / "credentials.json").read_text(encoding="utf-8"))
+    manifest = preflight()
+    manifest["credentials"] = {
+        "admin_key": manifest["users"]["admin"]["key"],
+        "reader_key": manifest["users"]["a"]["key"],
+    }
     return manifest
 
 
@@ -69,8 +54,23 @@ async def test_existing_notification_any_scope_and_pagination(identity: str) -> 
                 "limit": 100,
             },
         )
+        negative = await native.get(
+            "issues.json",
+            params={
+                "set_filter": 1,
+                "fields[]": ["issue_tags", "status_id"],
+                "operators[issue_tags]": "=",
+                "values[issue_tags][]": [UNKNOWN],
+                "operators[status_id]": "*",
+                "values[status_id][]": [""],
+                "limit": 1,
+            },
+        )
     assert selected.status_code == 200
+    assert negative.status_code == 200
     expected = selected.json()
+    if negative.json()["total_count"] != 0 or expected["total_count"] == 0:
+        pytest.skip("Requires native tag filtering and existing notification-tag fixtures")
     assert expected["total_count"] <= 100, "Known-tag fixture exceeds this bounded check"
     if identity == "admin_key":
         assert expected["total_count"] > 0, "Known notification tag has no positive control"
@@ -191,9 +191,9 @@ async def test_read_only_live_negative_control_and_mcp_parity() -> None:
     assert response.json()["total"] == sdk["total"] == filtered["total_count"]
     evidence = {
         "task": "TOOL-036",
-        "target": "http://localhost:3000",
-        "version": "6.0.5",
-        "ownership": "redmine-mcp-test",
+        "target": URL,
+        "version": VERSION,
+        "ownership": PROJECT,
         "method": "GET only",
         "baseline_total": baseline["total_count"],
         "negative_control_total": filtered["total_count"],

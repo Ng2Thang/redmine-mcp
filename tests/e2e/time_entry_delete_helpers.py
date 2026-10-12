@@ -9,8 +9,10 @@ from typing import Any
 
 import pytest_asyncio
 
+from tools.testing.e2e_config import CONTAINER
+from tools.testing.e2e_config import STATE as STATE
+
 ROOT = Path(__file__).resolve().parents[2]
-STATE = ROOT / ".local/testing-e2e"
 
 
 def fixture_command(action: str) -> dict[str, Any]:
@@ -18,7 +20,7 @@ def fixture_command(action: str) -> dict[str, Any]:
         [
             "docker",
             "exec",
-            "redmine-mcp-e2e-redmine-1",
+            CONTAINER,
             "bundle",
             "exec",
             "rails",

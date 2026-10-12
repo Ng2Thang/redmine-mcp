@@ -22,6 +22,81 @@ builds images. It requires Python 3.13 on PATH and host ports 3000, 8000, and 54
 | Liveness | `http://localhost:8000/health` |
 | PostgreSQL | `localhost:5433`, database/user `redmine` |
 
+### Choose a Redmine version
+
+Two local Compose variants are available. Select exactly one alongside `deploy/compose.yaml`:
+
+| Redmine | Compose file | Compose project | Host state directory |
+|---|---|---|---|
+| 7.0.2 | `deploy/compose.test.7.0.2.yaml` | `redmine-mcp-test` | `.local` |
+| 6.0.1 | `deploy/compose.test.6.0.1.yaml` | `redmine-mcp-test-6-0-1` | `.local/redmine-6.0.1` |
+
+`deploy/compose.test.yaml` remains an equivalent 7.0.2 configuration for existing helpers.
+It uses the same project and data as `deploy/compose.test.7.0.2.yaml`; select one of these
+files, not both. Keep the two 7.0.2 configurations synchronized when changing deployment settings.
+
+Both images are pinned by digest. The 6.0.1 digest comes from the official
+[Docker image metadata](https://hub.docker.com/layers/library/redmine/6.0.1/images/sha256-499ba60895598e9a8556d412d851d39e8faf9108b6270114ec0d2dcbc6ebd285).
+The projects use separate database and attachment volumes, with matching version labels.
+Keep the project names shown above; do not reuse a project's volumes with another version.
+Both variants use the same host ports, so stop the running project before switching.
+
+For an existing `.env` created by `scripts/local_env.py`, switch from 7.0.2 to 6.0.1:
+
+```bash
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
+docker compose -p redmine-mcp-test --env-file .env \
+  -f deploy/compose.yaml -f deploy/compose.test.7.0.2.yaml stop
+docker compose -p redmine-mcp-test-6-0-1 --env-file .env \
+  -f deploy/compose.yaml -f deploy/compose.test.6.0.1.yaml \
+  up -d postgres redmine
+```
+
+To switch back, stop the 6.0.1 project with the same file and project arguments, then run
+`bash scripts/dev-up.sh`. Stopping retains each version's data. Both variants install plugins
+at startup. The existing development, seed, reset, backup, restore, and E2E helpers remain
+dedicated to 7.0.2. The 6.0.1 variant starts a separate Redmine instance without automatic
+synthetic seeding; it requires its own initial Redmine administration setup. Startup and
+plugin compatibility for this variant have not been verified.
+
+### Install local Redmine plugins
+
+The Redmine service in both local Compose variants installs plugin directories from
+`deploy/redmine-plugins` at startup. Each directory must contain `init.rb`.
+`deploy/redmine/install-plugins.sh` copies the read-only host sources into the container
+and hands startup to the official Redmine entrypoint. That entrypoint installs missing
+Gemfile dependencies and runs core and plugin database migrations before serving requests.
+First installation requires network access to fetch missing gems. Installation or migration
+errors stop startup and appear in the Redmine container logs.
+
+The installer sets Bundler's local `without` configuration to `development test` and
+`deployment` to `false`, matching the supplied Agile and Tags installation options without
+using the legacy command flags. See [Bundler configuration](https://bundler.io/man/bundle-config.1.html).
+Dependency installation and migrations run from `/usr/src/redmine`, where Redmine's Gemfile
+and Rakefile live; `/usr/src/redmine/plugins` contains the copied plugin directories.
+The installer sets `RAILS_ENV=production` and `REDMINE_PLUGINS_MIGRATE=1` so the official
+entrypoint migrates all installed plugins, including Agile, Tags, and Work Time.
+The migration task is `redmine:plugins:migrate`; an individual Agile migration would use
+`NAME=redmine_agile`, while Tags uses `NAME=redmineup_tags`. See the
+[Redmine plugin installation guide](https://www.redmine.org/projects/redmine/wiki/Plugins).
+
+After adding, updating, or removing plugin sources, recreate the Redmine container so it gets
+a fresh set of plugin files. For the default 7.0.2 deployment:
+
+```bash
+source scripts/common.sh
+compose up -d --no-deps --force-recreate redmine
+compose logs --follow --tail=100 redmine
+```
+
+Recreation preserves the database and uploaded files. Removing a source directory does not
+uninstall its database tables. Enable installed modules and grant the required role permissions
+in Redmine administration. The base `deploy/compose.yaml` connects MCP to an external Redmine;
+plugin installation applies only to the local Redmine service in the selected version file.
+Plugin compatibility with the pinned Redmine 7.0.2 image still requires separately authorized
+startup verification; Work Time's bundled changelog only declares support through Redmine 6.1.
+
 For database clients, read `POSTGRES_PASSWORD` privately from `.env`. Synthetic accounts are
 `admin`, `demo-manager`, `demo-developer`, `demo-reporter`, and `demo-mcp-reader`; their password
 is `TEST_USER_PASSWORD`. Use each account's personal key to inspect its visibility.

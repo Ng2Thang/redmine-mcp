@@ -55,7 +55,7 @@ the still-pending or waived acceptance stages. Test counts do not automatically 
 |---|---|---|---|
 | Unit | `tests/unit/` | [prep-016](plans/tasks/prep-016-unit-testing.md) | Fake ports, models and policies |
 | Integration | `tests/integration/` | [prep-017](plans/tasks/prep-017-offline-integration-testing.md) | Mocked Redmine and in-process REST/MCP |
-| E2E | `tests/e2e/` | [prep-018](plans/tasks/prep-018-live-e2e-testing.md) | Owned Redmine 7.0.2 and PostgreSQL |
+| E2E | `tests/e2e/` | [prep-018](plans/tasks/prep-018-live-e2e-testing.md) | Owned selected Redmine 6.x.x or 7.0.2 and PostgreSQL |
 
 The user authorized implementation and execution on 2026-10-05. Future coding-only assignments
 still require separate testing authorization. Run from Git Bash within an authorized assignment:
@@ -80,10 +80,69 @@ preserving existing containers, configuration and data. Existing E2E volumes mus
 and version labels. Preparation creates fixtures; it is not a read-only smoke check.
 
 ```bash
-uv run --frozen python scripts/prepare-e2e.py
 uv run --frozen pytest tests/e2e --run-e2e
 uv run --frozen python scripts/verify-e2e-supplement.py
 ```
+
+Pytest automatically runs `uv run --frozen python scripts/prepare-e2e.py` once per
+session before any selected E2E test or its fixtures run. Docker Desktop and `uv` on
+`PATH` are required. Preparation reuses the selected owned environment and seeds its
+fixtures; it does not reset volumes. A preparation failure stops the session before test
+execution. Private subprocess output is saved as `pytest-prepare.log` in the selected
+environment's state directory; fixture seed output remains in `seed.log`.
+
+Offline runs, collection-only runs, and runs with no selected E2E tests do not prepare
+Docker. E2E selection without `--run-e2e` is still rejected before preparation.
+The preparation command remains available separately, for example before running only
+the supplemental Inspector/browser scripts.
+
+### Selecting a Redmine release
+
+E2E accepts exact stable `6.x.x` releases and `7.0.2` (the default). Other 7.x versions,
+older majors, floating tags, and prereleases are rejected. This is a configuration range,
+not evidence that every release has passed the suite. The Docker tag must exist.
+
+For Redmine 6.0.1, use Git Bash from the repository root with Docker Desktop running:
+
+```bash
+export REDMINE_E2E_VERSION=6.0.1
+uv run --frozen pytest tests/e2e --run-e2e
+# Optional Inspector and authenticated browser checks:
+uv run --frozen python scripts/verify-e2e-supplement.py
+```
+
+Keep the exported selection for pytest, preparation, and supplemental scripts. Automatic preparation
+creates and seeds an isolated environment; it does not connect to an arbitrary external
+Redmine or use the root `.env`. The 6.0.1 project is `redmine-mcp-e2e-6-0-1`, private state
+is `.local/testing-e2e-6-0-1/`, and Redmine listens on `127.0.0.1:3002`. Other 6.x releases
+use the same naming pattern and default port 3002. Set `REDMINE_E2E_PORT` to a free port
+between 1024 and 65535 before preparation and keep it set for every subsequent command.
+This also allows different versions to coexist. The existing 7.0.2 project, state directory,
+and default port 3001 remain unchanged. Neither environment uses the development stack's data.
+
+Preparation reuses repository digest pins for 6.0.1 and 7.0.2. For another 6.x release it
+pulls `redmine:<version>` once, resolves its repository digest, and saves the immutable image
+reference in that release's private `compose.json`. Later preparation reuses that pin.
+An optional `REDMINE_E2E_IMAGE=redmine:<version>[-variant]@sha256:<64-hex-digest>` supplies
+an explicit official image pin; its tag must match the selected release. Native Ruby guards
+also verify the running Redmine version before fixture inspection or mutation. Manifests
+and volumes from another release are refused; no automatic reset or volume migration occurs.
+
+To return to the default selection in the same shell:
+
+```bash
+unset REDMINE_E2E_VERSION REDMINE_E2E_PORT REDMINE_E2E_IMAGE
+```
+
+Tag controls now use the selected owned E2E instance rather than the legacy shared 6.0.5
+stack. Positive tag scenarios require working native tag filtering and an existing
+`notification` tag fixture; unsupported or absent controls are explicitly skipped.
+Preparation does not install tag plugins. A skipped tag case is not compatibility acceptance.
+
+The version-selection change has not been executed against Docker or pytest. Before recording
+compatibility, run preparation, the selected E2E suite, cleanup review, and the optional
+Inspector/browser checks separately for each intended release. Existing assertions about
+permissions and resulting state remain in place and may expose version differences.
 
 Preflight verifies the image pin, synthetic markers, volume ownership, private manifest and
 native project identifiers before mutation. Ordinary personal keys exercise the separately

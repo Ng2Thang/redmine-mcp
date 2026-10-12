@@ -18,9 +18,9 @@ from redmine_mcp.common import ApplicationError
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.write import RedmineWriter, WriteReceipt
 from tests.helpers import mcp_session
+from tools.testing.e2e_config import CONTAINER, STATE
 
 ROOT = Path(__file__).resolve().parents[2]
-STATE = ROOT / ".local/testing-e2e"
 pytestmark = pytest.mark.asyncio
 
 
@@ -29,7 +29,7 @@ def fixture_command(action: str) -> dict[str, Any]:
         [
             "docker",
             "exec",
-            "redmine-mcp-e2e-redmine-1",
+            CONTAINER,
             "bundle",
             "exec",
             "rails",

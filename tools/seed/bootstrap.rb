@@ -32,6 +32,15 @@ reader.issues_visibility = 'default'
 reader.users_visibility = 'members_of_visible_projects'
 reader.save!
 manager = Role.find_by!(name: 'Manager')
+# Rails has loaded core and plugin permissions before this runner executes.
+manager.permissions = manager.setable_permissions.map(&:name)
+manager.permissions_all_trackers = {}
+manager.permissions_tracker_ids = {}
+manager.issues_visibility = 'all'
+manager.time_entries_visibility = 'all'
+manager.users_visibility = 'all'
+manager.all_roles_managed = true
+manager.save!
 developer = Role.find_by!(name: 'Developer')
 reporter = Role.find_by!(name: 'Reporter')
 users = {}

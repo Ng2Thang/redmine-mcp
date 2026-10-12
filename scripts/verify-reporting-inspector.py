@@ -13,13 +13,15 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+
 from redmine_mcp.auth import READ_OPERATIONS  # noqa: E402
 from tests.e2e.conftest import preflight  # noqa: E402
+from tools.testing.e2e_config import STATE, VERSION  # noqa: E402
 
 
 def main() -> None:
     manifest = preflight()
-    state = ROOT / ".local/testing-e2e"
+    state = STATE
     config = state / "reporting-inspector.json"
     config.write_text(
         json.dumps(
@@ -125,7 +127,7 @@ def main() -> None:
                 json.dumps(
                     {
                         "owner": "prep-018",
-                        "version": "7.0.2",
+                        "version": VERSION,
                         "discovery": "passed",
                         "calls_passed": len(calls),
                         "access": "read-only",

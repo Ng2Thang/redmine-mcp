@@ -1,0 +1,6 @@
+<% if User.current.allowed_to?(:edit_tags, @issue.project)  %>
+  <p id="issue_tags">
+    <label><%= l(:tags) %></label>
+    <%= tag_list_field_tag "issue[tag_list]", @issue.tag_list, taggable_type: 'Issue', width: '100%', tags: User.current.allowed_to?(:create_tags, @project) %>    
+  </p>
+<% end %>

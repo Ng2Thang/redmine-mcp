@@ -1,10 +1,8 @@
 """Live fixtures are guarded by image, marker, project and manifest ownership."""
 
 import json
-import re
 import subprocess
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -13,9 +11,36 @@ import pytest
 from redmine_mcp.app import create_app
 from redmine_mcp.auth import WRITE_OPERATIONS
 from redmine_mcp.config import Settings
+from tools.testing.e2e_config import CONTAINER, PORT, PROJECT, ROOT, STATE, URL, VERSION, validate_image
 
-ROOT = Path(__file__).resolve().parents[2]
-STATE = ROOT / ".local/testing-e2e"
+
+@pytest.fixture(scope="session", autouse=True)
+def prepare_e2e_environment(pytestconfig: pytest.Config) -> None:
+    """Prepare once before any selected live test or its session fixtures run."""
+    if not pytestconfig.getoption("--run-e2e"):
+        raise pytest.UsageError("Live tests require: pytest tests/e2e --run-e2e")
+    STATE.mkdir(parents=True, exist_ok=True)
+    log_path = STATE / "pytest-prepare.log"
+    with log_path.open("w", encoding="utf-8") as log:
+        try:
+            result = subprocess.run(
+                ["uv", "run", "--frozen", "python", "scripts/prepare-e2e.py"],
+                cwd=ROOT,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                check=False,
+            )
+        except OSError:
+            pytest.exit(
+                "Cannot launch E2E preparation; ensure uv is installed and available on PATH",
+                returncode=1,
+            )
+    if result.returncode:
+        pytest.exit(
+            "E2E preparation failed; inspect the selected environment's private "
+            "pytest-prepare.log and seed.log",
+            returncode=1,
+        )
 
 
 def native_state() -> Any:
@@ -23,7 +48,7 @@ def native_state() -> Any:
         [
             "docker",
             "exec",
-            "redmine-mcp-e2e-redmine-1",
+            CONTAINER,
             "bundle",
             "exec",
             "rails",
@@ -39,12 +64,11 @@ def native_state() -> Any:
 
 
 def preflight() -> Any:
-    target = re.search(
-        r"image: (redmine:[^\s]+)", (ROOT / "deploy/compose.test.yaml").read_text()
-    ).group(1)
-    result = subprocess.run(
-        ["docker", "inspect", "redmine-mcp-e2e-redmine-1"], capture_output=True, text=True
-    )
+    path = STATE / "compose.json"
+    if not path.exists():
+        pytest.fail("Owned E2E configuration missing; run scripts/prepare-e2e.py", pytrace=False)
+    target = validate_image(json.loads(path.read_text())["services"]["redmine"]["image"])
+    result = subprocess.run(["docker", "inspect", CONTAINER], capture_output=True, text=True)
     if result.returncode:
         pytest.fail(
             "Owned E2E container missing; run python scripts/prepare-e2e.py first", pytrace=False
@@ -56,21 +80,25 @@ def preflight() -> Any:
         config["Image"] != target
         or env.get("REDMINE_E2E_OWNER") != "prep-018"
         or env.get("REDMINE_TEST_MARKER") != "redmine-mcp-synthetic-v1"
+        or env.get("REDMINE_E2E_VERSION", "7.0.2") != VERSION
     ):
         pytest.fail(
             "Refusing live access: container image or ownership marker mismatch", pytrace=False
         )
     labels = config.get("Labels", {})
-    if labels.get("com.docker.compose.project") != "redmine-mcp-e2e":
+    if labels.get("com.docker.compose.project") != PROJECT:
         pytest.fail("Refusing live access: unexpected Compose project", pytrace=False)
-    for volume in ("redmine-mcp-e2e_database", "redmine-mcp-e2e_files"):
+    mounts = {mount["Destination"]: mount.get("Name") for mount in container["Mounts"]}
+    if mounts.get("/usr/src/redmine/files") != f"{PROJECT}_files":
+        pytest.fail("Refusing live access: unexpected Redmine files volume", pytrace=False)
+    for volume in (f"{PROJECT}_database", f"{PROJECT}_files"):
         inspected = subprocess.run(
             ["docker", "volume", "inspect", volume], capture_output=True, text=True, check=True
         )
         labels = json.loads(inspected.stdout)[0]["Labels"]
         if (
             labels.get("redmine-mcp.owner") != "prep-018"
-            or labels.get("redmine-mcp.redmine-version") != "7.0.2"
+            or labels.get("redmine-mcp.redmine-version") != VERSION
         ):
             pytest.fail(
                 "Refusing live access: synthetic volume ownership/version mismatch", pytrace=False
@@ -84,9 +112,12 @@ def preflight() -> Any:
     if (data.get("kind"), data.get("owner"), data.get("version")) != (
         "redmine-mcp-synthetic-v1",
         "prep-018",
-        "7.0.2",
+        VERSION,
     ):
         pytest.fail("Refusing live access: fixture marker/version mismatch", pytrace=False)
+    ports = container["NetworkSettings"]["Ports"].get("3000/tcp")
+    if ports != [{"HostIp": "127.0.0.1", "HostPort": str(PORT)}]:
+        pytest.fail("Refusing live access: unexpected Redmine port binding", pytrace=False)
     data["metadata"] = native_state()
     return data
 
@@ -110,7 +141,7 @@ class LiveEnvironment:
         self, method: Any, path: Any, *, user: Any = "admin", expected: Any = 200, **kwargs: Any
     ) -> Any:
         async with httpx.AsyncClient(
-            base_url="http://127.0.0.1:3001/",
+            base_url=URL + "/",
             headers={"X-Redmine-API-Key": self.key(user)},
             trust_env=False,
             timeout=30,
@@ -135,7 +166,7 @@ class LiveEnvironment:
     ) -> Any:
         settings = Settings(
             _env_file=None,
-            redmine_url="http://127.0.0.1:3001",
+            redmine_url=URL,
             redmine_write_enabled=writer,
             redmine_writer_auth_mode="personal_key" if writer else "pinned_key",
             redmine_writer_user_ids=(
@@ -185,7 +216,7 @@ class LiveEnvironment:
                 errors.append("issue cleanup failed")
         for attachment_id in self.attachments:
             async with httpx.AsyncClient(
-                base_url="http://127.0.0.1:3001/",
+                base_url=URL + "/",
                 headers={"X-Redmine-API-Key": self.key("admin")},
                 trust_env=False,
             ) as client:

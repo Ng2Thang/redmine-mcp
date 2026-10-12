@@ -1,4 +1,4 @@
-"""Owned Redmine 7.0.2 acceptance for tasks 034 and 035 only."""
+"""Owned version-selected Redmine acceptance for tasks 034 and 035 only."""
 
 import json
 from decimal import Decimal

@@ -3,14 +3,14 @@
 require 'json'
 require 'securerandom'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
-raise 'Wrong Redmine version' unless [Redmine::VERSION::MAJOR, Redmine::VERSION::MINOR, Redmine::VERSION::TINY] == [7, 0, 2]
+require_relative 'e2e_guard'
 path = '/seed-state/tool042-fixtures.json'
 
 case ARGV.first
 when 'setup'
   raise 'Unreconciled TOOL-042 fixtures' if File.exist?(path)
   prefix = "mcp-e2e-tool042-#{SecureRandom.hex(6)}"
-  ledger = {owner: 'tool-042', version: '7.0.2', prefix: prefix, project_id: nil, users: {}, role_ids: [], activities: {},
+  ledger = {owner: 'tool-042', version: E2EGuard::VERSION, prefix: prefix, project_id: nil, users: {}, role_ids: [], activities: {},
             policies: {future: Setting.timelog_accept_future_dates?, closed: Setting.timelog_accept_closed_issues?,
                        daily_max: Setting.timelog_max_hours_per_day.to_f, required: Setting.timelog_required_fields},
             closed_status_id: IssueStatus.where(is_closed: true).first&.id}
@@ -55,6 +55,7 @@ when 'setup'
   puts JSON.generate(ledger)
 when 'cleanup'
   ledger = JSON.parse(File.read(path))
+  E2EGuard.manifest!(ledger, 'tool-042')
   raise 'Wrong TOOL-042 owner' unless ledger['owner'] == 'tool-042' && ledger['prefix'].start_with?('mcp-e2e-tool042-')
   project = Project.find_by(id: ledger['project_id'])
   if project
@@ -87,7 +88,7 @@ when 'cleanup'
                activities: TimeEntryActivity.where(id: ledger['activities'].values).count}
   raise 'Incomplete TOOL-042 cleanup' unless remaining.values.all?(&:zero?)
   File.delete(path)
-  evidence = {owner: 'tool-042', version: '7.0.2', cleanup: 'passed', remaining: remaining,
+  evidence = {owner: 'tool-042', version: E2EGuard::VERSION, cleanup: 'passed', remaining: remaining,
               observed_policies: ledger['policies']}
   File.write('/seed-state/tool042-last-cleanup.json', JSON.generate(evidence))
   puts JSON.generate(evidence)

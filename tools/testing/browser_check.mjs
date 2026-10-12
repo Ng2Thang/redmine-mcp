@@ -7,18 +7,20 @@ import {resolve} from 'node:path';
 
 const input = JSON.parse(await readFile(process.argv[2], 'utf8'));
 const url = new URL(input.url);
-if (url.origin !== 'http://127.0.0.1:3001' || !url.pathname.startsWith('/attachments/download/')) {
+const origin = new URL(input.origin);
+if (origin.protocol !== 'http:' || origin.hostname !== '127.0.0.1' ||
+    url.origin !== origin.origin || !url.pathname.startsWith('/attachments/download/')) {
   throw new Error('Refusing an unowned attachment URL');
 }
 const probe = createServer();
 await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
 const port = probe.address().port;
 await new Promise(resolve => probe.close(resolve));
-const directory = resolve('.local/testing-e2e/browser-downloads');
+const directory = resolve(input.state, 'browser-downloads');
 await mkdir(directory, {recursive: true});
 const browser = spawn('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', [
   '--headless=new', '--no-first-run', '--disable-background-networking',
-  `--user-data-dir=${resolve('.local/testing-e2e/browser-profile')}`,
+  `--user-data-dir=${resolve(input.state, 'browser-profile')}`,
   `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1', 'about:blank',
 ], {windowsHide: true, stdio: 'ignore'});
 let socket;

@@ -32,6 +32,52 @@ uv run --frozen uvicorn redmine_mcp.app:create_app --factory --host 127.0.0.1 --
 Settings load at app creation. HTTP clients are managed by application lifespan; imports must not
 read credentials or contact upstream services. See the [architecture](architecture.md).
 
+## Synthetic Redmine versions
+
+For automated E2E version selection, use `REDMINE_E2E_VERSION` and
+`scripts/prepare-e2e.py` as described in the
+[E2E release instructions](testing-roadmap.md#selecting-a-redmine-release).
+It accepts exact 6.x.x releases and 7.0.2 and creates its own fixtures and volumes;
+the development seed below does not substitute for E2E preparation.
+
+With Docker Desktop running, start and seed the default Redmine 7.0.2 stack or the
+separate Redmine 6.0.1 stack from Git Bash:
+
+```bash
+bash scripts/dev-up.sh
+bash scripts/dev-up.sh 6.0.1
+```
+
+The 6.0.1 command combines `deploy/compose.yaml` with `deploy/compose.test.6.0.1.yaml`,
+builds the MCP image, and seeds both the baseline and history datasets. It uses project
+`redmine-mcp-test-6-0-1`, separate volumes, and secrets and seed state under
+`.local/redmine-6.0.1/`. Redmine listens on localhost:3001, PostgreSQL on localhost:5436,
+and the read-only MCP server on localhost:8002/mcp. Set `MCP_HOST_PORT` before running
+the command to override its MCP port. The default 7.0.2 command retains the root `.env`,
+`.local/` seed state, and ports 3000, 5433, and 8000.
+
+Both versions run seed mode `all` by default: the 150-issue baseline followed by the
+history dataset with 8 projects, 20 users, 12 versions, 300 additional issues, and
+900 time entries. Completed datasets are skipped on subsequent runs; an interrupted
+history seed resumes from its saved checkpoints. Existing incomplete baseline seeds
+still require the generator's guarded reset workflow.
+
+Synthetic bootstrap grants the `Manager` role every assignable permission registered
+by Redmine and the installed plugins. It enables all-tracker access, full issue,
+time-entry and user visibility, and management of all project roles. These remain
+role-based permissions governed by project membership, enabled modules, and workflow
+rules; the demo manager account is not a Redmine administrator. Bootstrap reapplies
+these settings on every `dev-up.sh` run, even when dataset generation is skipped.
+
+The other lifecycle helpers, including `seed.sh`, `backup.sh`, and reset/restore helpers,
+still target the default 7.0.2 environment. To stop 6.0.1 without removing its volumes:
+
+```bash
+docker compose -p redmine-mcp-test-6-0-1 \
+  --env-file .local/redmine-6.0.1/.env \
+  -f deploy/compose.yaml -f deploy/compose.test.6.0.1.yaml down
+```
+
 ## DEBUG logging
 
 Run from the repository root in Git Bash. Stop the Docker MCP service before using local
@@ -320,7 +366,8 @@ upgrades. Never hand-edit resolved hashes. Only `src/redmine_mcp` is packaged as
 
 The automated baseline is organized into `tests/unit/`, `tests/integration/` and `tests/e2e/`.
 Default pytest discovery runs the two offline layers. Live tests require explicit directory
-selection, `--run-e2e` and owned Redmine 7.0.2 fixtures. A coding-without-tests assignment cannot
+selection, `--run-e2e` and owned fixtures for the selected Redmine 6.x.x or 7.0.2 release.
+A coding-without-tests assignment cannot
 install test dependencies or create/run fixtures and tests; assign verification separately.
 Coverage thresholds and testing CI remain deferred. Follow the
 [testing roadmap](testing-roadmap.md) and [coverage matrix](plans/testing-coverage.md).

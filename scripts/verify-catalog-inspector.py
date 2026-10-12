@@ -12,8 +12,10 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS  # noqa: E402
 from tests.e2e.conftest import preflight  # noqa: E402
+from tools.testing.e2e_config import STATE, URL, VERSION  # noqa: E402
 
 
 def main() -> None:
@@ -21,7 +23,7 @@ def main() -> None:
     run = sys.argv[1]
     if len(run) != 32 or any(char not in "0123456789abcdef" for char in run):
         raise ValueError("Invalid owned fixture run identifier")
-    state = ROOT / ".local/testing-e2e/prep-020" / run
+    state = STATE / "prep-020" / run
     fixture = json.loads((state / "fixture.json").read_text())
     assert fixture["owner"] == "prep-020" and fixture["run"] == run
     project = fixture["projects"]["parent"]
@@ -78,9 +80,7 @@ def main() -> None:
                     time.sleep(0.2)
                 else:
                     raise RuntimeError("Owned Inspector server did not start")
-            with httpx.Client(
-                base_url="http://127.0.0.1:3001", headers=headers, trust_env=False
-            ) as native:
+            with httpx.Client(base_url=URL, headers=headers, trust_env=False) as native:
                 ownership = native.get(f"/projects/{project}.json")
                 assert ownership.status_code == 200
                 assert ownership.json()["project"]["identifier"] == fixture["prefix"] + "-parent"
@@ -238,7 +238,7 @@ def main() -> None:
                     assert oversized.status_code == 413
                 finally:
                     with httpx.Client(
-                        base_url="http://127.0.0.1:3001",
+                        base_url=URL,
                         trust_env=False,
                         headers={"X-Redmine-API-Key": manifest["users"]["admin"]["key"]},
                     ) as cleanup:
@@ -259,7 +259,7 @@ def main() -> None:
                 json.dumps(
                     {
                         "owner": "prep-020",
-                        "version": "7.0.2",
+                        "version": VERSION,
                         "allowed_all_catalog": "passed",
                         "native_read_parity": "passed",
                         "read_calls": 3,

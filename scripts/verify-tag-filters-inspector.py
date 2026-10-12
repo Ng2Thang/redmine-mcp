@@ -1,4 +1,4 @@
-"""Read-only TOOL-036 Inspector checks on the explicitly selected synthetic port 3000."""
+"""Read-only TOOL-036 Inspector checks on the selected owned E2E environment."""
 
 import json
 import os
@@ -13,11 +13,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tests.e2e.test_issue_tag_filters import UNKNOWN, owned_manifest  # noqa: E402
+from tools.testing.e2e_config import STATE, URL, VERSION  # noqa: E402
 
 
 def main() -> None:
     manifest = owned_manifest()
-    state = ROOT / ".local"
+    state = STATE
     config = state / "tool-036-inspector-config.json"
     server = None
     try:
@@ -107,13 +108,13 @@ def main() -> None:
                 json.dumps(
                     {
                         "task": "TOOL-036",
-                        "target": "http://localhost:3000",
-                        "version": "6.0.5",
+                        "target": URL,
+                        "version": VERSION,
                         "inspector": "2.8.0",
                         "discovery": "passed",
                         "read_calls_passed": 2,
                         "access": "read-only",
-                        "limitations": "No existing two-tag overlap or 7.0.2 acceptance",
+                        "limitations": "Requires native tag support; no two-tag overlap acceptance",
                     },
                     indent=2,
                 ),

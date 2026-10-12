@@ -12,13 +12,15 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS  # noqa: E402
 from tests.e2e.conftest import preflight  # noqa: E402
+from tools.testing.e2e_config import STATE, URL  # noqa: E402
 
 
 def main() -> None:
     manifest = preflight()
-    state = ROOT / ".local/testing-e2e"
+    state = STATE
     key = manifest["users"]["a"]["key"]
     project_id = manifest["projects"]["a"]
     config = state / "inspector.json"
@@ -132,7 +134,16 @@ def main() -> None:
                         raise RuntimeError("Inspector project call did not return visible data")
                 evidence["inspector"] = "passed"
                 browser_input = state / "browser-input.json"
-                browser_input.write_text(json.dumps({"url": metadata["content_url"], "key": key}))
+                browser_input.write_text(
+                    json.dumps(
+                        {
+                            "url": metadata["content_url"],
+                            "key": key,
+                            "origin": URL,
+                            "state": str(state),
+                        }
+                    )
+                )
                 browser = subprocess.run(
                     ["node", str(ROOT / "tools/testing/browser_check.mjs"), str(browser_input)],
                     capture_output=True,
@@ -149,7 +160,7 @@ def main() -> None:
         finally:
             if attachment_id is not None:
                 with httpx.Client(
-                    base_url="http://127.0.0.1:3001",
+                    base_url=URL,
                     trust_env=False,
                     headers={"X-Redmine-API-Key": manifest["users"]["admin"]["key"]},
                 ) as admin:

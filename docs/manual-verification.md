@@ -388,6 +388,13 @@ shared users, projects and memberships.
 
 ## Preparation and startup
 
+For the automated E2E fixture environment, follow
+[versioned stack preparation](testing-roadmap.md#selecting-a-redmine-release).
+PREP-029 reuses the 6.0.1 stack on localhost:3001 and 7.0.2 on localhost:3002.
+Their E2E manifests are separate from demo seed manifests. Standalone Inspector/browser
+scripts require preparation first; native fixture scripts use `/e2e-state`. Acceptance
+for this infrastructure change is pending; preserve earlier dated evidence.
+
 Use an existing synthetic environment or deliberately create one with `bash scripts/dev-up.sh`.
 That command creates configuration, containers, and sample data; it is not a read-only check.
 For an external instance, use only the read-only calls below with an appropriately restricted key.

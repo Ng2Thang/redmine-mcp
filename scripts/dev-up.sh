@@ -13,18 +13,12 @@ esac
 export REDMINE_TEST_VERSION="$version"
 source "$(dirname -- "$0")/common.sh"
 project=redmine-mcp-test
-redmine_port=3000
+redmine_port=3002
 postgres_port=5433
 if [[ "$version" == '6.0.1' ]]; then
   project=redmine-mcp-test-6-0-1
   redmine_port=3001
   postgres_port=5436
-  export MCP_HOST_PORT="${MCP_HOST_PORT:-8002}"
-  export REDMINE_PUBLIC_URL="${REDMINE_PUBLIC_URL:-http://localhost:3001}"
-  compose() {
-    docker compose -p "$project" --env-file .local/redmine-6.0.1/.env \
-      -f deploy/compose.yaml -f deploy/compose.test.6.0.1.yaml "$@"
-  }
 fi
 python scripts/local_env.py init
 for volume in "${project}_redmine_db_data" "${project}_redmine_files"; do
@@ -37,14 +31,9 @@ for volume in "${project}_redmine_db_data" "${project}_redmine_files"; do
   fi
 done
 compose up -d --wait --wait-timeout 600 postgres redmine
-if [[ "$version" == '6.0.1' ]]; then
-  compose exec -T redmine bundle exec rails runner /opt/seed/bootstrap.rb
-  python scripts/local_env.py assert
-  compose --profile tools run --build --rm seed all
-  python scripts/local_env.py runtime
-else
-  bash scripts/seed.sh all
-fi
+bash scripts/seed.sh all
 compose up -d --build --wait --wait-timeout 180 mcp-server
-echo "Ready: Redmine localhost:$redmine_port | MCP localhost:${MCP_HOST_PORT:-8000}/mcp | PostgreSQL localhost:$postgres_port"
+reader_port=8000
+[[ "$version" == '6.0.1' ]] && reader_port=8002
+echo "Ready: Redmine localhost:$redmine_port | MCP localhost:${MCP_HOST_PORT:-$reader_port}/mcp | PostgreSQL localhost:$postgres_port"
 

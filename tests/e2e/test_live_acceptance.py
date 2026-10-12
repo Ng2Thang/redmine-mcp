@@ -10,7 +10,7 @@ import pytest
 
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS
 from tests.helpers import mcp_session
-from tools.testing.e2e_config import CONTAINER, PORT, STATE, VERSION
+from tools.testing.e2e_config import PORT, STATE, VERSION, native_command, process_environment
 
 pytestmark = [pytest.mark.e2e, pytest.mark.asyncio]
 
@@ -243,19 +243,10 @@ async def test_multiple_group_and_inherited_roles(live: Any) -> None:
 
 def permission_action(action: Any) -> None:
     result = subprocess.run(
-        [
-            "docker",
-            "exec",
-            CONTAINER,
-            "bundle",
-            "exec",
-            "rails",
-            "runner",
-            "/opt/testing/e2e_permissions.rb",
-            action,
-        ],
+        native_command("e2e_permissions.rb", action),
         capture_output=True,
         text=True,
+        env=process_environment(),
     )
     assert result.returncode == 0, "Owned permission fixture action failed"
 

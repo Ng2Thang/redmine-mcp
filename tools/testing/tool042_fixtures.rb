@@ -4,13 +4,13 @@ require 'json'
 require 'securerandom'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
 require_relative 'e2e_guard'
-path = '/seed-state/tool042-fixtures.json'
+path = '/e2e-state/tool042-fixtures.json'
 
 case ARGV.first
 when 'setup'
   raise 'Unreconciled TOOL-042 fixtures' if File.exist?(path)
   prefix = "mcp-e2e-tool042-#{SecureRandom.hex(6)}"
-  ledger = {owner: 'tool-042', version: E2EGuard::VERSION, prefix: prefix, project_id: nil, users: {}, role_ids: [], activities: {},
+  ledger = {owner: 'tool-042', version: E2EGuard::VERSION, project: ENV['REDMINE_E2E_PROJECT'], prefix: prefix, project_id: nil, users: {}, role_ids: [], activities: {},
             policies: {future: Setting.timelog_accept_future_dates?, closed: Setting.timelog_accept_closed_issues?,
                        daily_max: Setting.timelog_max_hours_per_day.to_f, required: Setting.timelog_required_fields},
             closed_status_id: IssueStatus.where(is_closed: true).first&.id}
@@ -90,7 +90,7 @@ when 'cleanup'
   File.delete(path)
   evidence = {owner: 'tool-042', version: E2EGuard::VERSION, cleanup: 'passed', remaining: remaining,
               observed_policies: ledger['policies']}
-  File.write('/seed-state/tool042-last-cleanup.json', JSON.generate(evidence))
+  File.write('/e2e-state/tool042-last-cleanup.json', JSON.generate(evidence))
   puts JSON.generate(evidence)
 else
   raise 'Expected setup or cleanup'

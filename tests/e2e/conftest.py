@@ -11,7 +11,9 @@ import pytest
 from redmine_mcp.app import create_app
 from redmine_mcp.auth import WRITE_OPERATIONS
 from redmine_mcp.config import Settings
-from tools.testing.e2e_config import CONTAINER, PORT, PROJECT, ROOT, STATE, URL, VERSION, validate_image
+from tools.testing.e2e_config import ROOT, STATE, URL
+from tools.testing.e2e_environment import native_state as inspect_native_state
+from tools.testing.e2e_environment import preflight as inspect_preflight
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -44,82 +46,17 @@ def prepare_e2e_environment(pytestconfig: pytest.Config) -> None:
 
 
 def native_state() -> Any:
-    result = subprocess.run(
-        [
-            "docker",
-            "exec",
-            CONTAINER,
-            "bundle",
-            "exec",
-            "rails",
-            "runner",
-            "/opt/testing/e2e_inspect.rb",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode:
-        pytest.fail("Owned fixture inspection failed", pytrace=False)
-    return json.loads(result.stdout)
+    try:
+        return inspect_native_state()
+    except ValueError as error:
+        pytest.fail(str(error), pytrace=False)
 
 
 def preflight() -> Any:
-    path = STATE / "compose.json"
-    if not path.exists():
-        pytest.fail("Owned E2E configuration missing; run scripts/prepare-e2e.py", pytrace=False)
-    target = validate_image(json.loads(path.read_text())["services"]["redmine"]["image"])
-    result = subprocess.run(["docker", "inspect", CONTAINER], capture_output=True, text=True)
-    if result.returncode:
-        pytest.fail(
-            "Owned E2E container missing; run python scripts/prepare-e2e.py first", pytrace=False
-        )
-    container = json.loads(result.stdout)[0]
-    config = container["Config"]
-    env = dict(value.split("=", 1) for value in config["Env"] if "=" in value)
-    if (
-        config["Image"] != target
-        or env.get("REDMINE_E2E_OWNER") != "prep-018"
-        or env.get("REDMINE_TEST_MARKER") != "redmine-mcp-synthetic-v1"
-        or env.get("REDMINE_E2E_VERSION", "7.0.2") != VERSION
-    ):
-        pytest.fail(
-            "Refusing live access: container image or ownership marker mismatch", pytrace=False
-        )
-    labels = config.get("Labels", {})
-    if labels.get("com.docker.compose.project") != PROJECT:
-        pytest.fail("Refusing live access: unexpected Compose project", pytrace=False)
-    mounts = {mount["Destination"]: mount.get("Name") for mount in container["Mounts"]}
-    if mounts.get("/usr/src/redmine/files") != f"{PROJECT}_files":
-        pytest.fail("Refusing live access: unexpected Redmine files volume", pytrace=False)
-    for volume in (f"{PROJECT}_database", f"{PROJECT}_files"):
-        inspected = subprocess.run(
-            ["docker", "volume", "inspect", volume], capture_output=True, text=True, check=True
-        )
-        labels = json.loads(inspected.stdout)[0]["Labels"]
-        if (
-            labels.get("redmine-mcp.owner") != "prep-018"
-            or labels.get("redmine-mcp.redmine-version") != VERSION
-        ):
-            pytest.fail(
-                "Refusing live access: synthetic volume ownership/version mismatch", pytrace=False
-            )
-    path = STATE / "fixtures.json"
-    if not path.exists():
-        pytest.fail(
-            "Owned fixture manifest missing; run python scripts/prepare-e2e.py first", pytrace=False
-        )
-    data = json.loads(path.read_text())
-    if (data.get("kind"), data.get("owner"), data.get("version")) != (
-        "redmine-mcp-synthetic-v1",
-        "prep-018",
-        VERSION,
-    ):
-        pytest.fail("Refusing live access: fixture marker/version mismatch", pytrace=False)
-    ports = container["NetworkSettings"]["Ports"].get("3000/tcp")
-    if ports != [{"HostIp": "127.0.0.1", "HostPort": str(PORT)}]:
-        pytest.fail("Refusing live access: unexpected Redmine port binding", pytrace=False)
-    data["metadata"] = native_state()
-    return data
+    try:
+        return inspect_preflight()
+    except ValueError as error:
+        pytest.fail(str(error), pytrace=False)
 
 
 @pytest.fixture(scope="session")

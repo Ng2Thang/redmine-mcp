@@ -3,8 +3,9 @@
 require 'json'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
 require_relative 'e2e_guard'
-manifest = JSON.parse(File.read('/seed-state/fixtures.json'))
-E2EGuard.manifest!(manifest)
+manifest = JSON.parse(File.read('/e2e-state/fixtures.json'))
+E2EGuard.base_resources!(manifest)
+raise 'Incomplete E2E setup; use explicit --reset' if File.exist?('/e2e-state/setup.json')
 raise 'Wrong ownership' unless manifest['owner'] == 'prep-018'
 projects = manifest['projects'].to_h do |name, id|
   project = Project.find(id)

@@ -2,15 +2,21 @@
 name: redmine-mcp-test-6-0-1
 services:
   mcp-server:
+    ports: !override
+      - "127.0.0.1:${MCP_HOST_PORT:-8002}:8000"
     environment:
-      REDMINE_URL: http://redmine:3001
+      REDMINE_URL: http://redmine:3000
+      REDMINE_PUBLIC_URL: http://localhost:3001
     depends_on:
       redmine:
         condition: service_healthy
 
   mcp-writer:
+    ports: !override
+      - "127.0.0.1:${MCP_WRITER_HOST_PORT:-8003}:8000"
     environment:
-      REDMINE_URL: http://redmine:3001
+      REDMINE_URL: http://redmine:3000
+      REDMINE_PUBLIC_URL: http://localhost:3001
     depends_on:
       redmine:
         condition: service_healthy
@@ -35,7 +41,7 @@ services:
   redmine:
     image: redmine:6.0.1@sha256:d59578dc62538c113beb983cf79eb0857715f84c5ede4e60f14ae90a0d66f05b
     entrypoint: ["/bin/bash", "/opt/redmine/install-plugins.sh"]
-    command: ["rails", "server", "-b", "0.0.0.0", "-p", "3001"]
+    command: ["rails", "server", "-b", "0.0.0.0", "-p", "3000"]
     environment:
       REDMINE_DB_POSTGRES: postgres
       REDMINE_DB_DATABASE: redmine
@@ -45,21 +51,26 @@ services:
       SECRET_KEY_BASE: ${REDMINE_SECRET_KEY_BASE:?Set secret key}
       TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:?Set test password}
       REDMINE_TEST_MARKER: redmine-mcp-synthetic-v1
+      REDMINE_E2E_OWNER: prep-018
+      REDMINE_E2E_VERSION: "6.0.1"
+      REDMINE_E2E_PROJECT: redmine-mcp-test-6-0-1
       RAILS_ENV: production
       REDMINE_PLUGINS_MIGRATE: "1"
     ports:
-      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:3001:3000"
     volumes:
       - redmine_files:/usr/src/redmine/files
       - ./redmine-plugins:/opt/redmine/plugins:ro
       - ./redmine/install-plugins.sh:/opt/redmine/install-plugins.sh:ro
       - ../tools/seed:/opt/seed:ro
+      - ../tools/testing:/opt/testing:ro
+      - ${REDMINE_E2E_STATE:-../.local/e2e/6.0.1}:/e2e-state
       - ../.local/redmine-6.0.1:/seed-state
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3001/login')).code == '200' ? 0 : 1)"]
+      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/login')).code == '200' ? 0 : 1)"]
       interval: 10s
       timeout: 5s
       retries: 60
@@ -73,7 +84,7 @@ services:
       dockerfile: deploy/Dockerfile
     user: "0:0"
     environment:
-      REDMINE_URL: http://redmine:3001
+      REDMINE_URL: http://redmine:3000
       REDMINE_TEST_MARKER: redmine-mcp-synthetic-v1
       TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:?Set test password}
     volumes:

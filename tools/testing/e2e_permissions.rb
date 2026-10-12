@@ -3,12 +3,12 @@
 require 'json'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
 require_relative 'e2e_guard'
-manifest = JSON.parse(File.read('/seed-state/fixtures.json'))
+manifest = JSON.parse(File.read('/e2e-state/fixtures.json'))
 E2EGuard.manifest!(manifest)
 raise 'Wrong owner' unless manifest['owner'] == 'prep-018'
 role = Role.find(manifest['roles']['writer'])
 raise 'Unowned role' unless role.name == 'E2E writer' && role.members.all? { |member| member.project.identifier.start_with?('mcp-e2e-') }
-snapshot = '/seed-state/permission-snapshot.json'
+snapshot = '/e2e-state/permission-snapshot.json'
 case ARGV.first
 when 'revoke'
   raise 'Outstanding permission reconciliation' if File.exist?(snapshot)

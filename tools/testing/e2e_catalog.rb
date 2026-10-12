@@ -5,14 +5,14 @@ require 'json'
 require 'fileutils'
 raise 'Wrong fixture environment' unless ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1' && ENV['REDMINE_E2E_OWNER'] == 'prep-018'
 require_relative 'e2e_guard'
-base = JSON.parse(File.read('/seed-state/fixtures.json'))
+base = JSON.parse(File.read('/e2e-state/fixtures.json'))
 E2EGuard.manifest!(base)
 raise 'Wrong owner' unless base['owner'] == 'prep-018'
 action, run = ARGV
 raise 'Invalid run identifier' unless run&.match?(/\A[0-9a-f]{32}\z/)
 prefix = "mcp-e2e-prep020-#{run}"
 role_prefix = "prep020 #{run} "
-directory = "/seed-state/prep-020/#{run}"
+directory = "/e2e-state/prep-020/#{run}"
 FileUtils.mkdir_p(directory)
 path = "#{directory}/fixture.json"
 

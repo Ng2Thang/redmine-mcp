@@ -9,32 +9,25 @@ from typing import Any
 
 import pytest_asyncio
 
-from tools.testing.e2e_config import CONTAINER
 from tools.testing.e2e_config import STATE as STATE
+from tools.testing.e2e_config import native_command, process_environment
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def fixture_command(action: str) -> dict[str, Any]:
     result = subprocess.run(
-        [
-            "docker",
-            "exec",
-            CONTAINER,
-            "bundle",
-            "exec",
-            "rails",
-            "runner",
-            "/opt/testing/tool043_fixtures.rb",
-            action,
-        ],
+        native_command("tool043_fixtures.rb", action),
         capture_output=True,
         text=True,
+        env=process_environment(),
         timeout=90,
     )
     # Setup output includes private keys; never print it, even on failure.
     assert result.returncode == 0, f"TOOL-043 owned fixture {action} failed; inspect private ledger"
-    return json.loads(result.stdout)
+    records = [line for line in result.stdout.splitlines() if line.startswith('{"')]
+    assert len(records) == 1, "TOOL-043 fixture did not emit one private JSON record"
+    return json.loads(records[0])
 
 
 @pytest_asyncio.fixture

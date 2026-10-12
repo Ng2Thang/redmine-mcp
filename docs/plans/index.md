@@ -25,22 +25,24 @@ later entries record subsequent work. Dated evidence does not verify new working
 The 2026-10-09 documentation correction performed no tests, startup, Inspector or live calls
 and does not close acceptance gaps or publish a release.
 
-## Existing-stack E2E reuse plan (2026-10-12)
+## Existing-stack E2E reuse (2026-10-12)
 
 The user wants E2E to use the two existing versioned Compose stacks: Redmine 6.0.1 on
 localhost:3001 and Redmine 7.0.2 on localhost:3002. Their existing data is disposable.
-This new plan supersedes separate-stack provisioning for future normal preparation;
-the earlier implementation descriptions below remain historical and are still the current
-code behavior until the planned changes are implemented.
+PREP-029 implementation replaces separate-stack provisioning with selected-project startup,
+guarded fixture seeding and an explicit selected-stack reset. Earlier descriptions below
+retain their historical scope. Runtime acceptance remains pending.
 
 | Task | Client outcome | Dependencies | Status | Blocker | Next action |
 |---|---|---|---|---|---|
-| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | planned | None for implementation; all execution evidence pending | Implement shared profiles, Compose/lifecycle alignment, guarded preparation/reset, isolated fixture state, and consumer updates in task order; verify separately when authorized |
+| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | blocked | Implementation finished; static checks and TEST-001..009 acceptance pending. Auto-review rejected the unapproved Ruff invocation before execution | Authorize static checks and separate verification; add lifecycle/profile coverage, run per-version E2E, and record coexistence/reset/cleanup evidence |
 
-The plan retains exact 6.x.x and 7.0.2 validation, uses dedicated fixture manifests inside
-each existing stack, and permits an explicit selected-stack reset without resetting on every
-pytest invocation. No implementation, tests, check tools, Docker mutations, or seed/reset
-execution were performed for this planning assignment.
+The implementation retains exact 6.x.x and 7.0.2 validation, with explicit custom profiles
+for additional 6.x releases. Fixtures live in `.local/e2e/<version>/` and `/e2e-state`.
+Normal pytest preparation reuses data; standalone `--reset` acts on the selected marked
+stack. Code/docs and existing harness consumers were updated without executing tests,
+Docker, seeding, reset, Inspector or browser checks. Ruff was rejected before execution;
+static checks remain pending. No historical acceptance result verifies these edits.
 
 ## E2E release selection (2026-10-12)
 

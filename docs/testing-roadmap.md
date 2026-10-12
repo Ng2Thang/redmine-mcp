@@ -72,83 +72,110 @@ exits with usage error before fixtures run. Offline fixtures disable dotenv load
 Redmine settings and reject real HTTPX network dispatch. Shared data and MCP session helpers are
 in `tests/helpers.py`; collected test modules do not provide helpers to other modules.
 
-### Isolated live environment
+### Versioned synthetic stacks
 
-The pre-existing shared synthetic environment runs 6.0.5. Preparation creates a separate
-`redmine-mcp-e2e` Compose project on localhost port 3001 with owned database/files volumes,
-preserving existing containers, configuration and data. Existing E2E volumes must match ownership
-and version labels. Preparation creates fixtures; it is not a read-only smoke check.
+E2E uses the existing versioned Compose stacks. Preparation starts only their `postgres`
+and `redmine` services, then creates the fixture data required by pytest. It does not create
+another `redmine-mcp-e2e*` project, build the MCP application image, or require the large
+demo/history datasets. Tests run the MCP application in process with personal user keys.
 
-```bash
-uv run --frozen pytest tests/e2e --run-e2e
-uv run --frozen python scripts/verify-e2e-supplement.py
-```
+| Redmine | Compose project | Host Redmine | Host PostgreSQL | Optional reader / writer | Private E2E state |
+|---|---|---|---|---|---|
+| 6.0.1 | `redmine-mcp-test-6-0-1` | `127.0.0.1:3001` | `127.0.0.1:5436` | 8002 / 8003 | `.local/e2e/6.0.1/` |
+| 7.0.2 | `redmine-mcp-test` | `127.0.0.1:3002` | `127.0.0.1:5433` | 8000 / 8001 | `.local/e2e/7.0.2/` |
 
-Pytest automatically runs `uv run --frozen python scripts/prepare-e2e.py` once per
-session before any selected E2E test or its fixtures run. Docker Desktop and `uv` on
-`PATH` are required. Preparation reuses the selected owned environment and seeds its
-fixtures; it does not reset volumes. A preparation failure stops the session before test
-execution. Private subprocess output is saved as `pytest-prepare.log` in the selected
-environment's state directory; fixture seed output remains in `seed.log`.
-
-Offline runs, collection-only runs, and runs with no selected E2E tests do not prepare
-Docker. E2E selection without `--run-e2e` is still rejected before preparation.
-The preparation command remains available separately, for example before running only
-the supplemental Inspector/browser scripts.
+Both Redmine containers listen internally on 3000. Compose requires support for the
+`!override` tag used to select the 6.0.1 MCP listener ports. Run from Git Bash at the
+repository root, with Docker Desktop running and `uv` available on `PATH`.
 
 ### Selecting a Redmine release
 
-E2E accepts exact stable `6.x.x` releases and `7.0.2` (the default). Other 7.x versions,
-older majors, floating tags, and prereleases are rejected. This is a configuration range,
-not evidence that every release has passed the suite. The Docker tag must exist.
-
-For Redmine 6.0.1, use Git Bash from the repository root with Docker Desktop running:
+Run the two suites sequentially. Clear a previously exported port/image override before
+using the built-in defaults:
 
 ```bash
-export REDMINE_E2E_VERSION=6.0.1
-uv run --frozen pytest tests/e2e --run-e2e
-# Optional Inspector and authenticated browser checks:
-uv run --frozen python scripts/verify-e2e-supplement.py
+unset REDMINE_E2E_PORT REDMINE_E2E_IMAGE
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e --run-e2e
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e --run-e2e
 ```
 
-Keep the exported selection for pytest, preparation, and supplemental scripts. Automatic preparation
-creates and seeds an isolated environment; it does not connect to an arbitrary external
-Redmine or use the root `.env`. The 6.0.1 project is `redmine-mcp-e2e-6-0-1`, private state
-is `.local/testing-e2e-6-0-1/`, and Redmine listens on `127.0.0.1:3002`. Other 6.x releases
-use the same naming pattern and default port 3002. Set `REDMINE_E2E_PORT` to a free port
-between 1024 and 65535 before preparation and keep it set for every subsequent command.
-This also allows different versions to coexist. The existing 7.0.2 project, state directory,
-and default port 3001 remain unchanged. Neither environment uses the development stack's data.
+Pytest automatically runs `uv run --frozen python scripts/prepare-e2e.py` once per
+session before live fixtures and tests. Preparation selects the existing Compose profile,
+validates its image pin, synthetic markers and volumes, applies its current mounts, waits
+for healthy services, and seeds six named E2E users plus role/project/issue/reporting data.
+Repeated preparation verifies and reuses owned fixtures. The user-role differences needed
+by permission tests remain in place. A failure aborts the session before test execution.
 
-Preparation reuses repository digest pins for 6.0.1 and 7.0.2. For another 6.x release it
-pulls `redmine:<version>` once, resolves its repository digest, and saves the immutable image
-reference in that release's private `compose.json`. Later preparation reuses that pin.
-An optional `REDMINE_E2E_IMAGE=redmine:<version>[-variant]@sha256:<64-hex-digest>` supplies
-an explicit official image pin; its tag must match the selected release. Native Ruby guards
-also verify the running Redmine version before fixture inspection or mutation. Manifests
-and volumes from another release are refused; no automatic reset or volume migration occurs.
-
-To return to the default selection in the same shell:
+Offline runs, `--collect-only`, and runs with no selected E2E tests do not prepare Docker.
+Selecting E2E without `--run-e2e` still fails before setup. The preparation command can
+also be run separately before supplemental checks:
 
 ```bash
-unset REDMINE_E2E_VERSION REDMINE_E2E_PORT REDMINE_E2E_IMAGE
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen python scripts/prepare-e2e.py
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen python scripts/verify-e2e-supplement.py
 ```
 
-Tag controls now use the selected owned E2E instance rather than the legacy shared 6.0.5
-stack. Positive tag scenarios require working native tag filtering and an existing
-`notification` tag fixture; unsupported or absent controls are explicitly skipped.
-Preparation does not install tag plugins. A skipped tag case is not compatibility acceptance.
+Set the same version/profile for preparation, pytest, and supplemental scripts. Docker
+stacks may coexist, but run suites sequentially because supplemental application listeners
+still use shared temporary ports. Default selection is 7.0.2. Configuration accepts exact
+stable 6.x.x releases and 7.0.2; other 7.x, floating tags, prereleases and older majors fail.
+Only 6.0.1 and 7.0.2 have built-in profiles. Other 6.x releases require all four settings:
 
-The version-selection change has not been executed against Docker or pytest. Before recording
-compatibility, run preparation, the selected E2E suite, cleanup review, and the optional
-Inspector/browser checks separately for each intended release. Existing assertions about
-permissions and resulting state remain in place and may expose version differences.
+| Setting | Required custom-profile value |
+|---|---|
+| `REDMINE_E2E_COMPOSE_FILE` | Existing repository-local override combined with `deploy/compose.yaml` |
+| `REDMINE_E2E_COMPOSE_PROJECT` | Explicit Compose project name |
+| `REDMINE_E2E_ENV_FILE` | Synthetic env file in ignored `.local/` or root `.env` |
+| `REDMINE_E2E_PORT` | Host port 1024..65535, matching the profile's localhost-to-3000 binding |
 
-Preflight verifies the image pin, synthetic markers, volume ownership, private manifest and
-native project identifiers before mutation. Ordinary personal keys exercise the separately
-configured writer application. Administrative fixture inspection and cleanup stay separate;
-the MCP application never accesses the database directly. Keys and generated configuration remain
-in ignored `.local/testing-e2e/`, never command arguments or committed artifacts.
+A custom profile must include the E2E markers/project identity, read-only `/opt/testing`
+mount, writable `/e2e-state` mount, and project-owned `redmine_db_data`/`redmine_files`
+volumes labeled with the synthetic environment and exact version. Preparation supplies
+`REDMINE_E2E_STATE` as the absolute path to `.local/e2e/<version>/` for Compose interpolation.
+The official image must be `redmine:<version>[-variant]@sha256:<64-hex-digest>`.
+An optional `REDMINE_E2E_IMAGE` must match that configured pin; it does not replace the image.
+There is no fallback to a different release or generated standalone stack.
+
+### Reset and migration
+
+Normal pytest preparation does not reset the database. For a deliberate fresh start on a
+selected disposable synthetic stack, use the standalone reset flag:
+
+```bash
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen python scripts/prepare-e2e.py --reset
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen python scripts/prepare-e2e.py --reset
+```
+
+Each command stops/removes the selected project's containers, removes only its inspected
+marked database/files volumes, clears that version's E2E state, and prepares new fixtures.
+Other projects, env credentials, and the other version's state are retained. Preparation
+restarts only PostgreSQL/Redmine; optional Docker MCP services can be started separately.
+Reset refuses foreign/unmarked resources and volumes consumed by another project.
+
+Legacy 6.0.5 volumes under `redmine-mcp-test` require explicit reset before using the pinned
+7.0.2 profile. Restore the original env credentials if they are missing; preparation will
+not generate new passwords over existing volumes. Demo/history manifests remain separate
+and become stale after database reset: use their guarded reinitialization workflow before
+running those generators again. The earlier standalone E2E stacks and `.local/testing-e2e*/`
+files are not migrated or deleted automatically. Their database IDs must not be copied into
+the new manifests. If an old stack occupies a required port, stop that identified stack first.
+
+E2E manifests and logs live under `.local/e2e/<version>/`, mounted at `/e2e-state`.
+Development seed state keeps its `/seed-state` mount. Missing manifests with colliding
+E2E names, or a remaining `setup.json` from interrupted setup, require explicit reset;
+preparation never adopts records based only on a matching name.
+
+Diagnostics are private: `pytest-prepare.log` contains preparation output, `compose-up.log`
+contains service startup output, and `seed.log` contains native fixture output. Never paste
+credentials or unredacted logs into shared evidence. Preflight checks the selected running
+service/image/ports/mounts, native Redmine version, volume labels, and manifest/resource
+ownership before test mutation. The MCP application still has no direct database access.
+
+The Compose stacks retain their declared plugins. Tag scenarios require working native
+tag filtering and existing positive tag fixtures; missing prerequisites are explicitly
+skipped. A skip is not compatibility acceptance. PREP-029 implementation has not been
+executed against Docker or pytest; version-specific permission, state and cleanup evidence
+remains pending in [the task](plans/tasks/prep-029-reuse-versioned-compose-e2e.md).
 
 Assertions distinguish write acceptance from matched state, including accepted but ignored fields
 under author/tracker restrictions. Uncertain outcomes require reconciliation before a retry.
@@ -167,7 +194,7 @@ npx @modelcontextprotocol/inspector@2.8.0
 ```
 
 Connect privately to `http://127.0.0.1:18081/mcp` with an owned ordinary user's key.
-Redmine is at `http://127.0.0.1:3001`; never put keys into URLs or screenshots.
+Use the selected profile's Redmine URL (3001 for 6.0.1, 3002 for 7.0.2); never put keys into URLs or screenshots.
 
 ## Baseline history and further work
 

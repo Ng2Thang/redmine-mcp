@@ -35,7 +35,7 @@ def main() -> None:
     if action == "init" and not ENV.exists():
         write_env(
             {
-                "REDMINE_URL": f"http://localhost:{3001 if VERSION == '6.0.1' else 3000}",
+                "REDMINE_URL": f"http://localhost:{3001 if VERSION == '6.0.1' else 3002}",
                 "POSTGRES_PASSWORD": secrets.token_hex(32),
                 "TEST_USER_PASSWORD": secrets.token_hex(24),
                 "REDMINE_SECRET_KEY_BASE": secrets.token_hex(64),
@@ -48,6 +48,14 @@ def main() -> None:
         raise SystemExit("Not a marked synthetic .env; keep real configuration separate.")
     original = read_env()
     values = original.copy()
+    if VERSION == "7.0.2" and values.get("REDMINE_URL") in {
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    }:
+        values["REDMINE_URL"] = "http://localhost:3002"
+    values.setdefault("MCP_HOST_PORT", "8002" if VERSION == "6.0.1" else "8000")
+    values.setdefault("MCP_WRITER_HOST_PORT", "8003" if VERSION == "6.0.1" else "8001")
+    values.setdefault("REDMINE_PUBLIC_URL", f"http://localhost:{3001 if VERSION == '6.0.1' else 3002}")
     for legacy_key in ("REDMINE_API_KEY", "MCP_API_TOKEN"):
         values.pop(legacy_key, None)
     if values != original:

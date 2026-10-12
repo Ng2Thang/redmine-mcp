@@ -12,7 +12,7 @@ import pytest
 
 from redmine_mcp.auth import READ_OPERATIONS, WRITE_OPERATIONS
 from tests.helpers import mcp_session
-from tools.testing.e2e_config import CONTAINER, STATE, VERSION
+from tools.testing.e2e_config import STATE, VERSION, native_command, process_environment
 
 pytestmark = pytest.mark.asyncio
 ROOT = Path(__file__).resolve().parents[2]
@@ -20,21 +20,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def fixture_action(action: str, run: str) -> Any:
     result = subprocess.run(
-        [
-            "docker",
-            "exec",
-            CONTAINER,
-            "bundle",
-            "exec",
-            "rails",
-            "runner",
-            "/opt/testing/e2e_catalog.rb",
-            action,
-            run,
-        ],
+        native_command("e2e_catalog.rb", action, run),
         capture_output=True,
         text=True,
-        env=os.environ | {"MSYS_NO_PATHCONV": "1", "MSYS2_ARG_CONV_EXCL": "*"},
+        env=process_environment(),
     )
     directory = STATE / "prep-020" / run
     directory.mkdir(parents=True, exist_ok=True)

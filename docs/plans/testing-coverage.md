@@ -5,6 +5,15 @@ prep-016, offline integration prep-017 and live E2E prep-018. Historical evidenc
 2026-10-06; current 2026-10-07 reconciliation is recorded in the follow-up section and ledger. Scenarios cover selected behavior,
 not every possible workflow, role combination, Redmine version or infrastructure failure.
 
+## Existing-stack E2E infrastructure
+
+[PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) changes setup to reuse the
+6.0.1 and 7.0.2 Compose stacks, with private fixture state under `.local/e2e/<version>/`.
+Its TEST-001..009 cover target selection, coexistence, fresh/repeated/failed seed,
+ownership refusal, explicit selected reset, broader 6.x profile validation, opt-in gates,
+and version-specific permission/state/cleanup evidence. These scenarios remain pending.
+No previous suite count establishes acceptance of this new lifecycle.
+
 ## Current tools
 
 ### Issue time-entry deletion acceptance

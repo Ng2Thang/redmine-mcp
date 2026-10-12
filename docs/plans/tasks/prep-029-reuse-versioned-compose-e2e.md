@@ -9,13 +9,13 @@
 | Type | Shared testing prerequisite; no new MCP tool |
 | Access | Administrative synthetic setup, followed by existing personal-key reader/writer tests |
 | Destructive effects | Fixture creation and test mutations; an explicit reset may replace only the selected synthetic stack's database/files volumes |
-| Status | planned |
+| Status | blocked |
 | Dependencies | Existing [PREP-018 E2E baseline](prep-018-live-e2e-testing.md) and the current version-selection/automatic-preparation implementation |
 | Related tasks | [Testing coverage](../testing-coverage.md), [testing roadmap](../../testing-roadmap.md) |
 | Target Redmine version | Built-in profiles: 6.0.1 and 7.0.2; configurable additional exact 6.x.x releases; runtime acceptance pending |
 | Last updated | 2026-10-12, Codex |
-| Progress summary | Repository discovery and implementation plan complete; code and verification pending |
-| Next action | Implement sections 4-5; perform test execution only under a subsequent authorized verification assignment |
+| Progress summary | Implementation finished; static checks and compatibility testing pending |
+| Next action | Authorize static checks and the separate TEST-001..009 verification stage; add planned lifecycle/profile coverage and record per-version evidence |
 
 ## 2. Discovery and evidence
 
@@ -23,7 +23,8 @@
 
 The user has prepared two versioned Docker Compose files and wants to test Redmine 6.0.1
 on host port 3001 and Redmine 7.0.2 on host port 3002. Existing data in those stacks is
-disposable. This assignment requests a plan, not implementation, Docker changes, or test execution.
+disposable. The initial assignment requested planning only. The user subsequently authorized
+implementation of PREP-029. This coding stage excludes test execution and live Docker changes.
 
 The current catalog remains 18 reads and 18 writes. This task changes test infrastructure;
 it does not change operation IDs, API schemas, application permissions, or MCP registration.
@@ -298,29 +299,58 @@ while preparing this plan. Repository/source inspection is planning evidence onl
 
 ## 8. Implementation and review record
 
-- Changes made: this new task and its dashboard entry only.
-- Plan deviations: N/A; this supersedes the earlier proposed separate-stack approach for normal E2E preparation.
-- Quality and automated test results: pending EVID-001 and EVID-005.
-- Startup, Inspector, and native state results: pending EVID-002 through EVID-004.
-- Documentation: implementation must update current instructions; dated evidence remains intact.
-- Diff review: preserve pre-existing Compose/plugin/E2E/documentation changes; no runtime code is changed by this plan.
-- Pre-existing failure: user-observed preparation port collision; the earlier standalone stack cannot start on an occupied host port.
-- Remaining blocker: none for implementation planning; execution and compatibility evidence remain pending.
+Implementation authorized and completed on 2026-10-12; verification remains separate.
+
+- Shared configuration resolves the two existing projects and complete custom 6.x profiles,
+  without generated standalone Compose fallback. Native consumers use Compose service selection.
+- Compose variants standardize internal port 3000, Redmine host ports 3001/3002, PostgreSQL
+  ports 5436/5433, and optional MCP reader/writer ports 8002/8003 and 8000/8001. The default
+  Compose file matches the explicit 7.0.2 variant. The 6.0.1 MCP listener override requires
+  Compose support for the `!override` YAML tag.
+- Startup/shared lifecycle helpers and synthetic env URL initialization follow the selected
+  profile. Pre-existing plugin sources and unrelated staged changes were preserved.
+- `tools/testing/e2e_environment.py` centralizes configuration, runtime identity, pin, native
+  version, mount, volume and fixture ownership checks. Config/secrets stay in memory; public
+  setup errors exclude raw subprocess output. Preparation diagnostics remain private.
+- Preparation starts only selected PostgreSQL/Redmine services, seeds base/reporting fixtures,
+  and verifies the manifest. Explicit `--reset` validates volume consumers, removes only
+  inspected selected containers/volumes, and clears only the checked E2E state path.
+- State moved to `/e2e-state` and `.local/e2e/<version>/`. Base manifests and task ledgers
+  identify project/version/owner. Base resources are inspected before repairs. Initial setup
+  uses a transaction and incomplete-setup ledger. Failed or unclaimed fixture state requires
+  explicit reset rather than name-based adoption.
+- Existing E2E helpers/factories use the selected service and project identity. Task-native
+  JSON parsing tolerates preceding plugin notices without printing private keys.
+- Documentation updated: development, testing roadmap, manual verification, coverage matrix,
+  task, and dashboard. Historical acceptance records remain unchanged.
+- Source diff reviewed manually. No new lifecycle/profile unit tests were added or executed;
+  TEST-003, TEST-005, TEST-007, and TEST-008 coverage is handed off to verification.
+- A scoped Ruff lint command was attempted but rejected by automatic approval review before
+  execution because repository instructions require authorization for verification tools.
+  Ruff, mypy, format/architecture checks, and runtime checks remain unrun. The rejected
+  command also included shell paths; a future authorized Ruff invocation must select only
+  Python files. No alternate check route was used.
+- No Docker commands, seed scripts, resets, Inspector, browser checks, or pytest were run
+  during implementation. The user-observed port collision is prior evidence, not a new run.
+- Plan limitation: existing volumes with a missing env file require restoring their original
+  marked env file before setup/reset; replacement database passwords are never invented.
+- Remaining blocker: static-check authorization and TEST-001..009 acceptance evidence.
 
 ## 9. Completion and handoff
 
-- [ ] Required behavior implemented.
+- [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass.
 - [ ] Live permission/state checks, coexistence, and selected reset verified.
-- [ ] Documentation reflects the implemented behavior.
+- [x] Documentation reflects the implemented behavior.
 - [x] Contract decisions and dependency order recorded.
 - [x] Task and dashboard planning status synchronized.
 
-Final status: planned.
+Final status: blocked (implementation finished; static checks and testing pending).
 
-Outcome: a decision-complete implementation plan for existing-stack E2E reuse. The current
-runtime still provisions separate E2E stacks until this task is implemented.
+Outcome: E2E preparation targets the existing 6.0.1 and 7.0.2 stacks and private fixture
+state, with an explicit guarded selected-stack reset. No runtime acceptance is claimed.
 
-Next action: implement steps 1-7 in order. Schedule step 8 separately under explicit testing
-authorization; do not run the future reset commands as part of this planning assignment.
+Next action: authorize deferred static checks and implement/run meaningful offline lifecycle
+scenarios, followed by per-version live acceptance and cleanup evidence. EVID-001..005 remain
+pending until the corresponding commands actually run.

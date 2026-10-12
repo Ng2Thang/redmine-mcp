@@ -37,8 +37,11 @@ read credentials or contact upstream services. See the [architecture](architectu
 For automated E2E version selection, use `REDMINE_E2E_VERSION` and
 `scripts/prepare-e2e.py` as described in the
 [E2E release instructions](testing-roadmap.md#selecting-a-redmine-release).
-It accepts exact 6.x.x releases and 7.0.2 and creates its own fixtures and volumes;
-the development seed below does not substitute for E2E preparation.
+E2E seeds its own fixtures inside the existing versioned stacks. Built-in profiles are
+6.0.1 and 7.0.2; other exact 6.x.x releases require an explicit custom profile. Fixture
+manifests live in `.local/e2e/<version>/`, separate from the development seed state.
+The development seed below does not substitute for E2E preparation. Docker Compose must
+support the `!override` tag used by the 6.0.1 listener configuration.
 
 With Docker Desktop running, start and seed the default Redmine 7.0.2 stack or the
 separate Redmine 6.0.1 stack from Git Bash:
@@ -54,7 +57,8 @@ builds the MCP image, and seeds both the baseline and history datasets. It uses 
 `.local/redmine-6.0.1/`. Redmine listens on localhost:3001, PostgreSQL on localhost:5436,
 and the read-only MCP server on localhost:8002/mcp. Set `MCP_HOST_PORT` before running
 the command to override its MCP port. The default 7.0.2 command retains the root `.env`,
-`.local/` seed state, and ports 3000, 5433, and 8000.
+`.local/` seed state, and ports 3002, 5433, and 8000. Both Redmine containers
+listen internally on 3000. Optional writer ports are 8003 for 6.0.1 and 8001 for 7.0.2.
 
 Both versions run seed mode `all` by default: the 150-issue baseline followed by the
 history dataset with 8 projects, 20 users, 12 versions, 300 additional issues, and
@@ -69,8 +73,8 @@ role-based permissions governed by project membership, enabled modules, and work
 rules; the demo manager account is not a Redmine administrator. Bootstrap reapplies
 these settings on every `dev-up.sh` run, even when dataset generation is skipped.
 
-The other lifecycle helpers, including `seed.sh`, `backup.sh`, and reset/restore helpers,
-still target the default 7.0.2 environment. To stop 6.0.1 without removing its volumes:
+Lifecycle helpers default to 7.0.2. Set `REDMINE_TEST_VERSION=6.0.1` to select the
+6.0.1 profile through `scripts/common.sh`; E2E uses `REDMINE_E2E_VERSION` independently. To stop 6.0.1 without removing its volumes:
 
 ```bash
 docker compose -p redmine-mcp-test-6-0-1 \

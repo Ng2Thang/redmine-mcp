@@ -40,23 +40,39 @@ this target. See the [roadmap](docs/plans/index.md).
 - Windows Git Bash and Python 3.13 on PATH.
 - Docker Desktop with Linux containers for the synthetic environment.
 - Node.js/npm for MCP Inspector; uv for local Python development and quality checks.
-- Available host ports 3000, 8000, and 5433 for the synthetic environment.
+- Docker Compose 2.24.4+ and available host ports for the selected version (listed below).
 
 ## Quick start: synthetic environment
 
 Run from the repository root:
 
 ```bash
-bash scripts/dev-up.sh
+bash scripts/dev-up.sh 7.0.2
+bash scripts/dev-up.sh 6.0.1
 ```
 
-The script generates `.env` with random credentials if absent, starts PostgreSQL and Redmine,
-seeds 150 issues, and starts MCP. First startup downloads/builds images. Do not copy `.env.example`
-for this workflow or mix real-server configuration into it. Keep `.env` and `.local/` private.
+Choose either command, or run both for independent environments. Only `7.0.2` and `6.0.1`
+are accepted; omitting the argument defaults to `7.0.2`. No environment switches are required.
+Each version has a self-contained Compose file with local development settings. The script
+starts it, seeds baseline and history data, and starts MCP. No `.env` file or host state
+directory is created or required. Docker manages all database, attachment and seed-state volumes.
+It reports occupied ports before starting containers and reuses ports already owned by the
+selected service. First startup downloads/builds images.
+
+| Redmine version | Redmine port | MCP port | PostgreSQL port |
+|---|---|---|---|
+| 7.0.2 | 3002 | 8000 | 5433 |
+| 6.0.1 | 3001 | 8002 | 5436 |
+
+Projects are `redmine-mcp-dev-7-0-2` and `redmine-mcp-dev-6-0-1`. Old test projects and
+volumes are left untouched. Stop any old container named by the port-conflict error before retrying.
+Demo accounts use password `redmine-demo-password`; PostgreSQL uses `redmine-local-development`.
+These fixed credentials belong only to the localhost development stacks.
+The startup commands do not run tests or prepare the separate E2E fixtures.
 
 | Service | Address |
 |---|---|
-| Redmine | `http://localhost:3000` |
+| Redmine (7.0.2) | `http://localhost:3002` |
 | Swagger (Schemas section hidden) | `http://localhost:8000/docs` |
 | MCP Streamable HTTP | `http://localhost:8000/mcp` |
 | Liveness | `http://localhost:8000/health` |

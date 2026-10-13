@@ -7,7 +7,6 @@ snapshot="${1:?Usage: bash scripts/restore.sh SNAPSHOT_ID}"
 compose stop mcp-server redmine
 # Failure intentionally leaves applications stopped instead of serving a partial restore.
 compose --profile tools run --build --rm -e "SNAPSHOT_ID=$snapshot" backup-restore restore
-python scripts/local_env.py runtime
 compose up -d --wait --wait-timeout 600 redmine mcp-server
 echo 'Restore commands completed. Full restore validation is deferred.'
 

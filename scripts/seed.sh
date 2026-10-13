@@ -20,15 +20,11 @@ source "$(dirname -- "$0")/common.sh"
 # Bootstrap needs Rails internals; dataset creation lives in tools/seed/generate.py.
 # History deliberately skips bootstrap and requires an already completed baseline.
 if [[ "$mode" != 'history' ]]; then
-  python scripts/local_env.py init
   assert_redmine_version
   compose exec -T redmine bundle exec rails runner /opt/seed/bootstrap.rb
 fi
 assert_environment
 assert_redmine_version
 compose --profile tools run --build --rm seed "$mode"
-if [[ "$mode" != 'history' ]]; then
-  python scripts/local_env.py runtime
-fi
 echo 'Seed ready; use a personal Redmine API key in the request header.'
 

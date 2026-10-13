@@ -11,7 +11,8 @@ bash scripts/seed.sh all      # Bootstrap, baseline, then history
 ```
 
 Choose one mode for the dataset you need. `bash scripts/seed.sh --help` explains the modes.
-`bash scripts/dev-up.sh` still starts services and creates only the baseline. The seed command
+`bash scripts/dev-up.sh 7.0.2` or `bash scripts/dev-up.sh 6.0.1` starts the selected services
+and creates both baseline and history datasets. The seed command
 does not start services. The existing `bash scripts/seed-history.sh` command forwards to history.
 These commands write synthetic data; they do not run application tests or prepare live E2E data.
 
@@ -51,7 +52,7 @@ resume behavior still require separately authorized verification.
 ## Baseline dataset
 
 Bootstrap requires redmine-mcp-synthetic-v1 and refuses unknown nonempty instances.
-It sets a dedicated application title; Git Bash helpers also validate the .env marker.
+It sets a dedicated application title; Git Bash helpers validate internal Compose and volume markers.
 
 Rails creates default configuration, roles, users and custom fields. Python calls REST
 to create four private projects, memberships, 150 issues, comments, transitions, relations
@@ -65,11 +66,12 @@ and membership in main/child/empty only.
 
 Vietnamese fixture text intentionally exercises Unicode; documentation remains English.
 
-Artifacts:
-- .local/environment.json: environment marker.
-- .local/credentials.json: sensitive API keys and configuration IDs.
-- .local/manifest.json: progress, IDs, privacy cases, attachment names.
-- .local/backups/: sensitive snapshots with credentials.
+Artifacts in each project's `seed_state` Docker volume, mounted at `/seed-state` in Redmine:
+
+- `environment.json`: environment marker.
+- `credentials.json`: sensitive API keys and configuration IDs.
+- `manifest.json`: progress, IDs, privacy cases, attachment names.
+- Backups use the separate `backup_data` volume, mounted at `/state/backups` by the ops service.
 
 Completed seeds skip reruns; interrupted seeds require reset rather than resume.
 Read IDs from the manifest after reset. Only restore trusted snapshots with matching versions.
@@ -85,7 +87,7 @@ The command adds two parent projects and six subprojects, 20 users, 12 versions 
 subprojects. Issue schedules and time-entry work dates cover the 90 days before the command's
 first run, using the seed container's UTC date. Record creation timestamps remain current.
 
-The ignored `.local/history-manifest.json` records the date anchor, generated IDs, progress,
+The Docker-volume file `/seed-state/history-manifest.json` records the date anchor, IDs, progress,
 and completion status. A completed command skips reruns. An interrupted run resumes and
 reconciles records created just before a checkpoint. A synthetic reset removes this manifest;
 backups and restores include it when present. Do not edit it by hand.

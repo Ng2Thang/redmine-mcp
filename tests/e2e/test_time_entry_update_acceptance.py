@@ -7,6 +7,7 @@ import os
 import socket
 import subprocess
 import sys
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -33,7 +34,14 @@ def fixture_command(action: str) -> dict[str, Any]:
         timeout=90,
     )
     # Setup output includes private keys; never print it, even on failure.
-    assert result.returncode == 0, f"TOOL-042 owned fixture {action} failed; inspect private ledger"
+    log_path = STATE / f"tool042-{action}.log"
+    with log_path.open("w", encoding="utf-8") as log:
+        log_path.chmod(0o600)
+        log.write(result.stdout)
+        log.write(result.stderr)
+    assert result.returncode == 0, (
+        f"TOOL-042 owned fixture {action} failed; inspect {log_path.relative_to(ROOT)}"
+    )
     records = [line for line in result.stdout.splitlines() if line.startswith('{"')]
     assert len(records) == 1, "TOOL-042 fixture did not emit one private JSON record"
     return json.loads(records[0])
@@ -133,7 +141,10 @@ async def test_native_update_state_control_and_own_credit(time_fixture: Any, bou
         receipt = json.loads(result.content[0].text)
     assert receipt["outcome"] == "accepted" and receipt["verification"] == "matched"
     native = (await time_fixture.redmine("GET", f"time_entries/{entry_id}.json"))["time_entry"]
-    assert native["hours"] == 1.23 and native["spent_on"] == "2026-10-02"
+    # 6.0.1 emits exact whole-minute Rational strings; newer APIs emit two decimals.
+    expected_hours = Fraction(74, 60) if isinstance(native["hours"], str) else Fraction("1.23")
+    assert Fraction(str(native["hours"])) == expected_hours
+    assert native["spent_on"] == "2026-10-02"
     assert native["comments"] == payload["comments"]
     assert native["activity"]["id"] == payload["activity_id"]
     assert native["user"]["id"] == time_fixture.manifest["users"]["time_own"]["id"]

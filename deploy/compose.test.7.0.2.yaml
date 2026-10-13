@@ -1,8 +1,20 @@
 # Redmine 7.0.2: explicitly named variant of the default synthetic environment.
-name: redmine-mcp-test
+name: redmine-mcp-dev-7-0-2
 services:
   mcp-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    ports:
+      - "127.0.0.1:8000:8000"
     environment:
+      REDMINE_WRITE_ENABLED: "false"
       REDMINE_URL: http://redmine:3000
       REDMINE_PUBLIC_URL: http://localhost:3002
     depends_on:
@@ -10,7 +22,17 @@ services:
         condition: service_healthy
 
   mcp-writer:
+    profiles: ["writer"]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8001:8000"
     environment:
+      REDMINE_WRITE_ENABLED: "true"
+      REDMINE_WRITER_AUTH_MODE: personal_key
+      REDMINE_WRITER_OPERATIONS: ""
       REDMINE_URL: http://redmine:3000
       REDMINE_PUBLIC_URL: http://localhost:3002
     depends_on:
@@ -22,7 +44,7 @@ services:
     environment:
       POSTGRES_DB: redmine
       POSTGRES_USER: redmine
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: redmine-local-development
     ports:
       - "127.0.0.1:5433:5432"
     volumes:
@@ -42,14 +64,14 @@ services:
       REDMINE_DB_POSTGRES: postgres
       REDMINE_DB_DATABASE: redmine
       REDMINE_DB_USERNAME: redmine
-      REDMINE_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      REDMINE_SECRET_KEY_BASE: ${REDMINE_SECRET_KEY_BASE:?Set secret key}
-      SECRET_KEY_BASE: ${REDMINE_SECRET_KEY_BASE:?Set secret key}
-      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:?Set test password}
+      REDMINE_DB_PASSWORD: redmine-local-development
+      REDMINE_SECRET_KEY_BASE: redmine-mcp-local-7.0.2-0123456789abcdef0123456789abcdef0123456789abcdef
+      SECRET_KEY_BASE: redmine-mcp-local-7.0.2-0123456789abcdef0123456789abcdef0123456789abcdef
+      TEST_USER_PASSWORD: redmine-demo-password
       REDMINE_TEST_MARKER: redmine-mcp-synthetic-v1
       REDMINE_E2E_OWNER: prep-018
       REDMINE_E2E_VERSION: "7.0.2"
-      REDMINE_E2E_PROJECT: redmine-mcp-test
+      REDMINE_E2E_PROJECT: redmine-mcp-dev-7-0-2
       RAILS_ENV: production
       REDMINE_PLUGINS_MIGRATE: "1"
     ports:
@@ -60,8 +82,8 @@ services:
       - ./redmine/install-plugins.sh:/opt/redmine/install-plugins.sh:ro
       - ../tools/seed:/opt/seed:ro
       - ../tools/testing:/opt/testing:ro
-      - ${REDMINE_E2E_STATE:-../.local/e2e/7.0.2}:/e2e-state
-      - ../.local:/seed-state
+      - e2e_state:/e2e-state
+      - seed_state:/seed-state
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,10 +104,10 @@ services:
     environment:
       REDMINE_URL: http://redmine:3000
       REDMINE_TEST_MARKER: redmine-mcp-synthetic-v1
-      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:?Set test password}
+      TEST_USER_PASSWORD: redmine-demo-password
     volumes:
       - ../tools:/tools:ro
-      - ../.local:/seed-state
+      - seed_state:/seed-state
     working_dir: /
     entrypoint: ["/app/.venv/bin/python", "-m", "tools.seed"]
     depends_on:
@@ -101,15 +123,20 @@ services:
       PGHOST: postgres
       PGUSER: redmine
       PGDATABASE: redmine
-      PGPASSWORD: ${POSTGRES_PASSWORD}
+      REDMINE_IMAGE_VERSION: 7.0.2-bookworm
+      PGPASSWORD: redmine-local-development
     volumes:
       - redmine_files:/redmine-files
-      - ../.local:/state
+      - seed_state:/state
+      - backup_data:/state/backups
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
+  seed_state:
+  e2e_state:
+  backup_data:
   redmine_db_data:
     labels:
       redmine-mcp.environment: synthetic-test

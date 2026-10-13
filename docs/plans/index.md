@@ -35,7 +35,7 @@ retain their historical scope. Runtime acceptance remains pending.
 
 | Task | Client outcome | Dependencies | Status | Blocker | Next action |
 |---|---|---|---|---|---|
-| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | blocked | Implementation finished; static checks and TEST-001..009 acceptance pending. Auto-review rejected the unapproved Ruff invocation before execution | Authorize static checks and separate verification; add lifecycle/profile coverage, run per-version E2E, and record coexistence/reset/cleanup evidence |
+| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | in progress | 2026-10-13: [6.0.1 E2E evidence](../testing/evidence/prep-029-redmine-6.0.1.md): 50 passed, no skips; scoped lint/format and runtime mypy pass; owned cleanup passed | Verify 7.0.2 and remaining offline lifecycle/profile, coexistence, reset, and browser acceptance separately |
 
 The implementation retains exact 6.x.x and 7.0.2 validation, with explicit custom profiles
 for additional 6.x releases. Fixtures live in `.local/e2e/<version>/` and `/e2e-state`.

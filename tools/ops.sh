@@ -2,6 +2,10 @@
 set -eu
 umask 077
 expected=redmine-mcp-synthetic-v1
+case "${REDMINE_IMAGE_VERSION:-}" in
+  7.0.2-bookworm|6.0.1) ;;
+  *) echo 'Unsupported synthetic image version'; exit 1 ;;
+esac
 test -f /state/environment.json
 grep -q "$expected" /state/environment.json || { echo 'Wrong environment'; exit 1; }
 test "$(psql -Atc "SELECT value FROM settings WHERE name='app_title'")" = "Redmine MCP Synthetic Test" || {
@@ -21,13 +25,13 @@ case "${1:-}" in
     if test -f /state/history-manifest.json; then
       cp /state/history-manifest.json "$snapshot/"
     fi
-    printf '%s\n' 'redmine=7.0.2-bookworm' 'postgres=16.8-bookworm' > "$snapshot/versions.txt"
+    printf '%s\n' "redmine=$REDMINE_IMAGE_VERSION" 'postgres=16.8-bookworm' > "$snapshot/versions.txt"
     touch "$snapshot/COMPLETE"
     echo 'Backup complete; contains test credentials. Keep outside version control.'
     ;;
   restore)
     test -f "$snapshot/COMPLETE" || { echo 'Snapshot incomplete'; exit 1; }
-    grep -qx 'redmine=7.0.2-bookworm' "$snapshot/versions.txt"
+    grep -Fqx "redmine=$REDMINE_IMAGE_VERSION" "$snapshot/versions.txt"
     grep -qx 'postgres=16.8-bookworm' "$snapshot/versions.txt"
     grep -q "$expected" "$snapshot/environment.json"
     pg_restore --list "$snapshot/database.dump" >/dev/null

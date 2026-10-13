@@ -81,11 +81,10 @@ demo/history datasets. Tests run the MCP application in process with personal us
 
 | Redmine | Compose project | Host Redmine | Host PostgreSQL | Optional reader / writer | Private E2E state |
 |---|---|---|---|---|---|
-| 6.0.1 | `redmine-mcp-test-6-0-1` | `127.0.0.1:3001` | `127.0.0.1:5436` | 8002 / 8003 | `.local/e2e/6.0.1/` |
-| 7.0.2 | `redmine-mcp-test` | `127.0.0.1:3002` | `127.0.0.1:5433` | 8000 / 8001 | `.local/e2e/7.0.2/` |
+| 6.0.1 | `redmine-mcp-dev-6-0-1` | `127.0.0.1:3001` | `127.0.0.1:5436` | 8002 / 8003 | `.local/e2e/redmine-mcp-dev-6-0-1/` |
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | `127.0.0.1:3002` | `127.0.0.1:5433` | 8000 / 8001 | `.local/e2e/redmine-mcp-dev-7-0-2/` |
 
-Both Redmine containers listen internally on 3000. Compose requires support for the
-`!override` tag used to select the 6.0.1 MCP listener ports. Run from Git Bash at the
+Both Redmine containers listen internally on 3000. Use Docker Compose 2.24.4+. Run from Git Bash at the
 repository root, with Docker Desktop running and `uv` available on `PATH`.
 
 ### Selecting a Redmine release
@@ -130,8 +129,11 @@ Only 6.0.1 and 7.0.2 have built-in profiles. Other 6.x releases require all four
 
 A custom profile must include the E2E markers/project identity, read-only `/opt/testing`
 mount, writable `/e2e-state` mount, and project-owned `redmine_db_data`/`redmine_files`
-volumes labeled with the synthetic environment and exact version. Preparation supplies
-`REDMINE_E2E_STATE` as the absolute path to `.local/e2e/<version>/` for Compose interpolation.
+volumes labeled with the synthetic environment and exact version. Built-in profiles need
+no env file. They use the standalone versioned Compose files and add `deploy/compose.e2e.yaml`
+only during explicit E2E preparation to mount host evidence at `.local/e2e/<project>/`.
+`dev-up.sh` uses named volumes and creates no host configuration or evidence directories.
+Preparation supplies `REDMINE_E2E_STATE` internally; users do not set it for built-in profiles.
 The official image must be `redmine:<version>[-variant]@sha256:<64-hex-digest>`.
 An optional `REDMINE_E2E_IMAGE` must match that configured pin; it does not replace the image.
 There is no fallback to a different release or generated standalone stack.
@@ -152,24 +154,44 @@ Other projects, env credentials, and the other version's state are retained. Pre
 restarts only PostgreSQL/Redmine; optional Docker MCP services can be started separately.
 Reset refuses foreign/unmarked resources and volumes consumed by another project.
 
-Legacy 6.0.5 volumes under `redmine-mcp-test` require explicit reset before using the pinned
-7.0.2 profile. Restore the original env credentials if they are missing; preparation will
-not generate new passwords over existing volumes. Demo/history manifests remain separate
+Legacy `redmine-mcp-test*` projects and volumes are left untouched. New built-in projects use
+independent volumes and fixed local credentials. Stop old containers if they occupy a required
+port. Demo/history manifests remain separate
 and become stale after database reset: use their guarded reinitialization workflow before
 running those generators again. The earlier standalone E2E stacks and `.local/testing-e2e*/`
 files are not migrated or deleted automatically. Their database IDs must not be copied into
 the new manifests. If an old stack occupies a required port, stop that identified stack first.
 
-E2E manifests and logs live under `.local/e2e/<version>/`, mounted at `/e2e-state`.
+Built-in E2E manifests and logs live under `.local/e2e/<project>/`, mounted at `/e2e-state`.
+Custom profiles retain `.local/e2e/<version>/`. Legacy evidence remains untouched.
 Development seed state keeps its `/seed-state` mount. Missing manifests with colliding
 E2E names, or a remaining `setup.json` from interrupted setup, require explicit reset;
 preparation never adopts records based only on a matching name.
 
 Diagnostics are private: `pytest-prepare.log` contains preparation output, `compose-up.log`
-contains service startup output, and `seed.log` contains native fixture output. Never paste
+contains service startup output, and `seed.log` contains native fixture output.
+TOOL-042/043 fixture commands also write `tool042-<action>.log` and
+`tool043-<action>.log` in the selected private state directory, including failed setup
+diagnostics. These logs can contain personal keys. Never paste
 credentials or unredacted logs into shared evidence. Preflight checks the selected running
 service/image/ports/mounts, native Redmine version, volume labels, and manifest/resource
 ownership before test mutation. The MCP application still has no direct database access.
+
+Preparation repairs category grants and expected active/closed/archived states only for
+the manifest-owned baseline fixtures. Project tree positions are reloaded before state
+changes, and outstanding permission reconciliation or unexpected descendants aborts setup.
+Redmine 6.0.1 project responses that ignore pagination are sliced locally only when they
+contain the complete counted collection with valid distinct IDs and matching pagination
+echoes. Other response shapes still require strict page validation. Time-entry fixture
+policies use the installed settings; an absent closed-issue time-log setting represents
+the native unrestricted behavior on 6.0.1.
+
+The adapter converts native rational hour strings such as `"5/4"` from Redmine 6.0.1
+into numeric hours. Public write inputs still require JSON numbers. Receipt verification
+accounts for the native whole-minute getter and the two-decimal representation used by
+newer releases. Preparation also supplies the `notification` tag on the owned baseline
+issue, allowing the read-only positive and negative tag controls to run against the
+already-installed tag plugin instead of skipping for missing positive data.
 
 The Compose stacks retain their declared plugins. Tag scenarios require working native
 tag filtering and existing positive tag fixtures; missing prerequisites are explicitly

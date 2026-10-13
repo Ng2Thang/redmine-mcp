@@ -5,7 +5,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -56,26 +55,19 @@ def inspect_volume(name: str) -> dict[str, Any] | None:
 
 
 def initialize_credentials() -> None:
+    if ENV_FILE is None:
+        return
     if not ENV_FILE.exists():
         # Never initialize random passwords over a database that already exists.
         if any(inspect_volume(f"{PROJECT}_{key}") for key in ("redmine_db_data", "redmine_files")):
             raise ValueError("Existing volumes need their original env file; restore it before setup")
-        if os.environ.get("REDMINE_E2E_COMPOSE_FILE"):
-            raise ValueError("Initialize the custom profile's synthetic env file before E2E setup")
-        result = subprocess.run(
-            [sys.executable, "scripts/local_env.py", "init"],
-            cwd=ROOT,
-            env=process_environment() | {"REDMINE_TEST_VERSION": VERSION},
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if result.returncode:
-            raise ValueError("Cannot initialize the selected synthetic env file")
+        raise ValueError("Initialize the custom profile's synthetic env file before E2E setup")
     validate_credentials()
 
 
 def validate_credentials() -> None:
+    if ENV_FILE is None:
+        return
     if not ENV_FILE.is_file():
         raise ValueError("Selected synthetic env file is missing; run scripts/prepare-e2e.py")
     values = dict(
@@ -219,6 +211,9 @@ def validate_existing_containers(*, reset: bool = False) -> None:
             if mount.get("Type") == "volume" and mount.get("Name") not in {
                 f"{PROJECT}_redmine_db_data",
                 f"{PROJECT}_redmine_files",
+                f"{PROJECT}_seed_state",
+                f"{PROJECT}_e2e_state",
+                f"{PROJECT}_backup_data",
             }:
                 raise ValueError("Unexpected project volume; refusing lifecycle changes")
 
@@ -332,7 +327,7 @@ def reset_stack() -> None:
     if (
         not target.is_relative_to(ROOT.resolve())
         or target.parent != expected_parent
-        or target.name != VERSION
+        or target.name != (VERSION if os.environ.get("REDMINE_E2E_COMPOSE_FILE") else PROJECT)
         or STATE.is_symlink()
         or STATE.is_junction()
     ):

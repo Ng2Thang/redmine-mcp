@@ -27,6 +27,7 @@ from redmine_mcp.features.attachments.models import AttachmentContainerRequest
 from redmine_mcp.integrations.redmine.attachment_updates import RedmineAttachmentUpdates
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.responses import (
+    project_page_data,
     resource_object,
     response_items,
     response_object,
@@ -136,11 +137,13 @@ class RedmineCapabilities:
         offset = 0
         total: int | None = None
         probe = await self.client.get("projects.json", {"limit": 1, "offset": 0})
+        probe = project_page_data(probe, 1, 0)
         metadata = response_page(probe, "projects", 1, 0, require_metadata=True)
         if self.client.pagination.describe(metadata.total, 100).requires_narrowing:
             return ProjectInventory((), False)
         for _ in range(self.client.policy.max_query_pages):
             data = await self.client.get("projects.json", {"limit": 100, "offset": offset})
+            data = project_page_data(data, 100, offset)
             page = response_page(data, "projects", 100, offset, require_metadata=True)
             if self.client.pagination.describe(page.total, 100).requires_narrowing:
                 return ProjectInventory(tuple(ids), False)

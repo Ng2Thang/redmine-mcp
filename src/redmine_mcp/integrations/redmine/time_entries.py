@@ -7,6 +7,7 @@ from redmine_mcp.features.time_entries.queries import TimeEntryUserId
 from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import item
 from redmine_mcp.integrations.redmine.responses import resource_object, response_page
+from redmine_mcp.integrations.redmine.time_entry_hours import native_hours
 
 
 def map_time_entry(entry: dict[str, object]) -> TimeEntry:
@@ -20,7 +21,7 @@ def map_time_entry(entry: dict[str, object]) -> TimeEntry:
             "project": entry.get("project"),
             "user": entry.get("user"),
             "issue_id": issue_id,
-            "hours": entry.get("hours"),
+            "hours": native_hours(entry.get("hours")),
             "spent_on": entry.get("spent_on"),
             "activity": entry.get("activity"),
             "comments": entry.get("comments"),
@@ -115,7 +116,7 @@ class RedmineTimeEntries:
                 "id": entry.get("id"),
                 "issue_id": issue["id"],
                 "user": entry.get("user"),
-                "hours": entry.get("hours"),
+                "hours": native_hours(entry.get("hours")),
                 "spent_on": entry.get("spent_on"),
             },
         )

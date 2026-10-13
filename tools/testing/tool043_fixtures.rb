@@ -11,7 +11,8 @@ when 'setup'
   raise 'Unreconciled TOOL-043 fixtures' if File.exist?(path)
   prefix = "mcp-e2e-tool043-#{SecureRandom.hex(6)}"
   ledger = {owner: 'tool-043', version: E2EGuard::VERSION, project: ENV['REDMINE_E2E_PROJECT'], prefix: prefix, project_id: nil, users: {}, role_ids: [], activities: {},
-            policies: {future: Setting.timelog_accept_future_dates?, closed: Setting.timelog_accept_closed_issues?,
+            policies: {future: Setting.timelog_accept_future_dates?,
+                       closed: !Setting.respond_to?(:timelog_accept_closed_issues?) || Setting.timelog_accept_closed_issues?,
                        daily_max: Setting.timelog_max_hours_per_day.to_f, required: Setting.timelog_required_fields},
             closed_status_id: IssueStatus.where(is_closed: true).first&.id}
   File.write(path, JSON.generate(ledger))

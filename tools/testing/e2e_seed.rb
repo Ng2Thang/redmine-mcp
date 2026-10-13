@@ -29,12 +29,52 @@ def ensure_fixture_journals(issue, user)
   end
 end
 
+def ensure_fixture_tags(issue)
+  raise 'Unowned tag fixture' unless issue.project.identifier == 'mcp-e2e-a' && issue.subject == 'E2E a'
+  raise 'Tag plugin required for E2E controls' unless issue.respond_to?(:tag_list=)
+  tags = Array(issue.tag_list)
+  return if tags.include?('notification')
+
+  issue.tag_list = tags + ['notification']
+  issue.save!
+end
+
+def ensure_fixture_baseline(projects, writer)
+  raise 'Outstanding permission reconciliation' if File.exist?('/e2e-state/permission-snapshot.json')
+  ActiveRecord::Base.transaction do
+    available = Redmine::AccessControl.permissions.map(&:name)
+    writer.permissions |= %i[manage_categories view_issue_categories manage_issue_categories] & available
+    writer.save!
+    # Nested-set positions change as later projects are created or reparented.
+    # Reload before descendant operations so they target the intended project.
+    projects.each do |name, project|
+      next if %w[closed archived].include?(name)
+      project.reload
+      owned_ids = projects.values.map(&:id)
+      raise 'Unowned fixture descendants' unless (project.self_and_descendants.pluck(:id) - owned_ids).empty?
+      project.reopen if project.closed?
+      raise 'Unexpected archived base fixture' unless project.reload.active?
+    end
+    %w[closed archived].each do |name|
+      raise 'Unexpected base fixture descendants' if projects.fetch(name).reload.children.any?
+    end
+    projects.fetch('closed').reload.close
+    projects.fetch('archived').reload.archive
+    projects.fetch('disabled').reload.enabled_module_names = %w[files]
+    raise 'Closed fixture is active' unless projects.fetch('closed').reload.closed?
+    raise 'Archived fixture is active' unless projects.fetch('archived').reload.archived?
+  end
+end
+
 if File.exist?(path)
   previous = JSON.parse(File.read(path))
   E2EGuard.base_resources!(previous)
+  ensure_fixture_baseline(previous.fetch('projects').transform_values { |id| Project.find(id) },
+                          Role.find(previous.fetch('roles').fetch('writer')))
   raise 'Invalid existing ownership' unless previous['owner'] == 'prep-018' && previous['kind'] == ENV['REDMINE_TEST_MARKER']
   ensure_inherited_members(Project.find(previous['projects']['child']), Project.find(previous['projects']['parent']))
   issue = Issue.find(previous['issues']['a'])
+  ensure_fixture_tags(issue)
   ensure_fixture_journals(issue, User.find(previous['users']['a']['id']))
   previous['journals'] = issue.journals.pluck(:id)
   File.write(path, JSON.pretty_generate(previous))
@@ -117,12 +157,11 @@ begin
     issues['tracker_other'] = Issue.find_by(project: projects['tracker'], subject: 'E2E other tracker') || Issue.create!(project: projects['tracker'], tracker: trackers.last, author: users['a'], subject: 'E2E other tracker', status: IssueStatus.first, priority: IssuePriority.first)
     issues['private'] = Issue.find_by(project: projects['a'], subject: 'E2E private') || Issue.create!(project: projects['a'], tracker: trackers.first, author: users['a'], subject: 'E2E private', is_private: true, status: IssueStatus.first, priority: IssuePriority.first)
     ensure_fixture_journals(issues['a'].reload, users['a'])
+    ensure_fixture_tags(issues['a'])
     TimeEntry.create!(project: projects['a'], issue: issues['a'], user: users['a'], author: users['a'], hours: 1.25, spent_on: Date.today, activity: TimeEntryActivity.first)
     version = Version.create!(project: projects['a'], name: 'E2E version', status: 'open')
     category = IssueCategory.create!(project: projects['a'], name: 'E2E category')
-    projects['closed'].close
-    projects['archived'].archive
-    projects['disabled'].enabled_module_names = %w[files]
+    ensure_fixture_baseline(projects, roles.fetch('writer'))
 
     File.write(path, JSON.pretty_generate({kind: ENV['REDMINE_TEST_MARKER'], owner: 'prep-018', version: E2EGuard::VERSION,
       project: ENV['REDMINE_E2E_PROJECT'],

@@ -7,16 +7,26 @@ uses the separate workflow below. See [configuration](configuration.md) for sett
 ## Start and inspect the synthetic environment
 
 ```bash
-bash scripts/dev-up.sh
+bash scripts/dev-up.sh 7.0.2
+bash scripts/dev-up.sh 6.0.1
 ```
 
-The script generates marked local configuration if absent, starts PostgreSQL and Redmine, seeds
-sample data, and builds/starts MCP. First startup downloads and
-builds images. It requires Python 3.13 on PATH and host ports 3000, 8000, and 5433 to be available.
+Choose either command, or run both to start independent environments. Only 7.0.2 and 6.0.1
+are accepted; omitting the argument selects 7.0.2. Each Compose file includes its local settings
+and markers. The script starts PostgreSQL and Redmine, seeds baseline and history data,
+and builds/starts MCP. No environment switches are required. First startup downloads/builds
+images. Python 3.13 and Docker Compose 2.24.4+ must be on PATH. No `.env` file or host state
+directory is created or required; Docker manages persistent state in named volumes.
+
+Startup checks the selected ports before starting containers. A conflicting container or host
+listener produces an error identifying the port and service. Reruns reuse ports owned by the
+selected service. Ports are fixed by the versioned Compose files; inherited Compose settings
+cannot redirect the helper to another environment. The commands do not run tests or prepare
+the separate owned E2E fixtures.
 
 | Service | Address |
 |---|---|
-| Redmine | `http://localhost:3000` |
+| Redmine (7.0.2) | `http://localhost:3002` |
 | Swagger | `http://localhost:8000/docs` |
 | MCP Streamable HTTP | `http://localhost:8000/mcp` |
 | Liveness | `http://localhost:8000/health` |
@@ -24,12 +34,12 @@ builds images. It requires Python 3.13 on PATH and host ports 3000, 8000, and 54
 
 ### Choose a Redmine version
 
-Two local Compose variants are available. Select exactly one alongside `deploy/compose.yaml`:
+Two self-contained local Compose files are available. Select one without `deploy/compose.yaml`:
 
-| Redmine | Compose file | Compose project | Host state directory |
+| Redmine | Compose file | Compose project | Seed-state volume |
 |---|---|---|---|
-| 7.0.2 | `deploy/compose.test.7.0.2.yaml` | `redmine-mcp-test` | `.local` |
-| 6.0.1 | `deploy/compose.test.6.0.1.yaml` | `redmine-mcp-test-6-0-1` | `.local/redmine-6.0.1` |
+| 7.0.2 | `deploy/compose.test.7.0.2.yaml` | `redmine-mcp-dev-7-0-2` | `redmine-mcp-dev-7-0-2_seed_state` |
+| 6.0.1 | `deploy/compose.test.6.0.1.yaml` | `redmine-mcp-dev-6-0-1` | `redmine-mcp-dev-6-0-1_seed_state` |
 
 `deploy/compose.test.yaml` remains an equivalent 7.0.2 configuration for existing helpers.
 It uses the same project and data as `deploy/compose.test.7.0.2.yaml`; select one of these
@@ -39,26 +49,22 @@ Both images are pinned by digest. The 6.0.1 digest comes from the official
 [Docker image metadata](https://hub.docker.com/layers/library/redmine/6.0.1/images/sha256-499ba60895598e9a8556d412d851d39e8faf9108b6270114ec0d2dcbc6ebd285).
 The projects use separate database and attachment volumes, with matching version labels.
 Keep the project names shown above; do not reuse a project's volumes with another version.
-Both variants use the same host ports, so stop the running project before switching.
+Both versions can run concurrently with these fixed localhost ports:
 
-For an existing `.env` created by `scripts/local_env.py`, switch from 7.0.2 to 6.0.1:
+| Redmine | Redmine port | PostgreSQL port | MCP reader / optional writer |
+|---|---|---|---|
+| 7.0.2 | 3002 | 5433 | 8000 / 8001 |
+| 6.0.1 | 3001 | 5436 | 8002 / 8003 |
 
-```bash
-export MSYS_NO_PATHCONV=1
-export MSYS2_ARG_CONV_EXCL='*'
-docker compose -p redmine-mcp-test --env-file .env \
-  -f deploy/compose.yaml -f deploy/compose.test.7.0.2.yaml stop
-docker compose -p redmine-mcp-test-6-0-1 --env-file .env \
-  -f deploy/compose.yaml -f deploy/compose.test.6.0.1.yaml \
-  up -d postgres redmine
-```
+The development files contain fixed local credentials and synthetic markers. Root `.env` is
+ignored. Old `redmine-mcp-test*` containers, volumes and `.local/` files are not adopted,
+modified or deleted. Stop an old container if startup reports that it occupies a required port.
+The new projects start independent datasets. Backups live in each project's `backup_data`
+volume and are retained by the guarded reset helper.
 
-To switch back, stop the 6.0.1 project with the same file and project arguments, then run
-`bash scripts/dev-up.sh`. Stopping retains each version's data. Both variants install plugins
-at startup. The existing development, seed, reset, backup, restore, and E2E helpers remain
-dedicated to 7.0.2. The 6.0.1 variant starts a separate Redmine instance without automatic
-synthetic seeding; it requires its own initial Redmine administration setup. Startup and
-plugin compatibility for this variant have not been verified.
+Both versions install plugins and seed automatically. Lifecycle helpers default to 7.0.2;
+prefix a helper command with `REDMINE_TEST_VERSION=6.0.1` to select 6.0.1. E2E fixture
+preparation remains separate; see the [testing roadmap](testing-roadmap.md).
 
 ### Install local Redmine plugins
 
@@ -97,16 +103,19 @@ plugin installation applies only to the local Redmine service in the selected ve
 Plugin compatibility with the pinned Redmine 7.0.2 image still requires separately authorized
 startup verification; Work Time's bundled changelog only declares support through Redmine 6.1.
 
-For database clients, read `POSTGRES_PASSWORD` privately from `.env`. Synthetic accounts are
+For database clients, database/user are `redmine` and password is `redmine-local-development`.
+Synthetic accounts are
 `admin`, `demo-manager`, `demo-developer`, `demo-reporter`, and `demo-mcp-reader`; their password
-is `TEST_USER_PASSWORD`. Use each account's personal key to inspect its visibility.
+is `redmine-demo-password`. These are localhost development credentials. Use each account's
+personal key to inspect its visibility.
 
 Wrappers disable Git Bash path rewriting for Docker. For manual Compose operations, set:
 
 ```bash
 export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL='*'
-docker compose -p redmine-mcp-test --env-file .env -f deploy/compose.yaml -f deploy/compose.test.yaml ps
+source scripts/common.sh
+compose ps
 ```
 
 Do not share `docker compose config` output; it can expose interpolated credentials.
@@ -116,14 +125,16 @@ Do not share `docker compose config` output; it can expose interpolated credenti
 Stop all synthetic services while retaining volumes:
 
 ```bash
-docker compose -p redmine-mcp-test --env-file .env -f deploy/compose.yaml -f deploy/compose.test.yaml stop
+source scripts/common.sh
+compose stop
 ```
 
 Restart using `bash scripts/dev-up.sh`. Completed seeds are skipped.
 To free port 8000 for local Python while keeping Redmine running:
 
 ```bash
-docker compose -p redmine-mcp-test --env-file .env -f deploy/compose.yaml -f deploy/compose.test.yaml stop mcp-server
+source scripts/common.sh
+compose stop mcp-server
 ```
 
 ## Seed and reset
@@ -145,7 +156,12 @@ synthetic markers; do not bypass marker checks or use it against real data.
 bash scripts/reset-test-env.sh --confirm-reset
 ```
 
-Read IDs from `.local/manifest.json` after reset rather than assuming IDs remain the same.
+Read IDs from `/seed-state/manifest.json` in the Redmine container after reset:
+
+```bash
+source scripts/common.sh
+compose exec -T redmine cat /seed-state/manifest.json
+```
 See [synthetic data](test-data.md) for expected counts and visibility cases.
 
 To add three months of project, sprint-version, issue, and spent-time history to an already
@@ -157,7 +173,7 @@ bash scripts/seed-history.sh
 
 This adds 8 projects, 20 users, 12 versions, 300 issues, and 900 time entries. It preserves
 the base dataset, skips a completed rerun, and resumes an interrupted run. Read generated IDs
-from `.local/history-manifest.json`. Run the command a second time to confirm it reports a skip.
+from `/seed-state/history-manifest.json` in the Redmine container.
 In Redmine, inspect the History Alpha/Beta project trees, memberships, versions, issue schedules,
 and Spent time reports. In MCP Inspector, use manifest project and issue IDs to check visible
 projects, versions, and issues, then confirm `History Beta Private` is inaccessible to MCP Reader.
@@ -176,7 +192,8 @@ bash scripts/backup.sh baseline
 
 Backup validates the environment and stops MCP and Redmine. It stores a database dump,
 attachments archive, environment marker, manifest, test credentials, image-version metadata,
-and a completion marker under `.local/backups/<snapshot-id>/`. Its exit handler attempts to
+and a completion marker under `/state/backups/<snapshot-id>/` in the project's `backup_data`
+volume. Its exit handler attempts to
 restart applications even when backup fails. Incomplete snapshots must not be used for restore.
 Existing snapshots are not overwritten. Treat every snapshot as sensitive.
 
@@ -198,11 +215,11 @@ synthetic data can be discarded. Full restore, checksum, and failure-recovery va
 
 ## External Redmine
 
-The synthetic environment uses the pinned Redmine 7.0.2 image in
-[Compose](../deploy/compose.test.yaml). The backup and restore wrappers operate on the
-marked synthetic project. Use a snapshot created under this target when restoring it.
-`dev-up.sh` refuses an existing database or attachments volume unless its Docker
-label identifies Redmine 7.0.2. New volumes receive the label from Compose.
+The synthetic environments use pinned Redmine images in their versioned Compose files.
+The backup and restore wrappers operate on the selected marked synthetic project. Use a
+snapshot created under that version when restoring it. `dev-up.sh` refuses an existing
+database or attachments volume unless its Docker labels identify the selected version and
+project. New volumes receive these labels from Compose.
 
 Prepare `.local/external.env` as described in [configuration](configuration.md). Stop any MCP
 process already occupying port 8000. With the Git Bash Docker exports above in effect:
@@ -266,7 +283,7 @@ guarantees.
 | Symptom | Action |
 |---|---|
 | Docker engine unavailable | Start Docker Desktop with Linux containers. |
-| Port occupied | Free 3000, 8000, or 5433 as applicable; stop container MCP before local execution. |
+| Port occupied | Free the port reported for the selected version; stop container MCP before local execution. |
 | MCP/REST `401` | Check the personal Redmine API key header; Inspector's own token is separate. |
 | Redmine key rejected | Check the requesting user's API key and account access. |
 | TLS connection failure | Configure trusted certificates; keep verification enabled. |

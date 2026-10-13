@@ -1,0 +1,5 @@
+# Host evidence is mounted only by explicit E2E preparation, never by dev-up.sh.
+services:
+  redmine:
+    volumes:
+      - ${REDMINE_E2E_STATE:?Selected by the E2E launcher}:/e2e-state

@@ -7,14 +7,13 @@ export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL='*'
 test_version="${REDMINE_TEST_VERSION:-7.0.2}"
 case "$test_version" in
-  7.0.2) test_project=redmine-mcp-test; test_env=.env ;;
-  6.0.1) test_project=redmine-mcp-test-6-0-1; test_env=.local/redmine-6.0.1/.env ;;
+  7.0.2) test_project=redmine-mcp-dev-7-0-2 ;;
+  6.0.1) test_project=redmine-mcp-dev-6-0-1 ;;
   *) echo 'Unsupported synthetic Redmine version' >&2; exit 2 ;;
 esac
 export REDMINE_TEST_VERSION="$test_version"
 compose() {
-  docker compose -p "$test_project" --env-file "$test_env" \
-    -f deploy/compose.yaml -f "deploy/compose.test.${test_version}.yaml" "$@"
+  python scripts/local_env.py compose "$@"
 }
 assert_environment() {
   python scripts/local_env.py assert

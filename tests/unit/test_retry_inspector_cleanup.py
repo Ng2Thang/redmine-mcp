@@ -36,10 +36,12 @@ def test_inspector_removes_credentials_on_every_exit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str
 ) -> None:
     monkeypatch.setattr(inspector, "ROOT", tmp_path)
+    state = tmp_path / "e2e-state"
+    monkeypatch.setattr(inspector, "STATE", state)
     monkeypatch.setattr(
         inspector, "preflight", lambda: {"users": {"a": {"key": "offline-private-key"}}}
     )
-    config = tmp_path / ".local/testing-e2e/prep-027/inspector.json"
+    config = state / "prep-027/inspector.json"
     original_client = httpx.Client
     original_write = Path.write_text
     original_open = Path.open
@@ -56,6 +58,7 @@ def test_inspector_removes_credentials_on_every_exit(
         return original_client(*args, **kwargs, transport=httpx.MockTransport(respond))
 
     def write(path: Path, data: str, **kwargs: Any) -> int:
+        assert path.is_relative_to(tmp_path), "Offline Inspector must write only to temporary state"
         if phase == "partial_write" and path == config:
             original_write(path, data[:20], **kwargs)
             raise OSError(phase)

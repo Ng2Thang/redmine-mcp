@@ -61,6 +61,33 @@ class ResponsePage:
     offset: int
 
 
+def project_page_data(data: dict[str, Any], limit: int, offset: int) -> dict[str, Any]:
+    """Slice the complete collection returned by Redmine 6.0.1's projects endpoint.
+
+    That release echoes pagination but its ProjectQuery ignores offset and limit.
+    Accept this shape only when all counted projects have distinct positive IDs.
+    Normal pages and malformed envelopes still pass through strict validation.
+    """
+    values = response_items(data, "projects")
+    total = response_count(data)
+    if len(values) <= limit and offset == 0:
+        return data
+    if (
+        len(values) != total
+        or type(data.get("limit")) is not int
+        or data["limit"] != limit
+        or type(data.get("offset")) is not int
+        or data["offset"] != offset
+    ):
+        return data
+    ids = [row.get("id") for row in values]
+    if any(type(value) is not int or value < 1 for value in ids):
+        return data
+    if len(set(ids)) != len(ids):
+        return data
+    return data | {"projects": values[offset : offset + limit]}
+
+
 def response_page(
     data: dict[str, Any],
     key: str,

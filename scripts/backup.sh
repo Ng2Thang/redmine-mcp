@@ -7,5 +7,5 @@ snapshot="${1:-$(date +%Y%m%d-%H%M%S)}"
 compose stop mcp-server redmine
 trap 'compose up -d --wait --wait-timeout 600 redmine mcp-server' EXIT
 compose --profile tools run --build --rm -e "SNAPSHOT_ID=$snapshot" backup-restore backup
-echo "Backup created in .local/backups/$snapshot. Full restore validation is deferred."
+echo "Backup created in ${test_project}_backup_data at /$snapshot. Full restore validation is deferred."
 

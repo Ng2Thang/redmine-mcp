@@ -39,26 +39,41 @@ For automated E2E version selection, use `REDMINE_E2E_VERSION` and
 [E2E release instructions](testing-roadmap.md#selecting-a-redmine-release).
 E2E seeds its own fixtures inside the existing versioned stacks. Built-in profiles are
 6.0.1 and 7.0.2; other exact 6.x.x releases require an explicit custom profile. Fixture
-manifests live in `.local/e2e/<version>/`, separate from the development seed state.
-The development seed below does not substitute for E2E preparation. Docker Compose must
-support the `!override` tag used by the 6.0.1 listener configuration.
+manifests live in `.local/e2e/<project>/` for built-in profiles, separate from Docker seed state.
+The development seed below does not substitute for E2E preparation. Use Docker Compose 2.24.4+.
 
 With Docker Desktop running, start and seed the default Redmine 7.0.2 stack or the
 separate Redmine 6.0.1 stack from Git Bash:
 
 ```bash
-bash scripts/dev-up.sh
+bash scripts/dev-up.sh 7.0.2
 bash scripts/dev-up.sh 6.0.1
 ```
 
-The 6.0.1 command combines `deploy/compose.yaml` with `deploy/compose.test.6.0.1.yaml`,
-builds the MCP image, and seeds both the baseline and history datasets. It uses project
-`redmine-mcp-test-6-0-1`, separate volumes, and secrets and seed state under
-`.local/redmine-6.0.1/`. Redmine listens on localhost:3001, PostgreSQL on localhost:5436,
-and the read-only MCP server on localhost:8002/mcp. Set `MCP_HOST_PORT` before running
-the command to override its MCP port. The default 7.0.2 command retains the root `.env`,
-`.local/` seed state, and ports 3002, 5433, and 8000. Both Redmine containers
-listen internally on 3000. Optional writer ports are 8003 for 6.0.1 and 8001 for 7.0.2.
+Only these two versions are accepted; omitting the argument selects 7.0.2. The argument
+selects the self-contained `deploy/compose.test.<version>.yaml`, its project, named Docker
+volumes and fixed localhost ports. Configuration and synthetic markers are defined in Compose;
+no dotenv file, host state directory or environment toggle is needed. Root `.env` is ignored.
+Demo accounts use `redmine-demo-password`; PostgreSQL uses `redmine-local-development`.
+The new projects do not adopt or delete old test-project volumes or local state.
+
+| Redmine | Project | Redmine port | PostgreSQL port | MCP reader / optional writer |
+|---|---|---|---|---|
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | 3002 | 5433 | 8000 / 8001 |
+| 6.0.1 | `redmine-mcp-dev-6-0-1` | 3001 | 5436 | 8002 / 8003 |
+
+Before starting containers, the script checks the three required ports and reports the
+conflicting service or container. Ports already owned by the selected service are reused
+on repeat runs. Both versions can run concurrently. Both Redmine containers listen on 3000
+internally. The writer is optional and is not started by `dev-up.sh`.
+
+Verification handoff: this startup refactor has not been exercised with Docker, automated
+tests, or static-check tools. Separately authorized verification should cover fresh setup
+for both versions, concurrent stacks, reruns, a conflicting Docker container and host listener,
+unsupported versions, inherited Compose overrides, retained legacy volumes, and a root `.env`
+containing unrelated settings. Check that startup creates no host configuration directories,
+that seed manifests stay in the selected Docker volume, and that explicit E2E preparation
+still mounts host evidence separately. Reset/backup/restore changes also remain unverified.
 
 Both versions run seed mode `all` by default: the 150-issue baseline followed by the
 history dataset with 8 projects, 20 users, 12 versions, 300 additional issues, and
@@ -77,9 +92,7 @@ Lifecycle helpers default to 7.0.2. Set `REDMINE_TEST_VERSION=6.0.1` to select t
 6.0.1 profile through `scripts/common.sh`; E2E uses `REDMINE_E2E_VERSION` independently. To stop 6.0.1 without removing its volumes:
 
 ```bash
-docker compose -p redmine-mcp-test-6-0-1 \
-  --env-file .local/redmine-6.0.1/.env \
-  -f deploy/compose.yaml -f deploy/compose.test.6.0.1.yaml down
+docker compose -p redmine-mcp-dev-6-0-1 -f deploy/compose.test.6.0.1.yaml down
 ```
 
 ## DEBUG logging
@@ -98,10 +111,11 @@ updated environment reaches its process. This does not reset or seed Redmine:
 
 ```bash
 source scripts/common.sh
-LOG_LEVEL=DEBUG compose up -d --no-deps --force-recreate mcp-server
+compose up -d --no-deps --force-recreate mcp-server
 compose logs --follow --tail=200 mcp-server
 ```
 
+Set `LOG_LEVEL: DEBUG` in the selected Compose service environment before recreation.
 Use `mcp-writer` instead of `mcp-server` for an already configured writer deployment; retain
 its existing writer credentials, admission mode and operation gates. For external Redmine
 using the base Compose file:
@@ -113,8 +127,8 @@ docker compose --env-file .env -f deploy/compose.yaml logs --follow --tail=200 m
 ```
 
 Use `--build` when the image does not yet contain the logging implementation. Set `LOG_LEVEL`
-back to `INFO` and restart the local process, or rerun the selected recreation command with
-`LOG_LEVEL=INFO`, to turn detailed events off. Editing `.env` alone does not update a running
+back to `INFO` in the process settings or selected Compose service and recreate the container
+to turn detailed events off. Editing a configuration file alone does not update a running
 process. Ordinary `docker compose restart` does not apply changed container environment.
 
 To inspect a completed incident, copy its server-generated correlation from the console or

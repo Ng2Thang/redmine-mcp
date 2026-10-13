@@ -40,8 +40,8 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 
 Values in `.env.example` are placeholders and must be replaced for external use. Invalid
 required settings prevent application startup. `REDMINE_API_KEY` and `MCP_API_TOKEN` are retired
-runtime settings; remove them from existing external environment files. The synthetic setup
-helper removes them from its marked `.env`.
+runtime settings; remove them from existing external environment files. Synthetic Compose
+does not load an env file or include these legacy settings.
 
 The internal MCP-to-REST client configures the HTTPX inactivity timeout plus five seconds,
 but its in-process ASGI transport does not enforce that setting as a whole-tool timer.
@@ -184,8 +184,8 @@ expensive even with limit one. Repeated previews and different small queries rem
 Attachment content delivery is disabled. The retired content route returns
 `403 attachment_download_disabled` before authentication/upstream work, and cached MCP download
 calls are rejected. Metadata tools return browser links only; no export files are generated.
-For the synthetic Docker deployment, configure `REDMINE_PUBLIC_URL=http://localhost:3000` when
-the browser runs on the same Windows host. Use the actual public origin/subpath externally.
+Synthetic Compose sets `REDMINE_PUBLIC_URL` to `http://localhost:3002` for 7.0.2 or
+`http://localhost:3001` for 6.0.1. Use the actual public origin/subpath externally.
 Browser login and Redmine container permissions still apply. The binary byte setting remains
 relevant to writer uploads.
 Streams close on success and failure. Unsuccessful statuses are mapped without consuming their
@@ -232,37 +232,42 @@ writer access.
 
 ## Synthetic environment
 
-Run `bash scripts/dev-up.sh` from the repository root. It generates `.env` with random secrets
-when absent. Do not copy `.env.example` for this workflow. Existing configuration must carry
-the synthetic marker; keep real-instance configuration separate.
+Run `bash scripts/dev-up.sh 7.0.2` or `bash scripts/dev-up.sh 6.0.1` from the repository root.
+The argument selects the matching Compose file, project, volumes, state and fixed ports.
+No environment switches, dotenv file or host state directory are required. Each version's
+Compose file is self-contained, with fixed local credentials and internal synthetic markers.
+Root `.env` and inherited Compose switches are ignored. Named Docker volumes store the
+database, attachments and seed state. New versioned project names keep legacy data separate.
 
 | Variable | Synthetic use |
 |---|---|
-| `POSTGRES_PASSWORD` | Generated database password; database and user are both `redmine`. |
-| `TEST_USER_PASSWORD` | Generated password for the synthetic Redmine accounts. |
-| `REDMINE_SECRET_KEY_BASE` | Generated Rails secret, passed as both `REDMINE_SECRET_KEY_BASE` and `SECRET_KEY_BASE` in the Redmine container. |
-| `REDMINE_TEST_MARKER` | Must be `redmine-mcp-synthetic-v1`; checked alongside local state before destructive operations. |
+| `POSTGRES_PASSWORD` | Defined as `redmine-local-development`; database/user are `redmine`. |
+| `TEST_USER_PASSWORD` | Defined as `redmine-demo-password` for demo accounts. |
+| `REDMINE_SECRET_KEY_BASE` | Fixed local Rails secret defined in each version's Compose file. |
+| `REDMINE_TEST_MARKER` | Defined internally as `redmine-mcp-synthetic-v1`; users do not set it. |
 
-Synthetic account keys used for seeding remain in ignored `.local/credentials.json`. The setup
-does not put a Redmine API key in `.env`. For Inspector, obtain a personal key privately from
-Redmine's account page or the synthetic credentials file. Generated state, credentials,
-manifests, and backups live in ignored `.local/`.
+Synthetic account keys and manifests remain in the project's `seed_state` Docker volume,
+mounted at `/seed-state` in Redmine. Backups use the separate `backup_data` volume.
+For Inspector, obtain a personal key privately from Redmine's account page. Fixed development
+credentials belong only to these localhost stacks; external deployments use separate settings.
 
 ## Local and Docker addresses
 
 | Caller | Redmine address |
 |---|---|
-| Local Python process using the synthetic environment | `http://localhost:3000` |
+| Local Python process using synthetic Redmine 7.0.2 / 6.0.1 | `http://localhost:3002` / `http://localhost:3001` |
 | MCP container with the synthetic Compose override | `http://redmine:3000` |
 | Container accessing Redmine on the Windows host | Use `http://host.docker.internal:<port>` with the actual port. |
 
-Base Compose passes the runtime settings from its interpolation environment into MCP.
-The synthetic override explicitly replaces `REDMINE_URL` with the container service URL.
-Compose shell variables can override values from `--env-file`; avoid stale exported credentials.
+Base Compose for external deployments passes runtime settings from its interpolation environment.
+The standalone synthetic files explicitly set `REDMINE_URL` to the container service URL.
+Direct Docker Compose commands allow shell variables to override `--env-file`.
+The synthetic helpers isolate Compose interpolation from inherited shell settings.
 
-Published endpoints bind to localhost: MCP defaults to `8000` (Compose `MCP_HOST_PORT`),
-Redmine `3000`, PostgreSQL `5433`. `MCP_HOST_PORT` configures only the published Compose port;
-the application still listens on container port `8000`.
+Published synthetic endpoints bind to localhost: 7.0.2 uses MCP `8000`, Redmine `3002`,
+PostgreSQL `5433`; 6.0.1 uses `8002`, `3001`, `5436`. These ports are fixed in the versioned
+Compose files; occupied ports cause startup to stop with a diagnostic. Base Compose for
+external Redmine still supports `MCP_HOST_PORT`. MCP listens on container port `8000`.
 PostgreSQL uses port `5432` inside Docker. MCP never connects to PostgreSQL.
 Stop the MCP container before starting local Python on port `8000`.
 

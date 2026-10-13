@@ -23,7 +23,7 @@ from redmine_mcp.constants import codes as codes_text
 from redmine_mcp.constants import logs as logs_text
 from redmine_mcp.constants import redmine as redmine_text
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
-from redmine_mcp.integrations.redmine.responses import response_page
+from redmine_mcp.integrations.redmine.responses import project_page_data, response_page
 from redmine_mcp.integrations.redmine.retry import (
     RETRY_ERRORS,
     RETRY_STATUSES,
@@ -119,9 +119,13 @@ class RedmineClient:
         if offset:
             probe_params = {**params, "limit": 1, "offset": 0}
             probe = await self.get(path, probe_params)
+            if path == "projects.json" and key == "projects":
+                probe = project_page_data(probe, 1, 0)
             metadata = response_page(probe, key, 1, 0, require_metadata=require_metadata)
             self.pagination.require_scope(metadata.total, limit, guidance)
         data = await self.get(path, params)
+        if path == "projects.json" and key == "projects":
+            data = project_page_data(data, limit, offset)
         actual = response_page(data, key, limit, offset, require_metadata=require_metadata)
         if offset:
             self.pagination.require_scope(actual.total, limit, guidance)

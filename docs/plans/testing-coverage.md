@@ -11,8 +11,11 @@ not every possible workflow, role combination, Redmine version or infrastructure
 6.0.1 and 7.0.2 Compose stacks, with private fixture state under `.local/e2e/<version>/`.
 Its TEST-001..009 cover target selection, coexistence, fresh/repeated/failed seed,
 ownership refusal, explicit selected reset, broader 6.x profile validation, opt-in gates,
-and version-specific permission/state/cleanup evidence. These scenarios remain pending.
-No previous suite count establishes acceptance of this new lifecycle.
+and version-specific permission/state/cleanup evidence. On 2026-10-13, the complete
+6.0.1 E2E command passed all 50 cases with no skips and owned cleanup; see
+[dated evidence](../testing/evidence/prep-029-redmine-6.0.1.md). This verifies the selected
+6.0.1 live suite. The remaining lifecycle/profile boundaries, 7.0.2, coexistence, reset,
+and browser scenarios remain pending; a suite count does not establish those outcomes.
 
 ## Current tools
 

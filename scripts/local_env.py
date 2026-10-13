@@ -1,8 +1,9 @@
-"""Local credential management for Git Bash scripts; never print credentials."""
+"""Run one self-contained development Compose stack without host configuration files."""
 
 import json
 import os
-import secrets
+import socket
+import subprocess
 import sys
 from pathlib import Path
 
@@ -10,76 +11,147 @@ ROOT = Path(__file__).resolve().parents[1]
 VERSION = os.environ.get("REDMINE_TEST_VERSION", "7.0.2")
 if VERSION not in {"7.0.2", "6.0.1"}:
     raise SystemExit("Unsupported synthetic Redmine version.")
-STATE = ROOT / ".local" / "redmine-6.0.1" if VERSION == "6.0.1" else ROOT / ".local"
-ENV = STATE / ".env" if VERSION == "6.0.1" else ROOT / ".env"
-KIND = "redmine-mcp-synthetic-v1"
+PROJECT = f"redmine-mcp-dev-{VERSION.replace('.', '-')}"
 
 
-def read_env() -> dict[str, str]:
-    return dict(
-        line.split("=", 1)
-        for line in ENV.read_text(encoding="utf-8-sig").splitlines()
-        if line and not line.startswith("#") and "=" in line
+def compose_command(*arguments: str) -> list[str]:
+    return [
+        "docker",
+        "compose",
+        "-p",
+        PROJECT,
+        "-f",
+        str(ROOT / "deploy" / f"compose.test.{VERSION}.yaml"),
+        *arguments,
+    ]
+
+
+def compose_environment() -> dict[str, str]:
+    """Keep terminal and root dotenv settings out of the development stack."""
+    environment = os.environ.copy()
+    for name in list(environment):
+        if name.startswith("COMPOSE_"):
+            environment.pop(name)
+    environment.update(
+        {
+            "COMPOSE_DISABLE_ENV_FILE": "1",
+            "MSYS_NO_PATHCONV": "1",
+            "MSYS2_ARG_CONV_EXCL": "*",
+            "REDMINE_E2E_STATE": (ROOT / ".local/e2e" / PROJECT).as_posix(),
+        }
     )
+    return environment
 
 
-def write_env(values: dict[str, str]) -> None:
-    ENV.write_text(
-        "".join(f"{key}={value}\n" for key, value in sorted(values.items())), encoding="utf-8"
+def docker_output(*arguments: str) -> str:
+    result = subprocess.run(
+        ["docker", *arguments],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
     )
+    if result.returncode:
+        raise SystemExit("Cannot inspect Docker; check that Docker Desktop is running.")
+    return result.stdout
+
+
+def validate_volumes() -> None:
+    existing = set(docker_output("volume", "ls", "--quiet").split())
+    for key in ("redmine_db_data", "redmine_files"):
+        name = f"{PROJECT}_{key}"
+        if name not in existing:
+            continue
+        labels = json.loads(docker_output("volume", "inspect", name))[0].get("Labels") or {}
+        if (
+            labels.get("redmine-mcp.redmine-version") != VERSION
+            or labels.get("redmine-mcp.environment") != "synthetic-test"
+            or labels.get("com.docker.compose.project") != PROJECT
+        ):
+            raise SystemExit(f"Existing volume is not marked for Redmine {VERSION}: {name}")
+
+
+def check_ports() -> None:
+    result = subprocess.run(
+        compose_command("config", "--format", "json"),
+        cwd=ROOT,
+        env=compose_environment(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        raise SystemExit("Cannot resolve selected Compose files; Docker Compose 2.24.4+ is required.")
+    services = json.loads(result.stdout)["services"]
+    ids = docker_output("ps", "--quiet").split()
+    containers = json.loads(docker_output("inspect", *ids)) if ids else []
+    for service in ("postgres", "redmine", "mcp-server"):
+        for binding in services[service].get("ports", []):
+            port = int(binding["published"])
+            owned = False
+            for container in containers:
+                labels = container["Config"].get("Labels") or {}
+                for bindings in container["NetworkSettings"].get("Ports", {}).values():
+                    for published in bindings or []:
+                        if int(published["HostPort"]) != port:
+                            continue
+                        if (
+                            labels.get("com.docker.compose.project") != PROJECT
+                            or labels.get("com.docker.compose.service") != service
+                        ):
+                            raise SystemExit(
+                                f"Port {port} for Redmine {VERSION} ({service}) is already used "
+                                f"by container {container['Name'].lstrip('/')}. "
+                                "Stop the conflicting service and retry."
+                            )
+                        owned = True
+            if owned:
+                continue
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+                if os.name == "nt":
+                    listener.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+                try:
+                    listener.bind((binding.get("host_ip", "127.0.0.1"), port))
+                except OSError:
+                    raise SystemExit(
+                        f"Port {port} for Redmine {VERSION} ({service}) is unavailable. "
+                        "Stop the conflicting service and retry."
+                    ) from None
 
 
 def main() -> None:
-    action = sys.argv[1]
-    STATE.mkdir(parents=True, exist_ok=True)
-    if action == "init" and not ENV.exists():
-        write_env(
-            {
-                "REDMINE_URL": f"http://localhost:{3001 if VERSION == '6.0.1' else 3002}",
-                "POSTGRES_PASSWORD": secrets.token_hex(32),
-                "TEST_USER_PASSWORD": secrets.token_hex(24),
-                "REDMINE_SECRET_KEY_BASE": secrets.token_hex(64),
-                "REDMINE_TEST_MARKER": KIND,
-                "REDMINE_TIMEOUT_SECONDS": "20",
-                "LOG_LEVEL": "INFO",
-            }
+    action = sys.argv[1] if len(sys.argv) > 1 else ""
+    if action == "preflight":
+        validate_volumes()
+        check_ports()
+    elif action == "compose":
+        raise SystemExit(
+            subprocess.call(compose_command(*sys.argv[2:]), cwd=ROOT, env=compose_environment())
         )
-    if not ENV.exists() or read_env().get("REDMINE_TEST_MARKER") != KIND:
-        raise SystemExit("Not a marked synthetic .env; keep real configuration separate.")
-    original = read_env()
-    values = original.copy()
-    if VERSION == "7.0.2" and values.get("REDMINE_URL") in {
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    }:
-        values["REDMINE_URL"] = "http://localhost:3002"
-    values.setdefault("MCP_HOST_PORT", "8002" if VERSION == "6.0.1" else "8000")
-    values.setdefault("MCP_WRITER_HOST_PORT", "8003" if VERSION == "6.0.1" else "8001")
-    values.setdefault("REDMINE_PUBLIC_URL", f"http://localhost:{3001 if VERSION == '6.0.1' else 3002}")
-    for legacy_key in ("REDMINE_API_KEY", "MCP_API_TOKEN"):
-        values.pop(legacy_key, None)
-    if values != original:
-        write_env(values)
-    if action in {"assert", "runtime", "reset-state"}:
-        marker = STATE / "environment.json"
-        if not marker.exists() or json.loads(marker.read_text())["kind"] != KIND:
-            raise SystemExit("Missing/invalid synthetic environment marker.")
-    if action == "reset-state":
-        for name in (
-            "manifest.json",
-            "manifest.tmp",
-            "history-manifest.json",
-            "history-manifest.tmp",
-            "credentials.json",
-            "environment.json",
-        ):
-            target = (STATE / name).resolve()
-            if target.parent != STATE.resolve():
-                raise SystemExit("Path outside local state")
-            target.unlink(missing_ok=True)
-    elif action not in {"init", "assert", "runtime"}:
+    elif action == "assert":
+        validate_volumes()
+        guard = (
+            "abort 'Not the synthetic environment' unless "
+            "ENV['REDMINE_TEST_MARKER'] == 'redmine-mcp-synthetic-v1'; "
+            "abort 'Missing synthetic seed marker' unless "
+            "JSON.parse(File.read('/seed-state/environment.json'))['kind'] "
+            "== 'redmine-mcp-synthetic-v1'"
+        )
+        raise SystemExit(
+            subprocess.call(
+                compose_command("exec", "-T", "redmine", "ruby", "-rjson", "-e", guard),
+                cwd=ROOT,
+                env=compose_environment(),
+            )
+        )
+    else:
         raise SystemExit("Unknown action")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except OSError:
+        raise SystemExit("Cannot access Docker; check that Docker Desktop is running.") from None
+    except (ValueError, KeyError):
+        raise SystemExit("Invalid local synthetic configuration or Docker metadata.") from None

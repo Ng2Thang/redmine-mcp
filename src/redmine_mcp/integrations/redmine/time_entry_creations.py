@@ -17,6 +17,7 @@ from redmine_mcp.integrations.redmine.client import RedmineClient
 from redmine_mcp.integrations.redmine.mapping import item
 from redmine_mcp.integrations.redmine.responses import resource_object
 from redmine_mcp.integrations.redmine.time_entries import map_time_entry
+from redmine_mcp.integrations.redmine.time_entry_hours import native_hours
 from redmine_mcp.integrations.redmine.write import RedmineWriter
 
 REFERENCE_FIELDS = {
@@ -51,7 +52,12 @@ def verify_fields(
             else actual[source]
         )
         if field == "hours":
-            observed = Decimal(str(observed))
+            rational = isinstance(observed, str)
+            observed = Decimal(str(native_hours(observed)))
+            if rational:
+                with localcontext() as context:
+                    context.prec = max(32, observed.adjusted() + 8)
+                    observed = observed.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         results[field] = "matched" if observed == value else "mismatch"
     return results
 

@@ -9,13 +9,13 @@
 | Type | Shared testing prerequisite; no new MCP tool |
 | Access | Administrative synthetic setup, followed by existing personal-key reader/writer tests |
 | Destructive effects | Fixture creation and test mutations; an explicit reset may replace only the selected synthetic stack's database/files volumes |
-| Status | blocked |
+| Status | in progress |
 | Dependencies | Existing [PREP-018 E2E baseline](prep-018-live-e2e-testing.md) and the current version-selection/automatic-preparation implementation |
 | Related tasks | [Testing coverage](../testing-coverage.md), [testing roadmap](../../testing-roadmap.md) |
-| Target Redmine version | Built-in profiles: 6.0.1 and 7.0.2; configurable additional exact 6.x.x releases; runtime acceptance pending |
-| Last updated | 2026-10-12, Codex |
-| Progress summary | Implementation finished; static checks and compatibility testing pending |
-| Next action | Authorize static checks and the separate TEST-001..009 verification stage; add planned lifecycle/profile coverage and record per-version evidence |
+| Target Redmine version | 6.0.1 full E2E verified; 7.0.2 and additional exact 6.x.x profile acceptance pending |
+| Last updated | 2026-10-13, Codex |
+| Progress summary | Redmine 6.0.1: 50 E2E cases pass with cleanup; changed Python lint/format and runtime mypy pass; broader acceptance pending |
+| Next action | Verify 7.0.2 and remaining lifecycle/profile, coexistence, reset, and browser scenarios in separate assignments |
 
 ## 2. Discovery and evidence
 
@@ -338,6 +338,48 @@ Implementation authorized and completed on 2026-10-12; verification remains sepa
 
 ## 9. Completion and handoff
 
+### Initial diagnosis on 2026-10-13, before test execution authorization
+
+- The user supplied a failing E2E summary and explicitly authorized API GET diagnostics.
+  Only existing source/log inspection and API GET requests were performed; no pytest,
+  lint/type checks, Rails runner, seed, reset, or container lifecycle changes were executed.
+- On the installed 6.0.1 server, `projects.json?limit=1&offset=0` returned nine projects
+  for the ordinary fixture user and 21 for the administrator, while echoing `limit: 1`.
+  Offset 1 also returned the complete collection. Installed `ProjectQuery.results_scope`
+  did not apply the supplied pagination options. Project reads now slice a response only
+  when it contains the complete counted collection, matching integer pagination echoes,
+  and distinct positive project IDs. Other endpoints retain strict page validation, and
+  existing response-byte, request, deadline, and query-depth budgets remain enforced.
+- Installed 6.0.1 settings and time-entry validation have no
+  `timelog_accept_closed_issues` setting or corresponding closed-issue restriction.
+  TOOL-042/043 fixtures now record the native unrestricted behavior when that getter is
+  absent, and use the actual getter when available.
+- Installed category routes use `manage_categories`. Owned writer fixture preparation
+  now adds the available category permission names for both fresh and existing fixtures.
+- API GET showed the intended closed fixture active (status 1) and fixture b closed
+  (status 5). Seed project objects retained obsolete nested-set positions after creation
+  and reparenting. Preparation now reloads projects before descendant operations and
+  restores the owned baseline states transactionally, checking descendant ownership and
+  refusing outstanding permission reconciliation. This repair has not been executed.
+- TOOL-042/043 helpers now save captured stdout/stderr to private per-action log files;
+  assertion messages contain only the log path. Setup exceptions no longer lose their
+  diagnostics when no ledger was written or a failed setup removed its ledger.
+- Full-suite failures, including the reporting and Inspector failures, remain pending
+  re-execution after these changes; the supplied summary alone does not prove that every
+  failure shares one of the diagnosed causes. No passing acceptance is claimed.
+
+### Authorized execution on 2026-10-13
+
+The user subsequently authorized running and fixing the complete 6.0.1 E2E command,
+and separately authorized Ruff and mypy. The final exact command exited zero with
+**50 passed, no failed or skipped cases**, and one Pydantic deprecation warning in
+624.41 seconds. Both time-entry cleanup records report zero remaining resources.
+Native rational-hour conversion and owned positive tag seeding resolved the remaining
+failures/skips. Changed Python lint/format and runtime mypy pass; repository-wide mypy
+still reports four errors in the separate documentation package. See the dated
+[6.0.1 evidence](../../testing/evidence/prep-029-redmine-6.0.1.md) for commands, module
+counts, fixes, private log locations, and verification limits.
+
 - [x] Required behavior implemented.
 - [ ] Every requirement has passing acceptance evidence.
 - [ ] Relevant automated tests and repository checks pass.
@@ -346,11 +388,13 @@ Implementation authorized and completed on 2026-10-12; verification remains sepa
 - [x] Contract decisions and dependency order recorded.
 - [x] Task and dashboard planning status synchronized.
 
-Final status: blocked (implementation finished; static checks and testing pending).
+Final status: in progress (6.0.1 full E2E verified; broader PREP-029 acceptance pending).
 
 Outcome: E2E preparation targets the existing 6.0.1 and 7.0.2 stacks and private fixture
-state, with an explicit guarded selected-stack reset. No runtime acceptance is claimed.
+state, with an explicit guarded selected-stack reset. The complete selected 6.0.1 E2E
+suite passes, including Inspector and tag controls. No 7.0.2/reset acceptance is claimed.
 
-Next action: authorize deferred static checks and implement/run meaningful offline lifecycle
-scenarios, followed by per-version live acceptance and cleanup evidence. EVID-001..005 remain
-pending until the corresponding commands actually run.
+Next action: implement/run the remaining offline lifecycle scenarios and verify 7.0.2,
+coexistence, selected reset, and browser supplements in separate assignments. The 6.0.1
+portion of EVID-001 and relevant scoped static checks have passing evidence; the broader
+EVID-001..005 requirements remain incomplete.

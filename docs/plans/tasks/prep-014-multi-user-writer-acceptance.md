@@ -1,5 +1,9 @@
 # prep-014-multi-user-writer-acceptance: Verify caller isolation and resulting write state
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../../configuration.md#separate-writer-deployment).
+
 ## 1. Task identity and status
 
 | Field | Value |

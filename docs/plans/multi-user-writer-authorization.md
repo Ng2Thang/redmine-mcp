@@ -1,5 +1,9 @@
 # Multi-user writer authorization roadmap
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../configuration.md#separate-writer-deployment).
+
 Planning date: 2026-10-05. Target: the repository-pinned Redmine 7.0.2 release.
 This document plans a change; it does not describe deployed behavior or authorize testing.
 Task status is tracked in the [dashboard](index.md). Existing task IDs and acceptance evidence

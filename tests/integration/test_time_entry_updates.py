@@ -1,7 +1,6 @@
 """TOOL-042 state, permissions, faults and REST/MCP contracts without network access."""
 
 import copy
-import hashlib
 import json
 from typing import Any
 
@@ -346,7 +345,6 @@ async def test_matched_committed_state_does_not_promote_unexpected_receipt(
         (
             {
                 "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "personal_key",
                 "redmine_writer_operations": "create_issue",
             },
             403,
@@ -354,25 +352,13 @@ async def test_matched_committed_state_does_not_promote_unexpected_receipt(
         (
             {
                 "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "personal_key",
                 "redmine_writer_operations": "update_time_entry",
-                "redmine_writer_user_ids": "8",
-            },
-            403,
-        ),
-        (
-            {
-                "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "pinned_key",
-                "redmine_writer_operations": "update_time_entry",
-                "redmine_writer_key_sha256": hashlib.sha256(KEY.encode()).hexdigest(),
-                "redmine_writer_user_ids": "3",
             },
             200,
         ),
     ],
 )
-async def test_reader_operation_account_and_pinned_gates(
+async def test_reader_and_operation_gates(
     application_factory: Any, synthetic: Any, config: dict[str, Any], expected: int
 ) -> None:
     async with application_factory(**config) as app:

@@ -67,7 +67,7 @@ preflight and accepted-write read-back cases. The earlier catalog ledger predate
 
 The four tools manage memberships in selected projects. Listing is available on the reader;
 all mutations require the separate enabled writer, its operation allowlist and project-level
-`manage_members`. Pinned-key and personal-key restrictions apply, including to administrators.
+`manage_members`. Deployment operation gates and native permissions apply, including to administrators.
 
 | Tool | REST endpoint | Inputs |
 |---|---|---|
@@ -318,22 +318,22 @@ The tool uses only the caller's key, caches role evidence within a request, and 
 or permission-probing tool calls. Role API 403/404 produces unknown permissions; other upstream
 failures use normal application errors. It is available on both reader and writer deployments.
 
-The separate writer supports default `pinned_key` authentication and explicit `personal_key`
-mode for multiple callers. Each request supplies its own Redmine key. Personal-mode user IDs
-restrict writes only; deployment operation gates and upstream resource permissions still apply.
+The separate writer uses each caller's personal Redmine API key. Writes require
+`REDMINE_WRITE_ENABLED=true`, configured operations and upstream resource permissions.
+There is no separate writer key hash or user ID admission list.
 MCP sessions cannot be shared across users/keys. See [configuration](configuration.md).
 
-In personal-key mode, writes use caller memberships and role permissions for necessary checks
+Writes use caller memberships and role permissions for necessary checks
 in the real target project. Permission in another project does not authorize the target. Missing
 or partial metadata remains unknown; Redmine still checks every write using the caller key.
 Mixed issue updates can apply permitted fields/notes while ignoring others, as shown by read-back
 verification. Local checks preserve that behavior and do not promise unrestricted field access.
 
-Personal-key `tools/list` returns read tools plus permitted write candidates within the writer's
+Writer `tools/list` returns read tools plus permitted write candidates within the writer's
 configured operation ceiling. Known denied writes are omitted; conditional/unknown candidates
 remain discoverable. A tool may be usable in one project and forbidden in another. Re-list tools
 to refresh role evidence after a permission change; each invocation rechecks access even if the
-client cached an older catalog. Pinned-key mode retains the common configured catalog.
+client cached an older catalog.
 
 The MCP endpoint is `http://localhost:8000/mcp` using Streamable HTTP. Supply
 `X-Redmine-API-Key: <your personal Redmine API key>` for MCP and REST tools. The server exposes only the

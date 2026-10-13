@@ -1,10 +1,9 @@
 # Development
 
 The reader remains read-only. To develop the separate writer for multiple callers, use
-`REDMINE_WRITER_AUTH_MODE=personal_key`, clear `REDMINE_WRITER_KEY_SHA256`, and optionally restrict
-write admission with `REDMINE_WRITER_USER_IDS`. Each caller supplies a personal Redmine key.
-Default pinned-key mode retains the existing single-key configuration. See
-[configuration](configuration.md#separate-writer-deployment) for migration and session behavior.
+`REDMINE_WRITE_ENABLED=true` and configure `REDMINE_WRITER_OPERATIONS`. Each caller supplies
+a personal Redmine API key. No key hash or user ID admission configuration is required. See
+[writer configuration](configuration.md#separate-writer-deployment).
 
 ## Environment
 
@@ -59,7 +58,7 @@ The new projects do not adopt or delete old test-project volumes or local state.
 
 | Redmine | Project | Redmine port | PostgreSQL port | MCP reader / optional writer |
 |---|---|---|---|---|
-| 7.0.2 | `redmine-mcp-dev-7-0-2` | 3002 | 5433 | 8000 / 8001 |
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | 8001 | 5433 | 8000 / 8004 |
 | 6.0.1 | `redmine-mcp-dev-6-0-1` | 3001 | 5436 | 8002 / 8003 |
 
 Before starting containers, the script checks the three required ports and reports the

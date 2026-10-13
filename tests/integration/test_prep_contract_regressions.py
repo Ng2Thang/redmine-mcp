@@ -118,7 +118,6 @@ async def test_malformed_issue_zero_dispatch_or_preserved_receipt(
 async def test_binary_cap_boundaries(application_factory, synthetic, boundary, size):
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations="upload_attachment",
         redmine_max_binary_bytes=3,
     ) as app:

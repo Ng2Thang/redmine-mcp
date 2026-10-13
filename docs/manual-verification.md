@@ -49,7 +49,7 @@ Implement/execute TOOL-041-001..009 in a separately authorized testing assignmen
 - Add request/service/gateway coverage for numeric/date validation, supplied nulls, unsupported
   user/project/custom/batch fields, strict IDs, comments, exact POST body and resolved project
   query parameter, caller attribution and native default selection.
-- Cover pinned/personal auth, disabled writer, account/operation gates, explicit CSV/allowed_all,
+- Cover caller authentication, disabled writer, operation gates, explicit CSV/allowed_all,
   issue-derived `log_time`, conditional/unknown evidence, native denied targets, and callers who
   can log own time but cannot view time entries.
 - Cover accepted/mismatching/unavailable independent GETs, native minute/two-decimal rounding,
@@ -81,7 +81,7 @@ Future authorized rechecks retain the following coverage:
 - Cover strict partial-update inputs, supplied null/empty/unknown body rejection, comments
   clearing and date/hour/activity rules. Verify exact issue/entry/project/user preflight;
   malformed/wrong-target responses must send no PUT. Omitted fields must not enter the payload.
-- Cover credited user versus submitting author, own/all/no-edit/log-only callers, pinned/personal
+- Cover credited user versus submitting author, own/all/no-edit/log-only callers, caller authentication, deployment
   modes, writer gates, discovery, capability reports, explicit CSV and allowed_all. Role evidence
   remains conditional/unknown; native visibility/editability is final.
 - Cover no-body 204, native hour rounding, matched/mismatch/unavailable observations, GET failure,
@@ -108,7 +108,7 @@ scoped checks and exact cleanup. Future authorized rechecks retain TOOL-043-001.
   preflight, missing/project-only/malformed targets and zero DELETE on rejection. Verify exactly
   one native DELETE with no body/query and no retries.
 - Add permission and REST/MCP tests for own credited user versus author, all/no-edit/no-view,
-  pinned/personal modes, gates, explicit CSV/allowed_all, conditional capability reports and
+  caller authentication and deployment gates, explicit CSV/allowed_all, conditional capability reports and
   destructive/non-idempotent hints. Update shared catalog operation maps and synthetic transport
   fixtures to support this new operation while preserving reader/update/creation cases.
 - Cover native 204, dispatched timeout/5xx/unexpected 2xx, validation rejection and known
@@ -297,14 +297,15 @@ than treating that earlier deferral as the current result. These procedures rema
 an authorized regression assignment.
 
 For separately authorized multi-user verification on the marked synthetic writer, use distinct
-ordinary personal keys privately. In personal-key mode verify both users can read/connect and
-an excluded write-admission user receives 403 for writes. Reusing a session ID with a different
+ordinary personal keys privately. Verify both users can read/connect and attempt configured
+writes according to their native permissions without a writer key or user admission list.
+Reusing a session ID with a different
 user or rotated key must return 404 before dispatch, including GET and DELETE; the original
 caller must retain its session. The detailed fixture/state matrix is in
 [prep-014](plans/tasks/prep-014-multi-user-writer-acceptance.md). Do not execute those writes merely
 to perform a reader smoke check.
 
-For personal-key discovery, compare two users with contrasting complete project memberships.
+For writer discovery, compare two users with contrasting complete project memberships.
 Their write candidates should differ while reader names, schemas and annotations remain stable.
 Call a hidden or previously cached tool directly: its current permissions must still be checked.
 Repeat discovery after changing only an owned synthetic role; no other user's catalog may change.
@@ -365,7 +366,7 @@ shared users, projects and memberships.
    On a continued-page batch, make one project exceed its page scope while another fits;
    require the scoped rejection and the other project's readable page in the same result.
 4. Configure only authorized membership writer operations. Check disabled gates, missing
-   operations, user restrictions, pinned/personal-key modes, scoped capability reports and
+   operations, caller authentication, native permissions, scoped capability reports and
    caller-specific discovery. An administrator must still pass MCP gates.
 5. Submit invalid IDs/arrays/extra fields, duplicates, mismatched membership/project IDs,
    group writes and inherited deletes. A mixed batch with one known failure must perform
@@ -393,7 +394,7 @@ shared users, projects and memberships.
 
 For the automated E2E fixture environment, follow
 [versioned stack preparation](testing-roadmap.md#selecting-a-redmine-release).
-PREP-029 reuses the 6.0.1 stack on localhost:3001 and 7.0.2 on localhost:3002.
+PREP-029 reuses the 6.0.1 stack on localhost:3001 and 7.0.2 on localhost:8001.
 The built-in projects are `redmine-mcp-dev-6-0-1` and `redmine-mcp-dev-7-0-2`. They use
 self-contained Compose files and ignore root `.env`. Their demo seed manifests live in
 Docker's `seed_state` volumes; E2E manifests and logs live in `.local/e2e/<project>/`.

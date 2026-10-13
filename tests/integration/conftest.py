@@ -470,7 +470,6 @@ def application_factory(monkeypatch: Any, synthetic: Any) -> Any:
 async def writer_app(application_factory: Any) -> Any:
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations=",".join(WRITE_OPERATIONS),
     ) as app:
         yield app

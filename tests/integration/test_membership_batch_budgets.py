@@ -57,7 +57,6 @@ async def test_invalid_last_target_prevents_entire_batch(writer_app, synthetic, 
 async def test_reader_cap_does_not_override_batch_policy(application_factory, synthetic):
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations="update_project_members",
         redmine_read_operation_max_requests=1,
     ) as app:

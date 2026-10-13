@@ -129,13 +129,13 @@ extra MCP arguments explicitly while preserving the existing policy of other ope
 Standalone `allowed_all` expands to registered write IDs before catalog, REST and capability
 checks, including future registered writes after upgrade. It does not bypass other gates.
 
-The writer defaults to pinned-key authentication. Explicit personal-key mode authenticates
-multiple callers independently and applies an optional user list only at the write boundary.
+The writer authenticates each caller independently with their personal Redmine API key.
+`REDMINE_WRITE_ENABLED` controls write deployment access; no key or user admission list applies.
 The MCP dependency adapts the authenticated caller to the SDK session-owner identity without
 storing the raw key in its token object. SDK 1.30.0 owns stateful session binding and cleanup;
 credential changes cannot reuse an existing session. Read/write deployment gates remain in REST.
 
-Personal-key feature services invoke the typed `WriteAuthorizer` port after validated inputs.
+Writer feature services invoke the typed `WriteAuthorizer` port after validated inputs.
 `auth/capabilities.py` combines necessary permission expressions with explicit denied, conditional
 and unknown evidence. `integrations/redmine/capabilities.py` reads the caller profile/roles and
 resolves real issue, journal, relation and attachment targets through same-key reads. Capability
@@ -144,9 +144,9 @@ aggregate deadline. Visibility/ownership/field/tracker/workflow conditions still
 local permission presence never substitutes for upstream authorization. Existing write gateways
 retain container proof, accepted/uncertain outcomes, no automatic retries and independent read-back.
 
-`mcp/discovery.py` installs a raw SDK ListToolsRequest handler for personal writers and reads the
+`mcp/discovery.py` installs a raw SDK ListToolsRequest handler for enabled writers and reads the
 authenticated original request context. It returns request-local copies filtered by deployment
-admission and capability evidence. The complete generated catalog remains the immutable schema
+operation scope and capability evidence. The complete generated catalog remains the immutable schema
 superset for invocation. The adapter seeds SDK 1.30.0's cache once instead of using its list-tools
 decorator, which mutates shared schema state. Missing context fails closed; unknown permission
 coverage remains a candidate and is resolved through the same REST boundary at invocation.

@@ -26,7 +26,7 @@ the separate owned E2E fixtures.
 
 | Service | Address |
 |---|---|
-| Redmine (7.0.2) | `http://localhost:3002` |
+| Redmine (7.0.2) | `http://localhost:8001` |
 | Swagger | `http://localhost:8000/docs` |
 | MCP Streamable HTTP | `http://localhost:8000/mcp` |
 | Liveness | `http://localhost:8000/health` |
@@ -53,7 +53,7 @@ Both versions can run concurrently with these fixed localhost ports:
 
 | Redmine | Redmine port | PostgreSQL port | MCP reader / optional writer |
 |---|---|---|---|
-| 7.0.2 | 3002 | 5433 | 8000 / 8001 |
+| 7.0.2 | 8001 | 5433 | 8000 / 8004 |
 | 6.0.1 | 3001 | 5436 | 8002 / 8003 |
 
 The development files contain fixed local credentials and synthetic markers. Root `.env` is
@@ -278,9 +278,9 @@ for Redmine running on the Windows host. Hosting, HTTPS ingress, and OAuth remai
 ## Separate writer
 
 For the separate restricted writer, prepare an ignored `.local/writer.env` using
-[configuration](configuration.md#separate-writer-deployment). Keep its Redmine URL and caller
-restrictions private. Default pinned-key mode requires a key digest and admitted user IDs;
-personal-key mode requires an empty digest and supports an optional write-only user list.
+[configuration](configuration.md#separate-writer-deployment). Set `REDMINE_WRITE_ENABLED=true`
+and configure the operation ceiling. Each caller supplies a valid personal Redmine API key;
+there is no writer key hash or user ID admission list.
 Use ordinary users with the least native permissions for the intended projects.
 
 Choose the needed IDs from the [tool reference](tool-reference.md), for example
@@ -301,7 +301,7 @@ continues to use port 8000; base Compose forces its `REDMINE_WRITE_ENABLED=false
 Changing the env-file requires recreating the writer service with the startup command above;
 refresh client connections and tool lists afterward. Personal-key discovery is caller-specific
 and reports candidates, not guaranteed target access. Direct/cached calls still enforce current gates.
-Do not share `docker compose config` output because it includes the writer key digest.
+Keep `docker compose config` output private because it can include deployment secrets.
 
 For a synthetic writer, use the already marked synthetic instance with its own ignored writer
 configuration and a reachable Redmine URL. Do not add the synthetic override to this separate

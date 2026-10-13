@@ -16,7 +16,7 @@ services:
     environment:
       REDMINE_WRITE_ENABLED: "false"
       REDMINE_URL: http://redmine:3000
-      REDMINE_PUBLIC_URL: http://localhost:3002
+      REDMINE_PUBLIC_URL: http://localhost:8001
     depends_on:
       redmine:
         condition: service_healthy
@@ -28,13 +28,12 @@ services:
       dockerfile: deploy/Dockerfile
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8001:8000"
+      - "127.0.0.1:8004:8000"
     environment:
       REDMINE_WRITE_ENABLED: "true"
-      REDMINE_WRITER_AUTH_MODE: personal_key
       REDMINE_WRITER_OPERATIONS: ""
       REDMINE_URL: http://redmine:3000
-      REDMINE_PUBLIC_URL: http://localhost:3002
+      REDMINE_PUBLIC_URL: http://localhost:8001
     depends_on:
       redmine:
         condition: service_healthy
@@ -75,7 +74,7 @@ services:
       RAILS_ENV: production
       REDMINE_PLUGINS_MIGRATE: "1"
     ports:
-      - "127.0.0.1:3002:3000"
+      - "127.0.0.1:8001:3000"
     volumes:
       - redmine_files:/usr/src/redmine/files
       - ./redmine-plugins:/opt/redmine/plugins:ro

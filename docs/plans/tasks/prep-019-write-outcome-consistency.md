@@ -1,5 +1,9 @@
 # prep-019-write-outcome-consistency: Preserve uncertainty across every writer
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../../configuration.md#separate-writer-deployment).
+
 ## 1. Task identity and status
 
 | Field | Value |

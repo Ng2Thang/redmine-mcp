@@ -454,7 +454,6 @@ async def test_allowed_all_admits_every_individual_writer(
 ) -> None:
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations="allowed_all",
     ) as app:
         await test_all_writer_success_and_single_dispatch(app, synthetic, case, boundary)

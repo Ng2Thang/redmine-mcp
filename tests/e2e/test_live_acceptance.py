@@ -193,18 +193,6 @@ async def test_ownership_tracker_and_project_state_permissions(
             )
 
 
-async def test_deployment_admission_applies_even_to_admin(live: Any) -> None:
-    await assert_ownership(live)
-    async with live.client(user="admin", admitted=live.manifest["users"]["a"]["id"]) as client:
-        read = await client.get("/api/v1/projects")
-        assert read.status_code == 200
-        write = await client.post(
-            "/api/v1/issues",
-            json={"project_id": live.manifest["projects"]["a"], "subject": "denied"},
-        )
-        assert write.status_code == 403
-
-
 async def test_separate_reader_deployment_cannot_write(live: Any) -> None:
     await assert_ownership(live)
     async with live.application(writer=False) as app:

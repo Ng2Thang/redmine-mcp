@@ -18,6 +18,32 @@ shared Redmine instance or a real customer environment.
 
 ## Commands for an authorized assignment
 
+### Registered tool coverage
+
+`tests/e2e/test_mcp_tool_lifecycles.py` adds 22 cases covering the 36 registered MCP tools:
+18 independent reader scenarios and four write lifecycles covering all 18 writes. Reader
+cases compare caller-visible IDs and selected fields with native Redmine. Write cases check
+receipts and resulting native state for issues/notes, relations/watchers, files/attachments,
+time entries, versions and memberships. Owned fixtures clean up disposable resources.
+
+These additions have not yet been executed on 6.0.1 or 7.0.2. They supplement the existing
+permission, visibility, retry and Inspector cases; tool coverage does not imply exhaustive
+argument or permission coverage. The retired `download_attachment` is outside the catalog.
+The MCP SDK uses the application's existing in-process ASGI transport with real requests
+to the selected Redmine container. Run cases sequentially rather than with parallel workers.
+
+For an authorized focused run:
+
+```bash
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e/test_mcp_tool_lifecycles.py --run-e2e
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e/test_mcp_tool_lifecycles.py --run-e2e
+```
+
+See the [coverage matrix](../docs/plans/testing-coverage.md#mcp-catalog-lifecycle-additions)
+for the mapping from tool names to cases and assertions.
+
+### Layer and full-suite commands
+
 Run from Git Bash at the repository root:
 
 ```bash
@@ -49,7 +75,7 @@ instances. Built-in profiles use no env file and ignore root `.env`.
 | Version | Compose project | Redmine address | Private manifests and logs |
 | --- | --- | --- | --- |
 | 6.0.1 | `redmine-mcp-dev-6-0-1` | `http://127.0.0.1:3001` | `.local/e2e/redmine-mcp-dev-6-0-1/` |
-| 7.0.2 | `redmine-mcp-dev-7-0-2` | `http://127.0.0.1:3002` | `.local/e2e/redmine-mcp-dev-7-0-2/` |
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | `http://127.0.0.1:8001` | `.local/e2e/redmine-mcp-dev-7-0-2/` |
 
 The E2E overlay mounts the selected private directory at `/e2e-state`. Development seed
 manifests stay in the separate `seed_state` Docker volume at `/seed-state`.

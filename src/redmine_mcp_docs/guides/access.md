@@ -32,12 +32,11 @@ Writer setup requires all of the following:
 
 - `REDMINE_WRITE_ENABLED=true` in the writer runtime.
 - A nonempty `REDMINE_WRITER_OPERATIONS` list containing the intended actions.
-- Caller admission through `pinned_key` or explicitly configured `personal_key` mode.
+- A valid personal Redmine API key supplied by each caller.
 - Native Redmine permissions for the actual target.
 
-Pinned-key mode requires a private key digest and admitted user IDs. Personal-key mode
-authenticates each caller separately, requires an empty digest, and can restrict admitted
-user IDs. Follow the linked configuration for exact values and commands.
+Each caller authenticates separately. The server does not check a writer key hash or user ID
+admission list. Follow the linked configuration for exact values and commands.
 
 An explicit operation list limits scope. Standalone `allowed_all` permits every registered
 write, including new registrations after an upgrade. Restart or recreate the writer as

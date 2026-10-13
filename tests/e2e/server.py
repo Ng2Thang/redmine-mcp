@@ -3,7 +3,6 @@
 import json
 from typing import Any
 
-
 from redmine_mcp.app import create_app as application
 from redmine_mcp.auth import WRITE_OPERATIONS
 from redmine_mcp.config import Settings
@@ -12,16 +11,12 @@ from tools.testing.e2e_config import PROJECT, STATE, URL, VERSION
 
 
 def create_app() -> Any:
-    manifest = preflight()
+    preflight()
     return application(
         Settings(
             _env_file=None,
             redmine_url=URL,
             redmine_write_enabled=True,
-            redmine_writer_auth_mode="personal_key",
-            redmine_writer_user_ids=",".join(
-                str(row["id"]) for name, row in manifest["users"].items() if name != "admin"
-            ),
             redmine_writer_operations=",".join(WRITE_OPERATIONS),
         )
     )
@@ -33,16 +28,12 @@ def create_reader_app() -> Any:
 
 
 def create_allowed_all_app() -> Any:
-    manifest = preflight()
+    preflight()
     return application(
         Settings(
             _env_file=None,
             redmine_url=URL,
             redmine_write_enabled=True,
-            redmine_writer_auth_mode="personal_key",
-            redmine_writer_user_ids=",".join(
-                str(row["id"]) for name, row in manifest["users"].items() if name != "admin"
-            ),
             redmine_writer_operations="allowed_all",
         )
     )
@@ -53,7 +44,8 @@ def create_time_entry_update_app() -> Any:
     path = STATE / "tool042-fixtures.json"
     fixture = json.loads(path.read_text())
     if (
-        fixture.get("owner") != "tool-042" or fixture.get("version") != VERSION
+        fixture.get("owner") != "tool-042"
+        or fixture.get("version") != VERSION
         or fixture.get("project") != PROJECT
     ):
         raise ValueError("Unexpected TOOL-042 fixture ownership")
@@ -62,8 +54,6 @@ def create_time_entry_update_app() -> Any:
             _env_file=None,
             redmine_url=URL,
             redmine_write_enabled=True,
-            redmine_writer_auth_mode="personal_key",
-            redmine_writer_user_ids=",".join(str(row["id"]) for row in fixture["users"].values()),
             redmine_writer_operations="update_time_entry",
         )
     )
@@ -74,7 +64,8 @@ def create_time_entry_delete_app() -> Any:
     path = STATE / "tool043-fixtures.json"
     fixture = json.loads(path.read_text())
     if (
-        fixture.get("owner") != "tool-043" or fixture.get("version") != VERSION
+        fixture.get("owner") != "tool-043"
+        or fixture.get("version") != VERSION
         or fixture.get("project") != PROJECT
     ):
         raise ValueError("Unexpected TOOL-043 fixture ownership")
@@ -83,8 +74,6 @@ def create_time_entry_delete_app() -> Any:
             _env_file=None,
             redmine_url=URL,
             redmine_write_enabled=True,
-            redmine_writer_auth_mode="personal_key",
-            redmine_writer_user_ids=",".join(str(row["id"]) for row in fixture["users"].values()),
             redmine_writer_operations="delete_time_entry",
         )
     )

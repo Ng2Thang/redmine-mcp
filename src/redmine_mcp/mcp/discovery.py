@@ -32,10 +32,7 @@ def install_caller_discovery(
             raise McpError(ErrorData(code=INTERNAL_ERROR, message=auth_text.PERMISSION_DENIED))
         settings = get_settings(request)
         candidates: frozenset[str] = frozenset()
-        admitted = not settings.writer_user_ids or (
-            context.principal.redmine_user_id in settings.writer_user_ids
-        )
-        if settings.personal_writer and admitted and write_operations:
+        if settings.redmine_write_enabled and write_operations:
             capabilities = build_capabilities(
                 get_upstream(request), context.api_key, settings, context.principal
             )

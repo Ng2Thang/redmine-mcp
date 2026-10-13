@@ -70,7 +70,7 @@ Update documentation when configuration or public tool contracts change.
 Keep API keys, bearer tokens, and snapshots out of Git and logs. The registered catalog
 contains 18 reads and 18 writes. The default reader remains read-only; implemented writes
 require an explicitly enabled separate writer deployment, personal Redmine API keys,
-pinned-key or personal-key admission, configured operation gates, and native permissions.
+configured operation gates and native permissions; no key or user admission list applies.
 New writes must satisfy the tool workflow prerequisites; administrative seeding stays
 separate. Bind published ports to localhost; PostgreSQL uses host port 5433.
 Reset/restore helpers must validate the synthetic

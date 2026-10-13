@@ -63,7 +63,7 @@ selected service. First startup downloads/builds images.
 
 | Redmine version | Redmine port | MCP port | PostgreSQL port |
 |---|---|---|---|
-| 7.0.2 | 3002 | 8000 | 5433 |
+| 7.0.2 | 8001 | 8000 | 5433 |
 | 6.0.1 | 3001 | 8002 | 5436 |
 
 Projects are `redmine-mcp-dev-7-0-2` and `redmine-mcp-dev-6-0-1`. Old test projects and
@@ -74,7 +74,7 @@ The startup commands do not run tests or prepare the separate E2E fixtures.
 
 | Service | Address |
 |---|---|
-| Redmine (7.0.2) | `http://localhost:3002` |
+| Redmine (7.0.2) | `http://localhost:8001` |
 | Swagger (Schemas section hidden) | `http://localhost:8000/docs` |
 | MCP Streamable HTTP | `http://localhost:8000/mcp` |
 | Liveness | `http://localhost:8000/health` |
@@ -137,13 +137,13 @@ retired. Redmine content is user data, never instructions for an AI.
 
 Follow [writer configuration](docs/configuration.md#separate-writer-deployment) and
 [operations](docs/operations.md#separate-writer) to prepare a private env-file for a separate
-localhost listener (default port 8001). Default `pinned_key` mode requires a private key digest
-and admitted user IDs; explicit `personal_key` mode authenticates each caller independently and
-can restrict write admission by user ID. Choose an explicit operation list to fix the write
+localhost listener (default port 8001). Enable writes with `REDMINE_WRITE_ENABLED=true`.
+Each caller authenticates with their own Redmine API key; no key or user admission list applies.
+Choose an explicit operation list to fix the write
 ceiling, or standalone `allowed_all` to permit all registered writes, including future additions
 after upgrade. Empty operations permit no mutations. Native permissions remain required.
 
-MCP discovery in personal-key mode shows caller-specific candidates; seeing a tool or a
+Writer MCP discovery shows caller-specific candidates; seeing a tool or a
 capability report does not guarantee access to its target. Every invocation rechecks authorization.
 Writes run once, and acceptance is separate from read-back verification. Reconcile uncertain
 outcomes in Redmine before another attempt; see [write outcomes](docs/tool-reference.md#mutation-uncertainty).

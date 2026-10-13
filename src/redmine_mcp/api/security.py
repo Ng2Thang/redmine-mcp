@@ -1,6 +1,5 @@
 import logging
 from hashlib import sha256
-from hmac import compare_digest
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request
@@ -41,20 +40,11 @@ async def get_auth_context(
     try:
         api_key = normalize_api_key(key)
         settings = get_settings(request)
-        pinned_writer = settings.redmine_write_enabled and not settings.personal_writer
-        if pinned_writer and not compare_digest(
-            sha256(api_key.encode("ascii")).hexdigest(), settings.redmine_writer_key_sha256
-        ):
-            logger.debug(logs_text.AUTHENTICATION, "denied", "pinned_key")
-            raise HTTPException(http_status.HTTP_401_UNAUTHORIZED, auth_text.INVALID_API_KEY)
         service = build_authentication(get_upstream(request), settings)
         async with read_operation(
             read_budget_policy(settings), fresh=not request.url.path.startswith("/api/v1/")
         ):
             context = await service.authenticate(api_key)
-        if pinned_writer and (context.principal.redmine_user_id not in settings.writer_user_ids):
-            logger.debug(logs_text.AUTHENTICATION, "denied", "writer_user_gate")
-            raise HTTPException(http_status.HTTP_403_FORBIDDEN, auth_text.PERMISSION_DENIED)
         logger.debug(logs_text.AUTHENTICATION, "authenticated", "identity_verified")
         return context
     except ApplicationError as exc:
@@ -102,13 +92,6 @@ def require_write_access(
     if not settings.redmine_write_enabled:
         logger.debug(logs_text.AUTHORIZATION, "unknown", "denied", "writer_disabled")
         raise HTTPException(http_status.HTTP_403_FORBIDDEN, auth_text.WRITE_ACCESS_DISABLED)
-    if (
-        settings.personal_writer
-        and settings.writer_user_ids
-        and (context.principal.redmine_user_id not in settings.writer_user_ids)
-    ):
-        logger.debug(logs_text.AUTHORIZATION, "unknown", "denied", "writer_user_gate")
-        raise HTTPException(http_status.HTTP_403_FORBIDDEN, auth_text.PERMISSION_DENIED)
     route = request.scope.get("route")
     if not isinstance(route, APIRoute) or not route.operation_id:
         logger.debug(logs_text.AUTHORIZATION, "unknown", "denied", "unrecognized_route")

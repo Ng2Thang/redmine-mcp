@@ -98,23 +98,11 @@ class LiveEnvironment:
         return data["issue"]
 
     @asynccontextmanager
-    async def application(
-        self, *, writer: Any = True, admitted: Any = None, operations: Any = None
-    ) -> Any:
+    async def application(self, *, writer: Any = True, operations: Any = None) -> Any:
         settings = Settings(
             _env_file=None,
             redmine_url=URL,
             redmine_write_enabled=writer,
-            redmine_writer_auth_mode="personal_key" if writer else "pinned_key",
-            redmine_writer_user_ids=(
-                ",".join(
-                    str(user["id"])
-                    for name, user in self.manifest["users"].items()
-                    if name != "admin"
-                )
-                if admitted is None
-                else str(admitted)
-            ),
             redmine_writer_operations=(operations or ",".join(WRITE_OPERATIONS)) if writer else "",
         )
         app = create_app(settings)
@@ -122,10 +110,8 @@ class LiveEnvironment:
             yield app
 
     @asynccontextmanager
-    async def client(
-        self, *, user: Any = "a", writer: Any = True, admitted: Any = None, operations: Any = None
-    ) -> Any:
-        async with self.application(writer=writer, admitted=admitted, operations=operations) as app:
+    async def client(self, *, user: Any = "a", writer: Any = True, operations: Any = None) -> Any:
+        async with self.application(writer=writer, operations=operations) as app:
             async with httpx.AsyncClient(
                 transport=httpx.ASGITransport(app=app),
                 base_url="http://testserver",

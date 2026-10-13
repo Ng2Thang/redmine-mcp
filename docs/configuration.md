@@ -10,10 +10,7 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 |---|---|---|
 | `REDMINE_URL` | Required | HTTP or HTTPS base URL reachable from MCP; no embedded credentials, query, or fragment. A deployment subpath is supported. |
 | `REDMINE_WRITE_ENABLED` | `false` | Enables the separate writer runtime. Base Compose forces this false on `mcp-server` and true on the opt-in `mcp-writer` profile. |
-| `REDMINE_WRITER_AUTH_MODE` | `pinned_key` | `pinned_key` accepts one configured key; explicit `personal_key` authenticates each caller's own Redmine key. |
-| `REDMINE_WRITER_USER_IDS` | Empty | Positive user ID CSV. Required in enabled pinned-key mode; optional write-only admission list in personal-key mode. Empty personal-key list admits any authenticated caller to attempt enabled writes. |
 | `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs, or standalone `allowed_all` to permit every registered write operation. Empty permits no mutations. Unknown IDs and mixed `allowed_all` lists prevent startup. |
-| `REDMINE_WRITER_KEY_SHA256` | Empty | Private lowercase SHA-256 digest required for enabled pinned-key mode. Must be empty in personal-key mode; conflicting settings prevent startup. |
 | `REDMINE_TIMEOUT_SECONDS` | `20` | Positive finite read/write timeout in seconds; an inactivity timeout, not an end-to-end deadline. |
 | `REDMINE_CONNECT_TIMEOUT_SECONDS` | `5` | Positive finite connection timeout in seconds. |
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
@@ -184,7 +181,7 @@ expensive even with limit one. Repeated previews and different small queries rem
 Attachment content delivery is disabled. The retired content route returns
 `403 attachment_download_disabled` before authentication/upstream work, and cached MCP download
 calls are rejected. Metadata tools return browser links only; no export files are generated.
-Synthetic Compose sets `REDMINE_PUBLIC_URL` to `http://localhost:3002` for 7.0.2 or
+Synthetic Compose sets `REDMINE_PUBLIC_URL` to `http://localhost:8001` for 7.0.2 or
 `http://localhost:3001` for 6.0.1. Use the actual public origin/subpath externally.
 Browser login and Redmine container permissions still apply. The binary byte setting remains
 relevant to writer uploads.
@@ -267,7 +264,7 @@ entry points; the E2E launcher aligns them internally.
 
 | Caller | Redmine address |
 |---|---|
-| Local Python process using synthetic Redmine 7.0.2 / 6.0.1 | `http://localhost:3002` / `http://localhost:3001` |
+| Local Python process using synthetic Redmine 7.0.2 / 6.0.1 | `http://localhost:8001` / `http://localhost:3001` |
 | MCP container with the synthetic Compose override | `http://redmine:3000` |
 | Container accessing Redmine on the Windows host | Use `http://host.docker.internal:<port>` with the actual port. |
 
@@ -276,7 +273,7 @@ The standalone synthetic files explicitly set `REDMINE_URL` to the container ser
 Direct Docker Compose commands allow shell variables to override `--env-file`.
 The synthetic helpers isolate Compose interpolation from inherited shell settings.
 
-Published synthetic endpoints bind to localhost: 7.0.2 uses MCP `8000`, Redmine `3002`,
+Published synthetic endpoints bind to localhost: 7.0.2 uses MCP `8000`, Redmine `8001`,
 PostgreSQL `5433`; 6.0.1 uses `8002`, `3001`, `5436`. These ports are fixed in the versioned
 Compose files; occupied ports cause startup to stop with a diagnostic. Base Compose for
 external Redmine still supports `MCP_HOST_PORT`. MCP listens on container port `8000`.
@@ -301,10 +298,8 @@ Do not share `docker compose config` output because interpolation can expose sec
 
 ## Separate writer deployment
 
-Base Compose always keeps `mcp-server` read-only. The opt-in `mcp-writer` profile binds to
-localhost port `8001` by default (`MCP_WRITER_HOST_PORT`). It needs a separate ignored env-file
-with explicit authentication mode. Default `pinned_key` requires `REDMINE_WRITER_USER_IDS` and
-`REDMINE_WRITER_KEY_SHA256`. Prepare a private file without starting a deployment:
+Base Compose keeps `mcp-server` read-only. The opt-in `mcp-writer` profile binds to
+localhost port `8001` by default (`MCP_WRITER_HOST_PORT`). Prepare a separate ignored env-file:
 
 ```bash
 mkdir -p .local
@@ -312,49 +307,29 @@ cp -n .env.example .local/writer.env
 chmod 600 .local/writer.env
 ```
 
-Edit it privately: set the actual reachable `REDMINE_URL`, `REDMINE_WRITE_ENABLED=true`,
-`REDMINE_WRITER_AUTH_MODE=pinned_key`, the ordinary caller's positive numeric IDs in
-`REDMINE_WRITER_USER_IDS`, and its private digest in `REDMINE_WRITER_KEY_SHA256`.
-Leave `REDMINE_WRITER_OPERATIONS` empty until the intended operation scope is selected.
-These settings belong to the writer env-file; do not replace the reader's configuration.
-The Compose writer forces its write gate true, while a local writer needs the explicit setting.
-Generate the digest locally in Git
-Bash without putting the personal key in a command argument or history:
+Edit it privately to set the reachable `REDMINE_URL`, `REDMINE_WRITE_ENABLED=true`, and
+the intended `REDMINE_WRITER_OPERATIONS`. An empty operation list permits no mutations;
+standalone `allowed_all` permits all registered writes, including future additions.
+These settings belong to the writer env-file. Compose forces the writer gate true;
+a local writer needs the explicit setting.
 
-```bash
-read -rs writer_key; printf '\n'
-printf '%s' "$writer_key" | sha256sum | cut -d ' ' -f 1
-unset writer_key
-```
+Every caller supplies their own `X-Redmine-API-Key`. Authentication verifies the key through
+Redmine, and all upstream calls use that same key. Any authenticated caller can attempt the
+configured writes; native target permissions still decide access. The server has no key hash
+or user ID admission list. Use ordinary users with the needed project roles and restrict access
+to the listener and env-file.
 
-Copy the digest into the ignored writer env-file. Use a dedicated ordinary Redmine user with only
-the needed project roles and personal key; never use an administrator key. Restrict access to the
-writer listener and env-file. The writer compares the key digest before calling Redmine, then
-checks the returned Redmine user ID. A different key receives 401, and a mismatched user receives
-403. Both REST and MCP requests use this boundary. The writer still exposes existing read tools
-to its restricted caller.
-
-For multiple callers, configure the separate ignored writer env-file with:
-
-```bash
-REDMINE_WRITER_AUTH_MODE=personal_key
-REDMINE_WRITER_KEY_SHA256=
-REDMINE_WRITER_USER_IDS=
-```
-
-Each caller supplies their own `X-Redmine-API-Key`; authentication resolves the caller through
-Redmine and every upstream call uses that key. An optional user ID list restricts writes only;
-valid excluded users still read and connect. Empty user IDs do not grant Redmine permissions.
-The configured operation list and upstream permissions remain required. No shared administrator
-key or impersonation is used. Roll back by selecting `pinned_key`, supplying its valid digest
-and user IDs, and reconnecting clients.
+`REDMINE_WRITER_AUTH_MODE`, `REDMINE_WRITER_USER_IDS`, and `REDMINE_WRITER_KEY_SHA256`
+are retired and ignored. Remove them from existing private environment files to avoid confusion.
+Restart the local process or recreate the writer container to load the new code and settings,
+then reconnect clients. Do not roll back to a pinned-key configuration on this version.
 
 All MCP HTTP requests reauthenticate. Stateful sessions bind to user ID, configured Redmine
 issuer and a private key fingerprint through MCP SDK 1.30.0. A different user/key receives the
 same 404 as an unknown session; key rotation requires a new session. Session binding is removed
 on termination, expiry and shutdown. Keys/fingerprints are never returned or logged.
 
-Personal-key writes also read the caller's project memberships and role permissions through
+Writes also read the caller's project memberships and role permissions through
 `users/current.json?include=memberships` and `roles/{id}.json`. The internal capability snapshot
 is request-local and checks the actual project/resource context before dispatch. A known absent
 necessary permission is denied with 403. A present permission is conditional; tracker, workflow,
@@ -363,14 +338,13 @@ membership or inaccessible role metadata is unknown evidence and never proves de
 Malformed metadata, timeout or transport failure stops dispatch with a sanitized upstream error.
 No role-name mapping, administrator substitution or cross-request permission cache is used.
 
-Personal-key MCP discovery returns a caller-specific candidate list. It retains all read tools,
-applies the optional write admission list and configured operations, and hides only writes proved
-unavailable across the caller's completely inventoried visible projects. A project without
+Writer MCP discovery returns a caller-specific candidate list. It retains all read tools,
+applies configured operations, and hides only writes proved unavailable across the caller's
+completely inventoried visible projects. A project without
 membership or role metadata keeps evidence unknown, so potentially usable tools remain visible.
 Visible projects are inventoried in pages of 100, capped by `REDMINE_MAX_QUERY_PAGES` and the
 aggregate read budget. Oversized inventories remain incomplete; partial/changing evidence
-cannot prove denial. Role definitions are deduplicated
-only within this discovery request. Default pinned-key discovery keeps its common catalog.
+cannot prove denial. Role definitions are deduplicated only within this discovery request.
 
 Tool availability does not guarantee permission for a concrete target. Every direct or cached
 tool call still passes REST deployment and resource authorization. A fresh `tools/list` refreshes
@@ -390,7 +364,7 @@ It expands to the code's complete `WRITE_OPERATIONS` catalog for MCP discovery, 
 and project capability reporting, including membership writes. New registered write operations
 are also permitted after upgrading the server. Use an explicit CSV list to keep a fixed scope.
 This option still requires `REDMINE_WRITE_ENABLED=true` on the separate writer deployment;
-writer identity restrictions, caller permissions and native Redmine authorization still apply.
+caller permissions and native Redmine authorization still apply.
 Recreate the Compose writer after changing its env-file using the
 [startup command](operations.md#separate-writer), or restart a local writer process with the
 new environment; a plain Compose restart retains the existing container environment.
@@ -403,7 +377,7 @@ separate ignored writer env-file, for example:
 REDMINE_WRITER_OPERATIONS=add_project_members,update_project_members,delete_project_members
 ```
 
-Retain `REDMINE_WRITE_ENABLED`, pinned/personal-key authentication and user restrictions.
+Retain `REDMINE_WRITE_ENABLED` and authenticate each caller with their personal API key.
 Grant an ordinary caller `manage_members` in each destination project. Role-management limits
 remain native Redmine constraints; this permission does not authorize every role change.
 Membership listing requires no writer setting. Redmine 7.0.2 public `view_members` still checks

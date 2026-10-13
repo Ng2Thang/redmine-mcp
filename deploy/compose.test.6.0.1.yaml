@@ -31,7 +31,6 @@ services:
       - "127.0.0.1:8003:8000"
     environment:
       REDMINE_WRITE_ENABLED: "true"
-      REDMINE_WRITER_AUTH_MODE: personal_key
       REDMINE_WRITER_OPERATIONS: ""
       REDMINE_URL: http://redmine:3000
       REDMINE_PUBLIC_URL: http://localhost:3001

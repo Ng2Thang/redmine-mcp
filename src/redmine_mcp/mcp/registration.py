@@ -65,7 +65,7 @@ def register_mcp(
             )
     annotate_read_tools(mcp.tools)
     compatibility.seed_tool_cache()
-    if settings is not None and settings.personal_writer:
+    if settings is not None and settings.redmine_write_enabled:
         install_caller_discovery(mcp, compatibility=compatibility)
     install_read_limits(
         mcp,

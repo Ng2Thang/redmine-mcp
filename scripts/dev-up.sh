@@ -12,7 +12,7 @@ case "$version" in
 esac
 export REDMINE_TEST_VERSION="$version"
 source "$(dirname -- "$0")/common.sh"
-redmine_port=3002
+redmine_port=8001
 postgres_port=5433
 reader_port=8000
 if [[ "$version" == '6.0.1' ]]; then

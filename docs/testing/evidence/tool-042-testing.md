@@ -1,5 +1,9 @@
 # TOOL-042 testing evidence
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../../configuration.md#separate-writer-deployment).
+
 Date: 2026-10-08. Assignment: implement and execute tests for
 [TOOL-042](../../plans/tasks/tool-042-update-time-entry.md). Earlier coding-only restrictions
 were superseded for this testing stage. No other tool was implemented; TOOL-043 remains planned.

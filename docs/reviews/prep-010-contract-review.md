@@ -1,5 +1,9 @@
 # prep-010 permission and session contract review
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../configuration.md#separate-writer-deployment).
+
 Reviewed 2026-10-05 against the verified Redmine 7.0.2 release archive (SHA-256
 `d45e6d4c373cc3c8d33f1f4d4a2ffae1e1adb18703160707467493de7b4be591`), the current
 repository, FastAPI-MCP 0.4.0, and locked MCP SDK 1.30.0. No target runtime executed.

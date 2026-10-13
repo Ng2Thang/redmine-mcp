@@ -175,7 +175,6 @@ async def test_writer_gates_prevent_native_mutation(
         if gate == "reader"
         else {
             "redmine_write_enabled": True,
-            "redmine_writer_auth_mode": "personal_key",
             "redmine_writer_operations": "create_issue"
             if gate == "allowlist"
             else OPERATIONS[action],
@@ -425,7 +424,6 @@ async def test_scoped_writer_allowlist_exposes_only_selected_operation(
 ) -> None:
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations="delete_project_members",
     ) as app:
         async with mcp_session(app) as session:
@@ -441,7 +439,6 @@ async def test_preflight_budget_rejection_has_zero_writes(
 ) -> None:
     settings = {
         "redmine_write_enabled": True,
-        "redmine_writer_auth_mode": "personal_key",
         "redmine_writer_operations": "update_project_members",
     }
     settings[
@@ -507,7 +504,6 @@ async def test_missing_user_expansion_requires_complete_inventory(
     synthetic.respond = respond
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations="add_project_members",
         redmine_max_query_pages=1 if mode == "scope" else 10,
     ) as app:
@@ -560,27 +556,17 @@ async def test_delete_requires_positive_inventory_absence_proof(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("mode", ["pinned", "personal_restricted"])
-async def test_writer_identity_restrictions(
-    application_factory: Any, synthetic: Any, mode: str
+@pytest.mark.parametrize("key", ["offline-redmine-key", "offline-rotated-key"])
+async def test_writer_accepts_each_valid_caller_key(
+    application_factory: Any, synthetic: Any, key: str
 ) -> None:
-    from hashlib import sha256
-
-    settings = {
-        "redmine_write_enabled": True,
-        "redmine_writer_operations": "update_project_members",
-        "redmine_writer_user_ids": "3" if mode == "pinned" else "999",
-        "redmine_writer_auth_mode": "pinned_key" if mode == "pinned" else "personal_key",
-    }
-    if mode == "pinned":
-        settings["redmine_writer_key_sha256"] = sha256(b"offline-redmine-key").hexdigest()
-    async with application_factory(**settings) as app:
-        status, result = await invoke(app, "update", [item("update")], key="offline-rotated-key")
-        assert status == (401 if mode == "pinned" else 403), result
-        if mode == "pinned":
-            status, result = await invoke(app, "update", [item("update")])
-            assert status == 200 and result["results"][0]["outcome"] == "accepted"
-    assert synthetic.writes == (1 if mode == "pinned" else 0)
+    async with application_factory(
+        redmine_write_enabled=True,
+        redmine_writer_operations="update_project_members",
+    ) as app:
+        status, result = await invoke(app, "update", [item("update")], key=key)
+        assert status == 200 and result["results"][0]["outcome"] == "accepted"
+    assert synthetic.writes == 1
 
 
 @pytest.mark.asyncio
@@ -644,7 +630,6 @@ async def test_allowed_all_admits_each_membership_writer(
 ) -> None:
     async with application_factory(
         redmine_write_enabled=True,
-        redmine_writer_auth_mode="personal_key",
         redmine_writer_operations="allowed_all",
     ) as app:
         await test_native_payload_single_attempt_and_readback(app, synthetic, action, boundary)

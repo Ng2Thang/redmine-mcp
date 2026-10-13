@@ -1,6 +1,17 @@
 # MCP tool roadmap
 
-## Current status (2026-10-09)
+## Writer admission simplification (2026-10-13)
+
+Implemented at the user's request: remove pinned-key digests, writer authentication modes
+and user ID admission lists from settings, REST authentication, MCP discovery, capability
+reporting and deployment examples. Each caller still needs a valid personal Redmine API key.
+Writes require `REDMINE_WRITE_ENABLED=true`, configured operations and native permissions.
+Tests were updated for this contract; automated and live execution remain deferred.
+Earlier pinned-key and user-admission requirements below are historical and superseded.
+See [configuration](../configuration.md#separate-writer-deployment) and the
+[implementation and verification handoff](writer-admission-simplification.md).
+
+## Catalog status (2026-10-09)
 
 The registered catalog contains **18 reads and 18 writes**. The default reader exposes only
 reads; the separate opt-in writer enables configured writes with caller and native permission

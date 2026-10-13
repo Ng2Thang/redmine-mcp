@@ -33,9 +33,9 @@ manager readiness.
 The MCP client connects to `/mcp` with `X-Redmine-API-Key`. MCP initialization negotiates
 protocol capabilities; `tools/list` returns the generated tool definitions, including
 names, descriptions, input schemas, and annotations. The client can use this information
-to choose a tool. Reader and pinned-key writer discovery return the deployment catalog without
-project inventory reads; endpoint authentication still contacts Redmine. Personal-key writer
-discovery can inventory caller-visible projects and read memberships/role permissions to select
+to choose a tool. Reader discovery returns the deployment catalog without project inventory
+reads; endpoint authentication still contacts Redmine. Enabled writer discovery can inventory
+caller-visible projects and read memberships/role permissions to select
 write candidates. Evidence is request-local and bounded. Conditional or unknown candidates
 remain subject to target authorization on invocation; discovery does not grant permission.
 

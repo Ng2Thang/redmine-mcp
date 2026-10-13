@@ -1,7 +1,6 @@
 """TOOL-043 exact deletion, permissions, receipts and REST/MCP contracts offline."""
 
 import copy
-import hashlib
 import json
 from typing import Any
 
@@ -326,7 +325,6 @@ async def test_committed_delete_and_get404_never_promote_uncertainty(
         (
             {
                 "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "personal_key",
                 "redmine_writer_operations": "update_time_entry",
             },
             403,
@@ -334,33 +332,20 @@ async def test_committed_delete_and_get404_never_promote_uncertainty(
         (
             {
                 "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "personal_key",
                 "redmine_writer_operations": "delete_time_entry",
-                "redmine_writer_user_ids": "8",
-            },
-            403,
-        ),
-        (
-            {
-                "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "pinned_key",
-                "redmine_writer_operations": "delete_time_entry",
-                "redmine_writer_user_ids": "3",
-                "redmine_writer_key_sha256": hashlib.sha256(KEY.encode()).hexdigest(),
             },
             200,
         ),
         (
             {
                 "redmine_write_enabled": True,
-                "redmine_writer_auth_mode": "personal_key",
                 "redmine_writer_operations": "allowed_all",
             },
             200,
         ),
     ],
 )
-async def test_reader_operation_user_pinned_and_allowed_all_gates(
+async def test_reader_operation_and_allowed_all_gates(
     application_factory: Any,
     synthetic: Any,
     config: dict[str, Any],

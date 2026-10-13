@@ -29,10 +29,7 @@ class Settings(BaseSettings):
         default=MEMBERSHIP_BATCH_DEFAULTS.deadline_seconds, gt=0, allow_inf_nan=False
     )
     redmine_write_enabled: bool = False
-    redmine_writer_auth_mode: Literal["pinned_key", "personal_key"] = "pinned_key"
-    redmine_writer_user_ids: str = ""
     redmine_writer_operations: str = ""
-    redmine_writer_key_sha256: str = Field(default="", repr=False)
     redmine_timeout_seconds: float = Field(default=20, gt=0, allow_inf_nan=False)
     redmine_connect_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
     redmine_pool_timeout_seconds: float = Field(default=5, gt=0, allow_inf_nan=False)
@@ -76,24 +73,13 @@ class Settings(BaseSettings):
             ):
                 raise ValueError(runtime_text.URL_CONTAINS_QUERY_OR_FRAGMENT)
         if self.redmine_write_enabled:
-            user_ids = [part.strip() for part in self.redmine_writer_user_ids.split(",")]
             operations = [part.strip() for part in self.redmine_writer_operations.split(",")]
-            if (
-                self.redmine_writer_auth_mode == "pinned_key" or self.redmine_writer_user_ids
-            ) and any(not re.fullmatch(r"[1-9][0-9]*", part) for part in user_ids):
-                raise ValueError(runtime_text.WRITER_USER_IDS_REQUIRED)
             if (
                 any(not re.fullmatch(r"[a-z][a-z0-9_]*", part) for part in operations if part)
                 or (self.redmine_writer_operations and any(not part for part in operations))
                 or ("allowed_all" in operations and operations != ["allowed_all"])
             ):
                 raise ValueError(runtime_text.WRITER_OPERATIONS_REQUIRED)
-            if self.redmine_writer_auth_mode == "pinned_key" and not re.fullmatch(
-                r"[0-9a-f]{64}", self.redmine_writer_key_sha256
-            ):
-                raise ValueError(runtime_text.WRITER_KEY_HASH_REQUIRED)
-        if self.redmine_writer_auth_mode == "personal_key" and self.redmine_writer_key_sha256:
-            raise ValueError(runtime_text.PERSONAL_WRITER_HASH_FORBIDDEN)
         return self
 
     @property
@@ -103,16 +89,6 @@ class Settings(BaseSettings):
         return max(
             self.redmine_max_response_bytes,
             4 * ((self.redmine_max_binary_bytes + 2) // 3) + 65536,
-        )
-
-    @property
-    def personal_writer(self) -> bool:
-        return self.redmine_write_enabled and self.redmine_writer_auth_mode == "personal_key"
-
-    @property
-    def writer_user_ids(self) -> frozenset[int]:
-        return frozenset(
-            int(part.strip()) for part in self.redmine_writer_user_ids.split(",") if part.strip()
         )
 
     @property

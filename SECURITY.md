@@ -24,12 +24,12 @@ will assess the report and coordinate remediation and disclosure through the pri
 
 - Each caller supplies a personal Redmine API key; Redmine controls that user's visibility.
   Implemented mutations require a separate opt-in writer, configured operation ceiling,
-  caller admission and native permissions. The default reader remains read-only. Use ordinary
+  and native permissions. The default reader remains read-only. Use ordinary
   users with the least needed roles instead of an administrator key.
 - The server verifies each key against Redmine and resolves the requesting user ID. Application
-  policy explicitly registers read/write operation permissions. Pinned-key writer mode requires
-  a matching private digest and admitted user ID; personal-key mode authenticates each caller
-  and can apply a write-only user list. Capability evidence is request-local; conditional or
+  policy explicitly registers read/write operation permissions. Every authenticated caller
+  can attempt configured writes when `REDMINE_WRITE_ENABLED=true`; no key hash or user ID
+  admission list applies. Capability evidence is request-local; conditional or
   unknown evidence is not a permission grant. Redmine remains authoritative on invocation.
 - Every MCP HTTP request reauthenticates. Stateful sessions bind to user, Redmine issuer and
   a private key fingerprint; another user/key receives 404, and key rotation requires a new

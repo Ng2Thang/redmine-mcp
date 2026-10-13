@@ -1,5 +1,9 @@
 # Detailed DEBUG logging
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../configuration.md#separate-writer-deployment).
+
 ## Implementation contract
 
 Implemented on 2026-10-09 under the user's approved console-only logging plan. Existing

@@ -82,7 +82,7 @@ demo/history datasets. Tests run the MCP application in process with personal us
 | Redmine | Compose project | Host Redmine | Host PostgreSQL | Optional reader / writer | Private E2E state |
 |---|---|---|---|---|---|
 | 6.0.1 | `redmine-mcp-dev-6-0-1` | `127.0.0.1:3001` | `127.0.0.1:5436` | 8002 / 8003 | `.local/e2e/redmine-mcp-dev-6-0-1/` |
-| 7.0.2 | `redmine-mcp-dev-7-0-2` | `127.0.0.1:3002` | `127.0.0.1:5433` | 8000 / 8001 | `.local/e2e/redmine-mcp-dev-7-0-2/` |
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | `127.0.0.1:8001` | `127.0.0.1:5433` | 8000 / 8004 | `.local/e2e/redmine-mcp-dev-7-0-2/` |
 
 Both Redmine containers listen internally on 3000. Use Docker Compose 2.24.4+. Run from Git Bash at the
 repository root, with Docker Desktop running and `uv` available on `PATH`.
@@ -112,7 +112,7 @@ by permission tests remain in place. A failure aborts the session before test ex
 `REDMINE_E2E_VERSION` selects pytest and supplemental tools. `REDMINE_TEST_VERSION` selects
 development lifecycle helpers; the E2E launcher sets it internally to the E2E version.
 An already running 6.0.1 stack does not redirect a 7.0.2 test to port 3001: that command
-selects the separate 7.0.2 development project on port 3002.
+selects the separate 7.0.2 development project on port 8001.
 
 For a focused run, keep the version and explicit opt-in flag:
 
@@ -244,7 +244,7 @@ npx @modelcontextprotocol/inspector@2.8.0
 
 Connect privately to `http://127.0.0.1:18081/mcp` with an owned ordinary user's key.
 This example uses 6.0.1; use `REDMINE_E2E_VERSION=7.0.2` for an already prepared 7.0.2 target.
-Use the selected profile's Redmine URL (3001 for 6.0.1, 3002 for 7.0.2); never put keys into URLs or screenshots.
+Use the selected profile's Redmine URL (3001 for 6.0.1, 8001 for 7.0.2); never put keys into URLs or screenshots.
 
 ### Preparation troubleshooting
 

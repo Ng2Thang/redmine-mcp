@@ -1,5 +1,9 @@
 # Current catalog acceptance ledger
 
+> Writer admission update (2026-10-13): pinned-key and user ID admission checks
+> are retired. Earlier requirements and evidence below describe historical behavior.
+> See [current configuration](../../configuration.md#separate-writer-deployment).
+
 Date: 2026-10-07. Owner: [prep-020](../../plans/tasks/prep-020-current-catalog-acceptance.md).
 Target: owned Redmine **7.0.2**, digest pinned in `deploy/compose.test.yaml`.
 Scope: 17 reads and 15 writes from `auth/policy.py`; MCP reader registration agrees with

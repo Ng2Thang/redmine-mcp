@@ -19,7 +19,7 @@ identity. Put the key in private HTTP header settings, never tool arguments.
 
 The examples use the local Python reader or the 7.0.2 development stack on port 8000.
 For the 6.0.1 development stack, substitute port 8002 in MCP, REST, and schema URLs.
-The corresponding Redmine browser addresses are 3002 for 7.0.2 and 3001 for 6.0.1.
+The corresponding Redmine browser addresses are 8001 for 7.0.2 and 3001 for 6.0.1.
 
 ## Optional: connect with MCP Inspector
 

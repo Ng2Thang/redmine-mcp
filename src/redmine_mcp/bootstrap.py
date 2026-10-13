@@ -109,18 +109,16 @@ def build_container(
     attachment_updates = RedmineAttachmentUpdates(client, writer)
     authorizer = (
         build_capabilities(http, api_key, settings, principal)
-        if settings is not None and settings.personal_writer
+        if settings is not None and settings.redmine_write_enabled
         else None
     )
-    admitted = settings is not None and settings.redmine_write_enabled and principal is not None
-    if admitted and settings is not None and principal is not None:
-        admitted = not settings.writer_user_ids or (
-            principal.redmine_user_id in settings.writer_user_ids
-        )
+    authenticated_writer = (
+        settings is not None and settings.redmine_write_enabled and principal is not None
+    )
     operations = tuple(
         operation
         for operation in WRITE_OPERATIONS
-        if admitted and settings is not None and operation in settings.writer_operations
+        if authenticated_writer and settings is not None and operation in settings.writer_operations
     )
     return Container(
         AttachmentService(

@@ -54,6 +54,33 @@ that port in your client. Stop the Docker MCP service before using its port loca
 
 Continue with [MCP client installation](get-started.md), using `http://127.0.0.1:8000/mcp`.
 
+### Start from an existing `.env`
+
+If the repository root already contains your configured `.env`, open a fresh Git Bash
+terminal there and run:
+
+```bash
+uv sync --frozen
+REDMINE_WRITE_ENABLED=false uv run --frozen uvicorn redmine_mcp.app:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+The application loads `.env` automatically. Set `REDMINE_URL` to the Redmine address
+reachable from Windows; `REDMINE_URL_LOCAL` is not a runtime setting. Exported shell
+variables take precedence over `.env`. The command above explicitly starts a reader,
+even if the file contains `REDMINE_WRITE_ENABLED=true`.
+
+For a new external-instance configuration, copy `.env.example` to `.env` only if no
+`.env` exists, then edit `REDMINE_URL` before starting. Keep personal API keys in your
+client's private `X-Redmine-API-Key` header settings.
+
+The MCP endpoint is `http://127.0.0.1:8000/mcp`, and the REST reference is
+`http://127.0.0.1:8000/docs`. Local Python uses the command's `--port`; `MCP_HOST_PORT`
+and `MCP_WRITER_HOST_PORT` configure Docker Compose ports only.
+
+Leave this terminal open while using MCP. Stop with Ctrl+C, then rerun the startup
+command to restart or apply `.env` changes. Writer setup is documented under
+[reader and writer access](access.md).
+
 ## Docker with sample data
 
 Start Docker Desktop, then run:
@@ -72,7 +99,7 @@ It checks for occupied ports before startup and reuses services belonging to the
 | Setting | Redmine 7.0.2 | Redmine 6.0.1 |
 | --- | --- | --- |
 | Compose project | `redmine-mcp-dev-7-0-2` | `redmine-mcp-dev-6-0-1` |
-| Sample Redmine | `http://localhost:3002` | `http://localhost:3001` |
+| Sample Redmine | `http://localhost:8001` | `http://localhost:3001` |
 | Reader MCP URL | `http://localhost:8000/mcp` | `http://localhost:8002/mcp` |
 | REST API reference | `http://localhost:8000/docs` | `http://localhost:8002/docs` |
 | PostgreSQL | `localhost:5433` | `localhost:5436` |
@@ -93,9 +120,43 @@ fixtures automatically; development startup and the large demo/history datasets 
 
 ## Docker with existing Redmine
 
-Use the [external Redmine deployment steps](../docs/operations.md#external-redmine) to prepare
-`.local/external.env` and start the MCP-only Compose deployment. Docker Desktop must be running
-with Linux containers. Do not use the sample environment's seed/reset/restore helpers here.
+Start Docker Desktop with Linux containers. Prepare a separate configuration once:
+
+```bash
+mkdir -p .local
+cp -n .env.example .local/external.env
+```
+
+Edit `.local/external.env` and set `REDMINE_URL` to an address reachable from the container.
+For Redmine on the Windows host, use `http://host.docker.internal:3000`, replacing the port
+with your Redmine port. For a remote instance, use its actual HTTPS URL. Set
+`REDMINE_PUBLIC_URL`, if needed, to the address users open in their browser, and keep
+`REDMINE_TEST_MARKER` blank for a real instance.
+
+Start the MCP reader from the repository root:
+
+```bash
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
+docker compose -p redmine-mcp-external --env-file .local/external.env -f deploy/compose.yaml up -d --build mcp-server
+```
+
+Docker runs the server in the background. With the default `MCP_HOST_PORT=8000`, connect
+to `http://127.0.0.1:8000/mcp`. Base Compose keeps this service read-only. Use the separate
+[writer deployment](../docs/operations.md#separate-writer) for write actions, with a distinct
+`MCP_WRITER_HOST_PORT` such as `8001` when the reader uses `8000`.
+
+View startup logs or stop the reader with:
+
+```bash
+docker compose -p redmine-mcp-external --env-file .local/external.env -f deploy/compose.yaml logs --follow --tail=100 mcp-server
+docker compose -p redmine-mcp-external --env-file .local/external.env -f deploy/compose.yaml stop mcp-server
+```
+
+Press Ctrl+C to leave the log viewer; the container keeps running. Rerun the startup
+command to start a stopped reader or apply configuration changes. This deployment starts
+MCP only and connects to your existing Redmine. See the
+[external Redmine deployment steps](../docs/operations.md#external-redmine) for more details.
 
 Then follow [MCP client installation](get-started.md), using your deployment's `/mcp` URL.
 

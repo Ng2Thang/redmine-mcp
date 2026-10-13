@@ -22,6 +22,46 @@ later self-contained development-stack refactor. Current lifecycle/profile bound
 
 ## Current tools
 
+### MCP catalog lifecycle additions
+
+`tests/e2e/test_mcp_tool_lifecycles.py` adds 22 E2E cases: 18 independently selected
+reader cases and four write lifecycles that together call all 18 registered writes through
+the MCP SDK. These are implemented cases, not passing execution evidence. They have not
+been executed on either 6.0.1 or 7.0.2 as part of this change.
+
+| Cases | Tools | Assertions |
+| --- | --- | --- |
+| Reader identity and advisory scope | `get_current_user`, `list_my_project_capabilities` | Native caller identity and membership roles; scoped project and known membership; advisory read candidate |
+| Reader project discovery and metadata | `list_projects`, `get_project`, `list_project_versions`, `list_project_issue_categories`, `list_project_files`, `list_project_time_entry_activities`, `list_project_members` | Caller-native IDs and selected fields; batch membership outcome; populated reference activities; owned file present |
+| Reader issues, attachments and time | `list_issues`, `get_issue`, `get_attachment`, `list_issue_time_entries`, `list_time_entries` | Native caller-visible IDs and selected fields; explicit issue/project scope; populated disposable attachment |
+| Reader reference catalogs | `list_issue_statuses`, `list_issue_priorities`, `list_document_categories`, `list_trackers` | Populated catalogs with native ID/name parity |
+| Issue lifecycle | `create_issue`, `update_issue`, `update_issue_note`, `create_issue_relation`, `delete_issue_relation`, `add_issue_watcher`, `remove_issue_watcher` | Acceptance/read-back receipts, native subjects and edited journal, relation presence/absence at both endpoints, watcher membership |
+| Project file lifecycle | `upload_attachment`, `add_project_file`, `update_attachment`, `delete_attachment` | Upload receipt, project file membership, native/MCP metadata and byte size, native 404 and list absence after deletion |
+| Time lifecycle | `create_time_entry`, `update_time_entry`, `delete_time_entry` | Credited caller and issue, rational-compatible native hours, unchanged date, both time readers, deletion receipt/native 404 and zero issue total |
+| Version and membership lifecycle | `create_project_version`, `add_project_members`, `update_project_members`, `delete_project_members` | Open/unshared native version, batch receipts, native role replacement and membership absence |
+
+Reader cases also check that a reader deployment exposes exactly `READ_OPERATIONS`.
+The explicit reader case inventory must match that allowlist, so adding a reader requires
+adding its parity scenario. The retired `download_attachment` operation is not registered
+and is excluded from the 36-tool catalog.
+
+The cases reuse the existing preparation and ownership guards. Issue/file cases clean up
+only resources they created; catalog and time fixtures remove their disposable projects,
+roles and users through existing guarded cleanup. Run sequentially: the time fixture uses
+a selected-environment ledger and is not designed for parallel pytest workers.
+
+For a separately authorized focused run from Git Bash:
+
+```bash
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e/test_mcp_tool_lifecycles.py --run-e2e
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e/test_mcp_tool_lifecycles.py --run-e2e
+```
+
+These cases supplement existing permission, visibility, retry, uncertain-write and Inspector
+acceptance. Covering every registered tool does not cover every argument, role, plugin,
+concurrency condition or Redmine release. Native Redmine traffic uses the selected container;
+the MCP SDK connects to the application in process through the existing ASGI test transport.
+
 ### Issue time-entry deletion acceptance
 
 The user separately assigned TOOL-043 testing on 2026-10-08. [Deletion evidence](../testing/evidence/tool-043-testing.md)

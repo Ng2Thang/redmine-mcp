@@ -287,16 +287,14 @@ async def test_missing_or_invalid_credentials(writer_app: Any, synthetic: Any, k
     "settings,key",
     [
         ({"redmine_writer_operations": "create_issue"}, "offline-redmine-key"),
-        ({"redmine_writer_user_ids": "8"}, "offline-redmine-key"),
         ({}, "offline-reader-key"),
     ],
 )
-async def test_deployment_and_user_gates(
+async def test_operation_and_native_permission_gates(
     application_factory: Any, synthetic: Any, settings: Any, key: str
 ) -> None:
     config = {
         "redmine_write_enabled": True,
-        "redmine_writer_auth_mode": "personal_key",
         "redmine_writer_operations": "create_project_version",
         **settings,
     }

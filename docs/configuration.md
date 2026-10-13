@@ -251,6 +251,18 @@ mounted at `/seed-state` in Redmine. Backups use the separate `backup_data` volu
 For Inspector, obtain a personal key privately from Redmine's account page. Fixed development
 credentials belong only to these localhost stacks; external deployments use separate settings.
 
+Live E2E selects the same built-in project with `REDMINE_E2E_VERSION=6.0.1` or `7.0.2`.
+Pytest automatically adds `deploy/compose.e2e.yaml` and prepares fixture data before executing
+`tests/e2e --run-e2e`. The overlay mounts private host state at `.local/e2e/<project>/`;
+ordinary development startup uses the named `e2e_state` volume instead. Built-in E2E does
+not read an env file or require users to set synthetic markers.
+
+Custom E2E profiles have a separate, explicit env-file contract. Clear previously exported
+custom-profile variables before returning to the built-in defaults; see
+[test profile configuration](testing-roadmap.md#selecting-a-redmine-release). The lifecycle
+helper selector `REDMINE_TEST_VERSION` and test selector `REDMINE_E2E_VERSION` have different
+entry points; the E2E launcher aligns them internally.
+
 ## Local and Docker addresses
 
 | Caller | Redmine address |

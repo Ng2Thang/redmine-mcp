@@ -16,6 +16,19 @@ and creates both baseline and history datasets. The seed command
 does not start services. The existing `bash scripts/seed-history.sh` command forwards to history.
 These commands write synthetic data; they do not run application tests or prepare live E2E data.
 
+Seed helpers default to 7.0.2. For example, run
+`REDMINE_TEST_VERSION=6.0.1 bash scripts/seed.sh history` for the 6.0.1 development stack.
+Development manifests, checkpoints and credentials live in each project's `seed_state`
+Docker volume at `/seed-state`; the helpers require no host env file.
+
+E2E uses a separate fixture generator, `tools/testing/e2e_seed.rb`, on the same selected
+versioned database. `REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e --run-e2e`
+starts and prepares that stack automatically; `dev-up.sh` and the large datasets are optional.
+Built-in E2E state lives in `.local/e2e/<project>/`, mounted at `/e2e-state` through the
+E2E overlay. Do not copy IDs or credentials between versions, seed manifests, or legacy
+E2E directories. See [reset boundaries](testing-roadmap.md#reset-and-migration) before
+discarding data: resetting the database also invalidates manifests retained outside it.
+
 All Python dataset logic is in [`tools/seed/generate.py`](../tools/seed/generate.py).
 Read it in this order:
 

@@ -12,12 +12,33 @@
 | Status | in progress |
 | Dependencies | Existing [PREP-018 E2E baseline](prep-018-live-e2e-testing.md) and the current version-selection/automatic-preparation implementation |
 | Related tasks | [Testing coverage](../testing-coverage.md), [testing roadmap](../../testing-roadmap.md) |
-| Target Redmine version | 6.0.1 full E2E verified; 7.0.2 and additional exact 6.x.x profile acceptance pending |
+| Target Redmine version | Built-in 6.0.1/7.0.2; earlier 6.0.1 E2E verified on its dated setup; current self-contained layout and additional exact 6.x.x profiles pending |
 | Last updated | 2026-10-13, Codex |
-| Progress summary | Redmine 6.0.1: 50 E2E cases pass with cleanup; changed Python lint/format and runtime mypy pass; broader acceptance pending |
-| Next action | Verify 7.0.2 and remaining lifecycle/profile, coexistence, reset, and browser scenarios in separate assignments |
+| Progress summary | Self-contained development/E2E setup documented; earlier 6.0.1 result retained as historical evidence; current layout acceptance pending |
+| Next action | Verify current 6.0.1/7.0.2 setup and remaining lifecycle/profile, coexistence, reset, and browser scenarios in separate assignments |
 
 ## 2. Discovery and evidence
+
+### Current setup contract (2026-10-13)
+
+The later self-contained development refactor supersedes the initial env-file/project layout
+in this plan. Built-ins use `redmine-mcp-dev-6-0-1` and `redmine-mcp-dev-7-0-2` with their
+standalone versioned Compose files, fixed local credentials, and Docker seed-state volumes.
+Root `.env` and inherited Compose switches are ignored by the launcher. E2E adds
+`deploy/compose.e2e.yaml` to bind `.local/e2e/<project>/` at `/e2e-state`; development startup
+uses a named E2E-state volume. Custom profiles retain their explicit env-file and
+`.local/e2e/<version>/` contract. Pytest prepares once before live cases; standalone
+Inspector/browser scripts need explicit preparation. See the
+[current instructions](../../testing-roadmap.md#selecting-a-redmine-release).
+
+Development reset removes database/files/seed-state/named E2E-state volumes and preserves
+host evidence/backups. E2E reset removes database/files and the checked host E2E state,
+retaining development seed and backup volumes. Retained manifests become stale when their
+database is discarded. These paths require separate acceptance of their reset boundaries.
+
+The dated 50-case 6.0.1 result below used `redmine-mcp-test-6-0-1` before this refactor;
+it is not proof of the current layout. This documentation update used manual source and
+prose review only, without executing test, static-check, Docker, seed or reset commands.
 
 ### Client outcome and repository baseline
 

@@ -24,8 +24,14 @@ dates, revisions, waivers, and scenario limits; this refresh runs no tests.
 
 | Your goal | Read |
 | --- | --- |
-| Plan and run assigned checks | [Testing overview](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing-roadmap.md), [testing roadmap](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing-roadmap.md), [coverage matrix](../docs/plans/testing-coverage.md) |
+| Plan and run assigned checks | [Testing overview](testing.md), [canonical testing roadmap](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing-roadmap.md), [coverage matrix](../docs/plans/testing-coverage.md) |
 | Inspect MCP tools manually | [Manual tool verification](../docs/manual-verification.md) |
+
+Default `uv run --frozen pytest` selects offline unit/integration tests. Authorized live runs
+select `tests/e2e --run-e2e` with `REDMINE_E2E_VERSION=6.0.1` or `7.0.2`; pytest prepares
+the selected development stack automatically. The built-in projects need no env file.
+See [test commands and state](testing.md#commands-for-an-authorized-assignment) for
+private directories, focused runs, supplemental tools, and reset boundaries.
 
 <details>
 <summary>Recorded acceptance and review evidence</summary>

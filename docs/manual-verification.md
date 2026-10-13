@@ -220,14 +220,17 @@ against the owned environment:
 
 ```bash
 uv run --frozen --no-sync pytest tests/unit/test_time_entry_search.py tests/integration/test_issue_estimates.py tests/integration/test_time_entries_overview.py -q
-uv run --frozen --no-sync python scripts/prepare-e2e.py
-uv run --frozen --no-sync pytest tests/e2e/test_reporting_acceptance.py --run-e2e -q
-uv run --frozen --no-sync python scripts/verify-reporting-inspector.py
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e/test_reporting_acceptance.py --run-e2e -q
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen python scripts/prepare-e2e.py
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen python scripts/verify-reporting-inspector.py
 ```
 
 The preparation helper adds only owned fixtures; live tests delete their disposable issues and
 logs. Inspector creates a temporary reader-only server and stops it afterward. Keep its private
-header configuration and evidence in ignored `.local/testing-e2e`; do not reset the shared deployment.
+header configuration and evidence in ignored `.local/e2e/redmine-mcp-dev-7-0-2/`.
+Pytest prepares automatically; the explicit preparation command above is for the standalone
+Inspector script. Use `REDMINE_E2E_VERSION=6.0.1` consistently and its corresponding project
+directory to inspect 6.0.1. Do not reset a shared deployment for a read check.
 
 - Compare `list_issues` and `get_issue` estimates with same-key native Redmine responses.
   Verify numeric estimates, explicit null and missing-field evidence; sum eight 12-hour
@@ -391,12 +394,17 @@ shared users, projects and memberships.
 For the automated E2E fixture environment, follow
 [versioned stack preparation](testing-roadmap.md#selecting-a-redmine-release).
 PREP-029 reuses the 6.0.1 stack on localhost:3001 and 7.0.2 on localhost:3002.
-Their E2E manifests are separate from demo seed manifests. Standalone Inspector/browser
-scripts require preparation first; native fixture scripts use `/e2e-state`. Acceptance
-for this infrastructure change is pending; preserve earlier dated evidence.
+The built-in projects are `redmine-mcp-dev-6-0-1` and `redmine-mcp-dev-7-0-2`. They use
+self-contained Compose files and ignore root `.env`. Their demo seed manifests live in
+Docker's `seed_state` volumes; E2E manifests and logs live in `.local/e2e/<project>/`.
+Standalone Inspector/browser scripts require preparation first; native fixture scripts
+use `/e2e-state`. Pytest invokes preparation automatically with `tests/e2e --run-e2e`.
+Preserve earlier dated evidence; it does not verify subsequent setup refactors.
 
 Use an existing synthetic environment or deliberately create one with `bash scripts/dev-up.sh`.
-That command creates configuration, containers, and sample data; it is not a read-only check.
+That command starts containers and creates sample data in named Docker volumes; it does not
+create a host env file or run tests. E2E can also start PostgreSQL/Redmine directly without
+the development seed or Docker MCP service. Both startup paths mutate synthetic data.
 For an external instance, use only the read-only calls below with an appropriately restricted key.
 Never seed, reset, or restore a real instance for verification.
 

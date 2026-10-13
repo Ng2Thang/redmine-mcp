@@ -5,8 +5,9 @@ the service that receives requests from your AI client and connects to Redmine.
 If someone already operates it for you, ask for its URL and follow
 [MCP client installation](get-started.md).
 
-The application targets Redmine **7.0.2**. Commands use Git Bash on Windows and run from
-the repository root. This guide describes setup; it does not run or authorize tests.
+The primary target is Redmine **7.0.2**. Built-in development and E2E profiles are available
+for **6.0.1 and 7.0.2**. Commands use Git Bash on Windows and run from the repository root.
+This guide describes setup; use [Testing and evidence](testing.md) for automated test runs.
 
 **Choose your setup**
 
@@ -16,7 +17,8 @@ the repository root. This guide describes setup; it does not run or authorize te
 | You want to explore sample data | [Docker with sample data](#docker-with-sample-data) | Git, Git Bash, Docker Desktop with Linux containers, Python 3.13, uv |
 | You need Docker connected to your existing Redmine | [Docker with existing Redmine](#docker-with-existing-redmine) | Git, Git Bash, Docker Desktop with Linux containers, access to Redmine |
 
-An AI client is needed to use MCP. Node.js/npm is only needed if you choose MCP Inspector.
+An AI client is needed to use MCP. Node.js/npm is needed for MCP Inspector, including
+the automated E2E suite's Inspector cases. Sample stacks require Docker Compose 2.24.4+.
 Initial dependency and image downloads require Internet access.
 
 **Get the source once**, before following your chosen setup:
@@ -57,25 +59,37 @@ Continue with [MCP client installation](get-started.md), using `http://127.0.0.1
 Start Docker Desktop, then run:
 
 ```bash
-bash scripts/dev-up.sh
+bash scripts/dev-up.sh 7.0.2
+bash scripts/dev-up.sh 6.0.1
 ```
 
-The helper creates private random credentials in `.env` when absent, starts services,
-seeds sample data, and starts MCP. Use it only for the owned synthetic environment; keep
-it separate from real Redmine configuration. Do not copy `.env.example` into this workflow.
-Never run its seed/reset/restore helpers against a real Redmine instance.
+Choose either command, or run both for independent environments. Omitting the argument
+defaults to 7.0.2. Each version uses a self-contained Compose file with fixed local settings;
+root `.env` is ignored, and no host env file or seed-state directory is created. The helper
+starts PostgreSQL/Redmine, seeds the baseline and history datasets, and starts the MCP reader.
+It checks for occupied ports before startup and reuses services belonging to the selected project.
 
-| What to open | Default address |
-| --- | --- |
-| Sample Redmine | `http://localhost:3000` |
-| Reader MCP URL | `http://localhost:8000/mcp` |
-| REST API reference | `http://localhost:8000/docs` |
+| Setting | Redmine 7.0.2 | Redmine 6.0.1 |
+| --- | --- | --- |
+| Compose project | `redmine-mcp-dev-7-0-2` | `redmine-mcp-dev-6-0-1` |
+| Sample Redmine | `http://localhost:3002` | `http://localhost:3001` |
+| Reader MCP URL | `http://localhost:8000/mcp` | `http://localhost:8002/mcp` |
+| REST API reference | `http://localhost:8000/docs` | `http://localhost:8002/docs` |
+| PostgreSQL | `localhost:5433` | `localhost:5436` |
+
+Demo accounts use password `redmine-demo-password`. Database/user are `redmine`, with
+password `redmine-local-development`. These fixed credentials belong only to localhost
+development stacks. Docker stores database, attachments, and seed state in named volumes.
+Old test projects and their data remain separate; stop a conflicting old service if startup
+identifies it. Never run synthetic seed/reset/restore helpers against real Redmine data.
 
 Follow [sample account access and lifecycle](../docs/operations.md) for credentials,
 stop/restart, and sample-data management. Use the selected sample user's personal API key
-when connecting; generated credentials must stay private.
+when connecting; personal API keys and private seed manifests must stay private.
 
-Continue with [MCP client installation](get-started.md), using `http://localhost:8000/mcp`.
+Continue with [MCP client installation](get-started.md), using the reader URL for your version.
+To run automated E2E, follow [Testing and evidence](testing.md). E2E prepares its own
+fixtures automatically; development startup and the large demo/history datasets are optional.
 
 ## Docker with existing Redmine
 

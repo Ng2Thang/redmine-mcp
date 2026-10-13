@@ -25,26 +25,32 @@ later entries record subsequent work. Dated evidence does not verify new working
 The 2026-10-09 documentation correction performed no tests, startup, Inspector or live calls
 and does not close acceptance gaps or publish a release.
 
-## Existing-stack E2E reuse (2026-10-12)
+## Existing-stack E2E reuse (updated 2026-10-13)
 
 The user wants E2E to use the two existing versioned Compose stacks: Redmine 6.0.1 on
 localhost:3001 and Redmine 7.0.2 on localhost:3002. Their existing data is disposable.
 PREP-029 implementation replaces separate-stack provisioning with selected-project startup,
 guarded fixture seeding and an explicit selected-stack reset. Earlier descriptions below
-retain their historical scope. Runtime acceptance remains pending.
+retain their historical scope. Current built-in projects are `redmine-mcp-dev-6-0-1`
+and `redmine-mcp-dev-7-0-2`, using standalone versioned Compose files with fixed local
+settings and named seed volumes. Root `.env` is ignored. Pytest adds the E2E host-evidence
+overlay automatically. Runtime acceptance of this later setup refactor remains pending.
 
 | Task | Client outcome | Dependencies | Status | Blocker | Next action |
 |---|---|---|---|---|---|
-| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | in progress | 2026-10-13: [6.0.1 E2E evidence](../testing/evidence/prep-029-redmine-6.0.1.md): 50 passed, no skips; scoped lint/format and runtime mypy pass; owned cleanup passed | Verify 7.0.2 and remaining offline lifecycle/profile, coexistence, reset, and browser acceptance separately |
+| [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | in progress | [Dated 6.0.1 evidence](../testing/evidence/prep-029-redmine-6.0.1.md): 50 passed on the earlier project layout; current self-contained setup refactor is not established by that result | Verify current 6.0.1/7.0.2 setup and remaining offline lifecycle/profile, coexistence, reset, and browser acceptance separately |
 
 The implementation retains exact 6.x.x and 7.0.2 validation, with explicit custom profiles
-for additional 6.x releases. Fixtures live in `.local/e2e/<version>/` and `/e2e-state`.
+for additional 6.x releases. Built-in fixtures live in `.local/e2e/<project>/` and
+`/e2e-state`; custom profiles retain `.local/e2e/<version>/`.
 Normal pytest preparation reuses data; standalone `--reset` acts on the selected marked
-stack. Code/docs and existing harness consumers were updated without executing tests,
-Docker, seeding, reset, Inspector or browser checks. Ruff was rejected before execution;
-static checks remain pending. No historical acceptance result verifies these edits.
+stack. Development startup and E2E preparation are separate entry points on the same
+versioned project. The [current setup/test guide](../testing-roadmap.md#selecting-a-redmine-release)
+records commands, state paths, reset differences and preparation troubleshooting.
+This documentation pass performed source/prose review only; no tests, Docker changes,
+seeding, resets, Inspector calls or static-check tools were run.
 
-## E2E release selection (2026-10-12)
+## E2E release selection (historical implementation, 2026-10-12)
 
 Implemented user-requested E2E configuration for exact 6.x.x releases and 7.0.2 as the
 maximum accepted 7.x release. Shared configuration selects release-specific projects,

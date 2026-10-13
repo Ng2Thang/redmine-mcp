@@ -46,6 +46,12 @@ The registered catalog now contains 18 reads and 18 writes. Later preparation an
 evidence, waivers and pending acceptance are summarized in the [roadmap](docs/plans/index.md).
 Broader historical variants and operational/recovery acceptance remain separate follow-ups.
 
+For an authorized offline run, use `uv run --frozen pytest`. Live E2E explicitly selects
+`tests/e2e --run-e2e` with `REDMINE_E2E_VERSION=6.0.1` or `7.0.2`; pytest prepares the
+selected versioned development stack automatically. Built-in profiles use no env file.
+See the [setup and test commands](docs/testing-roadmap.md#selecting-a-redmine-release) for
+private state paths, custom profiles, reset boundaries, and troubleshooting.
+
 Use concise imperative commit subjects, such as `Add issue status filtering`. Review descriptions
 should explain the behavior change, reference applicable issues, list checks actually performed,
 and disclose failures or deferred checks. Include configuration or compatibility implications when

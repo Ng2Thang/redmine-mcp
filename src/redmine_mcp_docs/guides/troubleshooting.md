@@ -68,6 +68,54 @@ The change may already exist. Check Redmine and any receipt ID before another at
 Repeating a creation, note, or time-entry request can create duplicates. Failed read-back
 does not undo an accepted write. See [outcomes](write-actions.md#read-the-outcome).
 
+## Setup and testing
+
+### The sample stack reports an occupied port
+
+The 7.0.2 stack uses Redmine 3002, MCP 8000, and PostgreSQL 5433. The 6.0.1 stack uses
+3001, 8002, and 5436. Startup identifies a conflicting container or service; stop that
+identified service before retrying. Reruns reuse services owned by the selected project.
+Old `redmine-mcp-test*` projects are retained and may still occupy these ports.
+See [sample server setup](installation.md#docker-with-sample-data).
+
+### Pytest exits with E2E preparation failed
+
+No test case has run yet. Inspect the selected project's private preparation log first:
+
+```bash
+cat .local/e2e/redmine-mcp-dev-7-0-2/pytest-prepare.log
+```
+
+Use `redmine-mcp-dev-6-0-1` for 6.0.1. `compose-up.log` contains startup diagnostics;
+`seed.log` contains native fixture diagnostics. Those files may not exist if the failure
+happened earlier. Confirm Docker Desktop is running, the required ports are available,
+and the selected profile matches the intended version. Keep private keys and logs out of
+shared reports. See [Testing and evidence](testing.md) for automatic preparation and reruns.
+
+### The selected env file is not marked as synthetic
+
+Current built-in profiles use no env file and ignore root `.env`. This message indicates
+a custom env-file profile or older setup code. Clear exported custom E2E settings using
+[the testing instructions](testing.md#commands-for-an-authorized-assignment), then confirm
+the checkout has the current launcher. A custom profile needs its own marked synthetic
+configuration. Do not add a synthetic marker to an external-instance `.env` to bypass checks.
+
+### Pytest shows PydanticDeprecatedSince211
+
+The pinned FastAPI-MCP dependency has an annotation that calls an older Pydantic schema
+hook. This warning is separate from a preparation failure or failed test assertion. Check
+pytest's final result and exit message. Fixing the dependency requires a compatible change;
+editing `.venv` directly would be lost when dependencies are installed again.
+
+### I deleted local files but the E2E fixtures still exist
+
+Database records and development seed state live in Docker volumes. Deleting Python caches
+or helper scripts does not reset them. Deleting an E2E manifest removes its ownership record,
+so preparation refuses to adopt colliding records just by name. Use the documented
+[guarded reset](testing.md#reset-and-preparation-failures) only when the selected synthetic
+data can be discarded. Development and E2E resets retain different state; inspect their
+boundaries before switching between demo data and fresh test fixtures.
+
 ## Frequently asked questions
 
 ### Why do I see less than a colleague?

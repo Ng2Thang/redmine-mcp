@@ -8,14 +8,17 @@ not every possible workflow, role combination, Redmine version or infrastructure
 ## Existing-stack E2E infrastructure
 
 [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) changes setup to reuse the
-6.0.1 and 7.0.2 Compose stacks, with private fixture state under `.local/e2e/<version>/`.
+6.0.1 and 7.0.2 Compose stacks. Current built-in projects are `redmine-mcp-dev-6-0-1`
+and `redmine-mcp-dev-7-0-2`, with private fixture state under `.local/e2e/<project>/`;
+custom profiles use `.local/e2e/<version>/`.
 Its TEST-001..009 cover target selection, coexistence, fresh/repeated/failed seed,
 ownership refusal, explicit selected reset, broader 6.x profile validation, opt-in gates,
 and version-specific permission/state/cleanup evidence. On 2026-10-13, the complete
-6.0.1 E2E command passed all 50 cases with no skips and owned cleanup; see
-[dated evidence](../testing/evidence/prep-029-redmine-6.0.1.md). This verifies the selected
-6.0.1 live suite. The remaining lifecycle/profile boundaries, 7.0.2, coexistence, reset,
-and browser scenarios remain pending; a suite count does not establish those outcomes.
+6.0.1 E2E command passed all 50 cases with no skips and owned cleanup on the earlier
+`redmine-mcp-test-6-0-1` layout; see
+[dated evidence](../testing/evidence/prep-029-redmine-6.0.1.md). This does not verify the
+later self-contained development-stack refactor. Current lifecycle/profile boundaries,
+6.0.1/7.0.2 setup, coexistence, reset, and browser scenarios still need their own evidence.
 
 ## Current tools
 

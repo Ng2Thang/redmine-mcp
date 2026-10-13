@@ -30,10 +30,12 @@ See the [current roadmap summary](docs/plans/index.md#current-status-2026-10-09)
 acceptance gaps and waivers. Full restore validation, operational readiness, and testing CI
 remain outstanding; these results do not certify a production deployment.
 
-The project targets **Redmine 7.0.2**. The synthetic Compose deployment pins its official
-image digest. Current functional acceptance uses an isolated owned 7.0.2 environment;
-other Redmine versions are not established by that evidence. Document REST tools are outside
-this target. See the [roadmap](docs/plans/index.md).
+The primary target is **Redmine 7.0.2**, with built-in development and E2E profiles for
+**6.0.1 and 7.0.2**, each using an official image pinned by digest. Other exact 6.x.x
+releases need a custom E2E profile. The dated
+[6.0.1 verification](docs/testing/evidence/prep-029-redmine-6.0.1.md) records its tested
+deployment; it does not verify later setup changes or every 6.x release.
+Document REST tools are outside this target. See the [roadmap](docs/plans/index.md).
 
 ## Requirements
 
@@ -81,6 +83,34 @@ See [operations](docs/operations.md) for accounts, database access, stop/restart
 For an existing Redmine instance, follow [configuration](docs/configuration.md) and the external
 instance workflow in operations. Never seed or reset a real instance.
 
+## Run automated tests
+
+From the repository root in Git Bash:
+
+```bash
+uv sync --frozen
+uv run --frozen pytest
+```
+
+Default discovery runs unit and offline integration tests without Docker or Redmine credentials.
+For live E2E, start Docker Desktop and ensure Node.js/npm is available for the Inspector cases.
+Run either version, or run them sequentially:
+
+```bash
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e --run-e2e
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e --run-e2e
+```
+
+Pytest prepares the selected stack automatically before testing. It starts PostgreSQL/Redmine,
+adds owned E2E fixtures, and reuses the same version's development project and ports.
+Running `dev-up.sh` first is optional; the demo/history data and Docker MCP service are not
+required for E2E. Tests exercise their own MCP application instances.
+
+Built-in profiles ignore root `.env` and require no generated env file. Private manifests and
+logs live in `.local/e2e/redmine-mcp-dev-6-0-1/` or `.local/e2e/redmine-mcp-dev-7-0-2/`.
+Normal preparation preserves data. See the [testing guide](docs/testing-roadmap.md#selecting-a-redmine-release)
+for clearing custom overrides, focused runs, explicit resets, and preparation troubleshooting.
+
 ## Connect MCP Inspector
 
 ```bash
@@ -93,6 +123,8 @@ Open the printed Inspector URL with its session token. Select **Streamable HTTP*
 ```text
 X-Redmine-API-Key: <your personal Redmine API key>
 ```
+
+For the 6.0.1 development stack, use `http://localhost:8002/mcp` instead.
 
 Inspector's own session token is separate from your Redmine key. Connect, list tools, and call
 `list_projects`, `list_issues`, and `get_issue` using an actual visible issue ID. Follow the

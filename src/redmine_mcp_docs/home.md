@@ -60,8 +60,10 @@ Your client chooses tools and formats its answer; prompts are examples, not buil
   treating a summary as complete.
 - Attachment tools provide metadata and browser links. Open the links in Redmine to read files.
 
-The target is Redmine **7.0.2**. This is an unreleased pilot implementation; support and
-acceptance vary by operation. The [reference guide](guides/reference.md) links to exact
+The primary target is Redmine **7.0.2**. Built-in sample and E2E profiles cover **6.0.1 and
+7.0.2**; see [server installation](guides/installation.md) and [testing](guides/testing.md)
+for their setup. This is an unreleased pilot implementation; support and acceptance vary
+by operation and recorded deployment. The [reference guide](guides/reference.md) links to exact
 contracts and recorded limitations.
 
 ## Where to go next

@@ -66,6 +66,25 @@ Both versions install plugins and seed automatically. Lifecycle helpers default 
 prefix a helper command with `REDMINE_TEST_VERSION=6.0.1` to select 6.0.1. E2E fixture
 preparation remains separate; see the [testing roadmap](testing-roadmap.md).
 
+### Run E2E on the selected development stack
+
+```bash
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e --run-e2e
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e --run-e2e
+```
+
+Run these sequentially. Pytest automatically starts the selected PostgreSQL/Redmine services
+and seeds owned E2E fixtures; `dev-up.sh` is optional beforehand. E2E uses the projects and
+ports above, with a host evidence mount added by `deploy/compose.e2e.yaml`. It does not build
+or start Docker MCP, or generate demo/history data. Node.js/npm is needed for Inspector cases.
+Built-in profiles use no env file. `REDMINE_E2E_VERSION` selects tests independently of the
+`REDMINE_TEST_VERSION` setting used by lifecycle helpers.
+
+E2E logs and private manifests live in `.local/e2e/<project>/`, separate from development
+seed state in Docker volumes. Normal preparation preserves the database; it may repair owned
+fixture grants and states. See [testing](testing-roadmap.md#preparation-troubleshooting) for
+preparation failures and custom profile overrides.
+
 ### Install local Redmine plugins
 
 The Redmine service in both local Compose variants installs plugin directories from
@@ -130,6 +149,13 @@ compose stop
 ```
 
 Restart using `bash scripts/dev-up.sh`. Completed seeds are skipped.
+For the other version, set the lifecycle selector for a single command, for example:
+
+```bash
+REDMINE_TEST_VERSION=6.0.1 python scripts/local_env.py compose stop
+bash scripts/dev-up.sh 6.0.1
+```
+
 To free port 8000 for local Python while keeping Redmine running:
 
 ```bash
@@ -145,16 +171,29 @@ With the synthetic database and Redmine running:
 bash scripts/seed.sh
 ```
 
-A completed seed is skipped. An interrupted seed is not resumed; resolve the original failure
-before performing an explicit reset if the synthetic data can be discarded.
+A completed seed is skipped. An interrupted baseline seed requires reconciliation or guarded
+reset; history generation can resume from checkpoints. Resolve the original failure before
+performing an explicit reset if the synthetic data can be discarded.
 
-The following command deletes the dedicated synthetic database and attachment volumes, clears
-generated local state, and recreates the environment. Backups are preserved. It requires valid
+The following command deletes the selected synthetic database, attachment, seed-state and
+named E2E-state volumes, then recreates and seeds the development environment. Backups and
+host E2E evidence are preserved. It requires valid
 synthetic markers; do not bypass marker checks or use it against real data.
 
 ```bash
 bash scripts/reset-test-env.sh --confirm-reset
+REDMINE_TEST_VERSION=6.0.1 bash scripts/reset-test-env.sh --confirm-reset
 ```
+
+Choose the command for the version to discard; the first defaults to 7.0.2.
+An old host E2E manifest refers to the discarded database and cannot be reused after this reset.
+
+E2E has a different explicit reset, documented in
+[the testing guide](testing-roadmap.md#reset-and-migration): it removes the selected database/files
+and host E2E state, then seeds only E2E fixtures. It retains development seed and backup volumes;
+development seed manifests become stale when the database is replaced. Use the development
+reset for a fresh demo/history environment, and the E2E reset for fresh test fixtures. Returning
+to E2E after development reset requires clearing its stale state through explicit E2E reset.
 
 Read IDs from `/seed-state/manifest.json` in the Redmine container after reset:
 
@@ -197,7 +236,7 @@ volume. Its exit handler attempts to
 restart applications even when backup fails. Incomplete snapshots must not be used for restore.
 Existing snapshots are not overwritten. Treat every snapshot as sensitive.
 
-Restore replaces the current synthetic database, attachments, and local state:
+Restore replaces the current synthetic database, attachments, and Docker seed state:
 
 ```bash
 bash scripts/restore.sh baseline
@@ -207,6 +246,10 @@ Only restore trusted snapshots from matching repository and image versions. The 
 the synthetic markers, completion marker, Redmine/PostgreSQL image versions, dump listing, and
 archive readability. It restores the database and replaces attachments,
 and restarts applications on success. These checks do not establish full recovery correctness.
+
+Host E2E evidence is separate from the snapshot's Docker seed state. A restored database
+does not establish that a retained host E2E manifest still identifies its fixtures. Reconcile
+that state before live tests, or use explicit E2E reset when the restored data is disposable.
 
 If restore fails, MCP and Redmine remain stopped. Inspect the failure privately, verify snapshot
 compatibility and completeness, and correct the cause before retrying a trusted restore. Do not

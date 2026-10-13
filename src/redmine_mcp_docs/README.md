@@ -24,6 +24,12 @@ Removed routes have no redirects and resolve to the 404 page.
 Search indexes English pages only. Do not edit generated files.
 All Markdown must remain English. Use Git Bash commands and redact example secrets.
 
+Keep `guides/installation.md`, `guides/testing.md`, and `guides/troubleshooting.md` aligned
+with the canonical setup/test guides in `docs/` and the actual launchers. Built-in development
+and E2E profiles share versioned projects but use different seed/evidence state. Preserve
+dated verification results when updating instructions; a new setup description is not new
+acceptance evidence. Edit source Markdown, not exported copies or generated search paths.
+
 ## Local serving and export
 
 From Git Bash at the repository root:

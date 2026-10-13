@@ -121,9 +121,11 @@ its existing writer credentials, admission mode and operation gates. For externa
 using the base Compose file:
 
 ```bash
-LOG_LEVEL=DEBUG docker compose --env-file .env -f deploy/compose.yaml \
+LOG_LEVEL=DEBUG docker compose -p redmine-mcp-external \
+  --env-file .local/external.env -f deploy/compose.yaml \
   up -d --no-deps --force-recreate mcp-server
-docker compose --env-file .env -f deploy/compose.yaml logs --follow --tail=200 mcp-server
+docker compose -p redmine-mcp-external \
+  --env-file .local/external.env -f deploy/compose.yaml logs --follow --tail=200 mcp-server
 ```
 
 Use `--build` when the image does not yet contain the logging implementation. Set `LOG_LEVEL`
@@ -382,9 +384,28 @@ The pre-commit dependency is already included; use the actual package name for f
 Review both `pyproject.toml` and `uv.lock` and submit them together. Avoid unrelated dependency
 upgrades. Never hand-edit resolved hashes. Only `src/redmine_mcp` is packaged as runtime code.
 
+## Automated tests
+
 The automated baseline is organized into `tests/unit/`, `tests/integration/` and `tests/e2e/`.
 Default pytest discovery runs the two offline layers. Live tests require explicit directory
 selection, `--run-e2e` and owned fixtures for the selected Redmine 6.x.x or 7.0.2 release.
+
+```bash
+uv run --frozen pytest
+REDMINE_E2E_VERSION=6.0.1 uv run --frozen pytest tests/e2e --run-e2e
+REDMINE_E2E_VERSION=7.0.2 uv run --frozen pytest tests/e2e --run-e2e
+```
+
+Use the first command for offline verification. Live E2E requires Docker Desktop and
+Node.js/npm for Inspector. Pytest automatically prepares PostgreSQL/Redmine and owned fixtures
+once per session, including focused E2E runs. `dev-up.sh` and manual preparation are optional
+before pytest. Run the live commands sequentially; they use the selected development project,
+not another Redmine stack. See [preparation troubleshooting](testing-roadmap.md#preparation-troubleshooting).
+
+Offline tests of supplemental scripts must replace both `ROOT` and the separately imported
+`STATE` with temporary paths, and mock subprocess/network calls. Replacing `ROOT` alone does
+not redirect private Inspector credentials or evidence out of `.local/e2e/<project>/`.
+
 A coding-without-tests assignment cannot
 install test dependencies or create/run fixtures and tests; assign verification separately.
 Coverage thresholds and testing CI remain deferred. Follow the

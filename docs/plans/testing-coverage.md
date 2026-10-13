@@ -5,6 +5,25 @@ prep-016, offline integration prep-017 and live E2E prep-018. Historical evidenc
 2026-10-06; current 2026-10-07 reconciliation is recorded in the follow-up section and ledger. Scenarios cover selected behavior,
 not every possible workflow, role combination, Redmine version or infrastructure failure.
 
+## Complete catalog testcase additions (2026-10-13)
+
+The user requested additional cases for all supported MCP tools. The
+[36-tool testcase inventory](../testing/mcp-catalog-cases.md) maps each operation to executable
+offline and owned native scenarios. New catalog safety cases cover missing/invalid keys for
+all 36 tools, invalid values for all 31 tools accepting inputs, and both deployment and
+operation gates for all 18 writes through REST/MCP. Dedicated additions cover time creation,
+project activity choices and issue-detail tag mapping. The current writer matrix includes
+creation; new native creation/activity cases reuse guarded owned time fixtures and cleanup.
+
+The user has reported execution failures for these additions. No current pass count or
+complete scenario acceptance is claimed. Existing historical waivers, Inspector/native
+policy/plugin gaps and dated evidence remain separate.
+
+Following six user-reported creation failures, the payload assertion now isolates time-entry
+read-back from the SDK's output-schema discovery GETs, and MCP creation explicitly rejects
+extra properties. Both corrections are implemented without a rerun; the testcase inventory
+records the reported failures and current execution limit.
+
 ## Existing-stack E2E infrastructure
 
 [PREP-029](tasks/prep-029-reuse-versioned-compose-e2e.md) changes setup to reuse the

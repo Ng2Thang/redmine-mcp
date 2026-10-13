@@ -1,5 +1,19 @@
 # MCP tool roadmap
 
+## Complete catalog testcase additions (2026-10-13)
+
+At the user's request, add catalog safety cases for all 36 registered MCP tools and detailed
+time-entry creation, activity-discovery and assigned-tag scenarios. New owned native
+creation/activity cases reuse the guarded time fixture and its cleanup ledger. The
+[testcase inventory](../testing/mcp-catalog-cases.md) maps each tool to existing and new cases,
+documents execution commands and retains remaining acceptance limits. Status: cases authored;
+execution pending. No tests, Inspector checks or live calls were run for this assignment.
+After the user's six reported creation-test failures, scope the read-back assertion to
+time-entry requests and forbid extra MCP creation arguments. Corrections are implemented;
+their rerun remains pending. The testcase inventory records both causes.
+Earlier TOOL-040 waiver and TOOL-041 pending execution records remain historical; neither
+is replaced with a passing acceptance claim by these additions.
+
 ## Writer admission simplification (2026-10-13)
 
 Implemented at the user's request: remove pinned-key digests, writer authentication modes

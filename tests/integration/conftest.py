@@ -170,6 +170,28 @@ class SyntheticRedmine:
                 if request.content and request.headers.get("content-type") == "application/json"
                 else {}
             )
+            if path == "/time_entries.json" and request.method == "POST":
+                values = payload["time_entry"]
+                activity_id = values.get("activity_id", 9)
+                if activity_id not in (9, 10):
+                    return httpx.Response(422, json={"errors": ["must-not-leak"]})
+                minutes = (Decimal(str(values["hours"])) * 60).quantize(
+                    Decimal("1"), rounding=ROUND_HALF_UP
+                )
+                entry = {
+                    "id": max((row["id"] for row in self.time_entries), default=0) + 1,
+                    "project": {"id": values["project_id"], "name": "Demo"},
+                    "issue": {"id": values["issue_id"]},
+                    "user": {"id": uid, "name": "Caller"},
+                    "hours": float(
+                        (minutes / 60).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    ),
+                    "spent_on": values["spent_on"],
+                    "activity": {"id": activity_id, "name": "Activity"},
+                    "comments": values.get("comments", ""),
+                }
+                self.time_entries.append(entry)
+                return httpx.Response(201, json={"time_entry": copy.deepcopy(entry)})
             if path.startswith("/time_entries/") and request.method == "DELETE":
                 entry_id = int(path.split("/")[2].split(".")[0])
                 entry = next((row for row in self.time_entries if row["id"] == entry_id), None)

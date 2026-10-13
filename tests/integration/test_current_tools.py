@@ -11,6 +11,13 @@ from tests.helpers import mcp_session
 
 WRITES = [
     (
+        "create_time_entry",
+        "POST",
+        "/api/v1/issues/42/time-entries",
+        {"hours": 1.5, "spent_on": "2026-10-01"},
+        "/time_entries.json",
+    ),
+    (
         "delete_time_entry",
         "DELETE",
         "/api/v1/issues/42/time-entries/1",
@@ -128,6 +135,7 @@ def arguments(operation: Any, payload: Any) -> Any:
         if operation == "delete_attachment":
             result.update(container_type="project", container_id=7)
     if operation in (
+        "create_time_entry",
         "update_time_entry",
         "delete_time_entry",
         "update_issue",
@@ -308,8 +316,14 @@ async def test_received_server_error_is_uncertain_for_every_individual_writer(
     assert "must-not-leak" not in json.dumps(data)
     writes = [r for r in synthetic.requests if r.method != "GET"]
     assert len(writes) == 1 and writes[0].url.path == upstream_path
-    if operation in {"create_issue", "create_project_version", "upload_attachment"}:
+    if operation in {
+        "create_time_entry",
+        "create_issue",
+        "create_project_version",
+        "upload_attachment",
+    }:
         identifier = {
+            "create_time_entry": "resource_id",
             "create_issue": "resource_id",
             "create_project_version": "resource_id",
             "upload_attachment": "attachment_id",

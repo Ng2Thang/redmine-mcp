@@ -1,5 +1,16 @@
 # Testing roadmap
 
+### Complete MCP catalog testcase additions (2026-10-13)
+
+New executable cases and the [36-tool traceability inventory](testing/mcp-catalog-cases.md)
+cover catalog authentication, validation and write gates, plus dedicated time-entry creation,
+project activity discovery and issue-detail tags. Opt-in native creation/activity cases use
+the existing guarded time-project fixture with an additional owned read-only role/user.
+This assignment creates cases only; no tests, Inspector calls or live mutations were run.
+The user subsequently reported six creation failures. The read-back assertion now excludes
+SDK discovery GETs, and registration forbids extra creation arguments. These corrections
+await rerun; acceptance and earlier task-specific native policy/plugin gaps remain pending.
+
 ### Issue time-entry deletion acceptance
 
 The user separately assigned TOOL-043 testing on 2026-10-08. [Deletion evidence](testing/evidence/tool-043-testing.md)

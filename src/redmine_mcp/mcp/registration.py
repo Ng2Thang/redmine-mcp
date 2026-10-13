@@ -44,6 +44,7 @@ def register_mcp(
     repair_input_schemas(mcp.tools, app.openapi())
     for tool in mcp.tools:
         if tool.name in {
+            "create_time_entry",
             "add_project_members",
             "update_project_members",
             "delete_project_members",

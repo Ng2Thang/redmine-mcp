@@ -31,7 +31,8 @@ when 'setup'
       'all' => %i[view_issues view_time_entries log_time edit_time_entries],
       'own' => %i[view_issues view_time_entries log_time edit_own_time_entries],
       'denied' => %i[view_issues view_time_entries log_time],
-      'no_view' => %i[view_issues log_time edit_time_entries]
+      'no_view' => %i[view_issues log_time edit_time_entries],
+      'read_only' => %i[view_issues view_time_entries]
     }
     grants.each do |name, permissions|
       role = Role.create!(name: "#{prefix}-#{name}", permissions: permissions,

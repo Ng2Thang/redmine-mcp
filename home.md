@@ -1,6 +1,6 @@
 ## Explore a feature plan in Redmine
 
-An example of using Redmine MCP to plan and implement stock features.
+An example of using Redmine MCP to plan and implement features.
 This is a recorded example; available actions depend on your access and server configuration.
 
 <figure class="portal-feature-image">

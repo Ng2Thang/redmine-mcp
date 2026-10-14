@@ -129,7 +129,7 @@ Logs may contain personal API keys; do not paste them unredacted into shared rep
 See [setup troubleshooting](troubleshooting.md#setup-and-testing) for port conflicts,
 custom env-file errors, and the existing Pydantic warning.
 
-Consult the [testing roadmap](../docs/testing-roadmap.md) for dependency/fixture prerequisites,
+Consult the [testing roadmap](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing-roadmap.md) for dependency/fixture prerequisites,
 cleanup ownership, supplemental verification, and execution boundaries. Inspector input and
 expected results are in [manual verification](../docs/manual-verification.md).
 
@@ -146,7 +146,7 @@ not establish acceptance of the later self-contained `redmine-mcp-dev-*` setup r
 
 Use the [current task summary](../docs/plans/index.md),
 [coverage matrix](../docs/plans/testing-coverage.md), and
-[catalog acceptance ledger](../docs/testing/evidence/current-catalog-acceptance.md) together.
+[catalog acceptance ledger](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/current-catalog-acceptance.md) together.
 Later preparation, retry, and time-entry changes have their own evidence linked from
 [Contributors](contributors.md#testing-and-evidence).
 Time-entry creation acceptance remains pending, and activity discovery testing was waived in

@@ -1,0 +1,628 @@
+# MCP tool roadmap
+
+## Complete catalog testcase additions (2026-10-13)
+
+At the user's request, add catalog safety cases for all 36 registered MCP tools and detailed
+time-entry creation, activity-discovery and assigned-tag scenarios. New owned native
+creation/activity cases reuse the guarded time fixture and its cleanup ledger. The
+[testcase inventory](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/mcp-catalog-cases.md) maps each tool to existing and new cases,
+documents execution commands and retains remaining acceptance limits. Status: cases authored;
+execution pending. No tests, Inspector checks or live calls were run for this assignment.
+After the user's six reported creation-test failures, scope the read-back assertion to
+time-entry requests and forbid extra MCP creation arguments. Corrections are implemented;
+their rerun remains pending. The testcase inventory records both causes.
+Earlier TOOL-040 waiver and TOOL-041 pending execution records remain historical; neither
+is replaced with a passing acceptance claim by these additions.
+
+## Writer admission simplification (2026-10-13)
+
+Implemented at the user's request: remove pinned-key digests, writer authentication modes
+and user ID admission lists from settings, REST authentication, MCP discovery, capability
+reporting and deployment examples. Each caller still needs a valid personal Redmine API key.
+Writes require `REDMINE_WRITE_ENABLED=true`, configured operations and native permissions.
+Tests were updated for this contract; automated and live execution remain deferred.
+Earlier pinned-key and user-admission requirements below are historical and superseded.
+See [configuration](../configuration.md#separate-writer-deployment) and the
+[implementation and verification handoff](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/writer-admission-simplification.md).
+
+## Catalog status (2026-10-09)
+
+The registered catalog contains **18 reads and 18 writes**. The default reader exposes only
+reads; the separate opt-in writer enables configured writes with caller and native permission
+checks. Registration is an implementation fact, not acceptance of every scenario.
+
+| Area | Current state | Evidence / next action |
+|---|---|---|
+| PREP-020 baseline | Functional acceptance recorded for the earlier 17-read/15-write catalog | [Dated ledger](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/current-catalog-acceptance.md); retain its exact revision and historical gaps |
+| PREP-022–026 | Accepted for the defined functional scope | [Preparation regression evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md); 1,395 offline and 23 owned live cases recorded |
+| PREP-027 GET retries | Implemented and accepted within recorded scope | [Retry evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-027-testing.md); preserve full-run versus targeted-rerun limits |
+| TOOL-040 activity discovery | Implemented; testing waived | User waiver recorded in [task](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-040-list-project-time-entry-activities.md); runtime acceptance remains unverified |
+| TOOL-041 creation | Implemented; defined acceptance pending | [Task](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-041-create-time-entry.md); separately authorize remaining testing |
+| TOOL-042 / TOOL-043 | Implemented with separate offline/native acceptance | [Update evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-042-testing.md), [deletion evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-043-testing.md); the later deletion record includes 1,889 clean full offline passes |
+| PREP-028 / TOOL-036 tags | Implemented; acceptance gaps remain | Detail-mapping acceptance and 7.0.2 overlap/private-role filtering remain open; selected filtering live evidence used 6.0.5 |
+| BUG-001 | Investigation blocked on sanitized failing data and exact arguments | [Bug task](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/bugs/bug-001-get-issue-upstream-response.md); no resolution is claimed |
+| Detailed DEBUG logging | Implemented; runtime verification pending | [Implementation and verification handoff](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/debug-logging.md); static checks are recorded separately from functional acceptance |
+| Release | Unreleased pilot implementation; final release review remains open | [PREP-009](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-009-release-acceptance.md), [documentation audit and corrections](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md); packaging, CI, operational and recovery work remain separate |
+
+The sections below retain task histories in planning, coding and verification order. Earlier
+catalog counts, planned/blocked statements and no-tests records describe their stated stages;
+later entries record subsequent work. Dated evidence does not verify new working-tree edits.
+The 2026-10-09 documentation correction performed no tests, startup, Inspector or live calls
+and does not close acceptance gaps or publish a release.
+
+## Existing-stack E2E reuse (updated 2026-10-13)
+
+The user wants E2E to use the two existing versioned Compose stacks: Redmine 6.0.1 on
+localhost:3001 and Redmine 7.0.2 on localhost:3002. Their existing data is disposable.
+PREP-029 implementation replaces separate-stack provisioning with selected-project startup,
+guarded fixture seeding and an explicit selected-stack reset. Earlier descriptions below
+retain their historical scope. Current built-in projects are `redmine-mcp-dev-6-0-1`
+and `redmine-mcp-dev-7-0-2`, using standalone versioned Compose files with fixed local
+settings and named seed volumes. Root `.env` is ignored. Pytest adds the E2E host-evidence
+overlay automatically. Runtime acceptance of this later setup refactor remains pending.
+
+| Task | Client outcome | Dependencies | Status | Blocker | Next action |
+|---|---|---|---|---|---|
+| [PREP-029](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-029-reuse-versioned-compose-e2e.md) | Reuse the two stacks, seed E2E fixtures automatically, and avoid additional Redmine/PostgreSQL projects and port conflicts | Existing PREP-018 baseline; current version selection and auto-preparation | in progress | [Dated 6.0.1 evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-029-redmine-6.0.1.md): 50 passed on the earlier project layout; current self-contained setup refactor is not established by that result | Verify current 6.0.1/7.0.2 setup and remaining offline lifecycle/profile, coexistence, reset, and browser acceptance separately |
+
+The implementation retains exact 6.x.x and 7.0.2 validation, with explicit custom profiles
+for additional 6.x releases. Built-in fixtures live in `.local/e2e/<project>/` and
+`/e2e-state`; custom profiles retain `.local/e2e/<version>/`.
+Normal pytest preparation reuses data; standalone `--reset` acts on the selected marked
+stack. Development startup and E2E preparation are separate entry points on the same
+versioned project. The [current setup/test guide](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing-roadmap.md#selecting-a-redmine-release)
+records commands, state paths, reset differences and preparation troubleshooting.
+This documentation pass performed source/prose review only; no tests, Docker changes,
+seeding, resets, Inspector calls or static-check tools were run.
+
+## E2E release selection (historical implementation, 2026-10-12)
+
+Implemented user-requested E2E configuration for exact 6.x.x releases and 7.0.2 as the
+maximum accepted 7.x release. Shared configuration selects release-specific projects,
+volumes, private state, and a localhost port. Preparation persists an immutable official
+image digest; Python preflight and native Ruby guards check the selected version and
+fixture ownership. Pytest and supplemental Inspector/browser consumers use the same target.
+Legacy tag controls now use the selected owned instance and explicitly skip missing native
+tag capabilities or positive fixtures. Public MCP runtime contracts are unchanged.
+
+Implementation is complete; compatibility acceptance is pending. Changed Python files were
+formatted with Ruff. No tests, lint/type checks, Docker setup, seed execution, Inspector,
+browser checks, or live calls were run for this change. Required follow-up is a separately
+authorized preparation and E2E run on
+6.0.1, the intended additional 6.x releases, and 7.0.2, including cleanup inspection.
+Unsupported versions, mismatched manifests/volumes, image pins, and actual server versions
+also require negative verification. See the
+[commands and configuration contract](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing-roadmap.md#selecting-a-redmine-release).
+
+## Automatic E2E preparation (2026-10-12)
+
+Implemented the user's request to run `uv run --frozen python scripts/prepare-e2e.py`
+automatically before E2E tests. An E2E-only autouse session fixture prepares once before
+live fixtures and tests, preserving the selected release, image, and port environment.
+Preparation failures abort the session. Output stays in the selected ignored state
+directory's `pytest-prepare.log`; native seed output remains in `seed.log`.
+
+The `--run-e2e` opt-in remains required. Offline runs, collection-only runs, and empty
+E2E selections do not trigger preparation. Standalone preparation and supplemental
+scripts remain available. No tests, Docker preparation, live calls, or check tools were
+run for this change. Verification remains pending: first preparation, reuse, failure
+before test execution, and absence of preparation for offline/collection-only runs.
+
+## User documentation refresh (2026-10-12)
+
+The user authorized implementation of a user-oriented English portal refresh. The source
+now prioritizes connection, installation, first useful requests, four core everyday workflows,
+write guidance, and troubleshooting. Architecture, development, testing, and evidence remain
+accessible through repository links in the contributor hub. No public MCP operation or
+runtime configuration contract changes. See the
+[publication boundaries](../documentation-portal.md#content-ownership-and-publication).
+
+At the user's request, the original eight workflow pages were consolidated into four:
+assigned issues, issue summaries, time reports, and issue creation. Backlog filtering,
+progress drafts, notes, and time logging remain as short variations. The four removed
+standalone routes were initially redirected; the later sidebar-only cleanup removes those
+legacy redirects. Navigation and handoff were updated.
+
+The initial English refresh was implemented without synchronizing Vietnamese or running tests,
+quality-check tools, link-check tools, export/serve, browser checks, Inspector, live Redmine
+calls, or deployment. The user subsequently authorized Vietnamese synchronization, followed
+by deletion of off-menu pages only inside `src/redmine_mcp_docs/`.
+The user then requested retention of the earlier Overview's pages: four additional guides
+and 12 technical references per language were restored and linked from the current homepage.
+Publication and search now combine sidebar entries with that explicit Overview inventory.
+Layout review and other excluded reference translations remain removed. Canonical documents
+remain in the repository; only retained references are exported. Other technical links open
+repository files on GitHub. Legacy aliases and English reference fallbacks remain removed.
+The user's latest request removes all Vietnamese pages and support. The current source
+retains one English homepage, 13 sidebar guides, four additional Overview guides, and 12
+technical references, plus required shell and maintenance files. The language selector,
+translated routing, and Vietnamese export and search inventory have been removed. All
+Markdown must now be English; commands remain Bash. No tests, quality-check tools, export,
+serve, or browser verification were run for this removal. Existing generated or deployed
+output needs to be replaced with a fresh export. Rendered review is pending. The
+[manual portal handoff](../documentation-portal.md#verification-handoff) describes proposed
+checks requiring separate authorization. Existing operation acceptance gaps remain unchanged.
+
+## Issue spent-time update and deletion plan
+
+On 2026-10-08, the user reported that spent-time entries #919–#924 remain on issues #491–#496
+because the current connection lacks deletion, and explicitly requested plans for both update
+and delete tools. The IDs are user-reported context, not verified live state or authorized
+deletion targets. Exact entry-to-issue pairings and credited users must be discovered before
+any future mutation. The plan adds one issue-scoped entry per call for each operation.
+
+Existing readers and the implemented TOOL-041 creation writer remain baseline. TOOL-041 testing
+is pending; these tools use existing entries and do not depend on its creation acceptance.
+Exact official Redmine 7.0.2 release source was inspected for native editability, permissions,
+204 no-body success and destruction behavior. Both task contracts are decision-complete.
+No runtime code, tests, configuration, server settings or Redmine entries were changed.
+
+| Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [tool-042-update-time-entry](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-042-update-time-entry.md) | Correct supplied hours/date/activity/comments on one entry of a selected visible issue | Existing issue/time-entry readers, identity and restricted writer; PREP-019/020/027 baseline; PREP-002/016/017/018 testing | complete | 1,755 offline regression passes, sole old catalog argument failure corrected in passing rerun, seven additional edge cases and 10 owned 7.0.2/Inspector cases pass. Scoped checks pass; [evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-042-testing.md) distinguishes targeted corrections from final full rerun and records cleanup/policy limits |
+| 2 | [tool-043-delete-time-entry](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-043-delete-time-entry.md) | Permanently remove one selected entry with exact target checks and truthful receipt | Same existing baseline; independent of TOOL-042 and TOOL-041 acceptance | complete | 1889 full offline passes; 32 unit/82 dedicated integration and 12 owned native/Inspector cases pass. MCP extra-argument defect fixed; scoped checks and exact zero-resource cleanup pass. [Evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-043-testing.md) records native injection/policy limits |
+
+Each public behavior has one owner and neither new task depends on the other. Coordinate
+shared models/service/registration files without reverting existing work. Both require the
+separate restricted writer, admitted caller and native edit permissions. `allowed_all` includes
+them only after implementation/registration and a writer upgrade; it cannot create absent tools.
+Update does not move/recredit entries; delete has no undo or bulk transaction. Every mutation
+is single attempt; receipts distinguish native acceptance from later observations. A GET 404
+after an uncertain DELETE cannot prove deletion. Project-only entries, bulk writes, custom
+fields and server changes remain unassigned. Review, coding and testing are separate stages.
+
+The user subsequently assigned TOOL-042 implementation on 2026-10-08. Its code and public
+documentation are finished; static checks and the testing handoff are recorded in the task.
+The updated catalog has 18 reads and 17 writes. No tests, fixtures, startup, Inspector, live
+calls, deployment or environment changes were performed. TOOL-043 remains planned and has
+not been implemented; its independent deletion contract is preserved.
+
+The user subsequently assigned TOOL-042 tests on 2026-10-08. Test implementation and selected
+acceptance are finished: 61 unit/99 dedicated integration scenarios have passing evidence,
+native/Inspector verification has 10 passes, and all observed offline failures are resolved.
+Disposable owned roles/users/project/activities/entries were removed; the shared 6.0.5 instance
+and incident entries were untouched. Alternative global settings/plugin/race variants and
+unrelated repository Ruff debt remain disclosed. No final full regression rerun after the
+targeted argument correction/additional cases is claimed. TOOL-043 is unchanged.
+
+The user subsequently assigned TOOL-043 implementation on 2026-10-08. Code and public
+documentation are finished with a registered catalog of 18 reads and 18 writes. The dedicated
+deleter shares existing exact target/permission checks, sends one native DELETE and preserves
+receipt acceptance separately from caller-visible presence. Static-check results and the exact
+testing handoff are recorded in the task. No tests, fixtures, startup, Inspector, live calls,
+deployment or environment changes were performed in this coding stage. Status is blocked only
+on the outstanding separately assigned testing/acceptance stage.
+
+The user separately assigned TOOL-043 testing on 2026-10-08. Acceptance now includes 32 unit,
+82 dedicated integration cases, four additional current-writer matrix cases, and a clean final
+full offline run with 1889 passes. Native/Inspector acceptance has 11 passes plus one added
+no-issue-view permission case. Fixed undeclared MCP arguments being ignored by explicitly
+forbidding extra arguments for delete_time_entry. Verified native storage absence/control/totals,
+own/all/denied roles, duplicate and independent calls, committed fault receipts and moved-entry
+race. Task-owned resources and credential configs were removed; global policies/shared state
+and incident entries remain unchanged. Scoped checks pass. [Evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-043-testing.md)
+records exact executions, cleanup and limitations; no final single 12-case native rerun is claimed.
+
+## Issue time-entry creation plan
+
+On 2026-10-08, the user requested a task plan for the missing operation needed to log eight
+hours today on each selected issue. Existing time-entry readers remain the implemented baseline.
+This plan adds project activity discovery and own-time creation on one visible issue per call.
+Dates are explicit, activity defaults remain native, and separate calls retain independent
+receipts. Other-user logs, project-only creation, bulk writes, edit/delete and activity
+administration remain unassigned. `allowed_all` will include creation only after the new write
+operation is implemented and registered; it does not itself implement an absent tool.
+
+Exact 7.0.2 release source was inspected on 2026-10-08 for permissions, project activity
+expansions/defaults, creation validation and receipts. Both contracts are decision-complete;
+implementation and verification remain pending. No tests, fixtures, startup, Inspector, live
+mutations, configuration or Redmine server changes are authorized by this planning assignment.
+Review, coding and separately authorized testing are distinct next stages.
+
+The user subsequently assigned TOOL-040 coding on 2026-10-08. Its reader is implemented;
+scoped Ruff lint/format, full-source mypy and diff whitespace checks pass. Repository-wide Ruff
+reports seven existing lint findings and one existing unformatted file outside task scope.
+The user subsequently waived TOOL-040 testing and assigned TOOL-041 coding. TOOL-040 is closed
+under that explicit waiver, without claiming runtime acceptance. TOOL-041 implementation is
+finished; scoped Ruff lint/format, full-source mypy (127 files) and diff whitespace checks pass.
+The same unrelated whole-repository Ruff findings remain. TOOL-041 testing is a separate
+assignment. No tests, startup, Inspector or live calls ran; the writer is not deployed by this stage.
+
+| Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [tool-040-list-project-time-entry-activities](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-040-list-project-time-entry-activities.md) | Resolve active project activity names to IDs without inventing defaults | Existing project reader and bounded GET client; prep-020 baseline; prep-002/016/017/018 for later verification | complete | User waived testing on 2026-10-08 and directed TOOL-041 continuation; static checks pass; native acceptance remains unverified |
+| 2 | [tool-041-create-time-entry](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-041-create-time-entry.md) | Log own hours on one visible issue with an explicit date, restricted writer and truthful acceptance/read-back | Existing issue/identity/writer; prep-019/020/027 baseline; TOOL-040 for named activity choices (testing waived); prep-002/016/017/018 for later testing | blocked | Implementation finished; testing pending. Scoped Ruff lint/format, mypy and diff checks pass; unrelated repository Ruff findings recorded. Separately authorize TOOL-041-001..009, catalog/fixture updates and owned 7.0.2/Inspector/state/cleanup acceptance |
+
+Each public behavior has one owner. TOOL-040 is the client prerequisite for discovering activity
+names; creation can still use a known ID or a native default without activity-read permission.
+The new IDs preserve TOOL-037's retirement and the previous TOOL-038/039 tag-task mappings.
+The existing localhost:3000 6.0.5 observation is not acceptance of either new tool on pinned 7.0.2.
+
+## Bug task plans
+
+Bug investigation and fix plans live in [bugs/](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/bugs/README.md).
+Use the [bug task template](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/bugs/TEMPLATE.md) for new reports and link assigned
+bug tasks and their status here.
+
+| Task | Affected tool | Status | Next action |
+|---|---|---|---|
+| [bug-001-get-issue-upstream-response](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/bugs/bug-001-get-issue-upstream-response.md) | `get_issue` | blocked | Fix authorized; source inspection cannot identify the cause from the generic error. Obtain the failing sanitized upstream response and exact arguments; testing remains pending. |
+
+## RedmineUP issue tags plan
+
+On 2026-10-08, the user requested task documents for Redmine 7.0.2 with RedmineUP Tags
+2.2.0 Light. The retained outcomes are filtering issues by ANY selected name within one
+exact project or across caller-visible projects. Assignment writes were originally requested
+and subsequently removed by the user on 2026-10-08. Adding/removing assignments and creating
+tag names are no longer assigned outcomes. Shared deletion/rename/merge, tags on project
+records, independent unused-tag creation, and changes to `create_issue` are outside scope.
+
+The user prohibits all Redmine server changes. The companion approach, supplemental GET and
+configuration were removed. Existing PREP-028 code preserves native detail tags only if returned,
+otherwise null/not_returned, without changing list or writer output. User-supplied
+[TAGS-REST-001..003](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/integrations/redmineup-tags.md) now establish native known-name filtering
+(positive and negative controls), while list/detail responses omit full tags. These are user
+observations, not agent tests or complete MCP acceptance. Exact source backs multi-name ANY and
+count/paging, which still need later acceptance. Existing core acceptance is baseline only.
+
+| Preferred order | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-028-redmineup-tags-api-readiness](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-028-redmineup-tags-api-readiness.md) | Record filter readiness and preserve truthful issue-detail tags | Existing reader; user REST evidence recorded | blocked | Implementation finished; testing pending (PREP-028-001..006). Detail fallback and public model export implemented; scoped Ruff and mypy pass. Full tags absent; filter evidence is usable independently |
+| 2 | [tool-036-filter-issues-by-tags](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-036-filter-issues-by-tags.md) | Find issues matching ANY supplied known tag alongside existing filters | Existing list reader/budgets; PREP-028 evidence satisfied, no dependency on its mapper acceptance | blocked | 1,584 offline regressions, 82 focused + 2 cleanup cases and 3 selected port-3000 live tests pass; Inspector discovery/two calls pass. Observed target is 6.0.5; 7.0.2, real two-tag overlap/private fixtures remain pending. See [testing evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-036-tag-filter-testing.md) |
+
+Each public behavior has one owner. PREP-028 owns the existing truthful detail fallback;
+TOOL-036 owns filtering. Filtering uses
+PREP-028's already recorded upstream evidence; its
+dependency is that evidence, not completion of PREP-028 mapper acceptance. Filtering
+is not a write-permission or full-state proof.
+Keep implementation review, coding, and separately authorized testing as distinct stages.
+During the original coding stages, no tests, fixtures, dependency changes, startup, Inspector,
+plugin installation, mutations or deployment were performed. Following the documentation review,
+TOOL-036 coding implements
+`tags_any`; a subsequent user correction removed the enable flag and Compose/env passthrough.
+Tag filtering is always available. Tags support
+uses only already available REST support; no server plugin, library installation or
+server modification is permitted. Complete assignment reads and tag discovery are no longer
+assigned outcomes; their API limitations remain documented. Assignment writes were also removed.
+
+The user subsequently authorized TOOL-036 testing and explicitly selected localhost:3000.
+Its existing marked synthetic container runs Redmine 6.0.5; selected live results are recorded
+with that version limit, without server/fixture changes. Existing known-name filtering and
+REST/MCP/Inspector parity pass; full target and role/overlap acceptance remains open.
+
+### Tags task removal and renumbering (2026-10-08)
+
+At the user's explicit request, remove the complete-assignment read and tag catalogue task
+documents and compact the retained tasks into implementation order. The IDs below describe
+the old mapping only; current references use the new IDs and capability filenames.
+
+| Previous task | Current disposition |
+|---|---|
+| TOOL-036: read complete assigned tags | Removed from the assigned roadmap |
+| TOOL-037: list caller-visible tag names | Removed from the assigned roadmap |
+| TOOL-038: filter issues by tags | [TOOL-036: filter issues by tags](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-036-filter-issues-by-tags.md) |
+| TOOL-039: update issue tag assignments | Renumbered to TOOL-037, then removed at the user's request |
+
+Task filenames, task/scenario/evidence IDs, dependencies, links and public documentation were
+updated together. Previously cited TOOL-038/039 evidence now uses TOOL-036/037 respectively;
+this renumbering runs no new verification. Retained implementation history and pending criteria
+are preserved. Runtime code, operation IDs and existing acceptance results are unchanged.
+
+### Assignment-write task removal (2026-10-08)
+
+The user removed TOOL-037 after the coding review found unresolved effective REST permission
+preflight and assignment-preservation guarantees. Delete its task document and active references.
+The plugin source does define `edit_tags` and `create_tags`; removal does not assert that these
+permissions do not exist. They do not establish a proven effective REST authorization contract.
+No tag writer was implemented, so no runtime code or tests need removal. PREP-028 and TOOL-036
+remain; TOOL-037 is retired and must not be reused. No further renumbering is needed.
+
+## Redmine read retry plan
+
+On 2026-10-07, the user requested an implementation task for retrying Redmine calls.
+This plan covers bounded retries for eligible upstream GET failures, including identity,
+discovery and writer preflight/read-back reads. Mutations remain single attempt. The
+separate `get_issue` malformed-data bug is not resolved by this policy.
+The original assignment created planning documents only. Subsequent implementation and review
+fixes are finished, with user-authorized Ruff, formatting and mypy checks passing. Runtime
+testing was subsequently assigned on 2026-10-07. Focused offline, owned live reader,
+Inspector and static/architecture results are recorded in
+[PREP-027 testing](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-027-testing.md). Full regressions completed with
+1,457 passes and 41 old single-attempt assertions; all 41 are resolved in 92 passing final targeted
+cases. The record distinguishes that evidence from a clean full-suite rerun after test edits.
+Follow-up source review confirmed one central GET retry owner covers current upstream reads.
+The task also specifies parent deadline handling, cooperative batch remaining time and
+single-dispatch MCP-to-REST behavior; no additional middleware/session retry loop is planned.
+The subsequent Inspector credential cleanup review finding is fixed; nine offline regression
+cases and scoped static checks pass. Runtime retry behavior and earlier acceptance evidence
+remain unchanged; see the verification record's follow-up review section.
+
+| Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|
+| [prep-027-redmine-read-retries](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-027-redmine-read-retries.md) | Recover transient Redmine GET failures with configurable attempts, backoff and unchanged budgets | Existing prep-015 budgets, prep-019 receipts, prep-020 catalog baseline, prep-023 batch limits; prep-016/017/018 for verification | complete | 103 focused cases, 92 corrected legacy cases and 2 owned live reader cases pass; all 41 full-run failures resolved by final targeted reruns. Startup/Inspector discovery + 3 reads and static/architecture checks pass; zero live mutations. See verification record. |
+
+## Tool quality follow-up plan
+
+The user requested five technical task plans on 2026-10-07, covering review items 1, 3, 4, 5
+and 6: input-schema parity, membership batch budgets, request-body admission, declared upstream
+field validation, and private SDK integration. These extend existing tools and runtime boundaries;
+they do not add public operations. Review item 2 (unknown input/filter handling) and the separate
+output-context/`extra_fields` discussion are outside these five tasks. Input unknown-property
+policy and output field preservation must not be conflated.
+
+The user subsequently authorized testing for all five tasks on 2026-10-07; current results
+are in [Preparation regression testing](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md).
+
+The original planning assignment generated documents only. Subsequent explicitly assigned coding
+stages and subsequent verification results are recorded below. The plan itself authorizes no
+tests, fixtures, startup, Inspector, native mutations or deployment. Existing task histories,
+waivers and current catalog acceptance remain intact.
+
+| Preferred order | Review item | Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|---|---|
+| 1 | 1 / P1 | [prep-022-mcp-schema-parity](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-022-mcp-schema-parity.md) | Invoke existing REST-valid null and union inputs through MCP without adapter restrictions | Accepted prep-020 contracts; existing prep-016/017 infrastructure | complete | Accepted 2026-10-07: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; owned cleanup passed; [verification](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md) |
+| 2 | 3 / P2 | [prep-023-membership-batch-budgets](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-023-membership-batch-budgets.md) | Complete documented small ten-item membership fixtures with a dedicated bounded batch policy and accurate receipts | tool-033 current acceptance; prep-019 receipts; prep-020 baseline | complete | Accepted 2026-10-07: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; owned cleanup passed; [verification](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md) |
+| 3 | 4 / P2 | [prep-024-bounded-request-bodies](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-024-bounded-request-bodies.md) | Reject oversized REST/MCP bodies before parsing while preserving ordinary uploads | Existing upload/middleware contracts; prep-020 baseline | complete | Accepted 2026-10-07: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; owned cleanup passed; [verification](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md) |
+| 4 | 5 / P2 | [prep-025-strict-upstream-fields](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-025-strict-upstream-fields.md) | Receive trustworthy declared IDs, counts, flags and progress without coercion or receipt corruption | prep-020 resource contracts; prep-019 observation boundaries | complete | Accepted 2026-10-07: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; owned cleanup passed; [verification](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md) |
+| 5 | 6 / maintenance | [prep-026-mcp-sdk-compatibility-boundary](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-026-mcp-sdk-compatibility-boundary.md) | Maintain pinned SDK hooks through one typed boundary with stable dispatch/discovery/lifecycle | prep-022 accepted; existing session/discovery/receipt baseline | complete | Accepted 2026-10-07: 1395 offline tests and 23 owned Redmine 7.0.2 live tests including Inspector passed; static/architecture checks passed; owned cleanup passed; [verification](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-022-026-testing.md) |
+
+Tasks prep-022 through prep-025 are independent correction tracks. Preferred order is priority
+and integration guidance, not permission to execute a task range. prep-026 has a new hard
+dependency on accepted prep-022 behavior and should normally run last to consolidate final hooks.
+On 2026-10-07, the user explicitly authorized prep-026 coding before prep-022 acceptance,
+keeping both tasks' testing pending. This waives coding order only; it does not establish
+prep-022 acceptance or authorize SDK/runtime testing. The subsequent testing assignment
+now accepts prep-022 and prep-026 as recorded above.
+On 2026-10-07, the user explicitly requested numbering these five tasks from `prep-022`.
+The former pilot task's number is reused with this authorization; filenames, task IDs,
+dependencies and scenario/evidence IDs were renumbered together. This does not restore the
+removed pilot workstream. Operational readiness, recovery, CI and production deployment remain
+outside this plan.
+
+## Sequential stabilization plan
+
+The user requested task documents for the project-review priorities on 2026-10-07.
+The original planning stage created documents only. Subsequent explicitly assigned implementation
+and verification results are recorded below; CI activation, deployment and recovery remain separate.
+The user subsequently removed the pilot-deployment workstream from the current roadmap.
+Existing capability task IDs, contracts, waivers, and execution evidence are preserved.
+
+Execute the following tasks one at a time. Write-outcome consistency comes first so the later
+acceptance work verifies the corrected behavior. Each task separates implementation from
+separately authorized verification. A finished coding stage does not satisfy a verification
+dependency. The current stabilization sequence ends with the documentation task.
+
+| Order | Review priority | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|---|
+| 1 | Inconsistent write outcomes | [prep-019-write-outcome-consistency](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-019-write-outcome-consistency.md) | Treat mutation HTTP 5xx as uncertain while preserving individual/batch schemas, GET errors, and reconciliation | Existing writer/auth implementations; prep-016/017 baseline; prep-018 owned live infrastructure | complete | Accepted on 2026-10-07: full offline suite 1035 passed; transport/admission tests 22 passed; all 15 writers covered through REST/MCP; owned 7.0.2 real commit/HTTP-500 reconciliation and cleanup plus Inspector compatibility pass. Ruff/format/mypy and diff checks pass; proceed to prep-020 in its own assignment |
+| 2 | Outstanding acceptance | [prep-020-current-catalog-acceptance](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-020-current-catalog-acceptance.md) | Map current capabilities to actual evidence and close version, membership, allowed_all, and relevant historical gaps | prep-019 accepted; existing prep-018 isolated environment guidance | complete | Accepted 2026-10-07: [32-operation ledger](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/current-catalog-acceptance.md) audited; 1086 offline and 21 owned 7.0.2 live cases pass; TOOL-032-008/033-011, allowed_all and Inspector pass; broader original variants remain explicitly open in H1..H5; proceed to prep-021 without a release-readiness claim |
+| 3 | Stale documentation | [prep-021-current-catalog-documentation](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-021-current-catalog-documentation.md) | Make setup, writer configuration, security guidance, and release limitations match current behavior | prep-020 accepted | complete | Accepted 2026-10-07: current guides aligned with the 17-read/15-write ledger, pinned/personal writer modes and allowed_all; STAB-021-001..005 manual source/prose/example/link review and diff check pass. No tests or operational commands run; historical gaps and Unreleased status retained. Stabilization complete for local development; future feature or coverage work requires its own assignment |
+
+These are shared stabilization prerequisites, not new Redmine tools. prep-020 coordinates
+evidence without taking contract ownership from tool-032, tool-033, or the allowed_all follow-up.
+prep-021 owns correction of existing guidance. Operational readiness, CI and recovery work
+remain deferred outside the current local-development roadmap.
+The original prep-009 final release review remains separate; completing
+this plan does not publish a release or silently close its historical prerequisites.
+
+Active task IDs are `prep-001` through `prep-028`, `tool-001` through `tool-036`, and
+`tool-040`/`tool-041`. TOOL-037 remains retired; TOOL-038/039 retain historical tag-task mappings
+and are not reused.
+
+## Issue estimates and general spent-time reporting
+
+The user assigned both independent coding tasks on 2026-10-06. Test implementation, execution,
+startup, Inspector and live verification require a separate testing assignment. Existing task
+evidence and unrelated work remain intact.
+
+| Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|
+| [tool-034-list-issue-estimates](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-034-list-issue-estimates.md) | Preserve issue-list estimates and missing-field evidence for truthful client totals | Existing issue reader, tool-015 detail models, prep-015 read budgets | complete | TOOL-034-001..005 passed: full offline suite 883 cases, owned 7.0.2 estimate parity/96-hour fixture, Inspector and static checks |
+| [tool-035-list-time-entries](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-035-list-time-entries.md) | Read caller-visible spent-time logs across projects, users and dates, including logs without issues | Existing time-entry reader, prep-015 budgets, tool-031 capability discovery | complete | TOOL-035-001..007 passed: full offline suite 883 cases, owned 7.0.2 scopes/date bounds/own-log visibility, Inspector numeric/me calls and static checks |
+
+The [writer `allowed_all` configuration follow-up](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/writer-operations-allowed-all.md) implements
+the user-requested option for every registered write operation. Testing remains pending.
+
+The user-authorized [caller project capabilities](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-031-list-my-project-capabilities.md) tool is
+implemented: `list_my_project_capabilities` returns paginated unique project roles, merged
+permissions and conditional/unknown candidate tools, with global tools separate. Centralized
+read rules cover projects, issues, versions, categories, files, time entries and attachment
+containers using the project permission union and visible-project/admin evidence.
+Tool entries default to `operation_id` and `state`; `include_reasons=true` adds explanations.
+Optional `project_id` and `operation_id` filters scope destination/action lookups; operation
+matches default to conditional evidence, with `include_unknown=true` retaining unknowns.
+The merged permission, read-rule and optional explanation follow-ups were inspected in source
+only in the earlier implementation assignment. The subsequently authorized three-phase
+testing record below establishes selected offline/live scenarios, including merged and
+inherited roles and scoped permission revocation. Earlier static checks are recorded in its implementation record.
+
+This dashboard tracks user-facing MCP capabilities. A Redmine REST endpoint is implementation
+evidence inside a task, not the unit of planning. The task document owns its detailed status;
+update this table in the same change when that status, blocker, or next action changes.
+Active task IDs are `tool-001` through `tool-036` and `prep-001` through `prep-028`.
+The retained stabilization follow-up consists of prep-019 through prep-021. The five
+tool-quality plans are prep-022 through prep-026, added and renumbered at the user's request
+on 2026-10-07.
+On 2026-10-02, the user requested compact numbering after document tasks
+were removed. Task filenames, dependencies, links, and scenario IDs were renumbered
+together; earlier IDs remain available in Git history. The deleted `issues-000` through
+`issues-008` IDs remain retired.
+
+The next strictly sequential capability roadmap is specified in
+[Redmine 7.0.2 files and issues](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/redmine-7-0-2-capabilities.md).
+Its tasks are listed below. The 7.0.2 deployment target is configured and accepted;
+the user waived actual runtime verification on 2026-10-02. Selected runtime scenarios now pass under prep-018; older broader acceptance criteria remain
+tracked in their original task records.
+
+Synthetic deployment: Redmine `7.0.2-bookworm` is pinned in `deploy/compose.test.yaml`.
+Planning baseline: 2026-09-30. Task records below contain the implementation and acceptance
+evidence completed since that baseline. Existing runtime configuration already has a
+false-default write gate, but the currently deployed catalog remains read-only.
+
+The original capability dashboards below retain historical task status and pending variants.
+Current selected testing evidence is the [coverage matrix](testing-coverage.md) and the
+prep-016 through prep-018 records dated 2026-10-06. Implementation-time statements about
+unexecuted verification describe the earlier assignments.
+
+## Earlier reader catalog and historical task status
+
+| Tool | What a client can do today | Status |
+|---|---|---|
+| `list_projects` | Page through projects visible to the requesting Redmine user. | Implemented; runtime acceptance not established by this plan |
+| `list_issues` | Page through issues by project, status, and assignee. | Implemented; extension task below |
+| `get_issue` | Read one visible issue with journals and attachment metadata. | Implemented; extension task below |
+| `get_current_user` | Identify the caller and read visible project memberships with roles. | Implementation finished; acceptance pending in tool-013 |
+| `list_my_project_capabilities` | Read unique caller project roles, merged permissions and conditional/unknown tool candidates. | Aggregation implemented; follow-up checks and runtime acceptance pending separately authorized verification |
+
+## Ordered task dashboard
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-001-ruff-checks](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-001-ruff-checks.md) | Repository static checks can assess later tool changes. | None | complete | `bash scripts/check.sh`, whitespace, and router contract checks pass. |
+| 2 | [prep-002-offline-tests](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-002-offline-tests.md) | Tool changes have credential-free automated verification. | prep-001 | complete | Locked offline REST/MCP suite, static checks, and package build pass. |
+| 3 | [tool-001-list-issues-search](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-001-list-issues-search.md) | Find issues by useful work filters and ordering. | prep-002 | complete | Offline, static, and marked synthetic Inspector checks pass. |
+| 4 | [tool-002-get-issue-context](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-002-get-issue-context.md) | Request the related context needed for one issue. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). DETAIL-001 through DETAIL-004 pass offline. Same-reader journal IDs/private flags and empty allowed statuses match Redmine; contrasting ordinary-role visibility and nonempty transitions remain pending. |
+| 5 | [tool-003-get-project](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-003-get-project.md) | Read one visible project's details. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). PROJECT-001 through PROJECT-003 pass offline. Visible-project mapping and marked restricted-project rejection pass for the existing live fixture; complete baseline acceptance remains pending. |
+| 6 | [tool-004-list-issue-statuses](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-004-list-issue-statuses.md) | Resolve status IDs and closed flags. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). STATUS-001/002 pass offline. Six live statuses and closed flags match Redmine; the sampled issue has an empty allowed-status set, so the nonempty workflow comparison remains pending. |
+| 7 | [tool-005-list-trackers](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-005-list-trackers.md) | Resolve tracker IDs and supported fields. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). TRACKER-001/002 pass offline. Three registry tracker IDs/names match Redmine; full comparison against visible project tracker settings and a clean live rerun remain pending. |
+| 8 | [tool-006-list-issue-priorities](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-006-list-issue-priorities.md) | Resolve priority IDs and the default. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). PRIORITY-001/002 pass offline. Five registry priorities and default flags match Redmine; complete clean baseline acceptance remains pending. |
+| 9 | [tool-007-list-project-versions](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-007-list-project-versions.md) | Discover versions available to a project. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). VERSION-002/003 pass offline, including strict collection counts. The sampled base project's empty version set matches Redmine; populated shared/private visibility under contrasting ordinary roles remains pending. |
+| 10 | [tool-008-list-project-issue-categories](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-008-list-project-issue-categories.md) | Discover categories available to a project. | prep-002 | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). CATEGORY-002/003 pass offline, including strict collection counts. Inspector and Redmine return 403 for the reader; a permitted populated-category/private-project fixture remains missing for CATEGORY-001/004. |
+| 11 | [tool-009-list-issues-by-category](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-009-list-issues-by-category.md) | Find all visible issues in a selected project category. | prep-002; tool-008 for category ID discovery | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). CATISSUE-001 through CATISSUE-004 pass offline. CATISSUE-005 remains blocked: the fixture records no categories and the reader lacks category-list permission. |
+| 12 | [tool-010-list-issues-by-target-version](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-010-list-issues-by-target-version.md) | Find visible issues in a Target version and optionally exclude subprojects. | prep-002; tool-007 for Target version ID discovery | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). TARGETISSUE-001 through TARGETISSUE-005 pass offline. Inspector and same-key Redmine return zero exact-project and seven descendant-inclusive History Alpha/Sprint 02 Bug matches with matching IDs/count/version membership. Full visibility acceptance and clean live rerun remain pending. |
+| 13 | [tool-011-expose-issue-schedule-and-spent-hours](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-011-expose-issue-schedule-and-spent-hours.md) | Read issue start/due dates and visible direct spent hours so clients can identify dated Bugs and sum their hours. | prep-002; tool-001 issue search; tool-010 exact-project scoping | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). DATE, HOURS, AGG, COMPAT, and MCP offline cases pass. Thirteen Operations Bugs have matching list date/hour fields and sampled detail fields. No issue qualifies for September 2026, so LIVE-001's nonempty hours aggregate remains pending. |
+| 14 | [tool-012-list-issue-time-entries](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-012-list-issue-time-entries.md) | Identify the users credited with visible spent hours on selected issues. | prep-002; tool-011 issue selection and direct-hours context | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). ENTRY, PAGE, AGG, AUTH, VIS, COMPAT, and MCP offline cases pass. Three live entries match Redmine by ID, issue, credited user, hours, date, and count. All-user completeness and the contrasting-role visibility matrix remain pending. |
+| 15 | [tool-013-get-current-user](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-013-get-current-user.md) | Identify the caller and their visible project memberships and roles. | prep-002; prep-003 identity foundation (runtime acceptance pending) | blocked | Offline acceptance expanded in prep-004 (356-case full suite passes). USER-001 through USER-009 executed variants pass offline. The live ordinary profile's public fields, ten memberships, and roles match Redmine. USER-010 remains blocked by the missing second ordinary personal key and other account/role variants. |
+
+Tasks 3, 4, 11, 12, and 13 extend existing tools. Tasks 5 through 10, 14, and 15 add eight operations. Each task has one
+contract owner; supporting model, service, gateway, route, and registration edits belong to that
+owner. The issue extensions and lookup tasks may be implemented in any order after prep-002;
+the table gives the preferred release order, not a code dependency.
+
+## Runtime infrastructure work
+
+| Task | Outcome | Status | Blocker / next action |
+|---|---|---|---|
+| [prep-003-runtime-foundation](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-003-runtime-foundation.md) | Bound auth identity, strict service queries, bounded HTTP reads, exception/logging boundaries, lifecycle ownership, validated MCP exposure, and static architecture gate | blocked | Implementation accepted with testing pending. Expanded offline foundation checks and MCP startup fix pass under prep-004; remaining ordinary-account/live matrix pending. |
+
+## Redmine 7.0.2 sequential capability roadmap
+
+This roadmap plans fifteen operations and extends `list_issues` and `get_issue`.
+The 7.0.2 image is pinned in the synthetic Compose deployment. Each active row
+depends on accepted evidence and explicit user acceptance of its listed predecessor.
+Unit testing requires separate user authorization for each task. The user waived
+actual runtime verification on 2026-10-02; planned checks are not passing evidence.
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-004-accept-existing-baseline](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-004-accept-existing-baseline.md) | Accept the existing reader baseline | prep-002-offline-tests accepted | complete | User accepted the revised offline baseline by directing continuation to prep-005 on 2026-10-02. Live waiver and prior limitations retained; see [dated evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/prep-004-verification.md). |
+| 2 | [prep-005-redmine-7-0-2](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-005-redmine-7-0-2.md) | Pin Redmine 7.0.2 | prep-004-accept-existing-baseline accepted | complete | User accepted the final 7.0.2 pin and waived actual runtime verification on 2026-10-02; live behavior remains unverified. |
+| 3 | [tool-014-list-issues-associations](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-014-list-issues-associations.md) | Extend issue lists with associations | prep-005-redmine-7-0-2 accepted | complete | User directed continuation without verification on 2026-10-02; static checks pass, but unit and live behavior remain unverified. |
+| 4 | [tool-015-get-issue-write-context](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-015-get-issue-write-context.md) | Expose issue write and file context | tool-014-list-issues-associations accepted | blocked | Implementation and static checks finished; user directed continuation to tool-016 with unit tests unexecuted and live verification waived. |
+| 5 | [tool-016-list-document-categories](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-016-list-document-categories.md) | List document categories | tool-015-get-issue-write-context continuation directed | blocked | Implementation finished; exact 7.0.2 source, Ruff, mypy, and final diff reviewed. TOOL-016-001 through TOOL-016-005 unexecuted; live verification waived. |
+| 6 | [tool-017-list-project-files](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-017-list-project-files.md) | List project files | tool-016-list-document-categories continuation directed | blocked | Implementation, static checks, and user review approved on 2026-10-02; TOOL-017-001 through TOOL-017-005 remain unexecuted. User directed continuation to tool-018. |
+| 7 | [tool-018-get-attachment](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-018-get-attachment.md) | Read attachment metadata | tool-017-list-project-files approved | blocked | Implementation, static checks, and user review approved on 2026-10-02; TOOL-018-001 through TOOL-018-005 remain unexecuted. User directed continuation to prep-006. |
+| 8 | [prep-006-bounded-binary-downloads](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-006-bounded-binary-downloads.md) | Bound binary download transport | tool-018-get-attachment approved | blocked | Implementation, static checks, and user review approved on 2026-10-02; offline/live verification remains unexecuted. User directed continuation to tool-019. |
+| 9 | [tool-019-download-attachment](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-019-download-attachment.md) | Download bounded attachment content | prep-006-bounded-binary-downloads approved | blocked | Implementation, static checks, and user review approved on 2026-10-02; TOOL-019-001 through TOOL-019-005 remain unexecuted. User directed continuation to prep-007. |
+| 10 | [prep-007-restricted-writer-foundation](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-007-restricted-writer-foundation.md) | Establish restricted writer runtime | tool-019-download-attachment approved | blocked | Implementation and static checks finished; user review and separately authorized offline/synthetic verification pending. |
+| 11 | [prep-008-synthetic-writer-verification](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-008-synthetic-writer-verification.md) | Prepare disposable writer verification | prep-007-restricted-writer-foundation approved | blocked | Controlled fixture and evidence plan prepared; review and separately authorized execution pending. |
+| 12 | [tool-020-upload-attachment](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-020-upload-attachment.md) | Upload bounded attachment bytes | prep-008 plan committed; execution pending | blocked | Implementation and static checks approved by user on 2026-10-02; offline/synthetic permission and state evidence pending. Continue to tool-021. |
+| 13 | [tool-021-add-project-file](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-021-add-project-file.md) | Attach upload as project file | tool-020 coding approved; tests pending | blocked | Implementation and static checks approved by user on 2026-10-02; offline/synthetic permission and state evidence pending. Continue to tool-022. |
+| 14 | [tool-022-update-attachment](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-022-update-attachment.md) | Edit attachment metadata | tool-021 coding approved; tests pending | blocked | Implementation and static checks approved by user on 2026-10-05 (commit `e248644`). Requested tool-017 through tool-022 coding range finished; separately authorized offline/synthetic container permission and state checks remain pending. |
+| 15 | [tool-023-delete-attachment](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-023-delete-attachment.md) | Delete one attachment | tool-022 coding approved; tests pending | blocked | User approved commit `c6ef155` on 2026-10-05 and directed tool-024 continuation; separately authorized TOOL-023-001 through TOOL-023-005 verification pending. |
+| 16 | [tool-024-create-issue](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-024-create-issue.md) | Create or natively copy an issue | tool-023 coding approved; tests pending | blocked | User approved commit `d600fda` on 2026-10-05 and directed tool-025; separately authorized TOOL-024-001 through TOOL-024-005/native copy state verification pending. |
+| 17 | [tool-025-update-issue](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-025-update-issue.md) | Update issue fields or add a note | tool-024 coding approved; tests pending | blocked | User approved commit `27cae75` on 2026-10-05 and directed tool-026; separately authorized TOOL-025-001 through TOOL-025-005/permission and state verification pending. |
+| 18 | [tool-026-update-issue-note](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-026-update-issue-note.md) | Edit a journal note | tool-025 coding approved; tests pending | blocked | User approved commit `6aef9de` on 2026-10-05 and directed tool-027; separately authorized TOOL-026-001 through TOOL-026-005/journal permission and state verification pending. |
+| 19 | [tool-027-create-issue-relation](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-027-create-issue-relation.md) | Create one issue relation | tool-026 coding approved; tests pending | blocked | User approved commit `a7f89f8` on 2026-10-05 and assigned tools 028-030; separately authorized TOOL-027-001 through TOOL-027-005/permission, scheduling, and state verification pending. |
+| 20 | [tool-028-delete-issue-relation](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-028-delete-issue-relation.md) | Delete one issue relation | tool-027 coding approved; tests pending | blocked | User approved commit `f21140d` on 2026-10-05 and requested continuation; separately authorized TOOL-028-001 through TOOL-028-005/permissions, journals, and state verification pending. |
+| 21 | [tool-029-add-issue-watcher](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-029-add-issue-watcher.md) | Add one watcher | tool-028 coding approved; tests pending | blocked | User approved commit `b930d8c` on 2026-10-05 and directed tool-030; separately authorized TOOL-029-001 through TOOL-029-005/watcher eligibility, permissions, and membership verification pending. |
+| 22 | [tool-030-remove-issue-watcher](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-030-remove-issue-watcher.md) | Remove one watcher | tool-029 coding approved; tests pending | blocked | Implementation and static checks finished on 2026-10-05; user review and separately authorized TOOL-030-001 through TOOL-030-005/removal permissions, no-op behavior, and membership verification pending. |
+| 23 | [prep-009-release-acceptance](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-009-release-acceptance.md) | Review complete Redmine 7.0.2 release | tool-030-remove-issue-watcher accepted | blocked | Await tool-030-remove-issue-watcher acceptance and exact 7.0.2 evidence. |
+
+## Multi-user writer authorization roadmap
+
+The user requested this plan on 2026-10-05. The
+[multi-user writer design](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/multi-user-writer-authorization.md) extends the existing writer;
+it adds no new public operation and preserves all earlier task IDs and evidence.
+Phase 1 permits explicitly configured personal-key authentication with the existing common
+catalog. Phase 2 adds project/resource capability checks and caller-specific candidate discovery.
+Reader isolation and the deployment operation ceiling remain required. Planning authorizes no
+implementation, unit tests, startup, Inspector, or synthetic mutations.
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-010-permission-session-contract](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-010-permission-session-contract.md) | Resolve permission evidence, resource context, and session integration | Existing prep-003/005/007 implementations; prior acceptance limitations retained | complete | [Dated contract review](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/prep-010-contract-review.md) resolves all eleven operations, partial evidence, raw discovery handler and SDK session binding. Implement prep-011 next. |
+| 2 | [prep-011-multi-user-writer-auth](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-011-multi-user-writer-auth.md) | Authenticate personal keys and restrict writes independently of reads | prep-010 session contract; existing prep-007 implementation | blocked | Implementation and Ruff/mypy/diff checks pass. AUTH-001 through AUTH-008 and metadata packaging checks assigned to prep-014; continue prep-012 coding under the full-range assignment. |
+| 3 | [prep-012-project-resource-authorization](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-012-project-resource-authorization.md) | Check caller capabilities in the actual target context | prep-010 resolved permission matrix; prep-011 implementation | blocked | All eleven service checks, typed evidence and same-key target/role gateway implemented; Ruff/mypy/AST/diff checks pass. PERM-001 through PERM-009 pending in prep-014; continue prep-013 coding. |
+| 4 | [prep-013-caller-tool-discovery](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-013-caller-tool-discovery.md) | Discover tools relevant to the caller without changing shared registry | prep-010 adapter contract; prep-011/012 implementations | blocked | Raw SDK discovery handler and immutable schema superset implemented; Ruff/mypy/AST/diff checks pass. DISC-001 through DISC-007 and runtime acceptance assigned to prep-014. |
+| 5 | [prep-014-multi-user-writer-acceptance](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-014-multi-user-writer-acceptance.md) | Verify caller isolation, permissions, discovery, and resulting write state | prep-011/012/013 implemented; prep-002 baseline; prep-008 fixture guidance; separate testing authorization | blocked | User clarified that the implementation request did not authorize tests. Agent-created tests/tooling removed and existing test edits restored. No further unit tests, Inspector, synthetic seeding or live verification without explicit separate approval. |
+
+The old prep-009 release acceptance remains scoped to its existing roadmap. prep-014 owns
+acceptance of the multi-user change; old waivers and passing checks are not new runtime evidence.
+
+Execution assignment (2026-10-05): the user requested implementation of prep-010 through prep-014,
+quality checks and one commit per prep named `feat: prep_0xx <context>`. Coding stages remain
+separate from prep-014's explicit verification scope. No production rollout is included.
+
+## Caller project capabilities
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [tool-031-list-my-project-capabilities](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-031-list-my-project-capabilities.md) | Inspect caller roles, permissions and candidate tools per visible project | Existing project reader and prep-010/011/012/013 implementations | blocked | Implementation, review fix and static checks finished; runtime acceptance awaits separately authorized verification. |
+
+## Bounded Redmine reads
+
+The user authorized prep-015 coding on 2026-10-05. No user quotas, query state, count/statistics
+tool or generated export is included. The physical-request semaphore is shared per process;
+large query previews require narrowing before continuation, and attachments return links only.
+
+| Order | Task | Client outcome | Depends on | Status | Blocker / next action |
+|---|---|---|---|---|---|
+| 1 | [prep-015-bounded-redmine-reads](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-015-bounded-redmine-reads.md) | Bound pagination scans, upstream concurrency and logical read work; retrieve browser attachment links | Existing prep-003/005/010-013 and tool-031 implementations; prep-002 for testing | blocked | Implementation finished; timeout-boundary, shared proxy-admission and pagination-guidance review fixes applied; user-approved defaults are concurrency 50, admission 30s, read attempts 30 and aggregate deadline 90s. Ruff lint/format, mypy and diff whitespace checks pass. TEST-001 through TEST-006, updated old paging/download expectations and synthetic acceptance require separate verification authorization. |
+
+## Three-phase application testing
+
+The user explicitly authorized implementation and execution on 2026-10-05. The three directories
+are unit, offline integration and opt-in live E2E. [Coverage matrix](testing-coverage.md) maps all
+15 reader tools, eleven writers and shared runtime scenarios. Historical evidence is preserved.
+
+| Order | Task | Outcome | Depends on | Status | Next action |
+|---|---|---|---|---|---|
+| 1 | [prep-016-unit-testing](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-016-unit-testing.md) | Validate service/model/policy logic using fake ports | Existing prep-002 baseline | complete | 102 unit cases and static checks pass; see task evidence. |
+| 2 | [prep-017-offline-integration-testing](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-017-offline-integration-testing.md) | Verify current REST/MCP tools against mocked Redmine | prep-016 | complete | 395 integration cases and live opt-in gate pass. |
+| 3 | [prep-018-live-e2e-testing](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/prep-018-live-e2e-testing.md) | Verify real permissions, write state and owned cleanup | prep-017 | complete | 14 live cases, Inspector, browser and owned cleanup pass. |
+
+The existing shared synthetic environment runs 6.0.5. New live acceptance uses a separate
+`redmine-mcp-e2e` Compose project on localhost port 3001, with its own labeled database/files
+volumes and guarded fixture scripts. Existing containers, credentials and data are preserved.
+
+## Target version creation
+
+| Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|
+| [tool-032-create-project-version](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-032-create-project-version.md) | Create an open, unshared Target version; return readable existing versions with an explicit duplicate error | Existing project reader; prep-007/010-013 writer implementations; prep-016-018 testing infrastructure | complete | Current acceptance reconciled in prep-020 on 2026-10-07: 1086 offline/21 owned live cases pass; operation-specific 7.0.2 native state/roles/side effects, Inspector and disposable cleanup pass. Historical records remain in the task; current source-linked evidence is in the [ledger](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/current-catalog-acceptance.md) |
+
+## Project membership management
+
+The user selected one combined task for four separate MCP tools. Shared models, batch preflight,
+permission integration, and receipts belong to that task; no separate preparation task is assigned.
+List remains available on the reader; user-only writes require the restricted enabled writer.
+
+| Task | Client outcome | Dependencies | Status | Blocker / next action |
+|---|---|---|---|---|
+| [tool-033-project-members-management](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/plans/tasks/tool-033-project-members-management.md) | List project memberships and add, update, or delete user memberships across selected projects with whole-batch preflight and individual results | Existing project reader; prep-007/010-013 writer/auth/discovery implementations; prep-015 read budgets; prep-016-018 testing infrastructure | complete | Current acceptance reconciled in prep-020 on 2026-10-07: 1086 offline/21 owned live cases pass; operation-specific 7.0.2 native state/roles/side effects, Inspector and disposable cleanup pass. Historical records remain in the task; current source-linked evidence is in the [ledger](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/current-catalog-acceptance.md) |
+
+## Future ideas, not assigned tasks
+
+Issue deletion, administration, native Gantt API support, wiki content, and
+search remain outside this roadmap. Do not restore the deleted endpoint
+backlog or add operations solely because Redmine exposes them.
+
+## Status and handoff rules
+
+Use `discovery`, `specified`, `planned`, `implementing`, `verifying`, `complete`, or `blocked` as
+defined in the task template. `planned` means the public contract is decision-complete, even if a
+dependency is pending. `blocked` names missing evidence or an unresolved decision. `complete`
+requires implemented behavior and passing acceptance evidence, not a finished document or static
+checks alone. Before handing a task to an implementation agent, read its dependencies, exact next
+action, and latest evidence; update both the task and this dashboard after the handoff.

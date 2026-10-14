@@ -13,11 +13,32 @@
 | Dependencies | Existing [PREP-018 E2E baseline](prep-018-live-e2e-testing.md) and the current version-selection/automatic-preparation implementation |
 | Related tasks | [Testing coverage](../testing-coverage.md), [testing roadmap](../../testing-roadmap.md) |
 | Target Redmine version | Built-in 6.0.1/7.0.2; earlier 6.0.1 E2E verified on its dated setup; current self-contained layout and additional exact 6.x.x profiles pending |
-| Last updated | 2026-10-13, Codex |
-| Progress summary | Self-contained development/E2E setup documented; earlier 6.0.1 result retained as historical evidence; current layout acceptance pending |
-| Next action | Verify current 6.0.1/7.0.2 setup and remaining lifecycle/profile, coexistence, reset, and browser scenarios in separate assignments |
+| Last updated | 2026-10-14, Codex |
+| Progress summary | G02 Python profile/lifecycle/reset/gate cases pass; earlier 6.0.1 result remains historical; current native layout acceptance pending |
+| Next action | Verify current 6.0.1/7.0.2 native setup, seed reuse/recovery, coexistence, selected reset and browser scenarios separately |
 
 ## 2. Discovery and evidence
+
+### G02 offline verification follow-up (2026-10-14)
+
+The user assigned G02 from the [coverage review plan](../testing-gap-plan-2026-10-14.md).
+Its final focused run passed 171 new offline cases; a broader related regression passed
+1,095 before four late preflight additions. Scoped Ruff checks passed. No setup/runtime or
+native Ruby code changed. [Dated evidence](../../testing/evidence/g02-offline-setup-2026-10-14.md)
+records the cases, commands, corrected harness errors and mocked boundaries.
+
+| Original scenario | Current offline evidence | Remaining scope |
+| --- | --- | --- |
+| TEST-003 | Preparation order/cutoffs and exactly-once session preparation pass | Confirm actual first setup and native fixture availability |
+| TEST-005 | Python profile/container/volume/manifest/native-guard refusal cases pass | Native implementation/ownership behavior is simulated, not live acceptance |
+| TEST-006 | Exact reset command/target selection, foreign consumers/path refusals and failure cutoffs pass | Owned real selected reset and other-stack preservation |
+| TEST-007 | Built-in/custom exact-version selection and immutable pin/refusal cases pass | Runtime compatibility of additional custom releases remains separate |
+| TEST-008 | Real child-pytest selection/collection/opt-in/deselection and failure gates pass with fake preparation | No native execution needed for the gate contract |
+
+TEST-001/002/004/009 and live portions above remain pending. Simulated incomplete/colliding
+seed failures verify Python abort handling; actual Ruby seed idempotence and recovery remain
+TEST-004. The task remains in progress. Current built-in 7.0.2 uses host port 8001; older
+3002/profile statements below retain their original planning scope.
 
 ### Current setup contract (2026-10-13)
 
@@ -307,10 +328,10 @@ REDMINE_E2E_VERSION=7.0.2 uv run --frozen python scripts/verify-e2e-supplement.p
 
 | Evidence | Procedure | Expected | Actual result | Status |
 |---|---|---|---|---|
-| EVID-001 | Profile/lifecycle offline cases and relevant existing regressions | TEST-003, TEST-005, TEST-007, TEST-008 pass | Not run | Pending |
+| EVID-001 | Profile/lifecycle offline cases and relevant existing regressions | TEST-003, TEST-005, TEST-007, TEST-008 Python scope passes | G02: 171 final focused and 1,095 earlier related passes; see dated evidence | Accepted offline, 2026-10-14 |
 | EVID-002 | Selected 6.0.1 preparation, suite, and cleanup review | Version-specific acceptance or exact failures/skips | Not run | Pending |
 | EVID-003 | Selected 7.0.2 preparation, suite, and cleanup review | Version-specific acceptance or exact failures/skips | Not run | Pending |
-| EVID-004 | Two-stack coexistence and explicit selected reset | TEST-002, TEST-006 pass | Not run | Pending |
+| EVID-004 | Two-stack coexistence and explicit selected reset | TEST-002, TEST-006 pass | G02 offline reset boundaries pass; no real reset/coexistence run | Native acceptance pending |
 | EVID-005 | Ruff, mypy, architecture checks, and relevant repository checks after implementation | No introduced failures | Not run | Pending |
 
 Docker/plugin compatibility and test assumptions may fail on one version. Record and resolve

@@ -1,6 +1,7 @@
 # Writer admission simplification
 
-Date: 2026-10-13. Status: implementation complete; functional verification deferred.
+Implementation date: 2026-10-13. Status: current offline baseline accepted on 2026-10-14;
+native verification remains pending.
 
 ## Requested behavior
 
@@ -27,9 +28,16 @@ identity and target permissions. There is no separate list of admitted keys or u
 
 ## Verification handoff
 
-Tests were updated but not executed. No application startup, Inspector calls, live writes,
-deployment or private environment changes were performed. Historical passing test counts do
-not establish acceptance of this change.
+At the coding handoff, tests were updated but not executed. No application startup, Inspector
+calls, live writes, deployment or private environment changes were performed. Historical
+passing test counts do not establish acceptance of this change.
+
+The user's subsequent G01 assignment passed the complete unit and integration suites on
+2026-10-14: **855 unit and 1,541 integration cases**, with no failures or skips and exit 0.
+Existing admission, rotated-key, second-user, permission-denial, operation-ceiling and session
+isolation cases passed without further corrections. See the
+[dated offline evidence](../testing/evidence/g01-offline-baseline-2026-10-14.md).
+This follow-up does not establish live permissions or deployed writer acceptance.
 
 Ruff lint and formatting pass for changed Python files. The full `mypy src` check reports
 four errors in unchanged documentation tooling: `redmine_mcp_docs/tools/portal.py` at lines

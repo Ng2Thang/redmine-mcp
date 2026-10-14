@@ -1,5 +1,10 @@
 # Detailed DEBUG logging
 
+G04 follow-up (2026-10-14): dedicated console-path coverage now passes 54 new cases and
+199 related regression cases. LOG-01..05 are accepted offline; see
+[dated evidence](../testing/evidence/g04-debug-logging-2026-10-14.md). The original
+implementation-only verification handoff below is retained as historical context.
+
 > Writer admission update (2026-10-13): pinned-key and user ID admission checks
 > are retired. Earlier requirements and evidence below describe historical behavior.
 > See [current configuration](../configuration.md#separate-writer-deployment).

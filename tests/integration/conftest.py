@@ -15,6 +15,7 @@ from redmine_mcp.auth import WRITE_OPERATIONS
 from redmine_mcp.auth.capabilities import OPERATION_PERMISSIONS
 from redmine_mcp.config import Settings
 from tests.helpers import ISSUE, PROJECT
+from tests.issue_write_helpers import RELATION_RESPONSES
 from tests.membership_helpers import membership
 
 
@@ -268,7 +269,12 @@ class SyntheticRedmine:
                 return httpx.Response(201, json={"version": version})
             if path == "/attachments/9.json":
                 if request.method == "DELETE":
-                    self.files = []
+                    self.files = [file for file in self.files if file["id"] != 9]
+                    for issue in self.issues.values():
+                        if "attachments" in issue:
+                            issue["attachments"] = [
+                                value for value in issue["attachments"] if value["id"] != 9
+                            ]
                 else:
                     self.attachment.update(payload["attachment"])
                 return httpx.Response(204)
@@ -296,13 +302,19 @@ class SyntheticRedmine:
             if path == "/journals/1.json":
                 self.issues[42]["journals"][0].update(payload["journal"])
                 return httpx.Response(204)
-            if path == "/issues/42/relations.json":
-                from redmine_mcp.features.issues.write_models import IssueRelationCreateRequest
-                from redmine_mcp.integrations.redmine.issue_relations import expected_relation
-
+            if path in ("/issues/42/relations.json", "/issues/43/relations.json"):
+                source = int(path.split("/")[2])
+                values = payload["relation"]
                 self.relation = {
                     "id": 1,
-                    **expected_relation(42, IssueRelationCreateRequest(**payload["relation"])),
+                    **RELATION_RESPONSES[
+                        (
+                            source,
+                            values["issue_to_id"],
+                            values.get("relation_type", "relates"),
+                            values.get("delay"),
+                        )
+                    ],
                 }
                 for issue in self.issues.values():
                     if issue["id"] in (42, 43):
@@ -313,9 +325,16 @@ class SyntheticRedmine:
                     issue["relations"] = []
                 return httpx.Response(204)
             if path.startswith("/issues/42/watchers"):
-                self.issues[42]["watchers"] = (
-                    [{"id": 3, "name": "Writer"}] if request.method == "POST" else []
+                user_id = (
+                    payload["watcher"]["user_id"]
+                    if request.method == "POST"
+                    else int(path.split("/")[4].removesuffix(".json"))
                 )
+                watchers = self.issues[42]["watchers"]
+                if request.method == "POST" and not any(w["id"] == user_id for w in watchers):
+                    watchers.append({"id": user_id, "name": "Watcher"})
+                elif request.method == "DELETE":
+                    self.issues[42]["watchers"] = [w for w in watchers if w["id"] != user_id]
                 return httpx.Response(204)
             return httpx.Response(404, json={})
         if self.readback_failure and self.writes:

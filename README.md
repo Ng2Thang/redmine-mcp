@@ -3,6 +3,9 @@
 Access Redmine through REST or MCP using the requesting user's permissions. Built with
 Python 3.13, FastAPI, and FastAPI-MCP.
 
+Read the [user documentation](https://ng2thang.github.io/redmine-mcp/) for setup,
+MCP client connections, supported tools, usage examples, and troubleshooting.
+
 - **Read by default:** 18 tools for projects, issues, memberships, attachment metadata,
   spent-time logs, and reference data.
 - **Enable writes separately:** an opt-in writer provides up to 18 tools for issues,

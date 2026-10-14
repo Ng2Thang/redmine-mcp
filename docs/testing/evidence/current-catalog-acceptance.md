@@ -1,5 +1,13 @@
 # Current catalog acceptance ledger
 
+G05 follow-up (2026-10-14): separate final selected suites passed **40 cases on 6.0.1 and
+40 on 7.0.2**, plus 14 Inspector calls per version. The
+[dated G05 evidence](g05-native-variants-2026-10-14.md) covers named tag/private-scope,
+time-policy, issue/version attachment, inverse/cross-project relation, note/watcher grant
+and ordinary locked/deleted/rotated-key variants, with owned cleanup and preserved activity
+defaults. It supplements matching H1..H5 scenarios only; it does not change R020's revision,
+date, tool counts or untested broader criteria below.
+
 > Writer admission update (2026-10-13): pinned-key and user ID admission checks
 > are retired. Earlier requirements and evidence below describe historical behavior.
 > See [current configuration](../../configuration.md#separate-writer-deployment).

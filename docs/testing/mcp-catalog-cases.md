@@ -1,9 +1,41 @@
 # Test cases for the complete MCP catalog
 
-Status: authored on 2026-10-13; execution pending. This assignment adds executable cases,
+Authoring status on 2026-10-13: execution pending. That assignment adds executable cases,
 not passing evidence or a percentage coverage claim. The catalog has 18 reads and 18 writes.
 No pytest collection, unit/integration/E2E execution, Inspector invocation, or live mutation
 was performed while authoring these cases.
+
+## G01 offline execution follow-up (2026-10-14)
+
+The user subsequently assigned the current offline baseline. Complete suites passed separately:
+**855 unit and 1,541 integration cases**, with no failures or skips and exit 0 for both commands.
+The catalog safety, creation fixes, activity discovery and issue-detail tag mapping cases are
+included in those passing runs. No further test/runtime correction was needed. Each command
+reported the existing Pydantic deprecation warning. See the
+[G01 evidence](evidence/g01-offline-baseline-2026-10-14.md) for revision and execution details.
+Native lifecycle/creation/plugin/permission acceptance and Inspector remain separate and pending.
+
+## G03 complete offline regression follow-up (2026-10-14)
+
+After adding 171 G02 and 318 G03 cases, the complete current offline suite passed in one
+invocation: **2,885 cases** (1,063 unit, 1,822 integration), with no failures or skips and
+exit 0. The shared fake now uses literal relation results and actual watcher targets,
+preserving unrelated file/watcher controls. The
+[G03 evidence](evidence/g03-older-writers-2026-10-14.md) records the new scenario owners,
+fixture corrections and 19 warnings (one Pydantic, 18 JUnit property-format warnings).
+This refreshes the offline baseline without closing native or remaining G04..G08 acceptance.
+
+## G04/G05 scenario follow-up (2026-10-14)
+
+G04 added 54 console-path cases and passed a related 199-case regression. G05's final
+selected suites passed **40 cases on 6.0.1 and 40 on 7.0.2**, with no failures or skips,
+plus 14 offline cleanup refusal cases and 14 Inspector calls per version. This supplies
+focused native tag overlap/privacy, alternate time policy/default, attachment container,
+relation, journal/watcher grant and ordinary identity evidence. See the
+[G04 evidence](evidence/g04-debug-logging-2026-10-14.md) and
+[G05 evidence](evidence/g05-native-variants-2026-10-14.md) for corrected fixture ownership,
+cleanup and exact limits. Earlier authoring-only statements remain historical. Broader G07
+acceptance and original tool/task waivers remain separate; P2 G06/G08 are deferred.
 
 ## Catalog-wide scenarios
 
@@ -106,7 +138,8 @@ of the created entry and rejecting collection scans or extra entry reads.
 
 `mcp/registration.py` now explicitly forbids extra properties for `create_time_entry`, matching
 the existing strict REST request model. The schema and identity/project injection regressions
-remain enabled. These corrections have not been rerun; no passing result is claimed.
+remain enabled. At the authoring handoff these corrections had not been rerun; the later
+G01 complete integration run passed them, as recorded above.
 
 Previously recorded task waivers and acceptance are historical. Adding these files does not
 retroactively pass TOOL-040/041 acceptance, Inspector checks, broader native policy/default
@@ -114,7 +147,8 @@ matrices, tag overlap/private-role checks on 7.0.2, setup coexistence/recovery, 
 thresholds. Those limits remain visible in the [coverage matrix](../plans/testing-coverage.md)
 and original task records. No finite matrix establishes every plugin, workflow or release.
 
-After execution is separately authorized, use Git Bash from the repository root:
+The offline commands below were subsequently authorized and passed in G01. Native commands
+still require their own authorized execution stage. Use Git Bash from the repository root:
 
 ```bash
 uv run --frozen pytest tests/unit tests/integration -q

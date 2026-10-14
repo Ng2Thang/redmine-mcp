@@ -1,5 +1,77 @@
 # MCP tool roadmap
 
+## G05 focused native variants (2026-10-14)
+
+Added 40 E2E cases per selected version for NAT-01..04: populated tag overlap/private scope,
+alternative time policies, issue/version attachments, inverse/cross-project relations,
+journal/watcher grants and ordinary account/key revocation. Final runs passed **40 cases on
+6.0.1 and 40 on 7.0.2**, with no failures or skips. Fourteen offline cleanup refusal cases
+and **14 Inspector calls per version** also passed. Owned fixture cleanup and preservation
+of pre-existing activity flags passed; alternate settings used disposable stacks only.
+
+Status: **complete within the selected G05 scope**. See
+[dated evidence](../testing/evidence/g05-native-variants-2026-10-14.md) for exact pins,
+prerequisites, source manifest, corrections, cleanup and remaining limits. Runtime code and
+dependencies did not change. G06/G08 remain deferred at P2; broader G07 acceptance remains
+pending at P0 and was outside this assignment.
+
+## G04 DEBUG logging coverage (2026-10-14)
+
+Added 54 unit/integration cases covering LOG-01..05 through the configured console filter
+and formatter, including sensitive sentinels, concurrent MCP correlation, bounded stacks
+and unchanged retry/write/cleanup behavior. The related regression passed **199 cases**,
+zero failures or skips; scoped Ruff checks passed. No runtime or dependency changed.
+Status: **complete within offline scope**. See
+[dated evidence](../testing/evidence/g04-debug-logging-2026-10-14.md).
+
+The user assigned G04/G05 and deferred P2 items G06/G08. G07 is P0 in the original plan
+and remains separately scoped; it is not silently reclassified as P2.
+
+## G03 older writer coverage (2026-10-14)
+
+The user assigned G03. Added 318 offline cases for independent relation normalization,
+attachment container proofs, journal membership/privacy, watcher principals/no-ops, optional
+issue/copy fields and write uncertainty. The shared native fake now uses literal relation
+responses and preserves unrelated attachment/watcher controls. Targeted corrections passed
+102 cases; the final complete offline run passed **2,885 cases** (1,063 unit, 1,822
+integration), including all 318 new G03 cases, with no failures or skips and exit 0.
+Scoped Ruff checks passed. Status: **complete within offline scope**. The
+[dated evidence](../testing/evidence/g03-older-writers-2026-10-14.md) records scenario ownership,
+fixture corrections and native limits. No runtime/setup or dependency changes were needed.
+
+## G02 offline E2E setup coverage (2026-10-14)
+
+The user assigned G02 after the current offline baseline. Added **171 passing cases**:
+142 unit and 29 integration, covering version/profile selection, ownership, preparation
+ordering/failures, reset boundaries and actual child-pytest opt-in/session behavior with
+mocked external setup. A broader regression passed 1,095 cases before the final four
+preflight additions; all final 171 G02 cases passed afterward. Scoped Ruff checks passed.
+No setup/runtime code or dependencies changed. [Dated evidence](../testing/evidence/g02-offline-setup-2026-10-14.md)
+records commands, harness corrections and PREP-029 traceability. Status: **G02 complete
+within offline scope**. Native seed/reset/coexistence acceptance remains PREP-029/G07;
+no real stack preparation, mutation, Inspector or browser operation ran.
+
+## G01 current offline baseline (2026-10-14)
+
+The user explicitly assigned G01 from the coverage review plan. Complete unit and integration
+suites passed separately: **855 unit + 1,541 integration = 2,396 cases**, no failures or skips,
+and exit 0 for both commands. Each reported the same existing Pydantic deprecation warning.
+Creation regressions and writer admission cases passed; no runtime/test changes or duplicate
+reruns were necessary. [Dated evidence](../testing/evidence/g01-offline-baseline-2026-10-14.md)
+records the tested revision, local source manifest, versions, commands and limitations.
+Status: **G01 complete**. G02..G08 and live acceptance remain separate; no Docker, E2E,
+Inspector, browser or deployment operation ran for this assignment.
+
+## Test coverage review and generation backlog (2026-10-14)
+
+Source-reviewed the unit, offline integration and E2E suites against the 36-operation catalog,
+runtime safeguards and setup helpers. The [review and generation plan](testing-gap-plan-2026-10-14.md)
+records concrete gaps, proposed test files/scenarios, priorities, dependencies and acceptance
+criteria. Broad catalog coverage exists; additional scenario depth and current execution
+evidence are required. Status: review/planning complete; generation and execution pending.
+No test/runtime code changed; no tests, collection, check tools, Docker or live calls ran.
+Existing waivers and dated acceptance remain unchanged.
+
 ## Repository and documentation alignment (2026-10-14)
 
 Reviewed first-party runtime settings, operation registration and route contracts, deployment

@@ -1,5 +1,69 @@
 # Application testing coverage matrix
 
+## Focused native variants: G05 (2026-10-14)
+
+Final selected G05 suites passed **40/40 cases on 6.0.1 and 40/40 on 7.0.2**, with no
+failures/errors/skips. NAT-01..04 cover populated tag overlap/privacy/scope, alternate time
+policies, issue/version attachment containers, inverse/cross-project relations, note/watcher
+grants and ordinary identity revocation. Fourteen offline policy-cleanup refusal cases and
+14 Inspector socket calls per version also passed. New native fixtures preserve existing
+activity flags and record zero remaining owned resources. See
+[dated evidence](../testing/evidence/g05-native-variants-2026-10-14.md) for exact scope,
+image/plugin prerequisites and the corrected fixture callback. This does not close the
+broader G07/H1..H5 scope. G06/G08 are deferred by the user at P2.
+
+## DEBUG logging coverage: G04 (2026-10-14)
+
+Added **54 cases** for LOG-01..05 through the actual configured console handler/filter/
+formatter. The related logging/retry/runtime regression passed **199 cases**, zero failures
+or skips, with one existing Pydantic warning. Scoped Ruff checks passed; runtime code and
+dependencies did not change. See [dated evidence](../testing/evidence/g04-debug-logging-2026-10-14.md).
+This focused acceptance is separate from the dated full G03 baseline and native G05 scope.
+
+## Older writer scenario coverage: G03 (2026-10-14)
+
+Added 318 offline cases (66 unit, 252 integration) for WRT-01..07: independent relation
+expectations, endpoint/container/journal proofs, watcher target/no-op observations, optional
+issue/copy fields and uncertain receipts. The changed shared fake preserves control resources
+and no longer constructs relation responses through production normalization. Targeted
+corrections passed 102 cases; the final complete offline regression passed **2,885 cases**
+(1,063 unit, 1,822 integration), including all 318 new G03 cases, with no failures or skips
+and exit 0. Scoped Ruff checks passed. Status: **complete within offline scope**.
+The [G03 evidence](../testing/evidence/g03-older-writers-2026-10-14.md) records initial fixture
+errors, commands and Pydantic/JUnit warning limits; no new native acceptance is claimed.
+
+## Offline E2E setup coverage: G02 (2026-10-14)
+
+Added **171 passing cases** (142 unit, 29 integration) for Python release/profile selection,
+ownership guards, preparation ordering/cutoffs, exact reset selection/refusals and pytest
+gates. The final focused run passed all 171, and a broader related regression passed 1,095
+before four late preflight additions. Scoped Ruff checks passed. The
+[G02 evidence](../testing/evidence/g02-offline-setup-2026-10-14.md) maps files and scenarios to
+SET-01..06/PREP-029, distinguishes harness corrections from implementation faults, and retains
+native seed/reset/coexistence limitations. G02 is complete offline; PREP-029/live acceptance
+and G03..G08 remain separate. No setup/runtime or dependency changes were needed.
+
+## Current offline baseline: G01 (2026-10-14)
+
+Under the user's explicit G01 assignment, the complete unit suite passed **855 cases** and
+the complete integration suite passed **1,541 cases** in separate invocations: **2,396 passes**,
+no failures or skips, and exit 0 for both commands. Each invocation reported the existing
+Pydantic deprecation warning. Creation/schema/read-back regressions and the updated writer
+admission cases passed without further corrections. The
+[G01 evidence](../testing/evidence/g01-offline-baseline-2026-10-14.md) records source, versions,
+timing and execution limits. G01 is complete; this establishes the current offline baseline
+without closing new-scenario, setup, native-policy, E2E or release gaps in G02..G08.
+
+## Source coverage review (2026-10-14)
+
+The [coverage review and generation plan](testing-gap-plan-2026-10-14.md) assesses the current
+24 unit, 24 integration and 10 E2E test modules. All 36 operations have mapped cases;
+remaining priorities include current execution evidence, setup/reset refusal scenarios,
+independent relation expectations, older writer variants, DEBUG diagnostics and native
+policy/tag visibility matrices. The plan separates new cases from existing cases needing
+execution. Source review only: no tests or verification tools were run, and no acceptance
+status or historical result was changed.
+
 This matrix owns current testing traceability, not historical acceptance. Task ownership is unit
 prep-016, offline integration prep-017 and live E2E prep-018. Historical evidence below is dated
 2026-10-06; current 2026-10-07 reconciliation is recorded in the follow-up section and ledger. Scenarios cover selected behavior,

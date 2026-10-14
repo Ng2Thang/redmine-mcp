@@ -171,7 +171,8 @@ def export() -> Path:
         "assets/examples/my-issues.svg", "assets/examples/project-discovery.svg",
         "assets/imgs/install_mcp_codex_vscode_ext.png",
         "assets/imgs/implement-stock-feature-example.png",
-        "assets/imgs/example_redmine_tool.png",
+        "assets/imgs/Screenshot_46.png",
+        "assets/imgs/Feature-678.png",
         "assets/vendor/manifest.json", "assets/vendor/THIRD_PARTY_NOTICES.md",
     }
     vendor_manifest = safe_path(SOURCE / "assets" / "vendor" / "manifest.json")

@@ -9,17 +9,27 @@ This is a recorded example; available actions depend on your access and server c
     <a class="portal-image-action" href="assets/imgs/implement-stock-feature-example.png" target="_blank" rel="noopener noreferrer">Open full-size image (new tab)</a>
   </figcaption>
   <div class="portal-feature-image-scroll" role="region" aria-label="Stock feature example screenshot; scroll to read" tabindex="0">
-    <img src="assets/imgs/implement-stock-feature-example.png" alt="Recorded AI conversation using Redmine MCP to organize stock features, with issue tables, estimates, and follow-up requests." width="1920" height="13212" loading="lazy" decoding="async">
+    <img src="assets/imgs/implement-stock-feature-example.png" alt="Recorded AI conversation reviewing Redmine projects, then planning stock feature development and testing." width="1920" height="8159" loading="lazy" decoding="async">
   </div>
 </figure>
 
 <figure class="portal-feature-image">
   <figcaption>
-    <span>Result in Redmine · Created development and test issues</span>
-    <a class="portal-image-action" href="assets/imgs/example_redmine_tool.png" target="_blank" rel="noopener noreferrer">Open full-size image (new tab)</a>
+    <span>Result in Redmine · Issue list</span>
+    <a class="portal-image-action" href="assets/imgs/Screenshot_46.png" target="_blank" rel="noopener noreferrer">Open issue list (new tab)</a>
   </figcaption>
-  <div class="portal-feature-image-scroll" role="region" aria-label="Redmine result screenshot; scroll if needed" tabindex="0">
-    <img src="assets/imgs/example_redmine_tool.png" alt="Redmine issue list for target version 2.0.0, showing development and test tasks with categories, start dates, due dates, and logged time." loading="lazy" decoding="async">
+  <div class="portal-feature-image-scroll" role="region" aria-label="Redmine issue list screenshot; scroll if needed" tabindex="0">
+    <img src="assets/imgs/Screenshot_46.png" alt="Redmine issue list for History Alpha API target version 3.0.0, showing the development and test plan and its feature tasks." loading="lazy" decoding="async">
+  </div>
+</figure>
+
+<figure class="portal-feature-image">
+  <figcaption>
+    <span>Result in Redmine · Feature #678</span>
+    <a class="portal-image-action" href="assets/imgs/Feature-678.png" target="_blank" rel="noopener noreferrer">Open Feature #678 (new tab)</a>
+  </figcaption>
+  <div class="portal-feature-image-scroll" role="region" aria-label="Redmine Feature #678 screenshot; scroll if needed" tabindex="0">
+    <img src="assets/imgs/Feature-678.png" alt="Redmine Feature #678, showing its estimate, assignee, dates, acceptance criteria, attachment, and related issues." loading="lazy" decoding="async">
   </div>
 </figure>
 

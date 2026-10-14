@@ -1,5 +1,22 @@
 # MCP tool roadmap
 
+## Tool documentation refresh (2026-10-14)
+
+Reviewed the explicit reader catalog, write-operation registration, REST routes, and connected
+MCP tool descriptions. They list the same **36 tools: 18 reads and 18 writes**. This is a
+source and contract inventory review, not new functional acceptance.
+
+The portal's [supported tools guide](../../src/redmine_mcp_docs/guides/reference.md) now lists
+every operation individually, including document category discovery, with its purpose and
+scope. The canonical [tool reference](../tool-reference.md#tools-and-inputs) includes the complete
+writer endpoint/input table. README and portal navigation links point readers to the inventory.
+Write guidance now reflects personal API keys and operation/native permission gates without
+a separate account admission list. Existing testing waivers, pending creation acceptance,
+dated evidence, and release limitations remain unchanged.
+
+No runtime code, tool contracts, or operation gates changed. No tests, quality-check tools,
+browser checks, Inspector calls, or live Redmine operations were run for this refresh.
+
 ## Complete catalog testcase additions (2026-10-13)
 
 At the user's request, add catalog safety cases for all 36 registered MCP tools and detailed

@@ -4,8 +4,9 @@ Write actions change Redmine records. Use them when you intend to create or upda
 specific record, after checking the target and requested values.
 
 Connect to the separate writer using your personal Redmine API key. Your administrator
-must enable the action and admit your account, and your account needs the native Redmine
-permissions. See [Reader and writer access](access.md).
+must enable the writer and the action, and your account needs the native Redmine permissions
+for the target. There is no separate account admission list.
+See [Reader and writer access](access.md).
 
 ## Check your access
 

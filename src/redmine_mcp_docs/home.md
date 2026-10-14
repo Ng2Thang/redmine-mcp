@@ -1,6 +1,6 @@
 ## Explore a feature plan in Redmine
 
-An example of using Redmine MCP to plan and implement stock features.
+An example of using Redmine MCP to plan and implement features.
 This is a recorded example; available actions depend on your access and server configuration.
 
 <figure class="portal-feature-image">
@@ -63,6 +63,8 @@ Your client chooses tools and formats its answer; prompts are examples, not buil
 
 ## What you can expect
 
+- The catalog has **18 read tools and 18 write tools**. Browse the
+  [complete tool list](guides/reference.md#tools-by-task) for each tool's purpose and limits.
 - Results reflect the account associated with your personal Redmine API key.
 - Reading works on the default server. Changes require a writer connection, enabled actions,
   and your normal Redmine permissions.

@@ -19,8 +19,9 @@ available write actions depend on deployment configuration and caller discovery.
 Connect using [MCP client installation](get-started.md), then follow
 [Make and review changes](write-actions.md) to check your account's candidate actions,
 select a target, and interpret the result. If an action is missing, check the connection
-and ask your administrator whether it is enabled for your account. A visible tool is a
-candidate, not a guarantee of permission on every target.
+and ask your administrator whether the action is enabled on the writer and your Redmine
+permissions allow it for the target. A visible tool is a candidate, not a guarantee of
+permission on every target.
 
 ## Administrator setup
 

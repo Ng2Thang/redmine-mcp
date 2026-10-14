@@ -2,12 +2,14 @@
 
 ## Catalog and support scope
 
-The current registered catalog contains 18 reads and 18 writes. The default reader exposes
-only reads; the separate writer exposes configured mutations alongside readers. Personal-key
-discovery is caller-specific, and conditional/unknown candidates are not permission grants.
+The current registered catalog contains **36 tools: 18 reads and 18 writes**. The default reader
+exposes only reads; the separate writer exposes configured mutations alongside read tools.
+Personal-key discovery is caller-specific, and conditional/unknown candidates are not permission grants.
 Use [configuration](configuration.md#separate-writer-deployment) for authentication, operation
 lists and `allowed_all`. Authoritative input/output schemas remain in the feature routes/models
 and generated OpenAPI/MCP definitions; this reference explains their intended use.
+The [tool tables](#tools-and-inputs) list every registered read and write operation.
+Document category discovery is supported, but document record tools are outside this catalog.
 
 Functional acceptance for the earlier 17-read/15-write catalog is recorded in the
 [2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md): 1,086 offline and 21 owned Redmine
@@ -386,6 +388,8 @@ Reader tools advertise `readOnlyHint=true`, `destructiveHint=false`,
 These are client hints, not permission checks or guarantees that repeated reads return identical
 data. The external Redmine data can change.
 
+### Reader tools (18)
+
 | Tool | REST endpoint | Inputs |
 |---|---|---|
 | `get_current_user` | `GET /api/v1/users/current` | None; always includes visible project memberships and roles |
@@ -406,6 +410,47 @@ data. The external Redmine data can change.
 | `list_trackers` | `GET /api/v1/trackers` | None |
 | `list_issue_priorities` | `GET /api/v1/issue-priorities` | None |
 | `list_document_categories` | `GET /api/v1/document-categories` | None |
+
+### Writer tools (18)
+
+Every operation below requires the separate enabled writer, a configured operation gate,
+a valid personal Redmine API key, and native permissions for the target. There is no writer
+key hash or user ID admission list. The writer can expose fewer than all 18 writes.
+
+The inputs below are a summary of the MCP contract. In REST calls, path parameters belong
+in the URL. Attachment deletion takes container fields as query parameters; other write
+fields belong in their request bodies. Refer to the detailed contracts for field bounds,
+optional values, native permissions, and receipts.
+
+| Tool | REST endpoint | Main MCP inputs |
+|---|---|---|
+| `create_issue` | `POST /api/v1/issues` | `project_id`; `subject` unless `copy_from` is supplied; optional issue fields, uploads, and watchers |
+| `update_issue` | `PUT /api/v1/issues/{issue_id}` | `issue_id` and supplied issue fields, uploads, or a nonblank note |
+| `update_issue_note` | `PUT /api/v1/issues/{issue_id}/notes/{journal_id}` | `issue_id`, `journal_id`, and supplied `notes` or `private_notes` |
+| `create_issue_relation` | `POST /api/v1/issues/{issue_id}/relations` | `issue_id`, `issue_to_id`; optional `relation_type` and scheduling `delay` |
+| `delete_issue_relation` | `DELETE /api/v1/relations/{relation_id}` | `relation_id` |
+| `add_issue_watcher` | `POST /api/v1/issues/{issue_id}/watchers` | `issue_id`, `user_id` |
+| `remove_issue_watcher` | `DELETE /api/v1/issues/{issue_id}/watchers/{user_id}` | `issue_id`, `user_id` |
+| `create_time_entry` | `POST /api/v1/issues/{issue_id}/time-entries` | `issue_id`, positive `hours`, explicit `spent_on`; optional `activity_id`, `comments` |
+| `update_time_entry` | `PUT /api/v1/issues/{issue_id}/time-entries/{time_entry_id}` | `issue_id`, `time_entry_id`, and at least one of `hours`, `spent_on`, `activity_id`, `comments` |
+| `delete_time_entry` | `DELETE /api/v1/issues/{issue_id}/time-entries/{time_entry_id}` | `issue_id`, `time_entry_id` |
+| `upload_attachment` | `POST /api/v1/uploads` | `filename`, `content_base64`; returns a temporary unattached upload token |
+| `add_project_file` | `POST /api/v1/projects/{project_id}/files` | `project_id`, `token`, `filename`; optional `version_id`, `description` |
+| `update_attachment` | `PATCH /api/v1/attachments/{attachment_id}` | `attachment_id`, `container_type`, `container_id`, and supplied `filename` or `description` |
+| `delete_attachment` | `DELETE /api/v1/attachments/{attachment_id}` | `attachment_id`, `container_type`, `container_id` |
+| `create_project_version` | `POST /api/v1/projects/{project_id}/versions` | `project_id`, `name`; optional `description`, `due_date`; fixed open status and no sharing |
+| `add_project_members` | `POST /api/v1/projects/memberships/batch` | `items`: 1–10 objects with `project_id`, `user_id`, `role_ids` |
+| `update_project_members` | `PUT /api/v1/projects/memberships/batch` | `items`: 1–10 objects with `project_id`, `membership_id`, `role_ids` |
+| `delete_project_members` | `DELETE /api/v1/projects/memberships/batch` | `items`: 1–10 objects with `project_id`, `membership_id` |
+
+Issue creation and updates attach temporary tokens through `uploads`; project files use
+`add_project_file`. Uploading alone does not attach the file. Time-entry writes require a
+visible issue and do not support project-only entries, other-user creation, or moving entries.
+Membership mutations operate on users, not groups, and do not provide an atomic transaction.
+All writes separate acceptance from independent verification;
+see [mutation uncertainty](#mutation-uncertainty).
+
+### Issue and project list inputs
 
 | List parameter | Type and default | Accepted values |
 |---|---|---|
@@ -530,10 +575,11 @@ nullable `is_public`, `created_on`, and `updated_on`. Missing optional upstream 
 returned as null. The detail also includes `visibility`. Project visibility follows the
 requesting Redmine user.
 
-The five unpaged list tools (`list_project_versions`, `list_project_issue_categories`,
-`list_issue_statuses`, `list_trackers`, and `list_issue_priorities`) now return an object shaped
-as `{"items": [...], "visibility": {"scope": "requesting_redmine_user", "observations": []}}`.
-This replaces their former top-level JSON arrays, including for empty results.
+Unpaged readers (`list_project_versions`, `list_project_issue_categories`, `list_project_files`,
+`list_project_time_entry_activities`, `list_issue_statuses`, `list_trackers`,
+`list_issue_priorities`, and `list_document_categories`) return an object shaped as
+`{"items": [...], "visibility": {"scope": "requesting_redmine_user", "observations": []}}`,
+including for empty results. They do not accept `limit` or `offset`.
 
 `list_project_versions` returns available versions in `items`, with ID, name, owning project,
 status, optional description, and optional due date. Redmine may include versions shared from
@@ -590,9 +636,10 @@ rejected. REST takes issue_id in the path, not in the body.
 {"issue_id": 488, "hours": 8, "spent_on": "2026-10-08", "activity_id": 9}
 ```
 
-The writer must allow `create_time_entry` explicitly or use standalone `allowed_all`. Existing
-writer identity/admission rules still apply. Issue read access and native `log_time` in the
-resolved project are needed; `view_time_entries` is required for activity discovery/read-back,
+The writer must allow `create_time_entry` explicitly or use standalone `allowed_all`. Each caller
+authenticates with a personal Redmine API key; no separate account admission list applies.
+Issue read access and native `log_time` in the resolved project are needed;
+`view_time_entries` is required for activity discovery/read-back,
 not merely for creation. The native call initializes the resolved project before selecting
 caller-role/project/global activity defaults. Omitted activity uses that native selection;
 no default or an invalid project activity can cause native validation rejection.

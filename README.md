@@ -1,41 +1,34 @@
 # Redmine MCP
 
-Redmine tools using Python 3.13, FastAPI, and FastAPI-MCP. Read projects, issues, memberships,
-attachment metadata, and spent-time logs through REST or MCP as the requesting Redmine user.
-The default reader exposes 18 read operations. A separate opt-in writer can enable up to 18
-mutations for issues, attachments, project files, versions, memberships, relations, and watchers.
-The writer also supports logging the authenticated caller's time and updating existing entries
-on a visible issue, plus permanently deleting one selected issue-bound entry per call.
-See the [tool reference](docs/tool-reference.md) for the maintained contracts.
-Project time-entry activity discovery is implemented in
-[TOOL-040](docs/plans/tasks/tool-040-list-project-time-entry-activities.md); the user waived its testing.
-Own-time creation is implemented in [TOOL-041](docs/plans/tasks/tool-041-create-time-entry.md);
-its testing remains pending.
-Time-entry updates are implemented in
-[TOOL-042](docs/plans/tasks/tool-042-update-time-entry.md), with offline and 10 owned native/Inspector
-cases verified. [Testing evidence](docs/testing/evidence/tool-042-testing.md) records exact scope,
-targeted regression corrections and remaining policy/plugin limits.
-Time-entry deletion is implemented and tested in [TOOL-043](docs/plans/tasks/tool-043-delete-time-entry.md):
-32 unit/82 dedicated integration cases and 12 owned native/Inspector cases pass. Its
-[evidence](docs/testing/evidence/tool-043-testing.md) records full regressions, cleanup and limits.
+Access Redmine through REST or MCP using the requesting user's permissions. Built with
+Python 3.13, FastAPI, and FastAPI-MCP.
 
-This is a development implementation for pilot evaluation, with no production release or SLA.
-On 2026-10-07, PREP-020 recorded **1,086 offline tests and 21 owned live tests passing**,
-including authentication, writer gates, and selected native state checks. The
-[acceptance ledger](docs/testing/evidence/current-catalog-acceptance.md) records the exact revision, scenarios,
-and broader historical gaps for its earlier 17-read/15-write catalog. Later runtime hardening
-has separate [PREP-022–026 evidence](docs/testing/evidence/prep-022-026-testing.md); the time-entry
-update/deletion evidence is linked above. These dated records do not verify new working-tree edits.
-See the [current roadmap summary](docs/plans/index.md#current-status-2026-10-09) for remaining
-acceptance gaps and waivers. Full restore validation, operational readiness, and testing CI
-remain outstanding; these results do not certify a production deployment.
+- **Read by default:** 18 tools for projects, issues, memberships, attachment metadata,
+  spent-time logs, and reference data.
+- **Enable writes separately:** an opt-in writer provides up to 18 tools for issues,
+  attachments, project files, versions, memberships, relations, watchers, and time entries.
+  Time tools can log the caller's own time, update entries on a visible issue, and permanently
+  delete one selected issue-bound entry per call.
 
-The primary target is **Redmine 7.0.2**, with built-in development and E2E profiles for
-**6.0.1 and 7.0.2**, each using an official image pinned by digest. Other exact 6.x.x
-releases need a custom E2E profile. The dated
-[6.0.1 verification](docs/testing/evidence/prep-029-redmine-6.0.1.md) records its tested
-deployment; it does not verify later setup changes or every 6.x release.
-Document REST tools are outside this target. See the [roadmap](docs/plans/index.md).
+Browse the [supported tools](src/redmine_mcp_docs/guides/reference.md) for the complete catalog
+and practical limits. The [tool reference](docs/tool-reference.md) covers inputs and receipts.
+
+**Release status:** this project is for development and pilot evaluation. It has no production
+release or SLA. Full restore validation, operational readiness, and testing CI remain pending.
+The [roadmap](docs/plans/index.md) tracks acceptance gaps and testing waivers.
+
+Testing evidence covers specific revisions and scenarios, not new working-tree edits or
+production readiness. See the [acceptance ledger](docs/testing/evidence/current-catalog-acceptance.md)
+for the earlier catalog and [runtime hardening evidence](docs/testing/evidence/prep-022-026-testing.md).
+For time-entry tools, activity discovery has a testing waiver and own-time creation awaits testing;
+updates and deletion have [update evidence](docs/testing/evidence/tool-042-testing.md) and
+[deletion evidence](docs/testing/evidence/tool-043-testing.md).
+
+**Redmine compatibility:** the primary target is **7.0.2**. Built-in development and E2E profiles
+cover **6.0.1 and 7.0.2**, using official images pinned by digest. Other exact 6.x releases need
+a custom E2E profile. The [6.0.1 verification](docs/testing/evidence/prep-029-redmine-6.0.1.md)
+covers its recorded deployment, not later setup changes or every 6.x release.
+Document REST tools are outside this target.
 
 ## Requirements
 

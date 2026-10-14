@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "redmine-mcp"
 version = "0.1.0"
-description = "Read-only Redmine tools over FastAPI MCP"
+description = "Redmine tools over REST and MCP with a read-only default and optional writer"
 requires-python = ">=3.13,<3.14"
 dependencies = [
   "fastapi>=0.115,<1",

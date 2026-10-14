@@ -136,6 +136,8 @@ and license changes before committing. Upgrading pins is a separate maintenance 
 ## Static deployment
 
 Export, then upload **only** the contents of `.local/docs-portal/site/` to your static host.
+Publishing `src/redmine_mcp_docs/` directly omits canonical technical pages and generated search
+paths that the exporter adds to the complete site.
 Keep the directory layout intact. The host should serve `index.html` for the directory and
 appropriate JavaScript/CSS/SVG/text MIME types. Hash routing means deep links do not need an
 SPA rewrite rule. Retain the generated `.nojekyll` file on hosts using Jekyll so the sidebar
@@ -154,7 +156,7 @@ Replace the deployed output directory when publishing so obsolete pages are remo
 ## Verification handoff
 
 The source README provides the maintenance handoff. When separately authorized, review
-navigation, language switching, search, removed-route 404 behavior, stale-output removal,
+navigation, English-only controls and search, removed-route 404 behavior, stale-output removal,
 offline assets, clipboard controls, themes, mobile layout, and subdirectory hosting.
 No tests, browser checks, Inspector, or live calls are run automatically by export or serve.
 MCP acceptance remains governed by the canonical [testing roadmap](testing-roadmap.md)

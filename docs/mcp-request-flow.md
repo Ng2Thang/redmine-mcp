@@ -234,8 +234,11 @@ bounded retries for eligible transient GET failures, with shared deadlines and p
 request/byte accounting. Responses close before retry waits. Internal MCP-to-REST dispatch,
 whole tools and mutations are not retried; each mutation has one upstream attempt. See
 [configuration](configuration.md) and [PREP-027 evidence](testing/evidence/prep-027-testing.md).
-Application-owned logging avoids keys and raw upstream error bodies. Third-party adapter
-logging can include its generated tool exception and the internal REST error body.
+Application-owned logging avoids keys and raw upstream error bodies. Vendor loggers stay at
+WARNING, and records reaching the application console are replaced with
+`vendor_diagnostic details_omitted=true`. Vendor exception text and REST error bodies are
+not written to that console. Tool-error text returned to the client remains a separate result;
+see [logging configuration](configuration.md#detailed-debug-logs).
 
 On shutdown, the lifespan clears `app.state.upstream` and unwinds `AsyncExitStack`: MCP
 transport shutdown, upstream HTTP client closure, then internal HTTP client closure.

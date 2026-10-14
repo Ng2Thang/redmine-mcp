@@ -57,7 +57,7 @@ evidence, including versions, memberships, `allowed_all`, shared write uncertain
 catalog/read compatibility. Broader historical variants remain in H1..H6; counts do not close
 them automatically. No tests or runtime checks were rerun for the PREP-021 documentation update.
 The registered catalog now contains 18 reads and 18 writes; consult the
-[current roadmap summary](plans/index.md#current-status-2026-10-09) for later evidence and
+[current roadmap summary](plans/index.md#catalog-status-2026-10-09) for later evidence and
 the still-pending or waived acceptance stages. Test counts do not automatically close those gaps.
 
 ## Three-phase implementation

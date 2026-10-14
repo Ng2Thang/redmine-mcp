@@ -17,7 +17,7 @@ public tool behavior; shared prerequisites get separate tasks. Do not turn every
 endpoint or parameter into a tool.
 
 Read repository instructions, contributor guidance, architecture, tool reference, configuration,
-the task template, current code, the target pin in `deploy/compose.test.yaml`, and task
+the task template, current code, the target pin in `deploy/compose.test.7.0.2.yaml`, and task
 dependencies. Preserve unrelated working-tree changes and retired task IDs unless the user
 explicitly requests renumbering. For renumbering, update filenames, task IDs, dependencies,
 links, and scenario IDs together and record the revision in the dashboard. Record authoritative
@@ -75,8 +75,9 @@ Avoid a generic CRUD proxy and never log API keys, tokens, or complete issue bod
 The default reader remains read-only; implemented writes use a separate opt-in writer with
 configured operation gates and native permissions. New writes require a task defining exact
 side effects, least Redmine permissions, application permission rules and disposable synthetic
-verification. Current functional evidence and remaining variants are recorded in the
-[acceptance ledger](../testing/evidence/current-catalog-acceptance.md). Administrative seeding stays
+verification. Baseline functional evidence and its remaining variants are recorded in the
+[acceptance ledger](../testing/evidence/current-catalog-acceptance.md); later operation evidence
+and pending acceptance are tracked in the [roadmap](../plans/index.md). Administrative seeding stays
 separate. For each write, define success status/body, duplicates, retries, timeout uncertainty,
 partial success, concurrency, state reconciliation, and cleanup; do not invent upstream
 idempotency or rollback. A failed read-back cannot prove a preceding write failed.

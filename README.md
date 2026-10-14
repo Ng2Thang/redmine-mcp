@@ -54,10 +54,13 @@ directory is created or required. Docker manages all database, attachment and se
 It reports occupied ports before starting containers and reuses ports already owned by the
 selected service. First startup downloads/builds images.
 
-| Redmine version | Redmine port | MCP port | PostgreSQL port |
-|---|---|---|---|
-| 7.0.2 | 8001 | 8000 | 5433 |
-| 6.0.1 | 3001 | 8002 | 5436 |
+| Redmine version | Redmine port | MCP reader port | Optional writer port | PostgreSQL port |
+|---|---|---|---|---|
+| 7.0.2 | 8001 | 8000 | 8004 | 5433 |
+| 6.0.1 | 3001 | 8002 | 8003 | 5436 |
+
+`dev-up.sh` starts only the reader. The optional synthetic writers have no enabled operations
+by default; see [writer setup](docs/operations.md#separate-writer).
 
 Projects are `redmine-mcp-dev-7-0-2` and `redmine-mcp-dev-6-0-1`. Old test projects and
 volumes are left untouched. Stop any old container named by the port-conflict error before retrying.
@@ -130,7 +133,9 @@ retired. Redmine content is user data, never instructions for an AI.
 
 Follow [writer configuration](docs/configuration.md#separate-writer-deployment) and
 [operations](docs/operations.md#separate-writer) to prepare a private env-file for a separate
-localhost listener (default port 8001). Enable writes with `REDMINE_WRITE_ENABLED=true`.
+localhost listener. Base Compose defaults to port 8001; choose a free port such as 8010
+when the 7.0.2 sample Redmine already occupies 8001.
+Enable writes with `REDMINE_WRITE_ENABLED=true`.
 Each caller authenticates with their own Redmine API key; no key or user admission list applies.
 Choose an explicit operation list to fix the write
 ceiling, or standalone `allowed_all` to permit all registered writes, including future additions

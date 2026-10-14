@@ -116,7 +116,7 @@ compose logs --follow --tail=200 mcp-server
 
 Set `LOG_LEVEL: DEBUG` in the selected Compose service environment before recreation.
 Use `mcp-writer` instead of `mcp-server` for an already configured writer deployment; retain
-its existing writer credentials, admission mode and operation gates. For external Redmine
+its Redmine URL, personal-key authentication and configured operation gates. For external Redmine
 using the base Compose file:
 
 ```bash

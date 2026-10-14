@@ -1,5 +1,21 @@
 # MCP tool roadmap
 
+## Repository and documentation alignment (2026-10-14)
+
+Reviewed first-party runtime settings, operation registration and route contracts, deployment
+profiles, lifecycle helpers, testing setup, packaging, and the English Docsify guides against
+their source. Corrected stale environment-template guidance, writer ports and admission wording,
+logging descriptions, roadmap anchors, contributor links, and portal review expectations.
+The [audit record](../reviews/repository-docs-audit-2026-10-14.md) maps findings to source and
+documents the review limits.
+
+The catalog remains 18 reads and 18 writes; no runtime behavior, dependency pins, deployment
+configuration, or testing status was changed. Package description metadata now includes the
+optional writer. Dated task/evidence records and upstream vendor documentation retain their
+historical scope. No tests, quality-check tools, service startup, browser checks, Inspector
+calls, or live Redmine operations were run. Static export generation is separate from those
+checks and does not publish the portal.
+
 ## Tool documentation refresh (2026-10-14)
 
 Reviewed the explicit reader catalog, write-operation registration, REST routes, and connected
@@ -70,7 +86,7 @@ and does not close acceptance gaps or publish a release.
 ## Existing-stack E2E reuse (updated 2026-10-13)
 
 The user wants E2E to use the two existing versioned Compose stacks: Redmine 6.0.1 on
-localhost:3001 and Redmine 7.0.2 on localhost:3002. Their existing data is disposable.
+localhost:3001 and Redmine 7.0.2 on localhost:8001. Their existing data is disposable.
 PREP-029 implementation replaces separate-stack provisioning with selected-project startup,
 guarded fixture seeding and an explicit selected-stack reset. Earlier descriptions below
 retain their historical scope. Current built-in projects are `redmine-mcp-dev-6-0-1`

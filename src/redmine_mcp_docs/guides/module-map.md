@@ -7,7 +7,7 @@ responsibilities; it is source documentation, not live verification evidence.
 | Area | Responsibility |
 | --- | --- |
 | `app.py` | Read settings, register middleware/error handlers and REST routers, register MCP, attach lifespan |
-| `config.py` | Validate runtime settings, reader budgets, writer gates, and admission modes |
+| `config.py` | Validate runtime settings, reader budgets, writer operation gates, and upstream admission limits |
 | `lifecycle.py` | Manage shared upstream/internal HTTP clients, MCP readiness, and shutdown |
 | `bootstrap.py` | Supply concrete gateways to service ports and build request-scoped containers |
 | `api/` | HTTP dependencies, authentication entry points, limits, health, routing, and error serialization |

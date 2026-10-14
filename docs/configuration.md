@@ -10,7 +10,7 @@ variables override `.env` values. Unrelated dotenv entries are ignored by the ru
 |---|---|---|
 | `REDMINE_URL` | Required | HTTP or HTTPS base URL reachable from MCP; no embedded credentials, query, or fragment. A deployment subpath is supported. |
 | `REDMINE_WRITE_ENABLED` | `false` | Enables the separate writer runtime. Base Compose forces this false on `mcp-server` and true on the opt-in `mcp-writer` profile. |
-| `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs, or standalone `allowed_all` to permit every registered write operation. Empty permits no mutations. Unknown IDs and mixed `allowed_all` lists prevent startup. |
+| `REDMINE_WRITER_OPERATIONS` | Empty | Comma-separated write operation IDs, or standalone `allowed_all` to permit every registered write operation. Empty permits no mutations. Unknown IDs and mixed `allowed_all` lists prevent writer startup; a read-only runtime ignores the write ceiling. |
 | `REDMINE_TIMEOUT_SECONDS` | `20` | Positive finite read/write timeout in seconds; an inactivity timeout, not an end-to-end deadline. |
 | `REDMINE_CONNECT_TIMEOUT_SECONDS` | `5` | Positive finite connection timeout in seconds. |
 | `REDMINE_POOL_TIMEOUT_SECONDS` | `5` | Positive finite connection-pool acquisition timeout in seconds. |
@@ -43,8 +43,10 @@ does not load an env file or include these legacy settings.
 The internal MCP-to-REST client configures the HTTPX inactivity timeout plus five seconds,
 but its in-process ASGI transport does not enforce that setting as a whole-tool timer.
 The application's explicit GET, reader, capability and batch deadlines enforce work limits.
-Both Compose services forward the three `REDMINE_READ_RETRY_*` settings from the selected
-environment file with the same defaults as local Python. Setting attempts to `1` disables
+Both services in `deploy/compose.yaml` forward the three `REDMINE_READ_RETRY_*` settings from
+the selected environment file with the same defaults as local Python. Versioned synthetic
+Compose files ignore that env file and use runtime defaults unless their service environment
+is explicitly changed. Setting attempts to `1` disables
 GET retry for that process; applying configuration to a running deployment is a separate action.
 
 Request-body admission covers POSTs at `/mcp` and under `/mcp/`, and REST
@@ -133,8 +135,10 @@ physical requests, 30 MiB of GET response bytes and a 300-second cooperative dea
 GET retries and backoff share the remaining batch time. Only the GET acquisition timer is
 clipped; no whole-batch timer is added around mutations or previously accepted receipts.
 Preflight, mutations, permission/target rechecks and read-back share one scope starting at
-batch service entry after authentication. No counter resets per item. The writer Compose
-service forwards the three batch environment settings; existing `.env` values override defaults.
+batch service entry after authentication. No counter resets per item. The writer service in
+base Compose forwards the three batch environment settings; its selected env-file values
+override defaults. Built-in synthetic services use runtime defaults unless their Compose
+environment is changed.
 Preflight may reuse project/user proofs within that phase, but each mutation refreshes
 permissions and target evidence. There is no outer cancellation timer over mutations.
 Deadline exhaustion stops new dispatches and bounded reads, preserving already accepted
@@ -306,6 +310,12 @@ mkdir -p .local
 cp -n .env.example .local/writer.env
 chmod 600 .local/writer.env
 ```
+
+Choose an unused writer port. The built-in 7.0.2 Redmine already uses host port `8001`, so
+set `MCP_WRITER_HOST_PORT=8010` in this separate writer env-file when connecting to that stack.
+Built-in synthetic Compose files instead define optional writer ports `8004` for 7.0.2 and
+`8003` for 6.0.1. Those writers are not started by `dev-up.sh` and have an empty operation
+ceiling until their service environment is explicitly configured. They do not load this env-file.
 
 Edit it privately to set the reachable `REDMINE_URL`, `REDMINE_WRITE_ENABLED=true`, and
 the intended `REDMINE_WRITER_OPERATIONS`. An empty operation list permits no mutations;

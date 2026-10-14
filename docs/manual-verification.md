@@ -13,7 +13,7 @@ passed. It includes version and membership acceptance, `allowed_all`, and Inspec
 plus three read calls; Inspector performed no mutations in PREP-020. H1..H6 preserve wider
 historical limitations. Repeated checks are new work, not evidence already produced by this guide.
 Later preparation and time-entry acceptance, waivers and remaining gaps are recorded in the
-[current roadmap summary](plans/index.md#current-status-2026-10-09) and the sections below.
+[current roadmap summary](plans/index.md#catalog-status-2026-10-09) and the sections below.
 
 ## Project time-entry activities (testing waived)
 

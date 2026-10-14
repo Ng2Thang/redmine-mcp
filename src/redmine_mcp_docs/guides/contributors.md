@@ -11,7 +11,7 @@ references open locally; other technical records open repository files on GitHub
 | Topic | Read |
 | --- | --- |
 | Repository quick start | [Repository README](https://github.com/Ng2Thang/redmine-mcp/blob/master/README.md) |
-| Architecture | [Module map](../docs/architecture.md), [Architecture](../docs/architecture.md) |
+| Architecture | [Module map](module-map.md), [Architecture](../docs/architecture.md) |
 | Request execution | [MCP request and response flow](../docs/mcp-request-flow.md) |
 | Development | [Development](../docs/development.md), [Contributing](https://github.com/Ng2Thang/redmine-mcp/blob/master/CONTRIBUTING.md) |
 | Tool planning and implementation | [Tool workflow](../docs/workflows/redmine-tools.md), [Roadmap](../docs/plans/index.md) |
@@ -42,6 +42,7 @@ private directories, focused runs, supplemental tools, and reset boundaries.
 - [Time-entry update evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-042-testing.md)
 - [Time-entry deletion evidence](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/testing/evidence/tool-043-testing.md)
 - [Documentation audit](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md)
+- [Repository and documentation audit (2026-10-14)](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/repository-docs-audit-2026-10-14.md)
 
 </details>
 
@@ -53,7 +54,7 @@ private directories, focused runs, supplemental tools, and reset boundaries.
 | Manage deployments and sample data | [Operations](../docs/operations.md), [synthetic data](../docs/test-data.md) |
 | Review security or report a vulnerability | [Security policy](https://github.com/Ng2Thang/redmine-mcp/blob/master/SECURITY.md) |
 | Serve or publish documentation | [Portal maintenance and deployment](../docs/documentation-portal.md) |
-| Review the portal | [Portal manual checklist](https://github.com/Ng2Thang/redmine-mcp/blob/master/src/redmine_mcp_docs/README.md), [earlier layout review](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md) |
+| Review the portal | [Portal manual checklist](verification.md), [source maintenance guide](https://github.com/Ng2Thang/redmine-mcp/blob/master/src/redmine_mcp_docs/README.md), [earlier documentation audit](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md) |
 
 User guides live in `src/redmine_mcp_docs/guides/`. Keep all Markdown in English, document
 Bash commands, and label invented results as illustrative. Introduce goals and prerequisites,

@@ -14,7 +14,7 @@ This guide describes setup; use [Testing and evidence](testing.md) for automated
 | Your situation | Choose | What you need |
 | --- | --- | --- |
 | You have Redmine and want a local server | [Local Python](#local-python) | Git, Git Bash, Python 3.13, uv, access to Redmine |
-| You want to explore sample data | [Docker with sample data](#docker-with-sample-data) | Git, Git Bash, Docker Desktop with Linux containers, Python 3.13, uv |
+| You want to explore sample data | [Docker with sample data](#docker-with-sample-data) | Git, Git Bash, Docker Desktop with Linux containers, Python 3.13 |
 | You need Docker connected to your existing Redmine | [Docker with existing Redmine](#docker-with-existing-redmine) | Git, Git Bash, Docker Desktop with Linux containers, access to Redmine |
 
 An AI client is needed to use MCP. Node.js/npm is needed for MCP Inspector, including
@@ -102,7 +102,11 @@ It checks for occupied ports before startup and reuses services belonging to the
 | Sample Redmine | `http://localhost:8001` | `http://localhost:3001` |
 | Reader MCP URL | `http://localhost:8000/mcp` | `http://localhost:8002/mcp` |
 | REST API reference | `http://localhost:8000/docs` | `http://localhost:8002/docs` |
+| Optional writer port | `8004` | `8003` |
 | PostgreSQL | `localhost:5433` | `localhost:5436` |
+
+Sample startup does not start these writers. Their operation lists are empty until explicitly
+configured; follow [writer setup](../docs/operations.md#separate-writer) before using write actions.
 
 Demo accounts use password `redmine-demo-password`. Database/user are `redmine`, with
 password `redmine-local-development`. These fixed credentials belong only to localhost

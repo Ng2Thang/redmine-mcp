@@ -5,6 +5,19 @@ that a release has been published.
 
 ## Unreleased
 
+### Repository and documentation alignment (2026-10-14)
+
+- Align `.env.example` comments with self-contained synthetic stacks and personal-key writer
+  authentication. Preserve the existing example operation ceiling and configuration values.
+- Distinguish base Compose's writer port from the built-in 7.0.2/6.0.1 writer ports, and explain
+  the port-8001 conflict when a separate writer targets the 7.0.2 sample stack.
+- Correct architecture, logging, backup/restore lifecycle, roadmap anchors, contributor links,
+  and Docsify checklist/export expectations against source. Update package description metadata
+  to include the optional writer without changing dependencies or runtime behavior.
+- Record [review scope and limitations](docs/reviews/repository-docs-audit-2026-10-14.md).
+  No tests, quality-check tools, services, browser checks, Inspector calls, live operations,
+  or deployment were performed. Historical acceptance and pending work remain unchanged.
+
 ### Documentation state correction (2026-10-09)
 
 - Align contributor instructions and development/operations guides with the registered

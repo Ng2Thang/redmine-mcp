@@ -2,8 +2,9 @@
 
 The read-only `list_my_project_capabilities` route is implemented in the users feature.
 Its service combines the project reader Protocol with the request-local capability service
-and caller-key Redmine adapters. Bootstrap supplies the deployment write ceiling and account
-admission. Discovery and the report share project-operation permission evaluation. Role reads
+and caller-key Redmine adapters. Bootstrap supplies the deployment write ceiling and authenticated
+caller identity. No separate account admission list applies. Discovery and the report share
+project-operation permission evaluation. Role reads
 are deduplicated per request, never across callers or requests. The report is advisory and does
 not execute tools; runtime write authorization remains independent of reported candidates.
 Project read evidence is evaluated through centralized rules in the users feature: OR between
@@ -250,11 +251,13 @@ This is an import dependency gate; it does not prove runtime permission or busin
 Rules also cover package-root imports and nested contract modules, prevent common/auth modules
 from depending on feature implementations, and prevent domain code from importing feature routers.
 
-Base Compose runs MCP only. The synthetic override adds Redmine/PostgreSQL and optional
-seed/backup services. Administrative tools are not shipped in the runtime image.
+Base Compose runs MCP only for an existing Redmine instance. Each versioned synthetic Compose
+file is standalone and includes Redmine/PostgreSQL and optional seed/backup services;
+do not combine it with base Compose. Administrative tools are mounted separately and are
+not shipped in the runtime image.
 Image pins provide development reproducibility, not production security certification.
 OAuth and hosting remain deferred. The reader remains read-only; implemented mutations require
-the separate opt-in writer, configured operations, caller admission and native permissions.
+the separate opt-in writer, configured operations, a valid personal API key and native permissions.
 Single-attempt mutation receipts distinguish acceptance, uncertainty and independent read-back;
 received HTTP 500-599 is uncertain across JSON and binary writes. No automatic retry or rollback
 is implied. See [write outcomes](tool-reference.md#mutation-uncertainty).

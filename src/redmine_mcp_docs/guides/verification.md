@@ -4,14 +4,16 @@ This is a handoff checklist. No test runner, browser automation, Inspector sessi
 request, or portal runtime check is implied by its inclusion. Execute checks only when assigned
 or accepted by the user. Record the source revision, browser, hosting path, results, and limits.
 
-See the [2026-10-09 layout review](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md) for the checks performed after the
-user requested a portal review. The remaining checklist items still require verification.
+The [2026-10-09 documentation audit](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md)
+records earlier source and prose corrections, not browser acceptance. The checklist below
+describes proposed checks for the current portal; no passing browser result is implied.
 
 ## User-guide refresh handoff (2026-10-12)
 
 The following checks are proposed, not executed. Export/serve and browser access are
 required for portal review; Redmine and personal keys are needed only for separately
 authorized tool execution. Reading synthetic examples does not require live tool calls.
+Checklist expectations were reconciled with current source on 2026-10-14.
 
 - [ ] Follow both homepage paths: connect to an existing server and set up a server.
 - [ ] Confirm Get started has two entries: MCP client installation and MCP server installation.
@@ -41,8 +43,8 @@ authorized tool execution. Reading synthetic examples does not require live tool
 - [ ] Confirm time logging retains its pending acceptance and activity-discovery waiver.
 - [ ] Search for `open issues`, `logged time`, and `cannot connect`; open the intended guides.
 - [ ] Open Troubleshooting, Reference, and the contributor hub; follow nested canonical links.
-- [ ] Confirm Help and reference has two entries and troubleshooting has three submenu groups:
-      Connection and access, Inputs and results, and Frequently asked questions. Follow existing
+- [ ] Confirm Help and reference has two entries and troubleshooting has four submenu groups:
+      Connection and access, Inputs and results, Setup and testing, and Frequently asked questions. Follow existing
       symptom links, including client connection and incomplete results, to their individual headings.
 - [ ] Confirm REST and Inspector examples has three submenu sections, with connection values
       in its introduction. Confirm Contributors opens the hub directly and shows Develop tools,
@@ -50,7 +52,8 @@ authorized tool execution. Reading synthetic examples does not require live tool
       Security policy from its operations table and expand the recorded evidence list.
 - [ ] Open earlier technical URLs directly to confirm they remain available after navigation changes.
 - [ ] Open the retired `project-backlog`, `progress-update`, `update-issue`, and `log-time`
-      guide routes, with and without `.md`; confirm they resolve to the consolidated guides.
+      guide routes, with and without `.md`; confirm the English 404 page appears.
+      Use the current workflow links rather than expecting redirects from retired routes.
 - [ ] Check homepage installation links, 404 recovery links, and narrow-screen navigation.
 - [ ] Confirm all documentation and interface controls are English and no language selector appears.
 - [ ] Repeat key navigation and search under a hosting subdirectory.
@@ -124,15 +127,17 @@ documentation solely to exercise a check without restoring the intended contents
 ## Export lifecycle and boundaries
 
 - [ ] Run `bash scripts/docs-portal.sh export`; inspect `.local/docs-portal/site/export-manifest.json`.
-- [ ] Confirm output contains only portal assets, canonical documents, selected root documents,
-      and allowed linked tracked source/configuration references.
+- [ ] Confirm output contains the sidebar and retained Overview pages, selected canonical
+      `docs/` pages, required shell files, and explicitly inventoried browser assets.
+      Root documents and linked source/configuration files are not copied; their links open GitHub.
 - [ ] Confirm `.env`, `.git/`, snapshots, dumps, credentials, and unrelated `.local/` files are absent.
 - [ ] After an intended documentation edit, confirm automatic export and browser reload.
       Restart only after changing exporter or launcher code.
 - [ ] Remove a disposable generated file, re-export, and confirm the output is rebuilt as expected.
 - [ ] Remove a disposable source page from the selected inputs and confirm its old output disappears.
-- [ ] Check that an unmarked existing output directory or redirected output path is refused;
-      unrelated folders and files must remain untouched.
+- [ ] Check that unmarked site/staging output is preserved under a unique `preserved-*` backup
+      before a fresh export. Symlink/junction output paths must be refused, and unrelated
+      folders and files must remain untouched.
 - [ ] Open another port with `bash scripts/docs-portal.sh serve 8088`; check Ctrl+C shutdown.
 - [ ] Confirm directory listings are disabled and traversal URLs cannot expose repository files.
 
@@ -159,8 +164,8 @@ Manual browser review remains pending; no automated tests were run for this chan
   and the example contains the stock feature screenshot rather than the conversation reader.
 - Confirm the image stands separately without the Example session badge or enclosing card.
   Check that the full-size action is above the image and its caption row wraps on small screens.
-- Confirm the Redmine result screenshot appears immediately below the conversation screenshot
-  and before the product introduction; check its full-size link and exported asset as well.
+- Confirm the Redmine issue-list and Feature #678 screenshots appear below the conversation
+  screenshot and before the product introduction; check their full-size links and exported assets.
 - Check the bounded image region on desktop and mobile in both themes. Scroll to the bottom
   with pointer, touch, and keyboard; confirm the full image is available without stretching.
 - Open the full-size link in a new tab and use browser zoom to read the original image.

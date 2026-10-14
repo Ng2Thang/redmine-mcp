@@ -229,12 +229,17 @@ start with a letter or digit and contain only letters, digits, underscores, or h
 bash scripts/backup.sh baseline
 ```
 
-Backup validates the environment and stops MCP and Redmine. It stores a database dump,
+Backup validates the environment and stops the selected MCP reader and Redmine.
+It stores a database dump,
 attachments archive, environment marker, manifest, test credentials, image-version metadata,
 and a completion marker under `/state/backups/<snapshot-id>/` in the project's `backup_data`
 volume. Its exit handler attempts to
 restart applications even when backup fails. Incomplete snapshots must not be used for restore.
 Existing snapshots are not overwritten. Treat every snapshot as sensitive.
+
+Backup/restore wrappers stop and restart `mcp-server` and `redmine` only. Stop any optional
+or separately deployed writer that targets this database before maintenance; the wrappers
+do not manage that writer's lifecycle.
 
 Restore replaces the current synthetic database, attachments, and Docker seed state:
 
@@ -271,7 +276,7 @@ process already occupying port 8000. With the Git Bash Docker exports above in e
 docker compose -p redmine-mcp-external --env-file .local/external.env -f deploy/compose.yaml up -d --build
 ```
 
-This uses base Compose, which runs MCP only. Never add the synthetic override or invoke the
+This uses base Compose, which runs MCP only. Never add a synthetic Compose file or invoke the
 seed/reset/restore helpers for an external instance. Inside Docker, use `host.docker.internal`
 for Redmine running on the Windows host. Hosting, HTTPS ingress, and OAuth remain deferred.
 
@@ -296,7 +301,9 @@ profile with its own Compose project:
 docker compose -p redmine-mcp-writer --env-file .local/writer.env -f deploy/compose.yaml --profile writer up -d --build mcp-writer
 ```
 
-It listens on `127.0.0.1:8001` unless `MCP_WRITER_HOST_PORT` is set. The reader deployment
+Base Compose listens on `127.0.0.1:8001` unless `MCP_WRITER_HOST_PORT` is set. If the 7.0.2
+sample stack is running, its Redmine already owns port 8001: set a free writer port such as
+`MCP_WRITER_HOST_PORT=8010` in `.local/writer.env` before startup. The reader deployment
 continues to use port 8000; base Compose forces its `REDMINE_WRITE_ENABLED=false`.
 Changing the env-file requires recreating the writer service with the startup command above;
 refresh client connections and tool lists afterward. Personal-key discovery is caller-specific
@@ -304,8 +311,13 @@ and reports candidates, not guaranteed target access. Direct/cached calls still 
 Keep `docker compose config` output private because it can include deployment secrets.
 
 For a synthetic writer, use the already marked synthetic instance with its own ignored writer
-configuration and a reachable Redmine URL. Do not add the synthetic override to this separate
-writer project: the existing synthetic instance owns its database and files. For an external
+configuration and a reachable Redmine URL. From the writer container, the built-in 7.0.2
+instance is reachable at `http://host.docker.internal:8001`, or port `3001` for 6.0.1.
+Use the corresponding localhost URL for `REDMINE_PUBLIC_URL` browser links.
+Do not add a synthetic Compose file to this separate writer project: the existing synthetic
+instance owns its database and files. Built-in files also declare optional writer ports
+8004 (7.0.2) and 8003 (6.0.1), with no enabled operations; they require explicit service
+configuration and do not read `.local/writer.env`. For an external
 writer, use only the base Compose file and the external instance's ordinary user permissions;
 seed/reset/restore helpers remain inapplicable.
 
@@ -315,7 +327,9 @@ Reconcile the actual target in Redmine before attempting again, preserving alrea
 batch peers. A failed read-back does not undo acceptance. See
 [write semantics](tool-reference.md#mutation-uncertainty) and membership batch contracts.
 
-The [2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md) records current functional acceptance.
+The [2026-10-07 ledger](testing/evidence/current-catalog-acceptance.md) records acceptance for
+its earlier 17-read/15-write catalog. Later evidence, waivers and pending acceptance are
+summarized in the [current roadmap](plans/index.md#catalog-status-2026-10-09).
 `/health` remains process liveness and does not contact Redmine. Complete writer audit, metrics,
 CI, deployment/rollback and recovery acceptance remain deferred outside the current
 local-development roadmap. Existing logs and Compose healthchecks do not establish these

@@ -44,6 +44,8 @@ Serve only `.local/docs-portal/site/`, never the repository root. Export replace
 the owned output directory, removing obsolete pages. Source and asset edits trigger
 export and browser reload. Restart after changing the exporter or launcher.
 Static hosting must replace old output as well.
+Publish the exported site, not this source directory: export also copies retained canonical
+`docs/` pages and generates the search inventory.
 
 If an output directory is missing its ownership marker, export moves it to a unique
 `preserved-site-*` or `preserved-staging-*` backup under `.local/docs-portal/` before

@@ -1,0 +1,7 @@
+- [Overview](/home.md)
+- Install
+  - [MCP client installation](/guides/get-started.md)
+  - [MCP server installation](/guides/installation.md)
+- [Workflows](/guides/workflows.md)
+- [Help](/guides/troubleshooting.md)
+- [Repository](https://github.com/Ng2Thang/redmine-mcp)

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380" role="img" aria-labelledby="title desc">
+  <title id="title">Discover accessible Redmine projects</title>
+  <desc id="desc">Illustrative prompt: Which projects can I access? Tool: list_projects. Sample summary lists Website and Internal Tools, both invented projects.</desc>
+  <rect width="600" height="380" fill="#f4f6fa"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="28" y="36" fill="#a52a38" font-size="12" font-weight="700">ILLUSTRATIVE EXAMPLE / PROJECTS</text>
+    <rect x="24" y="56" width="552" height="72" rx="12" fill="#fff" stroke="#e4e8ee"/>
+    <text x="44" y="84" fill="#596779" font-size="13">ASK</text>
+    <text x="44" y="110" fill="#243247" font-size="22" font-weight="600">Which projects can I access?</text>
+    <rect x="24" y="144" width="552" height="84" rx="12" fill="#1b2535"/>
+    <g font-family="Consolas, monospace" font-size="16" fill="#e3e9f3">
+      <text x="44" y="176">list_projects</text>
+      <text x="44" y="205">{}</text>
+    </g>
+    <text x="28" y="261" fill="#596779" font-size="13">EXAMPLE CLIENT SUMMARY</text>
+    <rect x="28" y="280" width="12" height="12" rx="3" fill="#a52a38"/>
+    <text x="52" y="297" fill="#243247" font-size="19">Website</text>
+    <rect x="28" y="314" width="12" height="12" rx="3" fill="#a52a38"/>
+    <text x="52" y="331" fill="#243247" font-size="19">Internal Tools</text>
+    <text x="28" y="365" fill="#596779" font-size="12">Synthetic data. Your visible projects and client display will differ.</text>
+  </g>
+</svg>

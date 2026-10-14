@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380" role="img" aria-labelledby="title desc">
+  <title id="title">Find your open issues</title>
+  <desc id="desc">Illustrative prompt: Show my open issues. Tool: list_issues with assigned_to_id me and status_id open. Sample summary lists two invented issues.</desc>
+  <rect width="600" height="380" fill="#f4f6fa"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="28" y="36" fill="#a52a38" font-size="12" font-weight="700">ILLUSTRATIVE EXAMPLE / MY WORK</text>
+    <rect x="24" y="56" width="552" height="72" rx="12" fill="#fff" stroke="#e4e8ee"/>
+    <text x="44" y="84" fill="#596779" font-size="13">ASK</text>
+    <text x="44" y="110" fill="#243247" font-size="22" font-weight="600">Show my open issues.</text>
+    <rect x="24" y="144" width="552" height="84" rx="12" fill="#1b2535"/>
+    <g font-family="Consolas, monospace" font-size="16" fill="#e3e9f3">
+      <text x="44" y="176">list_issues</text>
+      <text x="44" y="205">assigned_to_id: "me", status_id: "open"</text>
+    </g>
+    <text x="28" y="261" fill="#596779" font-size="13">EXAMPLE CLIENT SUMMARY</text>
+    <circle cx="36" cy="290" r="5" fill="#a52a38"/>
+    <text x="52" y="297" fill="#243247" font-size="19">#123 Fix login redirect</text>
+    <circle cx="36" cy="324" r="5" fill="#a52a38"/>
+    <text x="52" y="331" fill="#243247" font-size="19">#124 Update setup guide</text>
+    <text x="28" y="365" fill="#596779" font-size="12">Synthetic data. Your visible issues and client display will differ.</text>
+  </g>
+</svg>

@@ -1,0 +1,170 @@
+# Documentation portal manual checklist
+
+This is a handoff checklist. No test runner, browser automation, Inspector session, live Redmine
+request, or portal runtime check is implied by its inclusion. Execute checks only when assigned
+or accepted by the user. Record the source revision, browser, hosting path, results, and limits.
+
+See the [2026-10-09 layout review](https://github.com/Ng2Thang/redmine-mcp/blob/master/docs/reviews/documentation-state-audit-2026-10-09.md) for the checks performed after the
+user requested a portal review. The remaining checklist items still require verification.
+
+## User-guide refresh handoff (2026-10-12)
+
+The following checks are proposed, not executed. Export/serve and browser access are
+required for portal review; Redmine and personal keys are needed only for separately
+authorized tool execution. Reading synthetic examples does not require live tool calls.
+
+- [ ] Follow both homepage paths: connect to an existing server and set up a server.
+- [ ] Confirm Get started has two entries: MCP client installation and MCP server installation.
+      REST and Inspector examples should appear under Help and reference.
+- [ ] Follow MCP client installation from connection settings to identity, projects, and assigned issues.
+- [ ] Confirm the client submenu lists Codex, VS Code Copilot, Cursor, other clients, and First request;
+      the server submenu lists Local Python, Docker with sample data, and Docker with existing Redmine.
+      Shared prerequisites and individual actions should not become submenu entries. Follow each
+      setup choice and the combined identity/project prompt, then the linked workflow guide.
+- [ ] Review the Codex extension, VS Code Copilot, Cursor, and other-client instructions with their supported
+      client versions. Check secret prompts/substitution, existing-server merging, tool discovery,
+      and the VS Code extension-host versus Agent Host distinction. Actual client connections
+      and identity calls need separate authorization; none are claimed by the guide examples.
+- [ ] Confirm the Codex setup screenshot loads from the exported `assets/imgs/` directory,
+      including under a hosting subdirectory, and its caption identifies the existing-server
+      update screen. Check that the credential remains obscured.
+- [ ] Open all four workflow pages from the sidebar and workflow index; check prompt copying,
+      JSON formatting, synthetic-result notices, prerequisites, and related links.
+- [ ] Confirm Everyday workflows opens the overview directly, without a duplicate Choose a workflow
+      entry. Each core workflow should show only three task-focused submenu headings; goals,
+      prerequisites, steps, example results, and related tools remain readable within the page.
+- [ ] Confirm write guides identify the writer requirement and explain uncertain outcomes.
+- [ ] Confirm Access and write actions has Choose your connection and Make and review changes.
+      The access submenu should have two sections; the write submenu should have three:
+      Check your access, Make a change, and Read the outcome. Follow candidate-action discovery,
+      administrator setup, and walkthrough links; check that writer gates and retry guidance remain.
+- [ ] Confirm time logging retains its pending acceptance and activity-discovery waiver.
+- [ ] Search for `open issues`, `logged time`, and `cannot connect`; open the intended guides.
+- [ ] Open Troubleshooting, Reference, and the contributor hub; follow nested canonical links.
+- [ ] Confirm Help and reference has two entries and troubleshooting has three submenu groups:
+      Connection and access, Inputs and results, and Frequently asked questions. Follow existing
+      symptom links, including client connection and incomplete results, to their individual headings.
+- [ ] Confirm REST and Inspector examples has three submenu sections, with connection values
+      in its introduction. Confirm Contributors opens the hub directly and shows Develop tools,
+      Testing and evidence, and Operate and maintain the server. Follow Runtime settings and
+      Security policy from its operations table and expand the recorded evidence list.
+- [ ] Open earlier technical URLs directly to confirm they remain available after navigation changes.
+- [ ] Open the retired `project-backlog`, `progress-update`, `update-issue`, and `log-time`
+      guide routes, with and without `.md`; confirm they resolve to the consolidated guides.
+- [ ] Check homepage installation links, 404 recovery links, and narrow-screen navigation.
+- [ ] Confirm all documentation and interface controls are English and no language selector appears.
+- [ ] Repeat key navigation and search under a hosting subdirectory.
+
+## Prerequisites
+
+Use Git Bash, Python 3.13, Git, and a modern browser. No API key, Docker service, Node installation,
+Redmine instance, or automated-test dependency is required for portal-only verification.
+Use a disposable export directory generated by the portal helper; do not edit canonical
+documentation solely to exercise a check without restoring the intended contents.
+
+## Offline behavior
+
+- [ ] Start `bash scripts/docs-portal.sh serve`; open `http://127.0.0.1:8080/`.
+- [ ] Disconnect Internet access while keeping localhost reachable; use a fresh browser profile
+      or cleared cache to establish that remote cached assets are unnecessary.
+- [ ] Confirm there are no external asset/font requests during initial load or navigation.
+- [ ] Confirm Themeable styling, red accent, system fonts, sidebar toggle, and readiness
+      transition; check wide tables on desktop and narrow screens.
+- [ ] Select Light and Dark under Appearance; check text, sidebar, search results, tables,
+      notices, highlighted code, copy buttons, and Mermaid diagrams for readable colors.
+- [ ] Select Auto and change system appearance; confirm the page and diagrams follow it.
+      Reload and navigate to confirm the selected mode persists. Check the mobile drawer
+      and keyboard access to the selector; confirm themes work without Internet access.
+- [ ] Open retired `#/vi/` and `#/vi/docs/tool-reference` links; confirm the English 404 page
+      appears and its recovery navigation works. Confirm search results contain English pages only.
+- [ ] Search for `mutation uncertainty` and `bootstrap`; open results on their correct pages.
+- [ ] Check Python, Bash, JSON, YAML, TOML, Docker, and diff highlighting where examples exist.
+- [ ] Copy a code block and compare its text, including newlines; check the clipboard fallback
+      when browser permissions deny the Clipboard API.
+- [ ] Render architecture and request-flow diagrams, navigate away and back, and check horizontal
+      and vertical scrolling on a narrow screen, including keyboard access to the diagram region.
+      Invalid Mermaid should display readable source instead.
+
+## Navigation and content
+
+- [ ] Open `/`; confirm the cover shows the local logo and readable text
+      in light and dark themes on desktop and mobile. Scroll to the existing homepage and
+      confirm the sidebar resize handle appears only with the navigation.
+- [ ] Open a guide and click Overview in the sidebar or navbar; confirm it opens
+      `#/home` at the homepage content with the cover hidden. Repeat while
+      already on the scrolled homepage; confirm it returns to the top of the content.
+      The sidebar title still opens the landing route with its cover. Repeat rapid
+      navigation, browser Back/Forward, and heading links.
+- [ ] Follow the homepage's MCP client installation and MCP server installation links; both target
+      English user guides. Open an installation deep link directly and confirm no cover appears.
+- [ ] Confirm the cover contains only the logo, product name, and short description,
+      without buttons, example images, animations, or captions.
+- [ ] Confirm exported output includes `_coverpage.md`; repeat cover navigation under a hosting
+      subdirectory and check that printing includes the documentation without the cover.
+- [ ] Open every top-level sidebar group and navbar destination.
+- [ ] Open the navbar's Install dropdown and follow both MCP client installation and
+      MCP server installation links, including from the mobile navigation drawer.
+- [ ] Open Visual tool examples; confirm all four SVG mockups and the static PNG load locally.
+      Expand the GIF example and check its three stages. Repeat under a hosting subdirectory
+      and on a narrow screen; confirm captions explain that the media uses synthetic data.
+- [ ] Open a nested page directly through its hash URL, then reload.
+- [ ] Follow cross-page heading links, especially configuration writer setup and mutation uncertainty.
+- [ ] Open linked source/configuration files from a nested task or audit page.
+- [ ] Visit `#/missing-page`; confirm the custom 404 offers working navigation.
+- [ ] Confirm installation, first calls, access, module map, execution flow, development, testing,
+      operations, and evidence pages are present.
+- [ ] Compare detailed pages with canonical `docs/`; preserve dated evidence, waivers, and pending work.
+- [ ] Check keyboard focus, Skip to content, search, sidebar toggle, and mobile navigation.
+- [ ] On desktop, drag the sidebar's right edge; confirm the content follows its width and
+      the width survives navigation and reload. Use Left/Right arrows on the focused edge
+      (Shift for larger steps), Home/End for limits, and double-click to reset.
+- [ ] Resize the viewport; confirm the sidebar leaves room for content, hides its resize
+      edge when collapsed, and uses the normal fixed-width drawer on mobile.
+
+## Export lifecycle and boundaries
+
+- [ ] Run `bash scripts/docs-portal.sh export`; inspect `.local/docs-portal/site/export-manifest.json`.
+- [ ] Confirm output contains only portal assets, canonical documents, selected root documents,
+      and allowed linked tracked source/configuration references.
+- [ ] Confirm `.env`, `.git/`, snapshots, dumps, credentials, and unrelated `.local/` files are absent.
+- [ ] After an intended documentation edit, confirm automatic export and browser reload.
+      Restart only after changing exporter or launcher code.
+- [ ] Remove a disposable generated file, re-export, and confirm the output is rebuilt as expected.
+- [ ] Remove a disposable source page from the selected inputs and confirm its old output disappears.
+- [ ] Check that an unmarked existing output directory or redirected output path is refused;
+      unrelated folders and files must remain untouched.
+- [ ] Open another port with `bash scripts/docs-portal.sh serve 8088`; check Ctrl+C shutdown.
+- [ ] Confirm directory listings are disabled and traversal URLs cannot expose repository files.
+
+## Static deployment
+
+- [ ] Serve the exported directory at a domain root and repeat navigation/search/diagram checks.
+- [ ] Serve the same export under a subdirectory such as `/redmine-mcp-docs/`; retain the trailing
+      slash and check assets, deep links, heading links, and raw source references.
+- [ ] Confirm the host supplies suitable MIME types for JavaScript, CSS, SVG, and text references.
+- [ ] Refresh browser storage after a new deployment and confirm search uses current content.
+- [ ] Publish only the generated site directory. Record that external references and commands
+      contacting Redmine or package registries still require network access.
+
+## Handoff record
+
+Report checks performed, checks deferred, observed failures, and remaining limitations.
+Portal verification does not establish MCP tool acceptance or production readiness.
+
+## Homepage example screenshot review
+
+Manual browser review remains pending; no automated tests were run for this change.
+
+- Open Overview at `#/?id=explore-a-feature-plan-in-redmine`; confirm the heading still resolves
+  and the example contains the stock feature screenshot rather than the conversation reader.
+- Confirm the image stands separately without the Example session badge or enclosing card.
+  Check that the full-size action is above the image and its caption row wraps on small screens.
+- Confirm the Redmine result screenshot appears immediately below the conversation screenshot
+  and before the product introduction; check its full-size link and exported asset as well.
+- Check the bounded image region on desktop and mobile in both themes. Scroll to the bottom
+  with pointer, touch, and keyboard; confirm the full image is available without stretching.
+- Open the full-size link in a new tab and use browser zoom to read the original image.
+  Confirm keyboard focus is visible and the screenshot has descriptive alt text.
+- When export is authorized, confirm the screenshot is included under `assets/imgs/`, loads
+  under a hosting subdirectory, and only the current screenshot assets are requested.
+

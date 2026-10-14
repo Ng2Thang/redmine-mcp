@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-labelledby="title desc">
+  <title id="title">Example: ask an AI client to read a Redmine issue</title>
+  <desc id="desc">An illustrative client prompt asks for issue 123. The client selects get_issue with issue_id 123. This is a mockup, not a captured session.</desc>
+  <rect width="960" height="440" rx="20" fill="#f4f6fa"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="36" y="42" fill="#a52a38" font-size="13" font-weight="700">ILLUSTRATIVE EXAMPLE / 01</text>
+    <text x="36" y="84" fill="#243247" font-size="28" font-weight="700">Ask a question. The client chooses a tool.</text>
+    <rect x="36" y="116" width="888" height="108" rx="12" fill="#fff" stroke="#e4e8ee"/>
+    <text x="60" y="149" fill="#596779" font-size="14">YOUR PROMPT</text>
+    <text x="60" y="188" fill="#243247" font-size="23">Summarize Redmine issue #123.</text>
+    <rect x="36" y="244" width="888" height="148" rx="12" fill="#1b2535"/>
+    <text x="60" y="278" fill="#aebbd0" font-size="14">TOOL CALL SELECTED BY THE CLIENT</text>
+    <g fill="#e3e9f3" font-family="Consolas, monospace" font-size="20">
+      <text x="60" y="318">get_issue</text>
+      <text x="60" y="356">{ "issue_id": 123 }</text>
+    </g>
+    <text x="36" y="421" fill="#596779" font-size="13">Synthetic issue ID. Replace this mockup with your own client screenshot.</text>
+  </g>
+</svg>

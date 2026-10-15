@@ -1,9 +1,23 @@
 # MCP tool roadmap
 
+## Runtime-only quality scope (2026-10-15)
+
+At the user's request, all source scans/fixes now target only `src/redmine_mcp/`.
+`scripts/check.sh`, `fix-quality.sh`, the expanded audit and the architecture checker exclude
+support scripts, seed tools, documentation code and tests from their source targets. mypy
+uses the existing strict configuration on the runtime package. Rules and suppressions are
+unchanged; excluded findings are not fixed or waived. Dated broader audit results are retained.
+Optional `--verify` still runs the complete offline regression and package build when selected.
+The [quality guide](../quality-check.md) and [audit workflow](../code-quality.md) reflect this scope.
+Validation: runtime Ruff lint/format, strict mypy and architecture checks passed for all
+130 runtime modules. The modified Python helpers passed their scoped lint/format/type checks;
+Bash syntax and diff whitespace checks passed. No runtime auto-fix, test, build, startup or
+live verification was performed for this scope change. This is not a refreshed full audit.
+
 ## CLI quality fixes and rechecks (2026-10-15)
 
 Added `scripts/fix-quality.sh` to apply guarded formatting and run the documented
-convention, typing, architecture, complexity and security commands with terminal output.
+runtime convention, typing, architecture, complexity and security commands with terminal output.
 `--check-only` preserves source; `--offline` skips advisories and returns incomplete status.
 Default edits are formatting only. `--fix-imports` opts into I001 ordering fixes; `--verify`
 opts into offline unit/integration tests and a package build. The new syntax-tree guard detects

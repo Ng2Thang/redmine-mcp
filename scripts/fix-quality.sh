@@ -16,6 +16,7 @@ Usage: bash scripts/fix-quality.sh [--check-only] [--fix-imports] [--verify] [--
 Apply formatting with a syntax-tree guard, then check convention, typing, architecture,
 complexity, security candidates and locked runtime dependency advisories.
 Diagnostics and a final summary are displayed directly in the terminal.
+Source checks and fixes target src/redmine_mcp only; support scripts are excluded.
 
   --check-only  Run checks without applying source fixes or formatting.
   --fix-imports Additionally fix import ordering (I001); review import side effects.
@@ -64,7 +65,7 @@ if ! uv sync --frozen --group audit; then
   exit 2
 fi
 
-targets=(src/redmine_mcp scripts tools/seed)
+targets=(src/redmine_mcp)
 uv_command=(uv run --frozen --no-sync --group audit)
 review_count=0
 error_count=0
@@ -155,15 +156,12 @@ run_step check 'Ruff convention' \
   "${uv_command[@]}" ruff check "${targets[@]}" --no-fix
 run_step check 'Ruff formatting' \
   "${uv_command[@]}" ruff format --check "${targets[@]}"
-run_step check 'Strict mypy (all src)' "${uv_command[@]}" mypy src
+run_step check 'Strict mypy (runtime)' "${uv_command[@]}" mypy "${targets[@]}"
 run_step check 'Architecture boundaries and cycles' \
   "${uv_command[@]}" python scripts/check_architecture.py
 run_step metric 'Radon runtime complexity above 10' \
   "${uv_command[@]}" radon cc src/redmine_mcp -s -n C
-run_step metric 'Radon support complexity above 10' \
-  "${uv_command[@]}" radon cc scripts tools/seed -s -n C
 run_step check 'Bandit runtime candidates' "${uv_command[@]}" bandit -r src/redmine_mcp
-run_step check 'Bandit support candidates' "${uv_command[@]}" bandit -r scripts tools/seed
 
 if "$offline"; then
   summary+=('Runtime dependency advisories: SKIPPED (offline mode)')

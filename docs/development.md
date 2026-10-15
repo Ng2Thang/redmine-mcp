@@ -170,7 +170,7 @@ requests in worker threads to achieve concurrency.
 
 ## Quality checks
 
-For a static audit with separate runtime/support reports, supplemental rules, complexity
+For a runtime-only static audit with supplemental rules, complexity
 metrics and security findings, see the [code-quality workflow](code-quality.md). Run
 `bash scripts/audit-code-quality.sh` after installing the separate audit group. This workflow
 does not run tests or replace the existing baseline gate.
@@ -182,8 +182,9 @@ For terminal-based checks with guarded formatting and optional import-ordering f
 and a package build. Neither tests nor builds run by default. Typing, architecture, complexity
 and security findings still require review, and deployed runtime acceptance stays separate.
 
-`scripts/check.sh` can be invoked by its path from any working directory. It checks the whole
-repository with Ruff, runtime code with mypy, and import boundaries with the architecture checker.
+`scripts/check.sh` can be invoked by its path from any working directory. It checks only
+`src/redmine_mcp/` with Ruff, mypy and the import-boundary/cycle architecture checker.
+Support scripts, seed tools, documentation code and tests are not source scan targets.
 It runs all four checks even when one fails and exits nonzero if any fails. It does not rewrite
 source or require Docker or credentials.
 Frozen uv commands may install missing locked dependencies into the local environment.
@@ -191,9 +192,9 @@ Frozen uv commands may install missing locked dependencies into the local enviro
 Equivalent individual commands:
 
 ```bash
-uv run --frozen ruff check .
-uv run --frozen ruff format --check .
-uv run --frozen mypy src
+uv run --frozen ruff check src/redmine_mcp
+uv run --frozen ruff format --check src/redmine_mcp
+uv run --frozen mypy src/redmine_mcp
 uv run --frozen python scripts/check_architecture.py
 ```
 

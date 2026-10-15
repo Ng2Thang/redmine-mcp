@@ -17,6 +17,10 @@ ordering and offline test/build verification as explicit options. Tests/build ru
 
 For individual CLI commands, see [Quality Check](quality-check.md).
 
+All source scans and fixes target `src/redmine_mcp/` only. `scripts/`, `tools/seed/`,
+documentation code and tests are outside that scope. Helpers in `scripts/` implement the
+workflow but are not themselves scanner targets.
+
 ## Safe fixes with terminal output
 
 Run from the repository root in Git Bash:
@@ -26,9 +30,9 @@ bash scripts/fix-quality.sh
 ```
 
 The script synchronizes the locked development/audit environment, applies formatting to
-`src/redmine_mcp/`, `scripts/` and `tools/seed/`, then rechecks convention, format,
+`src/redmine_mcp/`, then rechecks convention, format,
 strict typing, architecture, complexity, Bandit candidates and runtime dependency advisories.
-mypy and the architecture checker retain their full `src/` scope. Diagnostics and the final
+mypy and the architecture checker use that same runtime-only scope. Diagnostics and the final
 summary appear in the terminal; this script does not generate Markdown reports.
 
 Use these options to check without source edits or to omit the network advisory query:
@@ -63,6 +67,8 @@ guard failed. A failed test/build makes the command exit 2. Build artifacts go i
 `.local/code-quality/build/`. Tests/build do not run without `--verify`. This does not install
 the wheel, launch Uvicorn/containers or invoke live E2E. A real deployment smoke check remains
 separate; the offline suite uses mocked Redmine and in-process REST/MCP.
+The complete offline regression remains selected with `--verify`, including support-helper
+cases. Source scan exclusions do not remove those tests from the regression command.
 
 Typing, architecture, complexity and security findings require source review; there is no
 guarantee that all checks
@@ -105,8 +111,7 @@ is 15 seconds; each scanner has a five-minute process timeout. Network failures 
 | Layer | Baseline | Additional review |
 |---|---|---|
 | Runtime: `src/redmine_mcp/` | Existing Ruff rules and formatter | Supplemental Ruff, Radon CC/MI, Bandit |
-| Support: `scripts/`, `tools/seed/` | Existing Ruff rules and formatter | Supplemental Ruff, Radon CC/MI, Bandit |
-| All Python under `src/` | Existing strict mypy and architecture checker | Manual boundary and contract review |
+| Runtime: `src/redmine_mcp/` | Existing strict mypy and architecture checker | Manual boundary and contract review |
 | Runtime dependencies | Active Python/platform requirements exported from `uv.lock` | pip-audit advisories |
 
 The baseline keeps `E`, `F`, `I`, `UP`, Python 3.13, a 100-character line limit and strict mypy.
@@ -120,10 +125,10 @@ They are not proof of defects, measured performance problems or mandatory refact
 Bandit severity/confidence also require context review; do not suppress a finding merely to
 obtain a clean scan. No baseline suppressions or security waivers are added by this workflow.
 
-Only Python is scanned in the runtime/support directories. Ruby seeding, Bash helpers,
-JavaScript, documentation code and vendored assets need separate review. Tests, virtual
+Only Python under `src/redmine_mcp/` is scanned. Support scripts, seed tools, JavaScript,
+documentation code and vendored assets are outside scope. Tests, virtual
 environments, `.local/`, build output and generated state are outside scanner targets.
-`mypy src` retains its established wider source scope. The architecture checker detects its
+`mypy src/redmine_mcp` checks the runtime package. The architecture checker detects its
 configured import boundaries and cycles; a pass does not prove every router/port/gateway
 interaction or permission decision is correct.
 
@@ -146,6 +151,9 @@ Each invocation creates a new UTC timestamped directory under ignored `.local/co
 Ruff and Radon JSON is stored in their stdout files. Raw findings can contain source excerpts;
 keep them local until reviewed and sanitized. Never copy `.env`, keys, snapshots or dumps into
 reports. A commit ID alone does not identify uncommitted edits; use the source hashes as well.
+The manifest fingerprints runtime Python files, project metadata/lockfile and the specific
+audit helpers used to produce evidence. Helper hashes identify the procedure; they do not
+indicate those files were scanned. Older dated reports retain their original broader scope.
 
 | Exit | Meaning |
 |---|---|

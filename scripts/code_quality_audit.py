@@ -21,7 +21,6 @@ from typing import cast
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = "src/redmine_mcp"
-SUPPORT = ["scripts", "tools/seed"]
 EXTRA_RULES = "ASYNC,B,C4,C90,N,PERF,PIE,RET,RUF,SIM"
 TIMEOUT_SECONDS = 300
 
@@ -216,96 +215,77 @@ def executable(name: str) -> str:
 
 
 def checks(directory: Path) -> list[Check]:
-    selected: list[Check] = []
-    for scope, targets in (("runtime", [RUNTIME]), ("support", SUPPORT)):
-        selected.extend(
+    return [
+        Check(
+            "ruff-runtime",
+            module_command("ruff", "check", RUNTIME, "--no-fix", "--output-format=json"),
+            "ruff",
+        ),
+        Check("format-runtime", module_command("ruff", "format", "--check", RUNTIME), "format"),
+        Check(
+            "ruff-review-runtime",
+            module_command(
+                "ruff",
+                "check",
+                RUNTIME,
+                "--no-fix",
+                "--extend-select",
+                EXTRA_RULES,
+                "--config",
+                "lint.mccabe.max-complexity=10",
+                "--output-format=json",
+            ),
+            "ruff",
+        ),
+        Check("complexity-runtime", module_command("radon", "cc", "--json", RUNTIME), "complexity"),
+        Check(
+            "maintainability-runtime",
+            module_command("radon", "mi", "--json", RUNTIME),
+            "maintainability",
+        ),
+        Check(
+            "bandit-runtime",
+            module_command(
+                "bandit",
+                "-r",
+                RUNTIME,
+                "-f",
+                "json",
+                "-o",
+                str(directory / "bandit-runtime.json"),
+            ),
+            "bandit",
+            "bandit-runtime.json",
+        ),
+        Check(
+            "mypy",
+            module_command(
+                "mypy", RUNTIME, "--no-pretty", "--no-color-output", "--show-error-codes"
+            ),
+            "mypy",
+        ),
+        Check("architecture", [sys.executable, "scripts/check_architecture.py"], "architecture"),
+        Check(
+            "runtime-requirements",
             [
-                Check(
-                    f"ruff-{scope}",
-                    module_command("ruff", "check", *targets, "--no-fix", "--output-format=json"),
-                    "ruff",
-                ),
-                Check(
-                    f"format-{scope}",
-                    module_command("ruff", "format", "--check", *targets),
-                    "format",
-                ),
-                Check(
-                    f"ruff-review-{scope}",
-                    module_command(
-                        "ruff",
-                        "check",
-                        *targets,
-                        "--no-fix",
-                        "--extend-select",
-                        EXTRA_RULES,
-                        "--config",
-                        "lint.mccabe.max-complexity=10",
-                        "--output-format=json",
-                    ),
-                    "ruff",
-                ),
-                Check(
-                    f"complexity-{scope}",
-                    module_command("radon", "cc", "--json", *targets),
-                    "complexity",
-                ),
-                Check(
-                    f"maintainability-{scope}",
-                    module_command("radon", "mi", "--json", *targets),
-                    "maintainability",
-                ),
-                Check(
-                    f"bandit-{scope}",
-                    module_command(
-                        "bandit",
-                        "-r",
-                        *targets,
-                        "-f",
-                        "json",
-                        "-o",
-                        str(directory / f"bandit-{scope}.json"),
-                    ),
-                    "bandit",
-                    f"bandit-{scope}.json",
-                ),
-            ]
-        )
-    selected.extend(
-        [
-            Check(
-                "mypy",
-                module_command(
-                    "mypy", "src", "--no-pretty", "--no-color-output", "--show-error-codes"
-                ),
-                "mypy",
-            ),
-            Check(
-                "architecture", [sys.executable, "scripts/check_architecture.py"], "architecture"
-            ),
-            Check(
-                "runtime-requirements",
-                [
-                    executable("uv"),
-                    "export",
-                    "--locked",
-                    "--no-dev",
-                    "--no-default-groups",
-                    "--no-emit-project",
-                    "--no-hashes",
-                    "--no-header",
-                    "--no-annotate",
-                    "--format",
-                    "requirements-txt",
-                    "--output-file",
-                    str(directory / "runtime-requirements.txt"),
-                ],
+                executable("uv"),
                 "export",
-                "runtime-requirements.txt",
-            ),
-        ]
-    )
-    return selected
+                "--locked",
+                "--no-dev",
+                "--no-default-groups",
+                "--no-emit-project",
+                "--no-hashes",
+                "--no-header",
+                "--no-annotate",
+                "--format",
+                "requirements-txt",
+                "--output-file",
+                str(directory / "runtime-requirements.txt"),
+            ],
+            "export",
+            "runtime-requirements.txt",
+        ),
+    ]
 
 
 def git_metadata() -> dict[str, str]:
@@ -330,10 +310,14 @@ def git_metadata() -> dict[str, str]:
 
 
 def source_manifest() -> dict[str, str]:
-    paths = {ROOT / "pyproject.toml", ROOT / "uv.lock"}
-    for source in [ROOT / "src", ROOT / "scripts", ROOT / "tools/seed"]:
-        paths.update(source.rglob("*.py"))
-        paths.update(source.rglob("*.sh"))
+    paths = {
+        ROOT / "pyproject.toml",
+        ROOT / "uv.lock",
+        Path(__file__).resolve(),
+        ROOT / "scripts/audit-code-quality.sh",
+        ROOT / "scripts/check_architecture.py",
+    }
+    paths.update((ROOT / RUNTIME).rglob("*.py"))
     return {
         path.relative_to(ROOT).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in sorted(paths)
@@ -377,9 +361,8 @@ def write_report(directory: Path, results: list[Result], metadata: dict[str, obj
             "",
             "## Scope and reproduction",
             "",
-            "Runtime: `src/redmine_mcp/`. Support: `scripts/` and `tools/seed/`.",
-            "Only Python is scanned. Bash/Ruby/JS need separate source review.",
-            "mypy and the existing architecture checker retain their full `src/` scope.",
+            "All source scans target `src/redmine_mcp/` only.",
+            "Support scripts, seed tools and documentation code are outside scanner scope.",
             "Tests, generated state, virtual environments and vendored assets are excluded.",
             "pip-audit checks uv.lock runtime requirements for the active Python/platform.",
             "It contacts the public advisory service using package names and versions.",
@@ -407,6 +390,7 @@ def main() -> int:
         "started_utc": started.isoformat(),
         "python": sys.version,
         "platform": sys.platform,
+        "source_scope": RUNTIME,
         "git": git_metadata(),
         "source_sha256": source_manifest(),
         "versions": {

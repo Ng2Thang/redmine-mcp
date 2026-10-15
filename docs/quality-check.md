@@ -8,6 +8,10 @@ explicit option. Tests and package builds run only with `--verify`; no workflow 
 See the [code-quality workflow overview](code-quality.md#choose-a-workflow) to choose between
 terminal checks, guarded formatting and the expanded audit with saved evidence.
 
+All source checks and fixes target `src/redmine_mcp/` only. Support scripts, seed tools,
+documentation code and tests are outside scanner/fixer scope. The quality helpers in `scripts/`
+are executed as tooling; their source is not included in the quality scan.
+
 ## Setup
 
 Install the locked development and audit dependencies:
@@ -28,8 +32,8 @@ bash scripts/fix-quality.sh
 ```
 
 The script shows tool diagnostics and a final summary in the terminal. It does not
-generate Markdown reports. Fix targets are `src/redmine_mcp/`, `scripts/` and `tools/seed/`;
-mypy and architecture checks retain their wider `src/` scope. It synchronizes the locked
+generate Markdown reports. Formatting, lint, typing, complexity, security and architecture
+checks all target `src/redmine_mcp/`. It synchronizes the locked
 development/audit environment before starting and does not require a clean worktree.
 Existing edits remain in place; review the combined source diff after running it. General lint
 fixes are not applied automatically. The default command does not run tests or build packages.
@@ -99,6 +103,8 @@ uv build --no-sources --out-dir .local/code-quality/build
 
 Tests and the build are independent checks and are both attempted, even when other checks report
 findings. If the formatting guard failed, both are skipped. A failed test/build returns exit 2.
+The optional regression still runs the complete offline unit/integration suites, including
+their support-helper cases; narrowing source scan targets does not silently omit regression tests.
 The build writes artifacts under ignored `.local/` and may download build-system dependencies;
 `--offline` requires these dependencies to be cached. It does not update project dependency pins.
 
@@ -120,13 +126,16 @@ Implementation validation included Ruff lint/format and strict mypy for the new 
 Bash syntax and diff whitespace checks. The revised pipeline, import-ordering option and `--verify`
 have not been executed against existing source during this assignment. Syntax-tree matching,
 test/build success and actual deployment behavior must not be inferred from source review.
+After narrowing the scope, `bash scripts/check.sh` passed Ruff lint/format, strict mypy and
+architecture checks for all 130 runtime modules. No full audit, auto-fix or test/build ran for
+that scope change.
 
 ## Ruff: convention and imports
 
-Check runtime code and supporting Python scripts against the existing repository rules:
+Check runtime code against the existing repository rules:
 
 ```bash
-uv run --frozen ruff check src/redmine_mcp scripts tools/seed
+uv run --frozen ruff check src/redmine_mcp
 ```
 
 ## Ruff: formatting
@@ -134,15 +143,15 @@ uv run --frozen ruff check src/redmine_mcp scripts tools/seed
 Identify files that need formatting without rewriting them:
 
 ```bash
-uv run --frozen ruff format --check src/redmine_mcp scripts tools/seed
+uv run --frozen ruff format --check src/redmine_mcp
 ```
 
 ## mypy: strict typing
 
-Check all Python code under `src/`, including the documentation tools:
+Check the MCP runtime package with the existing strict typing configuration:
 
 ```bash
-uv run --frozen mypy src
+uv run --frozen mypy src/redmine_mcp
 ```
 
 ## Radon: complexity
@@ -154,11 +163,7 @@ uv run --frozen --group audit radon cc src/redmine_mcp -s -n C
 ```
 
 Rank C starts at complexity 11. Treat these results as review candidates, not proof of
-incorrect behavior. To inspect support scripts separately:
-
-```bash
-uv run --frozen --group audit radon cc scripts tools/seed -s -n C
-```
+incorrect behavior.
 
 ## Bandit: Python security candidates
 
@@ -166,12 +171,6 @@ Scan runtime Python code:
 
 ```bash
 uv run --frozen --group audit bandit -r src/redmine_mcp
-```
-
-Scan support scripts separately:
-
-```bash
-uv run --frozen --group audit bandit -r scripts tools/seed
 ```
 
 Review severity, confidence and the affected code before deciding whether a finding is
@@ -203,7 +202,7 @@ A network failure or skipped package means incomplete coverage, not a clean resu
 
 ## Repository architecture
 
-Run the existing static import-boundary and cycle checker over `src/`:
+Run the existing static import-boundary and cycle checker over `src/redmine_mcp/`:
 
 ```bash
 uv run --frozen python scripts/check_architecture.py
@@ -220,9 +219,10 @@ Run each command separately so a nonzero result does not prevent the next check.
 Nonzero exit codes can indicate findings or execution errors; read the terminal diagnostics.
 Do not apply broad suppressions or automatic fixes solely to obtain a clean result.
 
-Python scanners do not analyze Bash, Ruby or JavaScript files in the support directories.
-These commands do not target `tests/`, virtual environments, generated state or vendored
-browser assets. Static analysis does not establish functional acceptance.
+Source scanners do not target `scripts/`, `tools/seed/`, `src/redmine_mcp_docs/`, `tests/`,
+virtual environments, generated state or vendored browser assets. Dependency scanning still
+checks the runtime requirements exported from `uv.lock`. Static analysis does not establish
+functional acceptance.
 
 For an interactive local report, Qodana Community for Python is a separate option.
 Its inspections differ from this CLI baseline; it does not automatically replace the

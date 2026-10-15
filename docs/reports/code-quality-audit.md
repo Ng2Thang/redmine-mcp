@@ -1,5 +1,9 @@
 # Code-quality audit — 2026-10-15
 
+Scope update: the user subsequently limited quality workflows to `src/redmine_mcp/`.
+The results below retain the earlier runtime/support audit and its exact evidence. Current
+commands exclude support/documentation code; exclusion does not mean those findings were fixed.
+
 ## Outcome
 
 The static audit completed with findings, exit 1, and no failed or skipped scans. Existing

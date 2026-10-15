@@ -10,8 +10,8 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 status=0
-uv run --frozen ruff check . || status=1
-uv run --frozen ruff format --check . || status=1
-uv run --frozen mypy src || status=1
+uv run --frozen ruff check src/redmine_mcp || status=1
+uv run --frozen ruff format --check src/redmine_mcp || status=1
+uv run --frozen mypy src/redmine_mcp || status=1
 uv run --frozen python scripts/check_architecture.py || status=1
 exit "$status"

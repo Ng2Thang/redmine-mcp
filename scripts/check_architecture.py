@@ -4,11 +4,12 @@ import ast
 from importlib.util import resolve_name
 from pathlib import Path
 
-RUNTIME = Path(__file__).resolve().parents[1] / "src"
+SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
+RUNTIME = SOURCE_ROOT / "redmine_mcp"
 
 
 def module_name(path: Path) -> str:
-    parts = list(path.relative_to(RUNTIME).with_suffix("").parts)
+    parts = list(path.relative_to(SOURCE_ROOT).with_suffix("").parts)
     if parts[-1] == "__init__":
         parts.pop()
     return ".".join(parts)
@@ -43,11 +44,12 @@ def export_aliases(files: dict[str, Path]) -> dict[str, str]:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         public: set[str] = set()
-        for node in tree.body:
-            if isinstance(node, ast.Assign) and any(
-                isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
+        for statement in tree.body:
+            if isinstance(statement, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == "__all__"
+                for target in statement.targets
             ):
-                public = set(ast.literal_eval(node.value))
+                public = set(ast.literal_eval(statement.value))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 origin = node.module or ""
@@ -133,6 +135,9 @@ def forbidden(source: str, target: str) -> bool:
 
 def main() -> int:
     files = {module_name(path): path for path in sorted(RUNTIME.rglob("*.py"))}
+    if not files:
+        print("No runtime Python modules found under src/redmine_mcp.")
+        return 2
     dependencies = {name: imports(path, name) for name, path in files.items()}
     aliases = export_aliases(files)
     errors = {

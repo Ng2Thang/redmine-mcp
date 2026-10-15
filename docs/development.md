@@ -22,7 +22,7 @@ values, install packages, contact services, or change files. A missing required 
 nonzero exit code; optional tools do not affect readiness for Python development.
 
 Configure a reachable Redmine instance as described in [configuration](configuration.md).
-Stop the Docker MCP service before starting locally on port 8000; see [operations](operations.md).
+Stop any container using port 8000 before starting locally; see [operations](operations.md).
 
 ```bash
 uv run --frozen uvicorn redmine_mcp.app:create_app --factory --host 127.0.0.1 --port 8000 --reload --no-access-log
@@ -58,8 +58,8 @@ The new projects do not adopt or delete old test-project volumes or local state.
 
 | Redmine | Project | Redmine port | PostgreSQL port | MCP reader / optional writer |
 |---|---|---|---|---|
-| 7.0.2 | `redmine-mcp-dev-7-0-2` | 8001 | 5433 | 8000 / 8004 |
-| 6.0.1 | `redmine-mcp-dev-6-0-1` | 3001 | 5436 | 8002 / 8003 |
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | 3002 | 5433 | 8002 / 8004 |
+| 6.0.1 | `redmine-mcp-dev-6-0-1` | 3001 | 5436 | 8001 / 8003 |
 
 Before starting containers, the script checks the three required ports and reports the
 conflicting service or container. Ports already owned by the selected service are reused
@@ -96,8 +96,8 @@ docker compose -p redmine-mcp-dev-6-0-1 -f deploy/compose.test.6.0.1.yaml down
 
 ## DEBUG logging
 
-Run from the repository root in Git Bash. Stop the Docker MCP service before using local
-port 8000. The following starts the local application with detailed diagnostics and disables
+Run from the repository root in Git Bash. Stop any container using host port 8000 before
+using that port locally. The following starts the application with detailed diagnostics and disables
 Uvicorn access logs, which otherwise include raw request URLs:
 
 ```bash

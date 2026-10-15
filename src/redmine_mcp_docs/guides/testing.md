@@ -75,7 +75,7 @@ instances. Built-in profiles use no env file and ignore root `.env`.
 | Version | Compose project | Redmine address | Private manifests and logs |
 | --- | --- | --- | --- |
 | 6.0.1 | `redmine-mcp-dev-6-0-1` | `http://127.0.0.1:3001` | `.local/e2e/redmine-mcp-dev-6-0-1/` |
-| 7.0.2 | `redmine-mcp-dev-7-0-2` | `http://127.0.0.1:8001` | `.local/e2e/redmine-mcp-dev-7-0-2/` |
+| 7.0.2 | `redmine-mcp-dev-7-0-2` | `http://127.0.0.1:3002` | `.local/e2e/redmine-mcp-dev-7-0-2/` |
 
 The E2E overlay mounts the selected private directory at `/e2e-state`. Development seed
 manifests stay in the separate `seed_state` Docker volume at `/seed-state`.

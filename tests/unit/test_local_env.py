@@ -88,7 +88,7 @@ def test_port_conflicts_never_stop_other_services(
 ) -> None:
     module = setup_sandbox.load("scripts/local_env.py")
     bindings = {name: {"ports": []} for name in ("postgres", "redmine", "mcp-server")}
-    bindings["redmine"]["ports"] = [{"published": 8001, "host_ip": "127.0.0.1"}]
+    bindings["redmine"]["ports"] = [{"published": 3002, "host_ip": "127.0.0.1"}]
     monkeypatch.setattr(
         module.subprocess,
         "run",
@@ -106,7 +106,7 @@ def test_port_conflicts_never_stop_other_services(
                 }
             },
             "NetworkSettings": {
-                "Ports": {"3000/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8001"}]}
+                "Ports": {"3000/tcp": [{"HostIp": "127.0.0.1", "HostPort": "3002"}]}
             },
         }
     ]
@@ -132,7 +132,7 @@ def test_port_conflicts_never_stop_other_services(
             pass
 
         def bind(self, address: tuple[str, int]) -> None:
-            assert address == ("127.0.0.1", 8001)
+            assert address == ("127.0.0.1", 3002)
             if owner == "host":
                 raise OSError("occupied")
 

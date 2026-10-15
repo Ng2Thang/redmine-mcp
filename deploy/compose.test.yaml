@@ -12,11 +12,11 @@ services:
       timeout: 5s
       retries: 12
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8002:8000"
     environment:
       REDMINE_WRITE_ENABLED: "false"
       REDMINE_URL: http://redmine:3000
-      REDMINE_PUBLIC_URL: http://localhost:8001
+      REDMINE_PUBLIC_URL: http://localhost:3002
     depends_on:
       redmine:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
       REDMINE_WRITE_ENABLED: "true"
       REDMINE_WRITER_OPERATIONS: ""
       REDMINE_URL: http://redmine:3000
-      REDMINE_PUBLIC_URL: http://localhost:8001
+      REDMINE_PUBLIC_URL: http://localhost:3002
     depends_on:
       redmine:
         condition: service_healthy
@@ -74,7 +74,7 @@ services:
       RAILS_ENV: production
       REDMINE_PLUGINS_MIGRATE: "1"
     ports:
-      - "127.0.0.1:8001:3000"
+      - "127.0.0.1:3002:3000"
     volumes:
       - redmine_files:/usr/src/redmine/files
       - ./redmine-plugins:/opt/redmine/plugins:ro

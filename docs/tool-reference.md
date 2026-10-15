@@ -337,9 +337,11 @@ remain discoverable. A tool may be usable in one project and forbidden in anothe
 to refresh role evidence after a permission change; each invocation rechecks access even if the
 client cached an older catalog.
 
-The MCP endpoint is `http://localhost:8000/mcp` using Streamable HTTP. Supply
-`X-Redmine-API-Key: <your personal Redmine API key>` for MCP and REST tools. The server exposes only the
-tools below. Swagger at `/docs` and OpenAPI at `/openapi.json` describe REST schemas.
+The MCP endpoint uses Streamable HTTP: `http://localhost:8002/mcp` for the 7.0.2 sample,
+`http://localhost:8001/mcp` for the 6.0.1 sample, or `http://localhost:8000/mcp` for local Python.
+Supply `X-Redmine-API-Key: <your personal Redmine API key>` for MCP and REST tools.
+The server exposes only the tools below. Swagger at `/docs` and OpenAPI at `/openapi.json`
+describe REST schemas.
 
 Each call uses the requesting user's Redmine account. `me` means that user. Visibility follows
 Redmine permissions. The default reader catalog exposes no write tools. A separately enabled,

@@ -185,7 +185,7 @@ expensive even with limit one. Repeated previews and different small queries rem
 Attachment content delivery is disabled. The retired content route returns
 `403 attachment_download_disabled` before authentication/upstream work, and cached MCP download
 calls are rejected. Metadata tools return browser links only; no export files are generated.
-Synthetic Compose sets `REDMINE_PUBLIC_URL` to `http://localhost:8001` for 7.0.2 or
+Synthetic Compose sets `REDMINE_PUBLIC_URL` to `http://localhost:3002` for 7.0.2 or
 `http://localhost:3001` for 6.0.1. Use the actual public origin/subpath externally.
 Browser login and Redmine container permissions still apply. The binary byte setting remains
 relevant to writer uploads.
@@ -268,7 +268,7 @@ entry points; the E2E launcher aligns them internally.
 
 | Caller | Redmine address |
 |---|---|
-| Local Python process using synthetic Redmine 7.0.2 / 6.0.1 | `http://localhost:8001` / `http://localhost:3001` |
+| Local Python process using synthetic Redmine 7.0.2 / 6.0.1 | `http://localhost:3002` / `http://localhost:3001` |
 | MCP container with the synthetic Compose override | `http://redmine:3000` |
 | Container accessing Redmine on the Windows host | Use `http://host.docker.internal:<port>` with the actual port. |
 
@@ -277,12 +277,12 @@ The standalone synthetic files explicitly set `REDMINE_URL` to the container ser
 Direct Docker Compose commands allow shell variables to override `--env-file`.
 The synthetic helpers isolate Compose interpolation from inherited shell settings.
 
-Published synthetic endpoints bind to localhost: 7.0.2 uses MCP `8000`, Redmine `8001`,
-PostgreSQL `5433`; 6.0.1 uses `8002`, `3001`, `5436`. These ports are fixed in the versioned
+Published synthetic endpoints bind to localhost: 7.0.2 uses MCP `8002`, Redmine `3002`,
+PostgreSQL `5433`; 6.0.1 uses `8001`, `3001`, `5436`. These ports are fixed in the versioned
 Compose files; occupied ports cause startup to stop with a diagnostic. Base Compose for
 external Redmine still supports `MCP_HOST_PORT`. MCP listens on container port `8000`.
 PostgreSQL uses port `5432` inside Docker. MCP never connects to PostgreSQL.
-Stop the MCP container before starting local Python on port `8000`.
+Stop any container using host port `8000` before starting local Python on that port.
 
 ## External Redmine
 
@@ -311,8 +311,10 @@ cp -n .env.example .local/writer.env
 chmod 600 .local/writer.env
 ```
 
-Choose an unused writer port. The built-in 7.0.2 Redmine already uses host port `8001`, so
-set `MCP_WRITER_HOST_PORT=8010` in this separate writer env-file when connecting to that stack.
+Choose an unused writer port. The built-in 7.0.2 Redmine uses host port `3002`, so the default
+writer port `8001` can be used if available. Set `MCP_WRITER_HOST_PORT` to another free port
+in this separate writer env-file if needed.
+The 6.0.1 sample MCP reader uses port `8001`; choose another writer port when it is running.
 Built-in synthetic Compose files instead define optional writer ports `8004` for 7.0.2 and
 `8003` for 6.0.1. Those writers are not started by `dev-up.sh` and have an empty operation
 ceiling until their service environment is explicitly configured. They do not load this env-file.

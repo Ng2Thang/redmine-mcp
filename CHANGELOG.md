@@ -5,6 +5,20 @@ that a release has been published.
 
 ## Unreleased
 
+### Redmine development port (2026-10-15)
+
+- Move the Redmine 7.0.2 localhost port from 8001 to 3002 in both synthetic Compose files,
+  browser links, startup output, and the E2E profile default. Update existing test fixtures
+  and current setup guides. Base Compose's separate MCP writer still defaults to port 8001.
+- Tests, runtime verification, and deployment were not performed.
+
+### MCP development ports (2026-10-15)
+
+- Set the 7.0.2 synthetic MCP reader host port to 8002 and the 6.0.1 reader host port to
+  8001. Update startup output, client URLs, and migration instructions. Optional writers
+  remain on 8004 and 8003 respectively; the container listener stays on port 8000.
+- Tests, runtime verification, and deployment were not performed.
+
 ### Repository and documentation alignment (2026-10-14)
 
 - Align `.env.example` comments with self-contained synthetic stacks and personal-key writer

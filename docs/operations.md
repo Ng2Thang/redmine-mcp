@@ -26,10 +26,10 @@ the separate owned E2E fixtures.
 
 | Service | Address |
 |---|---|
-| Redmine (7.0.2) | `http://localhost:8001` |
-| Swagger | `http://localhost:8000/docs` |
-| MCP Streamable HTTP | `http://localhost:8000/mcp` |
-| Liveness | `http://localhost:8000/health` |
+| Redmine (7.0.2) | `http://localhost:3002` |
+| Swagger | `http://localhost:8002/docs` |
+| MCP Streamable HTTP | `http://localhost:8002/mcp` |
+| Liveness | `http://localhost:8002/health` |
 | PostgreSQL | `localhost:5433`, database/user `redmine` |
 
 ### Choose a Redmine version
@@ -53,8 +53,25 @@ Both versions can run concurrently with these fixed localhost ports:
 
 | Redmine | Redmine port | PostgreSQL port | MCP reader / optional writer |
 |---|---|---|---|
-| 7.0.2 | 8001 | 5433 | 8000 / 8004 |
-| 6.0.1 | 3001 | 5436 | 8002 / 8003 |
+| 7.0.2 | 3002 | 5433 | 8002 / 8004 |
+| 6.0.1 | 3001 | 5436 | 8001 / 8003 |
+
+To apply the 7.0.2 Redmine port change from 8001 to 3002 and MCP reader change from 8000
+to 8002 to existing stacks, stop both readers before recreating them. This releases the
+old 6.0.1 reader port 8002 before 7.0.2 takes it:
+
+```bash
+docker compose -f deploy/compose.test.6.0.1.yaml stop mcp-server
+docker compose -f deploy/compose.test.7.0.2.yaml stop mcp-server
+docker compose -f deploy/compose.test.7.0.2.yaml up -d --no-deps redmine mcp-server
+docker compose -f deploy/compose.test.6.0.1.yaml up -d --no-deps mcp-server
+```
+
+This preserves the existing data volumes. If the optional built-in writer is already enabled,
+recreate it with its existing operation configuration so browser links also use port 3002.
+Update host-side clients that still point to the old Redmine URL to `http://localhost:3002`.
+Use MCP URLs `http://localhost:8002/mcp` for 7.0.2 and `http://localhost:8001/mcp` for 6.0.1.
+Run only the commands for stacks already installed; a fresh stack uses `dev-up.sh`.
 
 The development files contain fixed local credentials and synthetic markers. Root `.env` is
 ignored. Old `redmine-mcp-test*` containers, volumes and `.local/` files are not adopted,
@@ -156,7 +173,7 @@ REDMINE_TEST_VERSION=6.0.1 python scripts/local_env.py compose stop
 bash scripts/dev-up.sh 6.0.1
 ```
 
-To free port 8000 for local Python while keeping Redmine running:
+To stop the selected Docker MCP reader while keeping Redmine running:
 
 ```bash
 source scripts/common.sh
@@ -301,10 +318,12 @@ profile with its own Compose project:
 docker compose -p redmine-mcp-writer --env-file .local/writer.env -f deploy/compose.yaml --profile writer up -d --build mcp-writer
 ```
 
-Base Compose listens on `127.0.0.1:8001` unless `MCP_WRITER_HOST_PORT` is set. If the 7.0.2
-sample stack is running, its Redmine already owns port 8001: set a free writer port such as
+Base Compose listens on `127.0.0.1:8001` unless `MCP_WRITER_HOST_PORT` is set. The 7.0.2
+sample Redmine uses port 3002. If port 8001 is occupied, set a free writer port such as
 `MCP_WRITER_HOST_PORT=8010` in `.local/writer.env` before startup. The reader deployment
 continues to use port 8000; base Compose forces its `REDMINE_WRITE_ENABLED=false`.
+The 6.0.1 sample MCP reader uses port 8001, so a separate base Compose writer needs another
+port when that stack is running.
 Changing the env-file requires recreating the writer service with the startup command above;
 refresh client connections and tool lists afterward. Personal-key discovery is caller-specific
 and reports candidates, not guaranteed target access. Direct/cached calls still enforce current gates.
@@ -312,7 +331,7 @@ Keep `docker compose config` output private because it can include deployment se
 
 For a synthetic writer, use the already marked synthetic instance with its own ignored writer
 configuration and a reachable Redmine URL. From the writer container, the built-in 7.0.2
-instance is reachable at `http://host.docker.internal:8001`, or port `3001` for 6.0.1.
+instance is reachable at `http://host.docker.internal:3002`, or port `3001` for 6.0.1.
 Use the corresponding localhost URL for `REDMINE_PUBLIC_URL` browser links.
 Do not add a synthetic Compose file to this separate writer project: the existing synthetic
 instance owns its database and files. Built-in files also declare optional writer ports

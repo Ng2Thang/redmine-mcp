@@ -12,13 +12,13 @@ case "$version" in
 esac
 export REDMINE_TEST_VERSION="$version"
 source "$(dirname -- "$0")/common.sh"
-redmine_port=8001
+redmine_port=3002
 postgres_port=5433
-reader_port=8000
+reader_port=8002
 if [[ "$version" == '6.0.1' ]]; then
   redmine_port=3001
   postgres_port=5436
-  reader_port=8002
+  reader_port=8001
 fi
 python scripts/local_env.py preflight
 echo "Starting Redmine $version using deploy/compose.test.${version}.yaml"

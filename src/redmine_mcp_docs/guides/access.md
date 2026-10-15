@@ -14,9 +14,10 @@ not grant extra Redmine permissions.
 
 The local Python reader and base Compose reader normally use port `8000`. Base Compose's
 separate writer defaults to `8001`; the built-in 7.0.2 sample uses reader/writer ports
-`8000`/`8004`, and 6.0.1 uses `8002`/`8003`. Sample writers are optional, are not started by
-`dev-up.sh`, and have no enabled operations until configured. A separate base Compose writer
-targeting the 7.0.2 sample needs another port, such as `8010`, because Redmine occupies `8001`.
+`8002`/`8004`, and 6.0.1 uses `8001`/`8003`. Sample writers are optional, are not started by
+`dev-up.sh`, and have no enabled operations until configured. The 7.0.2 sample Redmine uses
+port `3002`; choose a free port for a separate base Compose writer. If the 6.0.1 reader is
+running, its port `8001` is occupied, so use another writer port such as `8010`.
 Use the actual URL supplied by your administrator. The writer also offers reads, but
 available write actions depend on deployment configuration and caller discovery.
 

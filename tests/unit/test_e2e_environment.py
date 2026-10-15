@@ -64,7 +64,7 @@ def test_valid_compose_configuration_and_native_guard(
         ),
         (("services", "redmine", "image"), "redmine:latest"),
         (("services", "redmine", "ports", 0, "host_ip"), "0.0.0.0"),
-        (("services", "redmine", "ports", 0, "published"), 3002),
+        (("services", "redmine", "ports", 0, "published"), 3003),
         (("services", "redmine", "ports", 0, "target"), 8001),
         (("services", "postgres", "ports", 0, "host_ip"), "0.0.0.0"),
         (("services", "redmine", "volumes", 0, "read_only"), False),
@@ -209,7 +209,7 @@ def test_existing_container_version_change_requires_reset(
         (("Mounts", 0, "RW"), True),
         (("Mounts", 1, "RW"), False),
         (("Mounts", 1, "Source"), "/foreign/state"),
-        (("NetworkSettings", "Ports", "3000/tcp"), [{"HostIp": "0.0.0.0", "HostPort": "8001"}]),
+        (("NetworkSettings", "Ports", "3000/tcp"), [{"HostIp": "0.0.0.0", "HostPort": "3002"}]),
     ],
 )
 def test_running_mismatch_stops_before_native_guard(

@@ -37,8 +37,9 @@ records the cases, commands, corrected harness errors and mocked boundaries.
 
 TEST-001/002/004/009 and live portions above remain pending. Simulated incomplete/colliding
 seed failures verify Python abort handling; actual Ruby seed idempotence and recovery remain
-TEST-004. The task remains in progress. Current built-in 7.0.2 uses host port 8001; older
-3002/profile statements below retain their original planning scope.
+TEST-004. The task remains in progress. As of 2026-10-15, built-in 7.0.2 uses host port 3002;
+MCP readers use ports 8001 for 6.0.1 and 8002 for 7.0.2, with optional writers on 8003 and
+8004 respectively. Older profile statements below retain their original planning scope.
 
 ### Current setup contract (2026-10-13)
 

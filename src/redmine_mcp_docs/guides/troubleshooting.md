@@ -72,8 +72,8 @@ does not undo an accepted write. See [outcomes](write-actions.md#read-the-outcom
 
 ### The sample stack reports an occupied port
 
-The 7.0.2 stack uses Redmine 8001, MCP 8000, and PostgreSQL 5433. The 6.0.1 stack uses
-3001, 8002, and 5436. Startup identifies a conflicting container or service; stop that
+The 7.0.2 stack uses Redmine 3002, MCP 8002, and PostgreSQL 5433. The 6.0.1 stack uses
+3001, 8001, and 5436. Startup identifies a conflicting container or service; stop that
 identified service before retrying. Reruns reuse services owned by the selected project.
 Old `redmine-mcp-test*` projects are retained and may still occupy these ports.
 See [sample server setup](installation.md#docker-with-sample-data).

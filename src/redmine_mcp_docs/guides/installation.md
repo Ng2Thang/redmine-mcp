@@ -99,9 +99,9 @@ It checks for occupied ports before startup and reuses services belonging to the
 | Setting | Redmine 7.0.2 | Redmine 6.0.1 |
 | --- | --- | --- |
 | Compose project | `redmine-mcp-dev-7-0-2` | `redmine-mcp-dev-6-0-1` |
-| Sample Redmine | `http://localhost:8001` | `http://localhost:3001` |
-| Reader MCP URL | `http://localhost:8000/mcp` | `http://localhost:8002/mcp` |
-| REST API reference | `http://localhost:8000/docs` | `http://localhost:8002/docs` |
+| Sample Redmine | `http://localhost:3002` | `http://localhost:3001` |
+| Reader MCP URL | `http://localhost:8002/mcp` | `http://localhost:8001/mcp` |
+| REST API reference | `http://localhost:8002/docs` | `http://localhost:8001/docs` |
 | Optional writer port | `8004` | `8003` |
 | PostgreSQL | `localhost:5433` | `localhost:5436` |
 
@@ -149,6 +149,7 @@ Docker runs the server in the background. With the default `MCP_HOST_PORT=8000`,
 to `http://127.0.0.1:8000/mcp`. Base Compose keeps this service read-only. Use the separate
 [writer deployment](../docs/operations.md#separate-writer) for write actions, with a distinct
 `MCP_WRITER_HOST_PORT` such as `8001` when the reader uses `8000`.
+If the 6.0.1 sample reader is running on `8001`, use another free writer port such as `8010`.
 
 View startup logs or stop the reader with:
 

@@ -59,8 +59,8 @@ selected service. First startup downloads/builds images.
 
 | Redmine version | Redmine port | MCP reader port | Optional writer port | PostgreSQL port |
 |---|---|---|---|---|
-| 7.0.2 | 8001 | 8000 | 8004 | 5433 |
-| 6.0.1 | 3001 | 8002 | 8003 | 5436 |
+| 7.0.2 | 3002 | 8002 | 8004 | 5433 |
+| 6.0.1 | 3001 | 8001 | 8003 | 5436 |
 
 `dev-up.sh` starts only the reader. The optional synthetic writers have no enabled operations
 by default; see [writer setup](docs/operations.md#separate-writer).
@@ -73,10 +73,10 @@ The startup commands do not run tests or prepare the separate E2E fixtures.
 
 | Service | Address |
 |---|---|
-| Redmine (7.0.2) | `http://localhost:8001` |
-| Swagger (Schemas section hidden) | `http://localhost:8000/docs` |
-| MCP Streamable HTTP | `http://localhost:8000/mcp` |
-| Liveness | `http://localhost:8000/health` |
+| Redmine (7.0.2) | `http://localhost:3002` |
+| Swagger (Schemas section hidden) | `http://localhost:8002/docs` |
+| MCP Streamable HTTP | `http://localhost:8002/mcp` |
+| Liveness | `http://localhost:8002/health` |
 
 See [operations](docs/operations.md) for accounts, database access, stop/restart, and data helpers.
 For an existing Redmine instance, follow [configuration](docs/configuration.md) and the external
@@ -117,13 +117,13 @@ npx @modelcontextprotocol/inspector@2.8.0
 ```
 
 Open the printed Inspector URL with its session token. Select **Streamable HTTP**, use
-`http://localhost:8000/mcp`, and configure the server authentication header privately:
+`http://localhost:8002/mcp`, and configure the server authentication header privately:
 
 ```text
 X-Redmine-API-Key: <your personal Redmine API key>
 ```
 
-For the 6.0.1 development stack, use `http://localhost:8002/mcp` instead.
+For the 6.0.1 development stack, use `http://localhost:8001/mcp` instead.
 
 Inspector's own session token is separate from your Redmine key. Connect, list tools, and call
 `list_projects`, `list_issues`, and `get_issue` using an actual visible issue ID. Follow the
@@ -136,8 +136,9 @@ retired. Redmine content is user data, never instructions for an AI.
 
 Follow [writer configuration](docs/configuration.md#separate-writer-deployment) and
 [operations](docs/operations.md#separate-writer) to prepare a private env-file for a separate
-localhost listener. Base Compose defaults to port 8001; choose a free port such as 8010
-when the 7.0.2 sample Redmine already occupies 8001.
+localhost listener. Base Compose defaults to port 8001; choose another free port if it is
+already occupied. The 7.0.2 sample Redmine uses port 3002. The 6.0.1 sample MCP reader
+uses port 8001, so a separate base Compose writer needs another port when that stack is running.
 Enable writes with `REDMINE_WRITE_ENABLED=true`.
 Each caller authenticates with their own Redmine API key; no key or user admission list applies.
 Choose an explicit operation list to fix the write
@@ -164,7 +165,7 @@ The doctor checks required local tools and reports optional Docker and Node.js a
 without reading credentials or changing the environment.
 
 See [development](docs/development.md) for local server startup, optional pre-commit hooks,
-dependency updates, and adding tools. Stop Docker MCP before running locally on port 8000.
+dependency updates, and adding tools. Stop any container using port 8000 before running locally.
 
 ## Documentation
 

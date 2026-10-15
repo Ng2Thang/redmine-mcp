@@ -203,13 +203,15 @@ and does not close acceptance gaps or publish a release.
 ## Existing-stack E2E reuse (updated 2026-10-13)
 
 The user wants E2E to use the two existing versioned Compose stacks: Redmine 6.0.1 on
-localhost:3001 and Redmine 7.0.2 on localhost:8001. Their existing data is disposable.
+localhost:3001 and Redmine 7.0.2 on localhost:3002. Their existing data is disposable.
 PREP-029 implementation replaces separate-stack provisioning with selected-project startup,
 guarded fixture seeding and an explicit selected-stack reset. Earlier descriptions below
 retain their historical scope. Current built-in projects are `redmine-mcp-dev-6-0-1`
 and `redmine-mcp-dev-7-0-2`, using standalone versioned Compose files with fixed local
 settings and named seed volumes. Root `.env` is ignored. Pytest adds the E2E host-evidence
 overlay automatically. Runtime acceptance of this later setup refactor remains pending.
+As of 2026-10-15, MCP readers use localhost:8001 for 6.0.1 and localhost:8002 for 7.0.2;
+optional writers remain on 8003 and 8004 respectively.
 
 | Task | Client outcome | Dependencies | Status | Blocker | Next action |
 |---|---|---|---|---|---|

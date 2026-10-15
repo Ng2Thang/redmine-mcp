@@ -8,7 +8,7 @@ from tests.e2e_setup_helpers import SetupSandbox
 from tests.e2e_setup_helpers import setup_sandbox as setup_sandbox
 
 
-@pytest.mark.parametrize("version,port", [("6.0.1", 3001), ("7.0.2", 8001)])
+@pytest.mark.parametrize("version,port", [("6.0.1", 3001), ("7.0.2", 3002)])
 def test_builtin_identity_paths_commands_and_environment(
     setup_sandbox: SetupSandbox, monkeypatch: pytest.MonkeyPatch, version: str, port: int
 ) -> None:

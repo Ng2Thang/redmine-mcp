@@ -7,6 +7,10 @@ tool. If your client is already installed, go straight to its connection instruc
 You need an existing server URL. If you need to install and run the server yourself, follow
 [MCP server installation](installation.md) first, then return here.
 
+The sample Docker MCP URLs are `http://127.0.0.1:8002/mcp` for Redmine 7.0.2 and
+`http://127.0.0.1:8001/mcp` for 6.0.1. The examples below use local Python on port 8000;
+replace the URL with the endpoint for your deployment.
+
 **Before you start**
 
 - A running Redmine MCP server and its MCP URL, supplied by the person who installed it.

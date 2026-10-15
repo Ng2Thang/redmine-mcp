@@ -57,7 +57,7 @@ if not COMPOSE_FILE.is_file():
     raise ValueError("Selected E2E Compose override does not exist")
 
 STATE = ROOT / ".local/e2e" / (VERSION if custom else PROJECT)
-PORT = int(os.environ.get("REDMINE_E2E_PORT", "3001" if VERSION == "6.0.1" else "8001"))
+PORT = int(os.environ.get("REDMINE_E2E_PORT", "3001" if VERSION == "6.0.1" else "3002"))
 if not 1024 <= PORT <= 65535:
     raise ValueError("REDMINE_E2E_PORT must be between 1024 and 65535")
 URL = f"http://127.0.0.1:{PORT}"

@@ -394,7 +394,7 @@ shared users, projects and memberships.
 
 For the automated E2E fixture environment, follow
 [versioned stack preparation](testing-roadmap.md#selecting-a-redmine-release).
-PREP-029 reuses the 6.0.1 stack on localhost:3001 and 7.0.2 on localhost:8001.
+PREP-029 reuses the 6.0.1 stack on localhost:3001 and 7.0.2 on localhost:3002.
 The built-in projects are `redmine-mcp-dev-6-0-1` and `redmine-mcp-dev-7-0-2`. They use
 self-contained Compose files and ignore root `.env`. Their demo seed manifests live in
 Docker's `seed_state` volumes; E2E manifests and logs live in `.local/e2e/<project>/`.
@@ -412,11 +412,13 @@ Never seed, reset, or restore a real instance for verification.
 Confirm startup finishes without errors, then check liveness:
 
 ```bash
-curl --fail --silent --show-error http://localhost:8000/health
+curl --fail --silent --show-error http://localhost:8002/health
 ```
 
 Expected body: `{"status":"ok"}`. This endpoint does not contact Redmine, so successful tool
 calls are still needed to check upstream connectivity and credentials.
+The examples use the 7.0.2 sample reader on port 8002. Substitute port 8001 for the 6.0.1
+sample reader, port 8000 for local Python, or the actual port for an external deployment.
 
 ## MCP Inspector
 
@@ -425,7 +427,7 @@ npx @modelcontextprotocol/inspector@2.8.0
 ```
 
 Open the printed Inspector URL with its session token. Select **Streamable HTTP**, set the server
-URL to `http://localhost:8000/mcp`, and configure its authentication header privately:
+URL to `http://localhost:8002/mcp`, and configure its authentication header privately:
 
 ```text
 X-Redmine-API-Key: <your personal Redmine API key>
@@ -481,13 +483,13 @@ Without the personal-key header, the following read-only REST request should ret
 and `{"detail":"Missing or invalid Redmine API key"}`:
 
 ```bash
-curl --silent --show-error --include http://localhost:8000/api/v1/projects
+curl --silent --show-error --include http://localhost:8002/api/v1/projects
 ```
 
 Repeat the Inspector connection using an omitted or deliberately invalid Redmine key and confirm
 that protected tool access is rejected. Restore the valid key privately afterward.
 
-In Swagger at `http://localhost:8000/docs`, use **Authorize** with your Redmine API key.
+In Swagger at `http://localhost:8002/docs`, use **Authorize** with your Redmine API key.
 Request `GET /api/v1/issues` with `limit=0`; expect REST status `422` and validation details.
 If a known absent or inaccessible issue ID is available, read it and check that the response does
 not disclose its contents; Redmine may return forbidden or not-found behavior depending on access.

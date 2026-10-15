@@ -81,7 +81,9 @@ def check_ports() -> None:
         check=False,
     )
     if result.returncode:
-        raise SystemExit("Cannot resolve selected Compose files; Docker Compose 2.24.4+ is required.")
+        raise SystemExit(
+            "Cannot resolve selected Compose files; Docker Compose 2.24.4+ is required."
+        )
     services = json.loads(result.stdout)["services"]
     ids = docker_output("ps", "--quiet").split()
     containers = json.loads(docker_output("inspect", *ids)) if ids else []

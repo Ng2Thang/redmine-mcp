@@ -165,7 +165,9 @@ class ProjectCapabilityService:
                 )
         except TimeoutError:
             raise ApplicationError(
-                codes_text.UPSTREAM_TIMEOUT, redmine_text.TIMED_OUT, http_status.HTTP_504_GATEWAY_TIMEOUT
+                codes_text.UPSTREAM_TIMEOUT,
+                redmine_text.TIMED_OUT,
+                http_status.HTTP_504_GATEWAY_TIMEOUT,
             ) from None
 
     async def _project_page(

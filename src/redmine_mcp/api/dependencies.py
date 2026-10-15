@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import Depends, Request, status as http_status
+from fastapi import Depends, Request
+from fastapi import status as http_status
 
 from redmine_mcp.api.runtime import get_settings, get_upstream
 from redmine_mcp.api.security import get_auth_context

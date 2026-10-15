@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, status as http_status
+from fastapi import APIRouter, Depends, Path
+from fastapi import status as http_status
 
 from redmine_mcp.api import get_attachments, require_read_access
 from redmine_mcp.common import ApplicationError

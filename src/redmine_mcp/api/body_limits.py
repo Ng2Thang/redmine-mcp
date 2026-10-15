@@ -58,9 +58,7 @@ class RequestBodyLimitsMiddleware:
             return
         path = scope["path"]
         method = scope["method"]
-        limited = (
-            method == HTTPMethod.POST and (path == "/mcp" or path.startswith("/mcp/"))
-        ) or (
+        limited = (method == HTTPMethod.POST and (path == "/mcp" or path.startswith("/mcp/"))) or (
             method in {HTTPMethod.POST, HTTPMethod.PUT, HTTPMethod.PATCH, HTTPMethod.DELETE}
             and path.startswith("/api/v1/")
         )

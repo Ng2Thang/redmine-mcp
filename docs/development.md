@@ -170,6 +170,18 @@ requests in worker threads to achieve concurrency.
 
 ## Quality checks
 
+For a static audit with separate runtime/support reports, supplemental rules, complexity
+metrics and security findings, see the [code-quality workflow](code-quality.md). Run
+`bash scripts/audit-code-quality.sh` after installing the separate audit group. This workflow
+does not run tests or replace the existing baseline gate.
+
+For terminal-based checks with guarded formatting and optional import-ordering fixes, see
+[Quality Check](quality-check.md#automatic-fixes-and-rechecks). Run
+`bash scripts/fix-quality.sh` to format, or add `--check-only` to keep source unchanged.
+`--fix-imports` opts into I001 fixes; `--verify` explicitly runs offline unit/integration tests
+and a package build. Neither tests nor builds run by default. Typing, architecture, complexity
+and security findings still require review, and deployed runtime acceptance stays separate.
+
 `scripts/check.sh` can be invoked by its path from any working directory. It checks the whole
 repository with Ruff, runtime code with mypy, and import boundaries with the architecture checker.
 It runs all four checks even when one fails and exits nonzero if any fails. It does not rewrite

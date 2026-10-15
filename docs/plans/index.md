@@ -1,5 +1,36 @@
 # MCP tool roadmap
 
+## CLI quality fixes and rechecks (2026-10-15)
+
+Added `scripts/fix-quality.sh` to apply guarded formatting and run the documented
+convention, typing, architecture, complexity and security commands with terminal output.
+`--check-only` preserves source; `--offline` skips advisories and returns incomplete status.
+Default edits are formatting only. `--fix-imports` opts into I001 ordering fixes; `--verify`
+opts into offline unit/integration tests and a package build. The new syntax-tree guard detects
+structural changes during formatting, preserves edits for review and skips verification on
+failure. It does not prove deployed behavior or trigger automatic rollback.
+The [quality-check guide](../quality-check.md#automatic-fixes-and-rechecks) explains scope,
+exit codes and manual remediation limits. Development prerequisites, Bash syntax and diff
+whitespace checks passed; the new syntax-tree helper also passed Ruff lint/format and strict
+mypy. Status: implemented; full execution pending.
+The revised pipeline has not been executed against existing source during this assignment.
+Pre-existing formatting/import edits in the worktree were preserved. No dependencies were
+upgraded and no tests, builds or live calls ran during this revision.
+
+## Static code-quality audit (2026-10-15)
+
+Implemented an opt-in Git Bash audit workflow with a separate locked audit dependency group.
+Runtime/support Ruff, formatting, supplemental conventions, Radon CC/MI, Bandit, strict mypy,
+architecture and runtime dependency advisory checks produce local evidence and a Markdown report.
+All 16 steps completed; exit 1 records findings, with no errors/skips. Architecture passed;
+44 active runtime dependencies returned no advisory. Existing Ruff/format/type gaps remain.
+See the [reviewed audit](../reports/code-quality-audit.md),
+[remediation backlog](code-quality-remediation.md) and [workflow](../code-quality.md).
+Status: tooling and initial audit complete; remediation pending. Runtime code, tests, public
+contracts and release acceptance were not changed. No tests, startup, Docker operation or
+Inspector call ran. The sole runtime Bandit candidate was source-reviewed as an intentional
+empty SDK token placeholder; support security candidates still need per-call triage.
+
 ## G05 focused native variants (2026-10-14)
 
 Added 40 E2E cases per selected version for NAT-01..04: populated tag overlap/private scope,

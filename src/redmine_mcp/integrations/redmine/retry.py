@@ -9,9 +9,8 @@ from email.utils import parsedate_to_datetime
 from random import uniform
 from time import monotonic, time
 
-from fastapi import status as http_status
-
 import httpx
+from fastapi import status as http_status
 
 from redmine_mcp.integrations.redmine.policy import ReadPolicy
 

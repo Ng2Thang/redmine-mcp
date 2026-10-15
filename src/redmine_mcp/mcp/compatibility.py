@@ -147,10 +147,7 @@ class MCPCompatibility:
             headers: dict[str, str],
             body: Any | None,
         ) -> Any:
-            if (
-                method.upper() == HTTPMethod.DELETE
-                and path == "/api/v1/projects/memberships/batch"
-            ):
+            if method.upper() == HTTPMethod.DELETE and path == "/api/v1/projects/memberships/batch":
                 return await client.request(
                     HTTPMethod.DELETE, path, params=query, headers=headers, json=body
                 )
